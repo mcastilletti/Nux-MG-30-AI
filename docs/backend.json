@@ -1,0 +1,822 @@
+{
+  "entities": {
+    "Preset": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Preset",
+      "type": "object",
+      "description": "Represents a complete configuration (preset) for the NUX MG-30 multi-effect pedal, stored locally.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Preset entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "User-defined name for the preset."
+        },
+        "description": {
+          "type": "string",
+          "description": "An optional detailed description or notes about the preset."
+        },
+        "nuxSlotId": {
+          "type": "number",
+          "description": "The slot number (1-56) on the NUX MG-30 device where this preset is or was stored. Can be null if the preset is only local.",
+          "format": "integer"
+        },
+        "midiProgramChangeNumber": {
+          "type": "number",
+          "description": "The MIDI Program Change number (0-55) corresponding to the NUX MG-30 slot ID. Can be null if the preset is only local.",
+          "format": "integer"
+        },
+        "ampModelId": {
+          "type": "string",
+          "description": "Reference to the AmpModel entity used in this preset. (Relationship: AmpModel 1:N Preset)"
+        },
+        "cabinetModelId": {
+          "type": "string",
+          "description": "Reference to the CabinetModel entity used in this preset. (Relationship: CabinetModel 1:N Preset)"
+        },
+        "creationDate": {
+          "type": "string",
+          "description": "Timestamp when the preset was first created.",
+          "format": "date-time"
+        },
+        "lastModifiedDate": {
+          "type": "string",
+          "description": "Timestamp when the preset was last modified.",
+          "format": "date-time"
+        },
+        "isFavorite": {
+          "type": "boolean",
+          "description": "Indicates if the preset is marked as a favorite by the user."
+        },
+        "rating": {
+          "type": "number",
+          "description": "User-assigned rating for the preset, typically from 1 to 5.",
+          "format": "integer"
+        },
+        "tagIds": {
+          "type": "array",
+          "description": "References to Tag entities associated with this preset. (Relationship: Tag N:N Preset)",
+          "items": {
+            "type": "string"
+          }
+        },
+        "categoryId": {
+          "type": "string",
+          "description": "Reference to the Category entity that classifies this preset (e.g., 'Clean', 'Lead'). (Relationship: Category 1:N Preset)"
+        },
+        "thumbnailUrl": {
+          "type": "string",
+          "description": "Optional URL to a generated thumbnail image representing the preset's pedalboard view.",
+          "format": "uri"
+        },
+        "signalChainOrder": {
+          "type": "array",
+          "description": "An ordered list of effect block types (e.g., 'NoiseGate', 'Compressor', 'Amp', 'Delay') defining the signal flow.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "noiseGateEnabled": {
+          "type": "boolean",
+          "description": "Indicates if the Noise Gate effect is active."
+        },
+        "noiseGateThreshold": {
+          "type": "number",
+          "description": "Threshold parameter for the Noise Gate (0-100)."
+        },
+        "noiseGateDecay": {
+          "type": "number",
+          "description": "Decay parameter for the Noise Gate (0-100)."
+        },
+        "compressorEnabled": {
+          "type": "boolean",
+          "description": "Indicates if the Compressor effect is active."
+        },
+        "compressorType": {
+          "type": "string",
+          "description": "Type of compressor (if multiple options are available)."
+        },
+        "compressorSustain": {
+          "type": "number",
+          "description": "Sustain parameter for the Compressor."
+        },
+        "compressorLevel": {
+          "type": "number",
+          "description": "Level parameter for the Compressor."
+        },
+        "compressorAttack": {
+          "type": "number",
+          "description": "Attack parameter for the Compressor."
+        },
+        "compressorTone": {
+          "type": "number",
+          "description": "Tone parameter for the Compressor."
+        },
+        "ampGain": {
+          "type": "number",
+          "description": "Gain parameter for the Amplifier section."
+        },
+        "ampVolume": {
+          "type": "number",
+          "description": "Volume parameter for the Amplifier section."
+        },
+        "ampBass": {
+          "type": "number",
+          "description": "Bass EQ parameter for the Amplifier section."
+        },
+        "ampMiddle": {
+          "type": "number",
+          "description": "Middle EQ parameter for the Amplifier section."
+        },
+        "ampTreble": {
+          "type": "number",
+          "description": "Treble EQ parameter for the Amplifier section."
+        },
+        "ampPresence": {
+          "type": "number",
+          "description": "Presence parameter for the Amplifier section."
+        },
+        "ampMaster": {
+          "type": "number",
+          "description": "Master volume parameter for the Amplifier section."
+        },
+        "eqEnabled": {
+          "type": "boolean",
+          "description": "Indicates if the global EQ effect is active."
+        },
+        "eqBass": {
+          "type": "number",
+          "description": "Bass parameter for the EQ section (-12 to +12 dB)."
+        },
+        "eqMiddle": {
+          "type": "number",
+          "description": "Middle parameter for the EQ section (-12 to +12 dB)."
+        },
+        "eqTreble": {
+          "type": "number",
+          "description": "Treble parameter for the EQ section (-12 to +12 dB)."
+        },
+        "eqPresence": {
+          "type": "number",
+          "description": "Presence parameter for the EQ section (-12 to +12 dB)."
+        },
+        "modulationEnabled": {
+          "type": "boolean",
+          "description": "Indicates if a Modulation effect is active."
+        },
+        "modulationType": {
+          "type": "string",
+          "description": "Type of modulation effect (e.g., 'Chorus', 'Flanger', 'Phaser', 'Tremolo', 'Vibe')."
+        },
+        "modulationSpeed": {
+          "type": "number",
+          "description": "Speed parameter for the Modulation effect."
+        },
+        "modulationDepth": {
+          "type": "number",
+          "description": "Depth parameter for the Modulation effect."
+        },
+        "modulationRegenFeedback": {
+          "type": "number",
+          "description": "Regen/Feedback parameter specific to some modulation types (e.g., Flanger/Phaser)."
+        },
+        "modulationLevelMix": {
+          "type": "number",
+          "description": "Level/Mix parameter for the Modulation effect."
+        },
+        "delayEnabled": {
+          "type": "boolean",
+          "description": "Indicates if a Delay effect is active."
+        },
+        "delayType": {
+          "type": "string",
+          "description": "Type of delay effect (e.g., 'Analog', 'Digital', 'Tape', 'Modulation')."
+        },
+        "delayTime": {
+          "type": "number",
+          "description": "Time parameter for the Delay effect (0-2000ms)."
+        },
+        "delayFeedback": {
+          "type": "number",
+          "description": "Feedback parameter for the Delay effect."
+        },
+        "delayLevel": {
+          "type": "number",
+          "description": "Level parameter for the Delay effect."
+        },
+        "delayMix": {
+          "type": "number",
+          "description": "Mix (dry/wet) parameter for the Delay effect."
+        },
+        "reverbEnabled": {
+          "type": "boolean",
+          "description": "Indicates if a Reverb effect is active."
+        },
+        "reverbType": {
+          "type": "string",
+          "description": "Type of reverb effect (e.g., 'Room', 'Hall', 'Spring', 'Plate')."
+        },
+        "reverbDecay": {
+          "type": "number",
+          "description": "Decay parameter for the Reverb effect (0-10s)."
+        },
+        "reverbPreDelay": {
+          "type": "number",
+          "description": "Pre-delay parameter for the Reverb effect (0-200ms)."
+        },
+        "reverbTone": {
+          "type": "number",
+          "description": "Tone parameter for the Reverb effect."
+        },
+        "reverbMix": {
+          "type": "number",
+          "description": "Mix parameter for the Reverb effect."
+        },
+        "reverbLevel": {
+          "type": "number",
+          "description": "Level parameter for the Reverb effect."
+        },
+        "rawSysExData": {
+          "type": "string",
+          "description": "Optional raw System Exclusive (SysEx) data representing the full preset dump, for exact replication or debugging."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "ampModelId",
+        "cabinetModelId",
+        "creationDate",
+        "lastModifiedDate",
+        "isFavorite",
+        "rating",
+        "signalChainOrder",
+        "noiseGateEnabled",
+        "noiseGateThreshold",
+        "noiseGateDecay",
+        "compressorEnabled",
+        "compressorSustain",
+        "compressorLevel",
+        "compressorAttack",
+        "compressorTone",
+        "ampGain",
+        "ampVolume",
+        "ampBass",
+        "ampMiddle",
+        "ampTreble",
+        "ampPresence",
+        "ampMaster",
+        "eqEnabled",
+        "eqBass",
+        "eqMiddle",
+        "eqTreble",
+        "eqPresence",
+        "modulationEnabled",
+        "modulationSpeed",
+        "modulationDepth",
+        "modulationRegenFeedback",
+        "modulationLevelMix",
+        "delayEnabled",
+        "delayTime",
+        "delayFeedback",
+        "delayLevel",
+        "delayMix",
+        "reverbEnabled",
+        "reverbDecay",
+        "reverbPreDelay",
+        "reverbTone",
+        "reverbMix",
+        "reverbLevel"
+      ]
+    },
+    "AmpModel": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "AmpModel",
+      "type": "object",
+      "description": "Defines a specific amplifier model available on the NUX MG-30.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the AmpModel entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The common name of the amplifier model (e.g., 'Clean', 'British', 'Metal')."
+        },
+        "description": {
+          "type": "string",
+          "description": "A brief description of the amplifier model."
+        },
+        "iconUrl": {
+          "type": "string",
+          "description": "URL to an icon or image representing the amplifier model.",
+          "format": "uri"
+        },
+        "nuxInternalId": {
+          "type": "string",
+          "description": "Internal identifier used by the NUX MG-30 device for this amplifier model, useful for MIDI/SysEx mapping."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "description",
+        "iconUrl",
+        "nuxInternalId"
+      ]
+    },
+    "CabinetModel": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "CabinetModel",
+      "type": "object",
+      "description": "Defines a specific speaker cabinet model available on the NUX MG-30.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the CabinetModel entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The common name of the cabinet model."
+        },
+        "description": {
+          "type": "string",
+          "description": "A brief description of the cabinet model."
+        },
+        "imageUrl": {
+          "type": "string",
+          "description": "URL to an image representing the cabinet model.",
+          "format": "uri"
+        },
+        "nuxInternalId": {
+          "type": "string",
+          "description": "Internal identifier used by the NUX MG-30 device for this cabinet model, useful for MIDI/SysEx mapping."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "description",
+        "imageUrl",
+        "nuxInternalId"
+      ]
+    },
+    "Tag": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Tag",
+      "type": "object",
+      "description": "A customizable tag used to organize and filter presets.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Tag entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the tag (e.g., 'Live', 'Studio', 'Delay-Heavy')."
+        },
+        "color": {
+          "type": "string",
+          "description": "A color associated with the tag, in hexadecimal format (e.g., '#FF0000')."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "color"
+      ]
+    },
+    "Category": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Category",
+      "type": "object",
+      "description": "A predefined category used to classify presets (e.g., 'Clean', 'Crunch', 'Lead').",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Category entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the category."
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ]
+    },
+    "Setlist": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Setlist",
+      "type": "object",
+      "description": "A collection of presets ordered for live performance or specific use cases.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Setlist entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the setlist (e.g., 'Gig 2023 Set A', 'Rehearsal Tracks')."
+        },
+        "description": {
+          "type": "string",
+          "description": "An optional description for the setlist."
+        },
+        "presetIds": {
+          "type": "array",
+          "description": "An ordered list of references to Preset entities included in this setlist. (Relationship: Preset N:N Setlist)",
+          "items": {
+            "type": "string"
+          }
+        },
+        "creationDate": {
+          "type": "string",
+          "description": "Timestamp when the setlist was created.",
+          "format": "date-time"
+        },
+        "lastModifiedDate": {
+          "type": "string",
+          "description": "Timestamp when the setlist was last modified.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "presetIds",
+        "creationDate",
+        "lastModifiedDate"
+      ]
+    },
+    "SysExMapping": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "SysExMapping",
+      "type": "object",
+      "description": "Stores the discovered mappings between NUX MG-30 parameters and their corresponding MIDI/SysEx messages, often derived from analysis.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the SysExMapping entity."
+        },
+        "parameterName": {
+          "type": "string",
+          "description": "The human-readable name of the parameter being mapped (e.g., 'Amp Gain', 'Delay Time')."
+        },
+        "midiMessageType": {
+          "type": "string",
+          "description": "The type of MIDI message (e.g., 'CC' for Control Change, 'SysEx' for System Exclusive)."
+        },
+        "midiChannel": {
+          "type": "number",
+          "description": "The MIDI channel number if applicable (for CC messages). Null for SysEx.",
+          "format": "integer"
+        },
+        "midiControlNumber": {
+          "type": "number",
+          "description": "The MIDI Control Change number if applicable (for CC messages). Null for SysEx.",
+          "format": "integer"
+        },
+        "sysExSignature": {
+          "type": "string",
+          "description": "A pattern or signature representing the SysEx message structure for this parameter, with placeholders for variable data."
+        },
+        "midiValueRangeMin": {
+          "type": "number",
+          "description": "The minimum raw MIDI value for this parameter (e.g., 0).",
+          "format": "integer"
+        },
+        "midiValueRangeMax": {
+          "type": "number",
+          "description": "The maximum raw MIDI value for this parameter (e.g., 127).",
+          "format": "integer"
+        },
+        "appValueRangeMin": {
+          "type": "number",
+          "description": "The minimum value used in the application's UI for this parameter (e.g., 0)."
+        },
+        "appValueRangeMax": {
+          "type": "number",
+          "description": "The maximum value used in the application's UI for this parameter (e.g., 100)."
+        },
+        "dataType": {
+          "type": "string",
+          "description": "The data type of the parameter (e.g., 'number', 'boolean', 'string', 'enum')."
+        },
+        "enumOptions": {
+          "type": "array",
+          "description": "An ordered list of possible string values if `dataType` is 'enum'.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "lastVerifiedDate": {
+          "type": "string",
+          "description": "Timestamp when this mapping was last verified or updated.",
+          "format": "date-time"
+        },
+        "notes": {
+          "type": "string",
+          "description": "Any additional notes or context about this mapping (e.g., 'Reverse engineered from firmware v1.2')."
+        }
+      },
+      "required": [
+        "id",
+        "parameterName",
+        "midiMessageType",
+        "midiValueRangeMin",
+        "midiValueRangeMax",
+        "appValueRangeMin",
+        "appValueRangeMax",
+        "dataType",
+        "lastVerifiedDate"
+      ]
+    },
+    "SysExCommandLog": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "SysExCommandLog",
+      "type": "object",
+      "description": "Records raw System Exclusive (SysEx) messages for historical analysis and debugging, especially for the reverse engineering tool.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the SysExCommandLog entry."
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "Timestamp when the SysEx message was recorded.",
+          "format": "date-time"
+        },
+        "sysExMessageHex": {
+          "type": "string",
+          "description": "The raw SysEx message content in hexadecimal string format."
+        },
+        "source": {
+          "type": "string",
+          "description": "Indicates the origin of the SysEx message (e.g., 'User Interaction', 'Device Detection', 'Official Editor')."
+        },
+        "description": {
+          "type": "string",
+          "description": "A brief description or context for the recorded message (e.g., 'Amp Gain changed from 50 to 60')."
+        },
+        "analyzedMappingId": {
+          "type": "string",
+          "description": "Reference to a SysExMapping entity if this log entry was analyzed and matched to a known mapping. (Relationship: SysExMapping 0:N SysExCommandLog)"
+        }
+      },
+      "required": [
+        "id",
+        "timestamp",
+        "sysExMessageHex",
+        "source"
+      ]
+    },
+    "AppSettings": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "AppSettings",
+      "type": "object",
+      "description": "Stores user-specific application preferences and settings.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the AppSettings entity. Expected to be a fixed value like 'user_settings' as there's only one record."
+        },
+        "selectedMidiDeviceId": {
+          "type": "string",
+          "description": "Identifier for the currently selected MIDI input/output device. This might be a system-assigned ID or a user-friendly name."
+        },
+        "uiTheme": {
+          "type": "string",
+          "description": "The selected UI theme ('dark', 'light')."
+        },
+        "knobBehavior": {
+          "type": "string",
+          "description": "Defines how rotary knobs behave ('verticalDrag', 'circularDrag')."
+        },
+        "defaultNewPresetTemplateId": {
+          "type": "string",
+          "description": "Reference to a Preset entity to use as a template when creating new presets. (Relationship: Preset 0:1 AppSettings)"
+        },
+        "midiMessageLoggingEnabled": {
+          "type": "boolean",
+          "description": "Flag to enable or disable logging of MIDI messages for debugging."
+        },
+        "undoRedoHistoryLimit": {
+          "type": "number",
+          "description": "The maximum number of actions to store in the undo/redo history.",
+          "format": "integer"
+        },
+        "keyboardShortcuts": {
+          "type": "array",
+          "description": "An array of customizable keyboard shortcuts, where each item is an object defining an action and its keybind.",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "selectedMidiDeviceId",
+        "uiTheme",
+        "knobBehavior",
+        "midiMessageLoggingEnabled",
+        "undoRedoHistoryLimit",
+        "keyboardShortcuts"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "user",
+          "schema": {
+            "$ref": "#/backend/entities/user"
+          },
+          "description": "Stores basic user profile information. This serves as the root for all user-specific data. Ownership is strictly path-based: `request.auth.uid` must match `userId`.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique Firebase Authentication UID of the user."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/presets/{presetId}",
+        "definition": {
+          "entityName": "Preset",
+          "schema": {
+            "$ref": "#/backend/entities/Preset"
+          },
+          "description": "Stores individual user-created NUX MG-30 presets. Access is restricted to the owning user. This document structure implicitly provides ownership via the path, ensuring Authorization Independence without 'get()' calls in rules. Includes denormalized 'creationDate' and 'lastModifiedDate' for ownership and integrity.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique Firebase Authentication UID of the user who owns this preset."
+            },
+            {
+              "name": "presetId",
+              "description": "The unique identifier for the preset."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/tags/{tagId}",
+        "definition": {
+          "entityName": "Tag",
+          "schema": {
+            "$ref": "#/backend/entities/Tag"
+          },
+          "description": "Stores user-defined customizable tags for organizing presets. Access is restricted to the owning user. Ownership is implicitly provided by the path.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique Firebase Authentication UID of the user who owns this tag."
+            },
+            {
+              "name": "tagId",
+              "description": "The unique identifier for the tag."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/setlists/{setlistId}",
+        "definition": {
+          "entityName": "Setlist",
+          "schema": {
+            "$ref": "#/backend/entities/Setlist"
+          },
+          "description": "Stores user-created setlists, which are ordered collections of preset references. Access is restricted to the owning user. Ownership is implicitly provided by the path. Includes denormalized 'creationDate' and 'lastModifiedDate'.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique Firebase Authentication UID of the user who owns this setlist."
+            },
+            {
+              "name": "setlistId",
+              "description": "The unique identifier for the setlist."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/sysExCommandLogs/{logId}",
+        "definition": {
+          "entityName": "SysExCommandLog",
+          "schema": {
+            "$ref": "#/backend/entities/SysExCommandLog"
+          },
+          "description": "Records user-specific raw System Exclusive (SysEx) messages for debugging and analysis. Access is restricted to the owning user. Ownership is implicitly provided by the path.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique Firebase Authentication UID of the user who owns this log entry."
+            },
+            {
+              "name": "logId",
+              "description": "The unique identifier for the SysEx command log entry."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/appSettings/{settingsId}",
+        "definition": {
+          "entityName": "AppSettings",
+          "schema": {
+            "$ref": "#/backend/entities/AppSettings"
+          },
+          "description": "Stores user-specific application preferences and settings. Expected to be a single document per user (e.g., settingsId = 'current'). Access is restricted to the owning user. Ownership is implicitly provided by the path.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique Firebase Authentication UID of the user who owns these settings."
+            },
+            {
+              "name": "settingsId",
+              "description": "The unique identifier for the app settings document (e.g., 'current')."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/ampModels/{ampModelId}",
+        "definition": {
+          "entityName": "AmpModel",
+          "schema": {
+            "$ref": "#/backend/entities/AmpModel"
+          },
+          "description": "Stores global, static amplifier model definitions for the NUX MG-30. This data is read-only for all users, supporting QAPs for efficient listing without security rules acting as filters.",
+          "params": [
+            {
+              "name": "ampModelId",
+              "description": "The unique identifier for the amplifier model."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/cabinetModels/{cabinetModelId}",
+        "definition": {
+          "entityName": "CabinetModel",
+          "schema": {
+            "$ref": "#/backend/entities/CabinetModel"
+          },
+          "description": "Stores global, static speaker cabinet model definitions for the NUX MG-30. This data is read-only for all users, supporting QAPs for efficient listing without security rules acting as filters.",
+          "params": [
+            {
+              "name": "cabinetModelId",
+              "description": "The unique identifier for the cabinet model."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/categories/{categoryId}",
+        "definition": {
+          "entityName": "Category",
+          "schema": {
+            "$ref": "#/backend/entities/Category"
+          },
+          "description": "Stores global, static predefined categories for classifying presets. This data is read-only for all users, supporting QAPs for efficient listing without security rules acting as filters.",
+          "params": [
+            {
+              "name": "categoryId",
+              "description": "The unique identifier for the category."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/sysExMappings/{mappingId}",
+        "definition": {
+          "entityName": "SysExMapping",
+          "schema": {
+            "$ref": "#/backend/entities/SysExMapping"
+          },
+          "description": "Stores global mappings between NUX MG-30 parameters and MIDI/SysEx messages. This data is read-only for all users and potentially writeable by administrators for updates. Supports QAPs for efficient listing without security rules acting as filters.",
+          "params": [
+            {
+              "name": "mappingId",
+              "description": "The unique identifier for the SysEx mapping."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The recommended Firestore structure is designed with a strong emphasis on Authorization Independence, Structural Segregation, and clear Access Modeling, directly addressing the core design principles for security, scalability, and debuggability. All user-specific and private data are nested under a `/users/{userId}` top-level collection. This approach ensures that authorization rules are atomic and simple, relying solely on `request.auth.uid` matching the `{userId}` wildcard in the path.\n\n**Authorization Independence via Denormalization:**\nFor all user-owned data (Presets, Tags, Setlists, SysEx Command Logs, App Settings), the ownership is implicitly established by the path itself (e.g., `/users/{userId}/presets/{presetId}`). This means Firestore security rules can evaluate ownership by comparing `request.auth.uid` with the `{userId}` wildcard directly, eliminating the need for expensive and complex `get()` operations. This design choice is critical for maintaining transactional integrity and simplifying rule debugging. There is no hierarchical authorization dependency that would break atomic operations because each document's access is determined by its own path and the authenticated user's ID. If future requirements include sharing presets between users, denormalization would be applied by adding an `ownerId` field and potentially a `sharedWith` map directly to the `Preset` document, or moving shared presets to a dedicated `/communityPresets` top-level collection with explicit `ownerId` and `members` fields. However, for the current scope, personal ownership is implied.\n\n**QAPs (Rules are not Filters):**\nSecure `list` operations are inherently supported by this structure. When a user queries `users/{userId}/presets`, the security rules can be written to only allow `list` if `request.auth.uid == userId`. This ensures that a user can only list their own presets, and the Firestore query itself is automatically constrained by the path, preventing rules from acting as inefficient filters. Similarly, for global, static collections like `/ampModels`, `/cabinetModels`, `/categories`, and `/sysExMappings`, a simple `allow read: if true;` rule (or `allow read;` for publicly readable data) ensures all users can efficiently list and retrieve this information without any authorization filtering logic required in the rules.\n\n**Structural Segregation:**\nData is segregated based on its security posture. Global, static, and read-only data (e.g., `AmpModel`, `CabinetModel`, `Category`, `SysExMapping`) resides in top-level collections accessible to all authenticated users. Private, user-owned data (`Preset`, `Tag`, `Setlist`, `SysExCommandLog`, `AppSettings`) is strictly confined within `users/{userId}/` subcollections. This clear separation makes security rules significantly easier to write and maintain, as each collection has a homogeneous access pattern."
+  }
+}

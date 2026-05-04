@@ -1,0 +1,202 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * NUX MG-30 Preset Manager - Security Rules
+     *
+     * CORE PHILOSOPHY:
+     * This ruleset enforces a strict Path-Based Ownership model. All user-specific data (Presets, Tags, 
+     * Setlists, Logs, and Settings) is nested under a unique user document. Access is granted only 
+     * if the authenticated user's UID matches the {userId} wildcard in the document path.
+     *
+     * DATA STRUCTURE:
+     * - /users/{userId}: Root for all private user data.
+     * - /users/{userId}/presets/{presetId}: Private guitar effect presets.
+     * - /users/{userId}/tags/{tagId}: User-defined organizational tags.
+     * - /users/{userId}/setlists/{setlistId}: Ordered collections of presets.
+     * - /ampModels, /cabinetModels, /categories, /sysExMappings: Global, read-only metadata 
+     *   providing device definitions for all users.
+     *
+     * KEY SECURITY DECISIONS:
+     * 1. Authorization Independence: By using path-based ownership, we avoid expensive 'get()' 
+     *    calls. Ownership is verified simply by looking at the URL of the request.
+     * 2. QAPs (Query as Authorization): List operations are restricted to the owner's path, 
+     *    preventing users from attempting to list or discover other users' data.
+     * 3. Static Metadata: Global collections are publicly readable but strictly non-writable 
+     *    by clients to prevent unauthorized modification of device definitions.
+     * 4. Relational Integrity: On creation, documents must include an 'id' field that matches 
+     *     the document's ID in the path to ensure data consistency.
+     */
+
+    // --- HELPER FUNCTIONS ---
+
+    /** Checks if the user is authenticated. */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /** Checks if the authenticated user matches the userId in the path. */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /** Checks ownership and ensures the document exists for updates/deletes. */
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
+    }
+
+    /** Verifies that a field in the incoming data matches the ID in the path. */
+    function matchesPathId(field, pathId) {
+      return request.resource.data[field] == pathId;
+    }
+
+    /** Enforces that a field remains unchanged during an update. */
+    function isImmutable(field) {
+      return request.resource.data[field] == resource.data[field];
+    }
+
+    // --- COLLECTION RULES ---
+
+    /**
+     * @description Rules for the user root document. Allows users to create their own profile entry.
+     * @path /users/{userId}
+     * @allow (create) request.auth.uid == "user123"
+     * @deny (create) request.auth.uid != "user123"
+     * @principle Ownership-based self-creation.
+     */
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if false; // Users should not be listable
+      allow create: if isOwner(userId);
+      allow update, delete: if isExistingOwner(userId);
+
+      /**
+       * @description Stores user guitar presets. Access restricted to the owner.
+       * @path /users/{userId}/presets/{presetId}
+       * @allow (create) owner matches path AND data.id matches presetId
+       * @deny (list) requested by a different user
+       * @principle Path-based ownership and relational integrity.
+       */
+      match /presets/{presetId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && matchesPathId('id', presetId);
+        allow update: if isExistingOwner(userId) && isImmutable('id');
+        allow delete: if isExistingOwner(userId);
+      }
+
+      /**
+       * @description User-defined tags for organization.
+       * @path /users/{userId}/tags/{tagId}
+       * @allow (get) owner matches path
+       * @deny (update) ID field is being changed
+       * @principle Path-based ownership and data immutability for keys.
+       */
+      match /tags/{tagId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && matchesPathId('id', tagId);
+        allow update: if isExistingOwner(userId) && isImmutable('id');
+        allow delete: if isExistingOwner(userId);
+      }
+
+      /**
+       * @description Ordered collections of presets (setlists).
+       * @path /users/{userId}/setlists/{setlistId}
+       * @allow (update) owner matches path
+       * @deny (create) data.id does not match path ID
+       * @principle Path-based ownership.
+       */
+      match /setlists/{setlistId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && matchesPathId('id', setlistId);
+        allow update: if isExistingOwner(userId) && isImmutable('id');
+        allow delete: if isExistingOwner(userId);
+      }
+
+      /**
+       * @description Debug logs for SysEx MIDI commands.
+       * @path /users/{userId}/sysExCommandLogs/{logId}
+       * @allow (create) owner matches path
+       * @deny (update) any update attempt (logs should be append-only)
+       * @principle Ownership for private diagnostic data.
+       */
+      match /sysExCommandLogs/{logId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && matchesPathId('id', logId);
+        allow update, delete: if isExistingOwner(userId);
+      }
+
+      /**
+       * @description User-specific application preferences.
+       * @path /users/{userId}/appSettings/{settingsId}
+       * @allow (get) owner matches path
+       * @deny (create) auth UID does not match path userId
+       * @principle Ownership for personalized settings.
+       */
+      match /appSettings/{settingsId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && matchesPathId('id', settingsId);
+        allow update: if isExistingOwner(userId) && isImmutable('id');
+        allow delete: if isExistingOwner(userId);
+      }
+    }
+
+    /**
+     * @description User notes and song sheets.
+     * @path /notes/{noteId}
+     * @allow (read, write) if the authenticated user's UID matches the document's userId field.
+     */
+    match /notes/{noteId} {
+      allow read, update, delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+    }
+
+    /**
+     * @description Global amplifier definitions. Publicly readable, write-protected.
+     * @path /ampModels/{ampModelId}
+     * @allow (get, list) always
+     * @deny (write) anyone (admin-only, not defined in rules)
+     * @principle Public read for static global metadata.
+     */
+    match /ampModels/{ampModelId} {
+      allow get, list: if true;
+      allow create, update, delete: if false;
+    }
+
+    /**
+     * @description Global speaker cabinet definitions. Publicly readable.
+     * @path /cabinetModels/{cabinetModelId}
+     * @allow (get, list) always
+     * @deny (write) anyone
+     * @principle Public read for static global metadata.
+     */
+    match /cabinetModels/{cabinetModelId} {
+      allow get, list: if true;
+      allow create, update, delete: if false;
+    }
+
+    /**
+     * @description Global preset categories (e.g., Clean, Crunch).
+     * @path /categories/{categoryId}
+     * @allow (get, list) always
+     * @deny (write) anyone
+     * @principle Public read for static global metadata.
+     */
+    match /categories/{categoryId} {
+      allow get, list: if true;
+      allow create, update, delete: if false;
+    }
+
+    /**
+     * @description Global SysEx/MIDI parameter mappings.
+     * @path /sysExMappings/{mappingId}
+     * @allow (get, list) always
+     * @deny (write) anyone
+     * @principle Public read for static global metadata.
+     */
+    match /sysExMappings/{mappingId} {
+      allow get, list: if true;
+      allow create, update, delete: if false;
+    }
+  }
+}

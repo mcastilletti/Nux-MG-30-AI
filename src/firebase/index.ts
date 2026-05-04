@@ -3,7 +3,7 @@
 import { firebaseConfig } from '@/firebase/config';
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore'
+import { getFirestore, enableMultiTabIndexedDbPersistence } from 'firebase/firestore'
 
 // IMPORTANT: DO NOT MODIFY THIS FUNCTION
 export function initializeFirebase() {
@@ -33,11 +33,20 @@ export function initializeFirebase() {
 }
 
 export function getSdks(firebaseApp: FirebaseApp) {
+  const db = getFirestore(firebaseApp);
   return {
     firebaseApp,
     auth: getAuth(firebaseApp),
-    firestore: getFirestore(firebaseApp)
+    firestore: db
   };
+}
+
+// Enable persistence only on the client
+if (typeof window !== 'undefined') {
+  const { firestore } = initializeFirebase();
+  enableMultiTabIndexedDbPersistence(firestore).catch((err) => {
+    console.warn('Firestore persistence failed:', err.code);
+  });
 }
 
 export * from './provider';

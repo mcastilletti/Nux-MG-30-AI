@@ -17,9 +17,344 @@ import { cn } from '@/lib/utils';
 import { MG30_MODELS } from '@/lib/mg30-data';
 import { generateMG30Preset, MG30PresetOutput } from '@/ai/flows/mg30-preset-gen';
 import { useToast } from '@/hooks/use-toast';
+import { Preset } from '@/types/preset';
+
+function applyJsonToPreset(preset: Preset, json: any): { updatedPreset: Preset; appliedCount: number } {
+  let appliedCount = 0;
+
+  // Clone the preset to avoid direct mutations
+  const newPreset = JSON.parse(JSON.stringify(preset));
+
+  // Synonym mapping for common parameter names
+  const PARAM_SYNONYMS: Record<string, string[]> = {
+    'level': ['echo', 'mix', 'intensity', 'level', 'volume', 'vol', 'effect level'],
+    'time': ['time', 'repeat', 'speed', 'rate', 'position', 'delay time'],
+    'feedback': ['feedback', 'repeat', 'decay', 'fback'],
+    'threshold': ['threshold', 'sensitivity', 'sens'],
+    'middle': ['mid', 'middle'],
+    'treble': ['treble', 'treb'],
+    'presence': ['presence', 'pres'],
+    'drive': ['drive', 'drv', 'gain'],
+    'distortion': ['distortion', 'dist', 'drive', 'gain'],
+  };
+
+  const BLOCK_MAP: Record<string, string> = {
+    'gate': 'noise-gate',
+    'ng': 'noise-gate',
+    'noise-gate': 'noise-gate',
+    'efx': 'efx',
+    'wah': 'wah',
+    'amp': 'amp',
+    'ir': 'ir',
+    'mod': 'modulation',
+    'modulation': 'modulation',
+    'dly': 'delay',
+    'delay': 'delay',
+    'rvb': 'reverb',
+    'reverb': 'reverb',
+    'vol': 'vol',
+    'eq': 'eq'
+  };
+
+  // Robust value parser to handle strings like "CC 55, Value 35" or just "35"
+  const parseParamValue = (val: any): number | null => {
+    if (typeof val === 'number') return val;
+    if (typeof val === 'boolean') return val ? 1 : 0;
+    if (typeof val === 'string') {
+      const valueMatch = val.match(/(?:value|valore)\s*:?\s*(\d+(\.\d+)?)/i);
+      if (valueMatch) {
+        return Number(valueMatch[1]);
+      }
+      const num = Number(val);
+      if (!isNaN(num)) return num;
+
+      const numbers = val.match(/\d+(\.\d+)?/g);
+      if (numbers && numbers.length > 0) {
+        return Number(numbers[numbers.length - 1]);
+      }
+    }
+    return null;
+  };
+
+  const findModel = (effectType: string, modelName: string) => {
+    const models = MG30_MODELS[effectType as any] || [];
+    const cleanName = modelName.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+    let found = models.find(m => m.id.toLowerCase() === cleanName);
+    if (found) return found;
+
+    found = models.find(m =>
+      m.name.toLowerCase().replace(/[^a-z0-9]/g, '') === cleanName ||
+      m.fullName.toLowerCase().replace(/[^a-z0-9]/g, '') === cleanName
+    );
+    if (found) return found;
+
+    found = models.find(m =>
+      m.name.toLowerCase().includes(modelName.toLowerCase()) ||
+      m.fullName.toLowerCase().includes(modelName.toLowerCase()) ||
+      modelName.toLowerCase().includes(m.name.toLowerCase())
+    );
+    return found;
+  };
+
+  // Helper to update a parameter in a specific effect
+  const setParam = (effect: any, paramName: string, val: any) => {
+    let targetKey = Object.keys(effect.parameters || {}).find(
+      k => k.toLowerCase() === paramName.toLowerCase() ||
+        k.toLowerCase().replace(/[-_]/g, '') === paramName.toLowerCase().replace(/[-_]/g, '')
+    );
+
+    if (targetKey === undefined) {
+      const synonyms = PARAM_SYNONYMS[paramName.toLowerCase()];
+      if (synonyms) {
+        targetKey = Object.keys(effect.parameters || {}).find(
+          pk => synonyms.includes(pk.toLowerCase())
+        );
+      }
+    }
+
+    if (targetKey !== undefined) {
+      const parsedVal = parseParamValue(val);
+      if (parsedVal !== null) {
+        effect.parameters[targetKey] = parsedVal;
+        appliedCount++;
+      }
+    }
+  };
+
+  // Helper to handle a single effect object block
+  const mergeEffectBlock = (effect: any, blockData: any) => {
+    if (typeof blockData !== 'object' || blockData === null) return;
+
+    // Status/Enabled
+    if (blockData.hasOwnProperty('status') || blockData.hasOwnProperty('Status') || blockData.hasOwnProperty('enabled') || blockData.hasOwnProperty('Enabled')) {
+      const val = blockData.status ?? blockData.Status ?? blockData.enabled ?? blockData.Enabled;
+      if (typeof val === 'boolean') {
+        effect.enabled = val;
+        appliedCount++;
+      } else if (typeof val === 'string') {
+        const upperVal = val.toUpperCase();
+        effect.enabled = upperVal === 'ON' || upperVal === 'TRUE' || upperVal === '1' || upperVal.includes('ON');
+        appliedCount++;
+      }
+    }
+
+    // Model Selection
+    if (blockData.hasOwnProperty('model') || blockData.hasOwnProperty('Model')) {
+      const val = blockData.model ?? blockData.Model;
+      if (typeof val === 'string' && val.toUpperCase() !== 'BYPASS') {
+        const matchedModel = findModel(effect.type, val);
+        if (matchedModel) {
+          effect.model = matchedModel.id;
+          appliedCount++;
+
+          // Populate default parameters when changing model
+          const defaultParams: Record<string, number | string> = {};
+          matchedModel.parameters.forEach((p: any) => {
+            defaultParams[p.id.toLowerCase()] = p.default;
+          });
+          effect.parameters = { ...defaultParams };
+        }
+      } else if (typeof val === 'string' && val.toUpperCase() === 'BYPASS') {
+        effect.enabled = false;
+        appliedCount++;
+      }
+    }
+
+    // Process nested parameters
+    const params = blockData.params ?? blockData.Params ?? blockData.parameters ?? blockData.Parameters;
+    if (typeof params === 'object' && params !== null) {
+      Object.keys(params).forEach(k => {
+        setParam(effect, k, params[k]);
+      });
+    }
+
+    // Process flat parameters
+    Object.keys(blockData).forEach(k => {
+      const lowerK = k.toLowerCase();
+      if (lowerK !== 'enabled' && lowerK !== 'model' && lowerK !== 'parameters' && lowerK !== 'params' && lowerK !== 'id' && lowerK !== 'type' && lowerK !== 'status') {
+        setParam(effect, k, blockData[k]);
+      }
+    });
+  };
+
+  // Main JSON processing
+  if (json && typeof json === 'object') {
+    // 1. Preset Name
+    if (json.preset_goal) {
+      newPreset.name = json.preset_goal;
+      appliedCount++;
+    } else if (json.name) {
+      newPreset.name = json.name;
+      appliedCount++;
+    }
+
+    // 2. Signal Chain
+    const signalChain = json.signal_chain ?? json.SignalChain;
+    if (signalChain && typeof signalChain === 'object') {
+      Object.keys(signalChain).forEach(key => {
+        const mappedType = BLOCK_MAP[key.toLowerCase()];
+        if (mappedType) {
+          const effect = newPreset.effects.find((e: any) => e.type === mappedType);
+          if (effect) {
+            mergeEffectBlock(effect, signalChain[key]);
+          }
+        }
+      });
+    }
+
+    // 3. MIDI Data/Instructions Fallback (if they provided flat parameter list inside midi_data)
+    let midiParams: any = null;
+    if (json.midi_data?.instructions?.CC_Parameters) {
+      midiParams = json.midi_data.instructions.CC_Parameters;
+    } else if (json.midi_data?.instructions?.CC_Blocks) {
+      midiParams = { ...midiParams, ...json.midi_data.instructions.CC_Blocks };
+    }
+
+    if (midiParams && typeof midiParams === 'object') {
+      Object.keys(midiParams).forEach(k => {
+        let matchedPrefixedParam = false;
+        const lowerKey = k.toLowerCase();
+
+        newPreset.effects.forEach((e: any) => {
+          const idPref = e.id.toLowerCase() + '_';
+          const typePref = e.type.toLowerCase() + '_';
+          const idPrefDash = e.id.toLowerCase() + '-';
+          const typePrefDash = e.type.toLowerCase() + '-';
+
+          let paramPart = '';
+          if (lowerKey.startsWith(idPref)) {
+            paramPart = k.substring(idPref.length);
+          } else if (lowerKey.startsWith(typePref)) {
+            paramPart = k.substring(typePref.length);
+          } else if (lowerKey.startsWith(idPrefDash)) {
+            paramPart = k.substring(idPrefDash.length);
+          } else if (lowerKey.startsWith(typePrefDash)) {
+            paramPart = k.substring(typePrefDash.length);
+          }
+
+          if (paramPart) {
+            let targetKey = Object.keys(e.parameters || {}).find(
+              pk => pk.toLowerCase() === paramPart.toLowerCase() ||
+                pk.toLowerCase().replace(/[-_]/g, '') === paramPart.toLowerCase().replace(/[-_]/g, '')
+            );
+
+            if (targetKey === undefined) {
+              const synonyms = PARAM_SYNONYMS[paramPart.toLowerCase()];
+              if (synonyms) {
+                targetKey = Object.keys(e.parameters || {}).find(
+                  pk => synonyms.includes(pk.toLowerCase())
+                );
+              }
+            }
+
+            if (targetKey !== undefined) {
+              const parsedVal = parseParamValue(midiParams[k]);
+              if (parsedVal !== null) {
+                e.parameters[targetKey] = parsedVal;
+                appliedCount++;
+                matchedPrefixedParam = true;
+              }
+            }
+          }
+        });
+
+        if (!matchedPrefixedParam) {
+          newPreset.effects.forEach((e: any) => {
+            setParam(e, k, midiParams[k]);
+          });
+        }
+      });
+    }
+
+    // 4. Fallback: Array format, or nested format (if signal chain is not present)
+    if (!signalChain && !midiParams) {
+      if (Array.isArray(json)) {
+        json.forEach(item => {
+          if (typeof item === 'object' && item !== null) {
+            const effect = newPreset.effects.find(
+              (e: any) => (item.id && e.id === item.id) || (item.type && e.type === item.type)
+            );
+            if (effect) {
+              mergeEffectBlock(effect, item);
+            }
+          }
+        });
+      } else {
+        let hasBlockKeys = false;
+        newPreset.effects.forEach((e: any) => {
+          if (json.hasOwnProperty(e.id) || json.hasOwnProperty(e.type)) {
+            hasBlockKeys = true;
+            const blockData = json[e.id] ?? json[e.type];
+            mergeEffectBlock(e, blockData);
+          }
+        });
+
+        if (!hasBlockKeys) {
+          Object.keys(json).forEach(k => {
+            let matchedPrefixedParam = false;
+            const lowerKey = k.toLowerCase();
+
+            newPreset.effects.forEach((e: any) => {
+              const idPref = e.id.toLowerCase() + '_';
+              const typePref = e.type.toLowerCase() + '_';
+              const idPrefDash = e.id.toLowerCase() + '-';
+              const typePrefDash = e.type.toLowerCase() + '-';
+
+              let paramPart = '';
+              if (lowerKey.startsWith(idPref)) {
+                paramPart = k.substring(idPref.length);
+              } else if (lowerKey.startsWith(typePref)) {
+                paramPart = k.substring(typePref.length);
+              } else if (lowerKey.startsWith(idPrefDash)) {
+                paramPart = k.substring(idPrefDash.length);
+              } else if (lowerKey.startsWith(typePrefDash)) {
+                paramPart = k.substring(typePrefDash.length);
+              }
+
+              if (paramPart) {
+                let targetKey = Object.keys(e.parameters || {}).find(
+                  pk => pk.toLowerCase() === paramPart.toLowerCase() ||
+                    pk.toLowerCase().replace(/[-_]/g, '') === paramPart.toLowerCase().replace(/[-_]/g, '')
+                );
+
+                if (targetKey === undefined) {
+                  const synonyms = PARAM_SYNONYMS[paramPart.toLowerCase()];
+                  if (synonyms) {
+                    targetKey = Object.keys(e.parameters || {}).find(
+                      pk => synonyms.includes(pk.toLowerCase())
+                    );
+                  }
+                }
+
+                if (targetKey !== undefined) {
+                  const parsedVal = parseParamValue(json[k]);
+                  if (parsedVal !== null) {
+                    e.parameters[targetKey] = parsedVal;
+                    appliedCount++;
+                    matchedPrefixedParam = true;
+                  }
+                }
+              }
+            });
+
+            if (!matchedPrefixedParam) {
+              newPreset.effects.forEach((e: any) => {
+                setParam(e, k, json[k]);
+              });
+            }
+          });
+        }
+      }
+    }
+  }
+
+  newPreset.lastModified = new Date();
+  return { updatedPreset: newPreset, appliedCount };
+}
 
 const getBlockColorVar = (type: string) => {
-  switch(type) {
+  switch (type) {
     case 'wah': return '300 100% 75%';
     case 'noise-gate': return '70 100% 50%';
     case 'compressor': return '60 100% 50%';
@@ -46,14 +381,14 @@ export default function EditorPage() {
   const { activePreset, updateParameter, updateModel, updateScene, toggleEffect, undo, redo, setActivePreset } = usePresetStore();
   const { status, sendProgramChange, sendKnobParameter, sendModelChange, sendSceneChange, toggleBlock, enterBlockEditor, exitBlockEditor, isEditorSyncing, syncActivePreset, syncFullPreset } = useMidiStore();
   const { toast } = useToast();
-  
+
   const [selectedBlockId, setSelectedBlockId] = useState<string>('amp');
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   const [aiPrompt, setAiPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [proposedPreset, setProposedPreset] = useState<MG30PresetOutput | null>(null);
 
-  const selectedEffect = useMemo(() => 
+  const selectedEffect = useMemo(() =>
     activePreset.effects.find(e => e.id === selectedBlockId),
     [activePreset.effects, selectedBlockId]
   );
@@ -116,20 +451,58 @@ export default function EditorPage() {
   const handleSave = () => {
     if (status === 'connected') {
       syncFullPreset(activePreset);
-      toast({ 
-        title: "Hardware Save", 
-        description: `Salvataggio di '${activePreset.name}' in corso...` 
+      toast({
+        title: "Hardware Save",
+        description: `Salvataggio di '${activePreset.name}' in corso...`
       });
     } else {
-      toast({ 
-        title: "Local Save", 
-        description: "Pedaliera non connessa. Preset aggiornato localmente." 
+      toast({
+        title: "Local Save",
+        description: "Pedaliera non connessa. Preset aggiornato localmente."
       });
     }
   };
 
   const handleAiModeGenerate = async () => {
-    if (!aiPrompt.trim()) return;
+    const trimmedPrompt = aiPrompt.trim();
+    if (!trimmedPrompt) return;
+
+    // Controlla se l'input inizia con { o [ (indicando che l'utente vuole inserire un JSON)
+    const isJsonStyle = trimmedPrompt.startsWith('{') || trimmedPrompt.startsWith('[');
+    if (isJsonStyle) {
+      try {
+        const parsedJson = JSON.parse(trimmedPrompt);
+        // Applica i parametri JSON al preset attivo
+        const { updatedPreset, appliedCount } = applyJsonToPreset(activePreset, parsedJson);
+
+        if (appliedCount > 0) {
+          setActivePreset(updatedPreset);
+          toast({
+            title: "Parametri JSON Applicati",
+            description: `Applicati con successo ${appliedCount} parametri/configurazioni. Clicca SAVE per sincronizzare la pedaliera.`,
+          });
+          setIsAiModalOpen(false);
+          setAiPrompt('');
+          return;
+        } else {
+          toast({
+            title: "JSON Valido ma Nessun Parametro Corrispondente",
+            description: "Il JSON è valido ma non contiene parametri o moduli validi per MG-30.",
+            variant: "destructive"
+          });
+          return;
+        }
+      } catch (err: any) {
+        toast({
+          title: "Errore nel JSON",
+          description: "La stringa inserita inizia come un JSON ma contiene errori di sintassi: " + err.message,
+          variant: "destructive"
+        });
+        return;
+      }
+    }
+
+    // Altrimenti, procedi con la generazione tramite Intelligenza Artificiale
     setIsGenerating(true);
     setProposedPreset(null);
     try {
@@ -137,10 +510,10 @@ export default function EditorPage() {
       setProposedPreset(result);
     } catch (error: any) {
       const isRateLimit = error.message?.includes('429') || error.message?.toLowerCase().includes('rate');
-      toast({ 
-        title: isRateLimit ? "Limite AI raggiunto" : "Errore AI", 
-        description: isRateLimit ? "Attendi un minuto prima di generare un altro suono." : error.message, 
-        variant: "destructive" 
+      toast({
+        title: isRateLimit ? "Limite AI raggiunto" : "Errore AI",
+        description: isRateLimit ? "Attendi un minuto prima di generare un altro suono." : error.message,
+        variant: "destructive"
       });
     } finally {
       setIsGenerating(false);
@@ -149,10 +522,10 @@ export default function EditorPage() {
 
   const applyProposedPreset = () => {
     if (!proposedPreset) return;
-    
+
     const updatedEffects = activePreset.effects.map(effect => {
       const propEffect = proposedPreset.effects.find(pe => pe.type === effect.type);
-      
+
       if (propEffect) {
         const paramRecord: Record<string, number> = {};
         if (propEffect.parameters) {
@@ -179,12 +552,12 @@ export default function EditorPage() {
     };
 
     setActivePreset(newPreset);
-    
-    toast({ 
-      title: "AI Tone Applied", 
-      description: `Il preset '${proposedPreset.name}' è pronto. Clicca SAVE per sincronizzare la pedaliera.` 
+
+    toast({
+      title: "AI Tone Applied",
+      description: `Il preset '${proposedPreset.name}' è pronto. Clicca SAVE per sincronizzare la pedaliera.`
     });
-    
+
     setProposedPreset(null);
     setIsAiModalOpen(false);
     setAiPrompt('');
@@ -225,26 +598,26 @@ export default function EditorPage() {
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-             {/* Scene Selector */}
-             <div className="flex items-center gap-1 bg-secondary/30 p-1 rounded-lg border border-border">
-                <div className="px-2 text-[10px] font-black uppercase text-muted-foreground flex items-center gap-1"><Layers className="w-3 h-3" /> Scenes</div>
-                {[0, 1, 2].map((idx) => (
-                  <Button 
-                    key={`scene-btn-${idx}`}
-                    variant={activePreset.activeScene === idx ? 'default' : 'ghost'}
-                    size="sm"
-                    onClick={() => handleSceneChange(idx)}
-                    className={cn(
-                      "h-8 w-10 font-bold transition-all",
-                      activePreset.activeScene === idx ? "bg-primary shadow-lg scale-105" : "text-muted-foreground"
-                    )}
-                  >
-                    {idx + 1}
-                  </Button>
-                ))}
-             </div>
+            {/* Scene Selector */}
+            <div className="flex items-center gap-1 bg-secondary/30 p-1 rounded-lg border border-border">
+              <div className="px-2 text-[10px] font-black uppercase text-muted-foreground flex items-center gap-1"><Layers className="w-3 h-3" /> Scenes</div>
+              {[0, 1, 2].map((idx) => (
+                <Button
+                  key={`scene-btn-${idx}`}
+                  variant={activePreset.activeScene === idx ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => handleSceneChange(idx)}
+                  className={cn(
+                    "h-8 w-10 font-bold transition-all",
+                    activePreset.activeScene === idx ? "bg-primary shadow-lg scale-105" : "text-muted-foreground"
+                  )}
+                >
+                  {idx + 1}
+                </Button>
+              ))}
+            </div>
 
-             <div className="hidden sm:block w-[1px] h-8 bg-border mx-1" />
+            <div className="hidden sm:block w-[1px] h-8 bg-border mx-1" />
 
             <div className="flex items-center gap-2">
               <Dialog open={isAiModalOpen} onOpenChange={setIsAiModalOpen}>
@@ -258,14 +631,15 @@ export default function EditorPage() {
                     <>
                       <DialogHeader>
                         <DialogTitle className="flex items-center gap-2"><Sparkles className="w-5 h-5 text-primary" /> AI Tone Designer</DialogTitle>
-                        <DialogDescription>Descrivi il suono desiderato. L'AI configurerà modelli e parametri hardware.</DialogDescription>
+                        <DialogDescription>Descrivi il suono desiderato o incolla un JSON con i parametri per aggiornare direttamente il preset.</DialogDescription>
                       </DialogHeader>
                       <div className="space-y-4 py-4">
-                        <Textarea 
-                          placeholder="Es: Suono Gilmour anni '70 con molto delay e un ampli clean..." 
-                          value={aiPrompt} 
-                          onChange={(e) => setAiPrompt(e.target.value)} 
-                          className="min-h-[150px] bg-secondary/20"
+                        <Textarea
+                          placeholder={`Es. per prompt AI: Suono Gilmour anni '70 con molto delay...
+Es. per JSON: { "amp": { "gain": 60, "master": 80 }, "delay": { "enabled": true } }`}
+                          value={aiPrompt}
+                          onChange={(e) => setAiPrompt(e.target.value)}
+                          className="min-h-[150px] bg-secondary/20 font-mono text-sm"
                         />
                       </div>
                       <DialogFooter>
@@ -305,8 +679,8 @@ export default function EditorPage() {
 
         <Card className="border-border bg-background/50 overflow-hidden shadow-lg">
           <CardHeader className="py-3 border-b border-border bg-secondary/20 flex flex-row items-center justify-between">
-             <CardTitle className="text-xs uppercase tracking-widest text-muted-foreground flex items-center gap-2"><LayoutGrid className="w-3 h-3" /> Signal Chain</CardTitle>
-             <Button variant="ghost" size="sm" className="h-6 text-[9px] uppercase font-bold gap-2" onClick={exitBlockEditor}><X className="w-3 h-3" /> Close Editor</Button>
+            <CardTitle className="text-xs uppercase tracking-widest text-muted-foreground flex items-center gap-2"><LayoutGrid className="w-3 h-3" /> Signal Chain</CardTitle>
+            <Button variant="ghost" size="sm" className="h-6 text-[9px] uppercase font-bold gap-2" onClick={exitBlockEditor}><X className="w-3 h-3" /> Close Editor</Button>
           </CardHeader>
           <CardContent className="py-8">
             <div className="flex items-center justify-between max-w-6xl mx-auto overflow-x-auto gap-4 pb-2 px-4">
@@ -315,7 +689,7 @@ export default function EditorPage() {
                 const blockColor = getBlockColorVar(effect.type);
                 return (
                   <React.Fragment key={effect.id}>
-                    <div 
+                    <div
                       onClick={() => handleSelectBlock(effect.id, effect.type)}
                       className={cn(
                         "relative cursor-pointer w-24 flex flex-col items-center gap-2 p-3 rounded-lg border-2 transition-all flex-shrink-0 select-none",
@@ -325,7 +699,7 @@ export default function EditorPage() {
                       )}
                       style={{ borderColor: isSelected ? `hsl(${blockColor})` : '' }}
                     >
-                      <div 
+                      <div
                         onClick={(e) => handleToggleBlock(e, effect.id, effect.type, effect.enabled)}
                         className="w-10 h-10 rounded-md flex items-center justify-center mb-1 bg-background/60 border border-border/50 hover:bg-background/80 transition-colors"
                       >
@@ -344,37 +718,37 @@ export default function EditorPage() {
         </Card>
 
         {selectedEffect && (
-          <Card 
-            className="shadow-xl" 
+          <Card
+            className="shadow-xl"
             style={{ borderColor: `hsla(${getBlockColorVar(selectedEffect.type)}, 0.3)` }}
           >
-              <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-border/50 gap-4">
-                <div className="flex items-center gap-4">
-                  <Settings2 className="w-5 h-5" style={{ color: `hsl(${getBlockColorVar(selectedEffect.type)})` }} />
-                  <CardTitle className="text-lg uppercase" style={{ color: `hsl(${getBlockColorVar(selectedEffect.type)})` }}>
-                    {selectedEffect?.type} <Badge variant="outline" className="text-[10px] ml-2">{selectedEffect?.model}</Badge>
-                  </CardTitle>
+            <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-border/50 gap-4">
+              <div className="flex items-center gap-4">
+                <Settings2 className="w-5 h-5" style={{ color: `hsl(${getBlockColorVar(selectedEffect.type)})` }} />
+                <CardTitle className="text-lg uppercase" style={{ color: `hsl(${getBlockColorVar(selectedEffect.type)})` }}>
+                  {selectedEffect?.type} <Badge variant="outline" className="text-[10px] ml-2">{selectedEffect?.model}</Badge>
+                </CardTitle>
+              </div>
+              <div className="flex items-center gap-4">
+                <Select value={selectedEffect?.model} onValueChange={(val) => handleModelChange(selectedEffect!.id, selectedEffect!.type, val)}>
+                  <SelectTrigger className="w-[200px]"><SelectValue placeholder="Model" /></SelectTrigger>
+                  <SelectContent>{availableModels.map(m => <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>)}</SelectContent>
+                </Select>
+                <Switch checked={selectedEffect?.enabled} onCheckedChange={() => handleToggleBlock({ stopPropagation: () => { } } as any, selectedEffect!.id, selectedEffect!.type, selectedEffect!.enabled)} />
+              </div>
+            </CardHeader>
+            <CardContent className="p-10">
+              {currentModelData && (
+                <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-y-12 gap-x-8 justify-items-center">
+                  {currentModelData.parameters.map((param, index) => (
+                    <div key={param.id}>
+                      <RotaryKnob label={param.name} value={Number(selectedEffect.parameters[param.id.toLowerCase()] ?? param.default)} min={param.min} max={param.max} step={param.step} onChange={(v) => handleParamChange(selectedEffect.type, param.id, v, index)} color={currentBlockColor} />
+                    </div>
+                  ))}
                 </div>
-                <div className="flex items-center gap-4">
-                  <Select value={selectedEffect?.model} onValueChange={(val) => handleModelChange(selectedEffect!.id, selectedEffect!.type, val)}>
-                    <SelectTrigger className="w-[200px]"><SelectValue placeholder="Model" /></SelectTrigger>
-                    <SelectContent>{availableModels.map(m => <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>)}</SelectContent>
-                  </Select>
-                  <Switch checked={selectedEffect?.enabled} onCheckedChange={() => handleToggleBlock({ stopPropagation: () => {} } as any, selectedEffect!.id, selectedEffect!.type, selectedEffect!.enabled)} />
-                </div>
-              </CardHeader>
-              <CardContent className="p-10">
-                {currentModelData && (
-                  <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-y-12 gap-x-8 justify-items-center">
-                    {currentModelData.parameters.map((param, index) => (
-                      <div key={param.id}>
-                        <RotaryKnob label={param.name} value={Number(selectedEffect.parameters[param.id.toLowerCase()] ?? param.default)} min={param.min} max={param.max} step={param.step} onChange={(v) => handleParamChange(selectedEffect.type, param.id, v, index)} color={currentBlockColor} />
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+              )}
+            </CardContent>
+          </Card>
         )}
       </div>
     </AppShell>

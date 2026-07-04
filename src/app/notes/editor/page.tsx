@@ -77,7 +77,6 @@ function NoteEditorContent() {
   const { user, loading: userLoading } = useUser();
   
   const [savedNotes, setSavedNotes] = useState<SavedNote[]>([]);
-  const [localNotes, setLocalNotes] = useState<SavedNote[]>([]);
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(noteIdFromUrl);
   
   const [title, setTitle] = useState('');
@@ -111,28 +110,7 @@ function NoteEditorContent() {
   }, [noteIdFromUrl]);
 
   useEffect(() => {
-    const stored = localStorage.getItem('mg30_studio_notes');
-    let localParsed: SavedNote[] = [];
-    if (stored) {
-      try {
-        localParsed = JSON.parse(stored);
-        setLocalNotes(localParsed);
-      } catch (e) {
-        console.error(e);
-      }
-    }
-
-    if (userLoading) return;
-
-    const isMockUser = user?.uid === 'dev-user-123';
-    if (!user || isMockUser) {
-      setSavedNotes(localParsed);
-      if (noteIdFromUrl) {
-        const note = localParsed.find(n => n.id === noteIdFromUrl);
-        if (note) loadNote(note);
-      }
-      return;
-    }
+    if (userLoading || !user) return;
 
     const q = query(collection(firestore, "notes"), where("userId", "==", user.uid));
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -189,8 +167,6 @@ function NoteEditorContent() {
       return;
     }
 
-    const isMockUser = user?.uid === 'dev-user-123';
-    
     let orderToSave = currentOrder;
     if (!selectedNoteId) {
       const sameSetNotes = savedNotes.filter(n => n.band === band && n.setlist === setlist);
@@ -205,36 +181,21 @@ function NoteEditorContent() {
       generalNotes,
       sections,
       order: orderToSave,
-      updatedAt: (user && !isMockUser) ? serverTimestamp() : new Date().toISOString(),
-      userId: user?.uid || 'local-dev-user'
+      updatedAt: serverTimestamp(),
+      userId: user?.uid
     };
 
-    if (user && !isMockUser) {
-      try {
-        if (selectedNoteId && !selectedNoteId.startsWith('local-')) {
-          await updateDoc(doc(firestore, "notes", selectedNoteId), noteData);
-        } else {
-          const docRef = await addDoc(collection(firestore, "notes"), noteData);
-          setSelectedNoteId(docRef.id);
-        }
-        setEditMode(false);
-        toast({ title: "Nota Salvata nel Cloud" });
-      } catch (err) {
-        toast({ title: "Errore salvataggio cloud", variant: "destructive" });
+    try {
+      if (selectedNoteId) {
+        await updateDoc(doc(firestore, "notes", selectedNoteId), noteData);
+      } else {
+        const docRef = await addDoc(collection(firestore, "notes"), noteData);
+        setSelectedNoteId(docRef.id);
       }
-    } else {
-      const id = selectedNoteId || `local-${Date.now()}`;
-      const newNote = { ...noteData, id };
-      const updatedLocalNotes = (selectedNoteId && selectedNoteId.startsWith('local-'))
-        ? localNotes.map(n => n.id === id ? newNote : n)
-        : [...localNotes, newNote];
-      
-      setLocalNotes(updatedLocalNotes);
-      localStorage.setItem('mg30_studio_notes', JSON.stringify(updatedLocalNotes));
-      setSavedNotes(updatedLocalNotes);
-      setSelectedNoteId(id);
       setEditMode(false);
-      toast({ title: "Nota Salvata Localmente" });
+      toast({ title: "Nota Salvata nel Cloud" });
+    } catch (err) {
+      toast({ title: "Errore salvataggio cloud", variant: "destructive" });
     }
   };
 

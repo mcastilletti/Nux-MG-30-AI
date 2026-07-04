@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { NotebookPen, Plus, Trash2, GripVertical, Music2, Layers, ChevronUp, ChevronDown, Printer, Copy, ArrowRight } from 'lucide-react';
 import { useFirebase, useUser } from '@/firebase';
-import { collection, onSnapshot, query, where, doc, deleteDoc, writeBatch, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, getDocs, query, where, doc, deleteDoc, writeBatch, addDoc, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { DndContext, closestCenter, KeyboardSensor, MouseSensor, TouchSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
@@ -16,16 +16,18 @@ import { CSS } from '@dnd-kit/utilities';
 import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { NoteSheet } from '@/components/notes/NoteSheet';
+import { NoteEditorContent } from '@/components/notes/NoteEditorContent';
+import { useNotesCache } from '@/stores/use-notes-cache';
 
-
-interface NoteSection {
+export interface NoteSection {
   id: string;
   type: string;
   text: string;
   chords?: string[];
 }
 
-interface SavedNote {
+export interface SavedNote {
   id: string;
   title: string;
   band: string;
@@ -46,9 +48,9 @@ function NotesLibraryContent() {
   const searchParams = useSearchParams();
   const { toast } = useToast();
   const { firestore } = useFirebase();
-  const { user, loading: userLoading } = useUser();
+  const { user, isUserLoading: userLoading } = useUser();
+  const { notes: cachedNotes, setNotes, isLoading: cacheLoading, updateNote, addNote, deleteNote } = useNotesCache();
   
-  const [savedNotes, setSavedNotes] = useState<SavedNote[]>([]);
   const [selectedBand, setSelectedBand] = useState<string | null>(null);
   const [selectedSetlist, setSelectedSetlist] = useState<string | null>(null);
   const noteRefs = useRef<Record<string, HTMLDivElement>>({});
@@ -60,8 +62,16 @@ function NotesLibraryContent() {
   const [targetSetlist, setTargetSetlist] = useState('');
   const [newSetlistName, setNewSetlistName] = useState('');
 
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
 
   const scrollToId = searchParams.get('scrollTo');
+
+  useEffect(() => {
+    if (scrollToId) {
+      setSelectedNoteId(scrollToId);
+    }
+  }, [scrollToId]);
 
   useEffect(() => {
     const savedBand = localStorage.getItem(FILTER_BAND_KEY);
@@ -85,37 +95,41 @@ function NotesLibraryContent() {
   );
 
   useEffect(() => {
-    if (userLoading) return;
-    const isMockUser = user?.uid === 'dev-user-123';
+    if (userLoading || !user) return;
+
+    // Check if we have cached data that's recent (less than 10 minutes old)
+    const CACHE_TTL = 10 * 60 * 1000; // 10 minutes
+    const now = Date.now();
+    const lastUpdated = useNotesCache.getState().lastUpdated;
     
-    if (!user || isMockUser) {
-      const stored = localStorage.getItem('mg30_studio_notes');
-      if (stored) {
-        try {
-          const notes = JSON.parse(stored);
-          const sorted = notes.sort((a: SavedNote, b: SavedNote) => (a.order ?? 0) - (b.order ?? 0));
-          setSavedNotes(sorted);
-        } catch (e) { console.error(e); }
-      }
+    if (cachedNotes.length > 0 && lastUpdated && (now - lastUpdated) < CACHE_TTL) {
+      // Use cached data
       return;
     }
 
-    const q = query(collection(firestore, "notes"), where("userId", "==", user.uid));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const notes = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() } as SavedNote));
-      const sorted = notes.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-      setSavedNotes(sorted);
-    });
+    // Load from Firestore
+    const loadNotes = async () => {
+      try {
+        const q = query(collection(firestore, "notes"), where("userId", "==", user.uid));
+        const snapshot = await getDocs(q);
+        const notes = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() } as SavedNote));
+        const sorted = notes.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+        setNotes(sorted);
+      } catch (error) {
+        console.error('Error loading notes:', error);
+        toast({ title: "Errore caricamento note", variant: "destructive" });
+      }
+    };
 
-    return () => unsubscribe();
-  }, [user, userLoading, firestore]);
+    loadNotes();
+  }, [user, userLoading, firestore, cachedNotes.length, setNotes]);
 
   const filteredNotes = useMemo(() => {
-    let notesToFilter = [...savedNotes].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+    let notesToFilter = [...cachedNotes].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
     if (selectedBand) notesToFilter = notesToFilter.filter(n => n.band === selectedBand);
     if (selectedSetlist) notesToFilter = notesToFilter.filter(n => n.setlist === selectedSetlist);
     return notesToFilter;
-  }, [savedNotes, selectedBand, selectedSetlist]);
+  }, [cachedNotes, selectedBand, selectedSetlist]);
 
   useEffect(() => {
     if (scrollToId && filteredNotes.length > 0) {
@@ -130,34 +144,28 @@ function NotesLibraryContent() {
   }, [filteredNotes, scrollToId]);
 
   const bands = useMemo(() => {
-    const unique = [...new Set(savedNotes.map(n => n.band || 'Senza Band'))];
+    const unique = [...new Set(cachedNotes.map(n => n.band || 'Senza Band'))];
     return unique.sort();
-  }, [savedNotes]);
+  }, [cachedNotes]);
 
   const setlists = useMemo(() => {
     if (!selectedBand) return [];
-    const unique = [...new Set(savedNotes.filter(n => n.band === selectedBand).map(n => n.setlist || 'Senza Scaletta'))];
+    const unique = [...new Set(cachedNotes.filter(n => n.band === selectedBand).map(n => n.setlist || 'Senza Scaletta'))];
     return unique.sort();
-  }, [savedNotes, selectedBand]);
+  }, [cachedNotes, selectedBand]);
 
   const setlistsForCopy = useMemo(() => {
     if (!targetBand) return [];
-    const unique = [...new Set(savedNotes.filter(n => n.band === targetBand).map(n => n.setlist || 'Senza Scaletta'))];
+    const unique = [...new Set(cachedNotes.filter(n => n.band === targetBand).map(n => n.setlist || 'Senza Scaletta'))];
     return unique.sort();
-  }, [savedNotes, targetBand]);
+  }, [cachedNotes, targetBand]);
 
 
   const handleDelete = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
-    if (id.startsWith('local-')) {
-      const updated = savedNotes.filter(n => n.id !== id);
-      setSavedNotes(updated);
-      localStorage.setItem('mg30_studio_notes', JSON.stringify(updated));
-      toast({ title: "Nota eliminata localmente" });
-      return;
-    }
     try {
       await deleteDoc(doc(firestore, "notes", id));
+      deleteNote(id);
       toast({ title: "Nota eliminata" });
     } catch (err) { toast({ title: "Errore eliminazione", variant: "destructive" }); }
   };
@@ -172,27 +180,20 @@ function NotesLibraryContent() {
     const newIndex = direction === 'up' ? index - 1 : index + 1;
     const newFilteredOrdered = arrayMove(filteredNotes, index, newIndex);
     
-    const updatedNotes = [...savedNotes];
+    const updatedNotes = [...cachedNotes];
     newFilteredOrdered.forEach((note, idx) => {
       const globalIdx = updatedNotes.findIndex(n => n.id === note.id);
       if (globalIdx !== -1) updatedNotes[globalIdx] = { ...updatedNotes[globalIdx], order: idx };
     });
 
     const sortedGlobal = updatedNotes.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-    setSavedNotes(sortedGlobal);
+    setNotes(sortedGlobal);
 
-    const isMockUser = user?.uid === 'dev-user-123';
-    if (user && !isMockUser) {
-      const batch = writeBatch(firestore);
-      newFilteredOrdered.forEach((note, idx) => {
-        if (!note.id.startsWith('local-')) {
-          batch.update(doc(firestore, "notes", note.id), { order: idx });
-        }
-      });
-      await batch.commit();
-    } else {
-      localStorage.setItem('mg30_studio_notes', JSON.stringify(sortedGlobal));
-    }
+    const batch = writeBatch(firestore);
+    newFilteredOrdered.forEach((note, idx) => {
+      batch.update(doc(firestore, "notes", note.id), { order: idx });
+    });
+    await batch.commit();
   };
 
   function handleDragEnd(event: DragEndEvent) {
@@ -202,26 +203,20 @@ function NotesLibraryContent() {
         const overIndex = filteredNotes.findIndex(n => n.id === over.id);
         const newFilteredOrdered = arrayMove(filteredNotes, activeIndex, overIndex);
         
-        const updatedNotes = [...savedNotes];
+        const updatedNotes = [...cachedNotes];
         newFilteredOrdered.forEach((note, index) => {
             const globalIdx = updatedNotes.findIndex(n => n.id === note.id);
             if (globalIdx !== -1) updatedNotes[globalIdx] = { ...updatedNotes[globalIdx], order: index };
         });
 
         const sortedGlobal = updatedNotes.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-        setSavedNotes(sortedGlobal);
+        setNotes(sortedGlobal);
         
-        const isMockUser = user?.uid === 'dev-user-123';
-        if (user && !isMockUser) {
-            const batch = writeBatch(firestore);
-            newFilteredOrdered.forEach((note, index) => {
-                if (note.id.startsWith('local-')) return;
-                batch.update(doc(firestore, "notes", note.id), { order: index });
-            });
-            batch.commit().catch(() => toast({ title: "Errore sincronizzazione ordine cloud", variant: "destructive" }));
-        } else {
-            localStorage.setItem('mg30_studio_notes', JSON.stringify(sortedGlobal));
-        }
+        const batch = writeBatch(firestore);
+        newFilteredOrdered.forEach((note, index) => {
+            batch.update(doc(firestore, "notes", note.id), { order: index });
+        });
+        batch.commit().catch(() => toast({ title: "Errore sincronizzazione ordine cloud", variant: "destructive" }));
     }
   }
 
@@ -248,33 +243,26 @@ function NotesLibraryContent() {
       return;
     }
 
-    const notesInDestination = savedNotes.filter(n => n.band === targetBand && n.setlist === destinationSetlist);
+    const notesInDestination = cachedNotes.filter(n => n.band === targetBand && n.setlist === destinationSetlist);
     const newOrder = notesInDestination.length > 0 ? Math.max(...notesInDestination.map(n => n.order ?? 0)) + 1 : 0;
 
-    const newNote: Omit<SavedNote, 'id'> = {
-      ...noteToCopy,
+    const { id, ...noteData } = noteToCopy;
+    const newNote = {
+      ...noteData,
       band: targetBand,
       setlist: destinationSetlist,
       order: newOrder,
       updatedAt: serverTimestamp(),
       userId: user?.uid,
     };
-    delete newNote.id;
 
-    const isMockUser = user?.uid === 'dev-user-123';
-    if (user && !isMockUser) {
-        try {
-            await addDoc(collection(firestore, "notes"), newNote);
-            toast({ title: `Brano copiato in ${targetBand} / ${destinationSetlist}` });
-        } catch(e) {
-            toast({ title: "Errore nella copia.", variant: "destructive" });
-        }
-    } else {
-        const localNewNote = { ...newNote, id: `local-${Date.now()}` };
-        const updatedNotes = [...savedNotes, localNewNote];
-        localStorage.setItem('mg30_studio_notes', JSON.stringify(updatedNotes));
-        setSavedNotes(updatedNotes);
+    try {
+        const docRef = await addDoc(collection(firestore, "notes"), newNote);
+        const createdNote = { ...newNote, id: docRef.id } as SavedNote;
+        addNote(createdNote);
         toast({ title: `Brano copiato in ${targetBand} / ${destinationSetlist}` });
+    } catch(e) {
+        toast({ title: "Errore nella copia.", variant: "destructive" });
     }
     
     setIsCopyDialogOpen(false);
@@ -296,7 +284,7 @@ function NotesLibraryContent() {
                 <Printer className="w-4 h-4" /> Esporta PDF
               </Button>
             )}
-            <Button onClick={() => router.push('/notes/editor')} size="icon" className="w-11 h-11 bg-orange-600 hover:bg-orange-700 text-white font-bold rounded-full shadow-lg">
+            <Button onClick={() => { setSelectedNoteId(null); setIsSheetOpen(true); }} size="icon" className="w-11 h-11 bg-orange-600 hover:bg-orange-700 text-white font-bold rounded-full shadow-lg">
               <Plus className="w-6 h-6" />
             </Button>
           </div>
@@ -337,9 +325,9 @@ function NotesLibraryContent() {
                       onMove={(e, dir) => handleMove(e, note.id, dir)}
                       isFirst={index === 0}
                       isLast={index === filteredNotes.length - 1}
-                      onClick={() => router.push(`/notes/editor?id=${note.id}`)}
+                      onClick={() => { setSelectedNoteId(note.id); setIsSheetOpen(true); }}
                       ref={(el) => { if(el) noteRefs.current[note.id] = el; }}
-                      isHighlighted={note.id === scrollToId}
+                      isHighlighted={note.id === selectedNoteId}
                     />
                   ))}
                 </div>
@@ -435,11 +423,26 @@ function NotesLibraryContent() {
           </div>
         ))}
       </div>
+
+      <NoteSheet isOpen={isSheetOpen} onClose={() => setIsSheetOpen(false)}>
+        <NoteEditorContent 
+          noteId={selectedNoteId} 
+          onClose={() => setIsSheetOpen(false)} 
+          onUpdate={(note: SavedNote) => {
+            if (selectedNoteId) {
+              updateNote(note);
+            } else {
+              addNote(note);
+              setSelectedNoteId(note.id);
+            }
+          }} 
+        />
+      </NoteSheet>
     </AppShell>
   );
 }
 
-const SortableNoteCard = React.forwardRef<HTMLDivElement, { 
+const SortableNoteCard = React.memo(React.forwardRef<HTMLDivElement, { 
   note: SavedNote; 
   onDelete: (e: React.MouseEvent) => void; 
   onCopy: (e: React.MouseEvent, note: SavedNote) => void; 
@@ -508,7 +511,7 @@ const SortableNoteCard = React.forwardRef<HTMLDivElement, {
       </Card>
     </div>
   );
-});
+}));
 
 SortableNoteCard.displayName = 'SortableNoteCard';
 

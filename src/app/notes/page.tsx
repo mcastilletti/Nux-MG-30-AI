@@ -14,6 +14,7 @@ import { DndContext, closestCenter, KeyboardSensor, MouseSensor, TouchSensor, us
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { cn } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { NoteSheet } from '@/components/notes/NoteSheet';
@@ -35,6 +36,7 @@ export interface SavedNote {
   generalNotes?: string;
   sections?: NoteSection[];
   presetSlot?: string;
+  presetScene?: string;
   order?: number;
   updatedAt?: any;
   userId?: string;
@@ -64,6 +66,7 @@ function NotesLibraryContent() {
 
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
 
   const scrollToId = searchParams.get('scrollTo');
 
@@ -390,7 +393,9 @@ function NotesLibraryContent() {
             
             <div className="print-subtitle">
                <span>{note.band} - {note.setlist}</span>
-               {note.presetSlot && <span>PRESET MG-30: {note.presetSlot}</span>}
+               {note.presetSlot && (
+                 <span>PRESET MG-30: {note.presetSlot} {note.presetScene ? `(S${parseInt(note.presetScene) + 1})` : ''}</span>
+               )}
             </div>
 
             {note.generalNotes && (
@@ -424,10 +429,11 @@ function NotesLibraryContent() {
         ))}
       </div>
 
-      <NoteSheet isOpen={isSheetOpen} onClose={() => setIsSheetOpen(false)}>
+      <NoteSheet isOpen={isSheetOpen} onClose={() => setIsSheetOpen(false)} disableGestures={isEditing}>
         <NoteEditorContent 
           noteId={selectedNoteId} 
           onClose={() => setIsSheetOpen(false)} 
+          onEditModeChange={setIsEditing}
           onUpdate={(note: SavedNote) => {
             if (selectedNoteId) {
               updateNote(note);
@@ -495,7 +501,23 @@ const SortableNoteCard = React.memo(React.forwardRef<HTMLDivElement, {
         </div>
         
         <div className="flex-1 min-w-0">
-          <CardTitle className="text-[16px] font-black uppercase leading-tight whitespace-pre-wrap">{note.title}</CardTitle>
+          <div className="flex items-center gap-3">
+            <CardTitle className="text-[16px] font-black uppercase leading-tight whitespace-pre-wrap">{note.title}</CardTitle>
+            {note.presetSlot && (
+              <Badge variant="outline" className="h-6 px-2 text-[10px] font-black bg-orange-500/10 border-orange-500/20 text-orange-500 flex items-center gap-1.5 shrink-0">
+                <span>{(() => {
+                  const s = parseInt(note.presetSlot);
+                  const bank = Math.floor((s - 1) / 4) + 1;
+                  const sub = ['A', 'B', 'C', 'D'][(s - 1) % 4];
+                  return `${String(bank).padStart(2, '0')}${sub}`;
+                })()}</span>
+                <>
+                  <span className="opacity-30">•</span>
+                  <span>S{note.presetScene ? parseInt(note.presetScene) + 1 : 1}</span>
+                </>
+              </Badge>
+            )}
+          </div>
           <div className="flex items-center gap-2 mt-1">
             <span className="text-[10px] text-muted-foreground uppercase font-bold">{note.band}</span>
             <span className="text-[10px] text-muted-foreground opacity-30">•</span>

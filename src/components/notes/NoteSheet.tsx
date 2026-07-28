@@ -7,9 +7,10 @@ interface NoteSheetProps {
   isOpen: boolean;
   onClose: () => void;
   children: React.ReactNode;
+  disableGestures?: boolean;
 }
 
-export function NoteSheet({ isOpen, onClose, children }: NoteSheetProps) {
+export function NoteSheet({ isOpen, onClose, children, disableGestures = false }: NoteSheetProps) {
   const sheetRef = useRef<HTMLDivElement>(null);
   const [touchStartX, setTouchStartX] = useState(0);
   const [touchStartY, setTouchStartY] = useState(0);
@@ -19,16 +20,17 @@ export function NoteSheet({ isOpen, onClose, children }: NoteSheetProps) {
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) {
+      if (e.key === 'Escape' && isOpen && !disableGestures) {
         onClose();
       }
     };
 
     document.addEventListener('keydown', handleEscape);
     return () => document.removeEventListener('keydown', handleEscape);
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, disableGestures]);
 
   const handleTouchStart = (e: React.TouchEvent) => {
+    if (disableGestures) return;
     setTouchStartX(e.touches[0].clientX);
     setTouchStartY(e.touches[0].clientY);
     setTouchX(e.touches[0].clientX);
@@ -37,13 +39,13 @@ export function NoteSheet({ isOpen, onClose, children }: NoteSheetProps) {
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    if (!isDragging) return;
+    if (disableGestures || !isDragging) return;
     setTouchX(e.touches[0].clientX);
     setTouchY(e.touches[0].clientY);
   };
 
   const handleTouchEnd = () => {
-    if (!isDragging) return;
+    if (disableGestures || !isDragging) return;
     const diffY = touchY - touchStartY;
     const diffX = touchStartX - touchX;
     
@@ -73,7 +75,7 @@ export function NoteSheet({ isOpen, onClose, children }: NoteSheetProps) {
       {/* Backdrop */}
       <div 
         className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
-        onClick={onClose}
+        onClick={() => !disableGestures && onClose()}
       />
       
       {/* Sheet Content */}
@@ -81,17 +83,20 @@ export function NoteSheet({ isOpen, onClose, children }: NoteSheetProps) {
         ref={sheetRef}
         className={cn(
           "relative w-full max-w-2xl h-[90vh] sm:h-[85vh] bg-background rounded-t-2xl sm:rounded-2xl shadow-2xl flex flex-col transition-transform duration-75 ease-out",
-          isDragging && "transition-none"
+          isDragging && "transition-none",
+          disableGestures && "translate-x-0 translate-y-0"
         )}
-        style={{ transform: `translate3d(${translateX}px, ${translateY}px, 0)` }}
+        style={{ transform: !disableGestures ? `translate3d(${translateX}px, ${translateY}px, 0)` : undefined }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
         {/* Handle for mobile drag */}
-        <div className="flex justify-center pt-3 pb-2 sm:hidden">
-          <div className="w-12 h-1.5 bg-muted-foreground/30 rounded-full" />
-        </div>
+        {!disableGestures && (
+          <div className="flex justify-center pt-3 pb-2 sm:hidden">
+            <div className="w-12 h-1.5 bg-muted-foreground/30 rounded-full" />
+          </div>
+        )}
         
         {/* Content */}
         <div className="flex-1 overflow-auto">

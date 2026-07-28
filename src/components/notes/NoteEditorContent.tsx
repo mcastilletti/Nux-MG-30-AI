@@ -47,6 +47,7 @@ interface NoteEditorContentProps {
   noteId: string | null;
   onClose: () => void;
   onUpdate: (note: SavedNote) => void;
+  onEditModeChange?: (isEditing: boolean) => void;
 }
 
 function ChordPicker({ onSelect, step, setStep, selectedLetter, setSelectedLetter, selectedRoot, setSelectedRoot }: any) {
@@ -90,8 +91,8 @@ function ChordPicker({ onSelect, step, setStep, selectedLetter, setSelectedLette
   return null;
 }
 
-export function NoteEditorContent({ noteId, onClose, onUpdate }: NoteEditorContentProps) {
-  const { devicePresets, status, sendProgramChange } = useMidiStore();
+export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange }: NoteEditorContentProps) {
+  const { devicePresets, status, sendProgramChange, sendSceneChange } = useMidiStore();
   const { toast } = useToast();
   const { firestore } = useFirebase();
   const { user } = useUser();
@@ -101,12 +102,18 @@ export function NoteEditorContent({ noteId, onClose, onUpdate }: NoteEditorConte
   const [band, setBand] = useState('');
   const [setlist, setSetlist] = useState('');
   const [selectedPresetSlot, setSelectedPresetSlot] = useState<string>('');
+  const [selectedPresetScene, setSelectedPresetScene] = useState<string>('');
   const [generalNotes, setGeneralNotes] = useState('');
+  const [presetSearch, setPresetSearch] = useState('');
   const [isNotesOpen, setIsNotesOpen] = useState(true); 
   const [isDetailsOpen, setIsDetailsOpen] = useState(false); 
   const [editMode, setEditMode] = useState(false);
   const [sections, setSections] = useState<NoteSection[]>([]);
   const [currentOrder, setCurrentOrder] = useState<number>(0);
+
+  useEffect(() => {
+    onEditModeChange?.(editMode);
+  }, [editMode, onEditModeChange]);
 
   const [chordPickerStep, setChordPickerStep] = useState<'letter' | 'quality'>('letter');
   const [selectedLetter, setSelectedLetter] = useState<string | null>(null);
@@ -146,11 +153,25 @@ export function NoteEditorContent({ noteId, onClose, onUpdate }: NoteEditorConte
     return Array.from(setlists).sort();
   }, [band, setlist]);
 
+  const filteredPresets = useMemo(() => {
+    if (!presetSearch) return devicePresets;
+    const search = presetSearch.toLowerCase();
+    return devicePresets.filter(p => {
+      const bank = Math.floor((p.slot - 1) / 4) + 1;
+      const sub = ['A', 'B', 'C', 'D'][(p.slot - 1) % 4];
+      const label = `${bank}${sub}`.toLowerCase();
+      const fullLabel = `${String(bank).padStart(2, '0')}${sub}`.toLowerCase();
+      
+      return label.includes(search) || fullLabel.includes(search) || p.name.toLowerCase().includes(search);
+    });
+  }, [devicePresets, presetSearch]);
+
   const loadNote = (note: SavedNote) => {
     setTitle(note.title);
     setBand(note.band);
     setSetlist(note.setlist);
     setSelectedPresetSlot(note.presetSlot || '');
+    setSelectedPresetScene(note.presetScene || '');
     setGeneralNotes(note.generalNotes || '');
     setCurrentOrder(note.order ?? 0);
     setSections((note.sections || []).map((s, idx) => ({ 
@@ -160,7 +181,12 @@ export function NoteEditorContent({ noteId, onClose, onUpdate }: NoteEditorConte
     })));
     setEditMode(false);
     setIsNotesOpen(true);
-    if (note.presetSlot && status === 'connected') sendProgramChange(parseInt(note.presetSlot) - 1);
+    if (note.presetSlot && status === 'connected') {
+      sendProgramChange(parseInt(note.presetSlot) - 1);
+      if (note.presetScene) {
+        setTimeout(() => sendSceneChange(parseInt(note.presetScene)), 500);
+      }
+    }
   };
 
   const handleSaveNote = async () => {
@@ -181,6 +207,7 @@ export function NoteEditorContent({ noteId, onClose, onUpdate }: NoteEditorConte
       band: band || 'Senza Band',
       setlist: setlist || 'Senza Scaletta',
       presetSlot: selectedPresetSlot,
+      presetScene: selectedPresetScene,
       generalNotes,
       sections,
       order: orderToSave,
@@ -208,6 +235,7 @@ export function NoteEditorContent({ noteId, onClose, onUpdate }: NoteEditorConte
     setBand('');
     setSetlist('');
     setSelectedPresetSlot('');
+    setSelectedPresetScene('');
     setGeneralNotes('');
     setSections([{ id: `new-${Date.now()}-${Math.random()}`, type: 'Verse', text: '', chords: [] }]);
     setEditMode(true);
@@ -270,7 +298,15 @@ export function NoteEditorContent({ noteId, onClose, onUpdate }: NoteEditorConte
             )}
             {editMode && (
               <div className="flex items-center gap-2">
-                <button onClick={handleNewNote} className="h-11 w-11 text-muted-foreground rounded-full hover:bg-destructive/10 hover:text-destructive flex items-center justify-center" title="Annulla">
+                <button onClick={() => {
+                   if (noteId) {
+                      const note = getNoteById(noteId);
+                      if (note) loadNote(note);
+                      setEditMode(false);
+                   } else {
+                      onClose();
+                   }
+                }} className="h-11 w-11 text-muted-foreground rounded-full hover:bg-destructive/10 hover:text-destructive flex items-center justify-center" title="Annulla">
                   <X className="w-7 h-7" />
                 </button>
                 <button onClick={handleSaveNote} className="h-11 w-11 bg-primary shadow-lg rounded-full flex items-center justify-center" title="Salva">
@@ -284,12 +320,60 @@ export function NoteEditorContent({ noteId, onClose, onUpdate }: NoteEditorConte
         <div className="space-y-6">
           {(editMode || isDetailsOpen) && (
             <div className="space-y-4 p-4 rounded-xl bg-secondary/20 border border-border/50">
-              <div className="space-y-2">
-                <label className="text-[11px] uppercase font-black text-muted-foreground tracking-tighter">Hardware Preset</label>
-                <Select value={selectedPresetSlot} onValueChange={(val) => { setSelectedPresetSlot(val); if (status === 'connected') sendProgramChange(parseInt(val)-1); }} disabled={!editMode}>
-                  <SelectTrigger className="h-11 bg-background/50 border-border font-mono text-[13px]"><SelectValue placeholder="Collega a Slot MG-30" /></SelectTrigger>
-                  <SelectContent>{devicePresets.map((p) => (<SelectItem key={`preset-opt-${p.slot}`} value={p.slot.toString()}>{p.slot}: {p.name}</SelectItem>))}</SelectContent>
-                </Select>
+              <div className="grid grid-cols-3 gap-3">
+                <div className="col-span-2 space-y-2">
+                  <label className="text-[11px] uppercase font-black text-muted-foreground tracking-tighter">Hardware Preset</label>
+                  <Select value={selectedPresetSlot} onValueChange={(val) => { setSelectedPresetSlot(val); if (status === 'connected') sendProgramChange(parseInt(val)-1); }} disabled={!editMode}>
+                    <SelectTrigger className="h-11 bg-background/50 border-border font-mono text-[13px]"><SelectValue placeholder="Collega a Slot MG-30" /></SelectTrigger>
+                    <SelectContent className="max-h-[300px]">
+                      <div className="px-2 pb-2 pt-1">
+                        <Input 
+                          placeholder="Cerca Slot (es: 12A)..." 
+                          value={presetSearch} 
+                          onChange={(e) => setPresetSearch(e.target.value)}
+                          onKeyDown={(e) => e.stopPropagation()}
+                          className="h-8 text-xs mb-2"
+                        />
+                      </div>
+                      <div className="overflow-y-auto max-h-[240px]">
+                        {filteredPresets.length > 0 ? (
+                          filteredPresets.map((p) => {
+                            const bank = Math.floor((p.slot - 1) / 4) + 1;
+                            const sub = ['A', 'B', 'C', 'D'][(p.slot - 1) % 4];
+                            const label = `${String(bank).padStart(2, '0')}${sub}`;
+                            return (
+                              <SelectItem key={`preset-opt-${p.slot}`} value={p.slot.toString()}>
+                                <span className="font-bold mr-2">{label}:</span> {p.name}
+                              </SelectItem>
+                            );
+                          })
+                        ) : (
+                          <div className="py-2 text-center text-xs text-muted-foreground">Nessun preset trovato</div>
+                        )}
+                      </div>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[11px] uppercase font-black text-muted-foreground tracking-tighter">Scena</label>
+                  <Select 
+                    value={selectedPresetScene} 
+                    onValueChange={(val) => { setSelectedPresetScene(val); if (status === 'connected') sendSceneChange(parseInt(val)); }} 
+                    disabled={!editMode || !selectedPresetSlot}
+                  >
+                    <SelectTrigger className={cn(
+                      "h-11 bg-background/50 border-border font-mono text-[13px]",
+                      (!selectedPresetSlot) && "opacity-50 cursor-not-allowed"
+                    )}>
+                      <SelectValue placeholder="S1" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="0">SCENE 1</SelectItem>
+                      <SelectItem value="1">SCENE 2</SelectItem>
+                      <SelectItem value="2">SCENE 3</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">

@@ -47,6 +47,12 @@ export default function manifest(): MetadataRoute.Manifest {
         purpose: 'any',
       },
       {
+        src: '/icon-android.png',
+        sizes: '192x192',
+        type: 'image/png',
+        purpose: 'maskable',
+      },
+      {
         src: '/icon.png',
         sizes: '384x384',
         type: 'image/png',
@@ -57,6 +63,12 @@ export default function manifest(): MetadataRoute.Manifest {
         sizes: '512x512',
         type: 'image/png',
         purpose: 'any',
+      },
+      {
+        src: '/icon-android.png',
+        sizes: '512x512',
+        type: 'image/png',
+        purpose: 'maskable',
       }
     ],
   }

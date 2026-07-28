@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Name=MG30 Studio
+Comment=Editor professionale web per la pedaliera NUX MG-30
+Exec=google-chrome --app=https://studio--studio-3261187179-ec15d.us-central1.hosted.app --profile-directory=Default
+Icon=/home/matteo/Documenti/GitHub/Nux-MG-30-AI/public/icon.png
+Terminal=false
+Type=Application
+Categories=AudioVideo;Audio;
+StartupWMClass=MG30 Studio

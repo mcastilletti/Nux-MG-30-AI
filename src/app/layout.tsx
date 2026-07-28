@@ -45,7 +45,11 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Code+Pro:wght@400;500;600&display=swap" rel="stylesheet" />
+        <link rel="icon" href="/icon.png" sizes="32x32" />
+        <link rel="icon" href="/icon.png" sizes="192x192" />
+        <link rel="icon" href="/icon.png" sizes="512x512" />
         <link rel="shortcut icon" href="/icon.png" />
+        <link rel="apple-touch-icon" href="/icon.png" />
       </head>
       <body className="font-body antialiased selection:bg-primary/30">
         <FirebaseClientProvider>

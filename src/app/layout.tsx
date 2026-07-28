@@ -3,7 +3,7 @@ import './globals.css';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 
 export const viewport: Viewport = {
-  themeColor: '#FFD500',
+  themeColor: '#000000',
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
@@ -20,9 +20,11 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
+      { url: '/icon.png', sizes: '192x192', type: 'image/png' },
       { url: '/icon.png', sizes: '512x512', type: 'image/png' }
     ],
     apple: [
+      { url: '/icon.png', sizes: '192x192', type: 'image/png' },
       { url: '/icon.png', sizes: '512x512', type: 'image/png' }
     ],
   },

@@ -87,11 +87,11 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
         <Sidebar className="border-r border-border">
           <SidebarHeader className="p-4 border-b border-border">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-lg bg-[#FFD500] flex items-center justify-center overflow-hidden border border-white/10 shadow-sm p-0.5">
+              <div className="w-[70px] h-[70px] flex items-center justify-center overflow-hidden">
                 <img 
                   src="/icon.png" 
                   alt="MG30 Studio Logo" 
-                  className="w-[90%] h-[90%] object-contain"
+                  className="w-full h-full object-cover"
                 />
               </div>
               <div>

@@ -268,10 +268,10 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange 
   return (
     <TooltipProvider>
       <div className="flex flex-col gap-6 h-full">
-        <div className="flex items-center justify-between gap-4 py-4 border-b border-border/50">
-          <div className="flex items-center gap-3 flex-1 min-w-0">
-             <button onClick={onClose} className="h-10 w-10 rounded-full hover:bg-secondary/40 flex items-center justify-center">
-                <X className="w-6 h-6" />
+        <div className="flex items-center justify-between gap-2 lg:gap-4 py-1 lg:py-4 border-b border-border/50">
+          <div className="flex items-center gap-2 lg:gap-3 flex-1 min-w-0">
+             <button onClick={onClose} className="h-9 w-9 lg:h-10 lg:w-10 rounded-full hover:bg-secondary/40 flex items-center justify-center">
+                <X className="w-5 h-5 lg:w-6 lg:h-6" />
               </button>
             <div className="flex flex-col flex-1 min-w-0">
               {editMode ? (
@@ -292,8 +292,8 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange 
           </div>
           <div className="flex items-center gap-2">
             {!editMode && noteId && (
-              <button onClick={() => setEditMode(true)} className="h-11 w-11 text-muted-foreground rounded-full hover:bg-primary/10 hover:text-primary flex items-center justify-center" title="Modifica">
-                <Pencil className="w-7 h-7" />
+              <button onClick={() => setEditMode(true)} className="h-9 w-9 lg:h-11 lg:w-11 text-muted-foreground rounded-full hover:bg-primary/10 hover:text-primary flex items-center justify-center" title="Modifica">
+                <Pencil className="w-5 h-5 lg:w-7 lg:h-7" />
               </button>
             )}
             {editMode && (
@@ -306,11 +306,11 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange 
                    } else {
                       onClose();
                    }
-                }} className="h-11 w-11 text-muted-foreground rounded-full hover:bg-destructive/10 hover:text-destructive flex items-center justify-center" title="Annulla">
-                  <X className="w-7 h-7" />
+                }} className="h-9 w-9 lg:h-11 lg:w-11 text-muted-foreground rounded-full hover:bg-destructive/10 hover:text-destructive flex items-center justify-center" title="Annulla">
+                  <X className="w-5 h-5 lg:w-7 lg:h-7" />
                 </button>
-                <button onClick={handleSaveNote} className="h-11 w-11 bg-primary shadow-lg rounded-full flex items-center justify-center" title="Salva">
-                  <Save className="w-7 h-7" />
+                <button onClick={handleSaveNote} className="h-9 w-9 lg:h-11 lg:w-11 bg-primary shadow-lg rounded-full flex items-center justify-center" title="Salva">
+                  <Save className="w-5 h-5 lg:w-7 lg:h-7" />
                 </button>
               </div>
             )}
@@ -408,31 +408,33 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange 
             </div>
           )}
 
-          <Collapsible open={isNotesOpen} onOpenChange={setIsNotesOpen} className="space-y-2">
-            <CollapsibleTrigger asChild>
-              <button className="w-full justify-between h-10 text-[11px] font-black uppercase tracking-widest bg-secondary/30 rounded-xl px-4 border border-border/30 flex items-center">
-                <span>Note Generali</span>
-                {isNotesOpen ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-              </button>
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <Textarea 
-                placeholder="..." 
-                className="min-h-[140px] text-[16px] bg-card/30 border-border/50 resize-none leading-relaxed p-4" 
-                value={generalNotes} 
-                onChange={(e) => setGeneralNotes(e.target.value)} 
-                readOnly={!editMode} 
-              />
-            </CollapsibleContent>
-          </Collapsible>
+          {editMode || (generalNotes && generalNotes.trim() !== '...') ? (
+            <Collapsible open={isNotesOpen} onOpenChange={setIsNotesOpen} className="space-y-2">
+              <CollapsibleTrigger asChild>
+                <button className="w-full justify-between h-10 text-[11px] font-black uppercase tracking-widest bg-secondary/30 rounded-xl px-4 border border-border/30 flex items-center">
+                  <span>Note Generali</span>
+                  {isNotesOpen ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                </button>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <Textarea 
+                  placeholder="..." 
+                  className="min-h-[140px] text-[16px] bg-card/30 border-border/50 resize-none leading-relaxed p-4" 
+                  value={generalNotes} 
+                  onChange={(e) => setGeneralNotes(e.target.value)} 
+                  readOnly={!editMode} 
+                />
+              </CollapsibleContent>
+            </Collapsible>
+          ) : null}
 
           <Card className="border-border shadow-xl bg-card/40 rounded-2xl overflow-hidden">
-            <CardHeader className="py-3 bg-secondary/40 flex flex-row items-center justify-between px-5 border-b border-border/40">
-              <CardTitle className="text-[12px] uppercase tracking-widest font-black text-primary flex items-center gap-2"><Layers className="w-5 h-5" /> Struttura Brano</CardTitle>
-              {editMode && (
+            {editMode && (
+              <CardHeader className="py-3 bg-secondary/40 flex flex-row items-center justify-between px-5 border-b border-border/40">
+                <CardTitle className="text-[12px] uppercase tracking-widest font-black text-primary flex items-center gap-2"><Layers className="w-5 h-5" /> Struttura Brano</CardTitle>
                 <button onClick={() => handleAddSection(sections.length)} className="h-9 text-[11px] font-bold bg-background/50 border px-3 rounded flex items-center gap-2"><Plus className="w-4 h-4 mr-1" /> Sezione</button>
-              )}
-            </CardHeader>
+              </CardHeader>
+            )}
             <CardContent className="p-0">
               <div className="flex flex-col">
                 {sections.map((section, sIdx) => (
@@ -451,7 +453,7 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange 
                             value={section.type} 
                             onValueChange={(val: SectionType) => setSections(sections.map(s => s.id === section.id ? { ...s, type: val } : s))}
                           >
-                            <SelectTrigger className="w-full h-9 text-[10px] font-black uppercase bg-primary/5 border-primary/20 text-primary p-1">
+                            <SelectTrigger className="w-full h-9 text-[12px] font-black uppercase bg-primary/5 border-primary/20 text-primary p-1">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -461,7 +463,7 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange 
                             </SelectContent>
                           </Select>
                         ) : (
-                          <Badge variant="secondary" className="w-full justify-center h-9 text-[11px] font-black uppercase tracking-tighter bg-primary/10 text-primary border-primary/20">{section.type}</Badge>
+                          <Badge variant="secondary" className="w-full justify-center h-9 text-[13px] font-black uppercase tracking-tighter bg-primary/10 text-primary border-primary/20">{section.type}</Badge>
                         )}
                       </div>
                       <div className="p-3 flex-1 flex flex-col gap-3">

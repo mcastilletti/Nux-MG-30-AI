@@ -71,7 +71,7 @@ export function NoteSheet({ isOpen, onClose, children, disableGestures = false }
   const translateY = isDragging ? Math.max(0, touchY - touchStartY) : 0;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-start lg:items-center justify-center">
       {/* Backdrop */}
       <div 
         className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
@@ -82,7 +82,7 @@ export function NoteSheet({ isOpen, onClose, children, disableGestures = false }
       <div 
         ref={sheetRef}
         className={cn(
-          "relative w-full max-w-2xl h-[90vh] sm:h-[85vh] bg-background rounded-t-2xl sm:rounded-2xl shadow-2xl flex flex-col transition-transform duration-75 ease-out",
+          "relative w-full max-w-2xl h-[100vh] lg:h-[85vh] bg-background rounded-t-2xl lg:rounded-2xl shadow-2xl flex flex-col transition-transform duration-75 ease-out",
           isDragging && "transition-none",
           disableGestures && "translate-x-0 translate-y-0"
         )}
@@ -93,7 +93,7 @@ export function NoteSheet({ isOpen, onClose, children, disableGestures = false }
       >
         {/* Handle for mobile drag */}
         {!disableGestures && (
-          <div className="flex justify-center pt-3 pb-2 sm:hidden">
+          <div className="flex justify-center pt-2 pb-1 lg:hidden">
             <div className="w-12 h-1.5 bg-muted-foreground/30 rounded-full" />
           </div>
         )}

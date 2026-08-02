@@ -6,7 +6,7 @@ import { AppShell } from '@/components/layout/app-shell';
 import { Card, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { NotebookPen, Plus, Trash2, GripVertical, Music2, Layers, ChevronUp, ChevronDown, Printer, Copy, ArrowRight } from 'lucide-react';
+import { NotebookPen, Plus, Trash2, GripVertical, Music2, Layers, Printer, Copy, ArrowRight } from 'lucide-react';
 import { useFirebase, useUser } from '@/firebase';
 import { collection, getDocs, query, where, doc, deleteDoc, writeBatch, addDoc, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
@@ -63,6 +63,9 @@ function NotesLibraryContent() {
   const [targetBand, setTargetBand] = useState('');
   const [targetSetlist, setTargetSetlist] = useState('');
   const [newSetlistName, setNewSetlistName] = useState('');
+
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [noteToDelete, setNoteToDelete] = useState<SavedNote | null>(null);
 
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
@@ -164,39 +167,21 @@ function NotesLibraryContent() {
   }, [cachedNotes, targetBand]);
 
 
-  const handleDelete = async (e: React.MouseEvent, id: string) => {
+  const handleDelete = (e: React.MouseEvent, note: SavedNote) => {
     e.stopPropagation();
-    try {
-      await deleteDoc(doc(firestore, "notes", id));
-      deleteNote(id);
-      toast({ title: "Nota eliminata" });
-    } catch (err) { toast({ title: "Errore eliminazione", variant: "destructive" }); }
+    setNoteToDelete(note);
+    setIsDeleteDialogOpen(true);
   };
 
-  const handleMove = async (e: React.MouseEvent, id: string, direction: 'up' | 'down') => {
-    e.stopPropagation();
-    const index = filteredNotes.findIndex(n => n.id === id);
-    if (index === -1) return;
-    if (direction === 'up' && index === 0) return;
-    if (direction === 'down' && index === filteredNotes.length - 1) return;
-
-    const newIndex = direction === 'up' ? index - 1 : index + 1;
-    const newFilteredOrdered = arrayMove(filteredNotes, index, newIndex);
-    
-    const updatedNotes = [...cachedNotes];
-    newFilteredOrdered.forEach((note, idx) => {
-      const globalIdx = updatedNotes.findIndex(n => n.id === note.id);
-      if (globalIdx !== -1) updatedNotes[globalIdx] = { ...updatedNotes[globalIdx], order: idx };
-    });
-
-    const sortedGlobal = updatedNotes.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-    setNotes(sortedGlobal);
-
-    const batch = writeBatch(firestore);
-    newFilteredOrdered.forEach((note, idx) => {
-      batch.update(doc(firestore, "notes", note.id), { order: idx });
-    });
-    await batch.commit();
+  const handleConfirmDelete = async () => {
+    if (!noteToDelete) return;
+    try {
+      await deleteDoc(doc(firestore, "notes", noteToDelete.id));
+      deleteNote(noteToDelete.id);
+      toast({ title: "Nota eliminata" });
+      setIsDeleteDialogOpen(false);
+      setNoteToDelete(null);
+    } catch (err) { toast({ title: "Errore eliminazione", variant: "destructive" }); }
   };
 
   function handleDragEnd(event: DragEndEvent) {
@@ -323,11 +308,8 @@ function NotesLibraryContent() {
                     <SortableNoteCard 
                       key={note.id} 
                       note={note} 
-                      onDelete={(e) => handleDelete(e, note.id)} 
+                      onDelete={(e) => handleDelete(e, note)} 
                       onCopy={(e) => openCopyDialog(e, note)}
-                      onMove={(e, dir) => handleMove(e, note.id, dir)}
-                      isFirst={index === 0}
-                      isLast={index === filteredNotes.length - 1}
                       onClick={() => { setSelectedNoteId(note.id); setIsSheetOpen(true); }}
                       ref={(el) => { if(el) noteRefs.current[note.id] = el; }}
                       isHighlighted={note.id === selectedNoteId}
@@ -382,6 +364,19 @@ function NotesLibraryContent() {
             <Button variant="outline" onClick={() => setIsCopyDialogOpen(false)}>Annulla</Button>
             {copyStep === 1 && <Button onClick={() => setCopyStep(2)} disabled={!targetBand}>Avanti <ArrowRight className="w-4 h-4 ml-2"/></Button>}
             {copyStep === 2 && <Button onClick={handleConfirmCopy}>Conferma Copia</Button>}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Elimina "{noteToDelete?.title}"</DialogTitle>
+            <DialogDescription>Sei sicuro di voler eliminare questo brano? Questa azione non può essere annullata.</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>Annulla</Button>
+            <Button variant="destructive" onClick={handleConfirmDelete}>Elimina</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -452,12 +447,9 @@ const SortableNoteCard = React.memo(React.forwardRef<HTMLDivElement, {
   note: SavedNote; 
   onDelete: (e: React.MouseEvent) => void; 
   onCopy: (e: React.MouseEvent, note: SavedNote) => void; 
-  onMove: (e: React.MouseEvent, dir: 'up' | 'down') => void;
-  isFirst: boolean;
-  isLast: boolean;
   onClick: () => void; 
   isHighlighted?: boolean;
-}>(({ note, onDelete, onCopy, onMove, isFirst, isLast, onClick, isHighlighted }, ref) => {
+}>(({ note, onDelete, onCopy, onClick, isHighlighted }, ref) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: note.id });
   const style = { transform: CSS.Transform.toString(transform), transition, zIndex: isDragging ? 50 : 0, opacity: isDragging ? 0.6 : 1 };
 
@@ -475,60 +467,42 @@ const SortableNoteCard = React.memo(React.forwardRef<HTMLDivElement, {
   return (
     <div ref={combinedRef} style={style} onClick={onClick}>
        <Card className={cn(
-         "group relative flex items-center gap-3 p-4 hover:border-orange-500/50 transition-all cursor-pointer bg-card/60 border-border overflow-hidden", 
+         "group relative flex items-center pl-1 pr-4 py-4 hover:border-orange-500/50 transition-all cursor-pointer bg-card/60 border-border overflow-hidden", 
          isDragging && "shadow-2xl shadow-orange-500/30 border-orange-500/50",
          isHighlighted && "ring-2 ring-orange-500 border-orange-500 shadow-lg shadow-orange-500/20 bg-orange-500/5"
        )}>
-        <div className="flex flex-col gap-1 shrink-0 no-print">
-          <Button 
-            variant="secondary" 
-            size="icon" 
-            className="h-8 w-8 bg-secondary/40 hover:bg-orange-500/20 disabled:opacity-10" 
-            disabled={isFirst}
-            onClick={(e) => onMove(e, 'up')}
-          >
-            <ChevronUp className="w-4 h-4" />
-          </Button>
-          <Button 
-            variant="secondary" 
-            size="icon" 
-            className="h-8 w-8 bg-secondary/40 hover:bg-orange-500/20 disabled:opacity-10" 
-            disabled={isLast}
-            onClick={(e) => onMove(e, 'down')}
-          >
-            <ChevronDown className="w-4 h-4" />
-          </Button>
+        <div {...attributes} {...listeners} className="px-1 text-muted-foreground/30 hover:text-orange-500 cursor-grab active:cursor-grabbing touch-none flex items-center justify-center h-full" onClick={(e) => e.stopPropagation()}>
+          <GripVertical className="w-5 h-5" />
         </div>
-        
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-3">
-            <CardTitle className="text-[16px] font-black uppercase leading-tight whitespace-pre-wrap">{note.title}</CardTitle>
-            {note.presetSlot && (
-              <Badge variant="outline" className="h-6 px-2 text-[10px] font-black bg-orange-500/10 border-orange-500/20 text-orange-500 flex items-center gap-1.5 shrink-0">
-                <span>{(() => {
-                  const s = parseInt(note.presetSlot);
-                  const bank = Math.floor((s - 1) / 4) + 1;
-                  const sub = ['A', 'B', 'C', 'D'][(s - 1) % 4];
-                  return `${String(bank).padStart(2, '0')}${sub}`;
-                })()}</span>
-                <>
-                  <span className="opacity-30">•</span>
-                  <span>S{note.presetScene ? parseInt(note.presetScene) + 1 : 1}</span>
-                </>
-              </Badge>
-            )}
+        <div className="flex-1 min-w-0 pl-3">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex-1 min-w-0">
+              <CardTitle className="text-[16px] font-black uppercase leading-tight whitespace-pre-wrap">{note.title}</CardTitle>
+            </div>
+            <div className="flex items-center gap-1 shrink-0 no-print">
+               <Button variant="ghost" size="icon" className="h-9 w-9 text-blue-500 opacity-30 group-hover:opacity-100 transition-opacity" onClick={(e) => onCopy(e, note)}><Copy className="w-4 h-4" /></Button>
+              <Button variant="ghost" size="icon" className="h-9 w-9 text-destructive opacity-30 group-hover:opacity-100 transition-opacity" onClick={onDelete}><Trash2 className="w-4 h-4" /></Button>
+            </div>
           </div>
-          <div className="flex items-center gap-2 mt-1">
+          <div className="flex items-center gap-2 mt-2">
             <span className="text-[10px] text-muted-foreground uppercase font-bold">{note.band}</span>
             <span className="text-[10px] text-muted-foreground opacity-30">•</span>
             <span className="text-[10px] text-muted-foreground uppercase font-bold">{note.setlist}</span>
+            {note.presetSlot && (
+              <>
+                <span className="text-[10px] text-muted-foreground opacity-30">•</span>
+                <span className="text-[10px] text-orange-500 uppercase font-bold">
+                  {(() => {
+                    const s = parseInt(note.presetSlot);
+                    const bank = Math.floor((s - 1) / 4) + 1;
+                    const sub = ['A', 'B', 'C', 'D'][(s - 1) % 4];
+                    return `${String(bank).padStart(2, '0')}${sub}`;
+                  })()}
+                  {note.presetScene && ` S${parseInt(note.presetScene) + 1}`}
+                </span>
+              </>
+            )}
           </div>
-        </div>
-        
-        <div className="flex items-center gap-1 shrink-0 no-print">
-           <Button variant="ghost" size="icon" className="h-9 w-9 text-blue-500 opacity-30 group-hover:opacity-100 transition-opacity" onClick={(e) => onCopy(e, note)}><Copy className="w-4 h-4" /></Button>
-          <Button variant="ghost" size="icon" className="h-9 w-9 text-destructive opacity-30 group-hover:opacity-100 transition-opacity" onClick={onDelete}><Trash2 className="w-4 h-4" /></Button>
-          <div {...attributes} {...listeners} className="p-2 -m-2 text-muted-foreground/30 hover:text-orange-500 cursor-grab active:cursor-grabbing touch-none" onClick={(e) => e.stopPropagation()}><GripVertical className="w-5 h-5" /></div>
         </div>
       </Card>
     </div>

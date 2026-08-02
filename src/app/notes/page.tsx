@@ -6,7 +6,7 @@ import { AppShell } from '@/components/layout/app-shell';
 import { Card, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { NotebookPen, Plus, Trash2, GripVertical, Music2, Layers, Printer, Copy, ArrowRight } from 'lucide-react';
+import { NotebookPen, Plus, Trash2, GripVertical, Music2, Layers, Printer, Copy, ArrowRight, FileText } from 'lucide-react';
 import { useFirebase, useUser } from '@/firebase';
 import { collection, getDocs, query, where, doc, deleteDoc, writeBatch, addDoc, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
@@ -17,8 +17,10 @@ import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { NoteSheet } from '@/components/notes/NoteSheet';
 import { NoteEditorContent } from '@/components/notes/NoteEditorContent';
+import { BlockEditorContent } from '@/components/notes/BlockEditorContent';
 import { useNotesCache } from '@/stores/use-notes-cache';
 
 export interface NoteSection {
@@ -40,6 +42,8 @@ export interface SavedNote {
   order?: number;
   updatedAt?: any;
   userId?: string;
+  type?: 'song' | 'block';
+  blockContent?: string;
 }
 
 const FILTER_BAND_KEY = 'mg30_notes_filter_band';
@@ -51,7 +55,7 @@ function NotesLibraryContent() {
   const { toast } = useToast();
   const { firestore } = useFirebase();
   const { user, isUserLoading: userLoading } = useUser();
-  const { notes: cachedNotes, setNotes, isLoading: cacheLoading, updateNote, addNote, deleteNote } = useNotesCache();
+  const { notes: cachedNotes, setNotes, isLoading: cacheLoading, updateNote, addNote, deleteNote, getNoteById } = useNotesCache();
   
   const [selectedBand, setSelectedBand] = useState<string | null>(null);
   const [selectedSetlist, setSelectedSetlist] = useState<string | null>(null);
@@ -67,9 +71,13 @@ function NotesLibraryContent() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [noteToDelete, setNoteToDelete] = useState<SavedNote | null>(null);
 
+  const [isAddMenuOpen, setIsAddMenuOpen] = useState(false);
+
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [newBlockInitialBand, setNewBlockInitialBand] = useState<string | null>(null);
+  const [newBlockInitialSetlist, setNewBlockInitialSetlist] = useState<string | null>(null);
 
   const scrollToId = searchParams.get('scrollTo');
 
@@ -272,9 +280,43 @@ function NotesLibraryContent() {
                 <Printer className="w-4 h-4" /> Esporta PDF
               </Button>
             )}
-            <Button onClick={() => { setSelectedNoteId(null); setIsSheetOpen(true); }} size="icon" className="w-11 h-11 bg-orange-600 hover:bg-orange-700 text-white font-bold rounded-full shadow-lg">
-              <Plus className="w-6 h-6" />
-            </Button>
+            <Popover open={isAddMenuOpen} onOpenChange={setIsAddMenuOpen}>
+              <PopoverTrigger asChild>
+                <Button size="icon" className="w-11 h-11 bg-orange-600 hover:bg-orange-700 text-white font-bold rounded-full shadow-lg">
+                  <Plus className="w-6 h-6" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-48 p-2" align="end">
+                <div className="flex flex-col gap-1">
+                  <Button
+                    variant="ghost"
+                    className="justify-start gap-2 h-10"
+                    onClick={() => {
+                      setSelectedNoteId(null);
+                      setIsSheetOpen(true);
+                      setIsAddMenuOpen(false);
+                    }}
+                  >
+                    <NotebookPen className="w-4 h-4" />
+                    Nuovo Brano
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    className="justify-start gap-2 h-10"
+                    onClick={() => {
+                      setNewBlockInitialBand(selectedBand);
+                      setNewBlockInitialSetlist(selectedSetlist);
+                      setSelectedNoteId('new-block');
+                      setIsSheetOpen(true);
+                      setIsAddMenuOpen(false);
+                    }}
+                  >
+                    <FileText className="w-4 h-4" />
+                    Nuovo Blocco
+                  </Button>
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
         </header>
 
@@ -425,19 +467,41 @@ function NotesLibraryContent() {
       </div>
 
       <NoteSheet isOpen={isSheetOpen} onClose={() => setIsSheetOpen(false)} disableGestures={isEditing}>
-        <NoteEditorContent 
-          noteId={selectedNoteId} 
-          onClose={() => setIsSheetOpen(false)} 
-          onEditModeChange={setIsEditing}
-          onUpdate={(note: SavedNote) => {
-            if (selectedNoteId) {
-              updateNote(note);
-            } else {
-              addNote(note);
-              setSelectedNoteId(note.id);
-            }
-          }} 
-        />
+        {selectedNoteId === 'new-block' || (selectedNoteId && getNoteById(selectedNoteId)?.type === 'block') ? (
+          <BlockEditorContent
+            noteId={selectedNoteId}
+            initialBand={newBlockInitialBand}
+            initialSetlist={newBlockInitialSetlist}
+            onClose={() => {
+              setIsSheetOpen(false);
+              setNewBlockInitialBand(null);
+              setNewBlockInitialSetlist(null);
+            }}
+            onEditModeChange={setIsEditing}
+            onUpdate={(note: SavedNote) => {
+              if (selectedNoteId && selectedNoteId !== 'new-block') {
+                updateNote(note);
+              } else {
+                addNote(note);
+                setSelectedNoteId(note.id);
+              }
+            }}
+          />
+        ) : (
+          <NoteEditorContent
+            noteId={selectedNoteId}
+            onClose={() => setIsSheetOpen(false)}
+            onEditModeChange={setIsEditing}
+            onUpdate={(note: SavedNote) => {
+              if (selectedNoteId) {
+                updateNote(note);
+              } else {
+                addNote(note);
+                setSelectedNoteId(note.id);
+              }
+            }}
+          />
+        )}
       </NoteSheet>
     </AppShell>
   );
@@ -467,7 +531,8 @@ const SortableNoteCard = React.memo(React.forwardRef<HTMLDivElement, {
   return (
     <div ref={combinedRef} style={style} onClick={onClick}>
        <Card className={cn(
-         "group relative flex items-center pl-1 pr-4 py-4 hover:border-orange-500/50 transition-all cursor-pointer bg-card/60 border-border overflow-hidden", 
+         "group relative flex items-center pl-1 pr-4 py-4 hover:border-orange-500/50 transition-all cursor-pointer bg-card/60 border-border overflow-hidden",
+         note.type === 'block' && "bg-blue-500/10 border-blue-500/30 hover:border-blue-500/50",
          isDragging && "shadow-2xl shadow-orange-500/30 border-orange-500/50",
          isHighlighted && "ring-2 ring-orange-500 border-orange-500 shadow-lg shadow-orange-500/20 bg-orange-500/5"
        )}>
@@ -475,34 +540,48 @@ const SortableNoteCard = React.memo(React.forwardRef<HTMLDivElement, {
           <GripVertical className="w-5 h-5" />
         </div>
         <div className="flex-1 min-w-0 pl-3">
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex-1 min-w-0">
-              <CardTitle className="text-[16px] font-black uppercase leading-tight whitespace-pre-wrap">{note.title}</CardTitle>
+          {note.type === 'block' ? (
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex-1 min-w-0">
+                <CardTitle className="text-[16px] font-black uppercase leading-tight break-words text-blue-600">{note.title}</CardTitle>
+              </div>
+              <div className="flex items-center gap-1 shrink-0 no-print">
+                 <Button variant="ghost" size="icon" className="h-9 w-9 text-blue-500 opacity-30 group-hover:opacity-100 transition-opacity" onClick={(e) => onCopy(e, note)}><Copy className="w-4 h-4" /></Button>
+                <Button variant="ghost" size="icon" className="h-9 w-9 text-destructive opacity-30 group-hover:opacity-100 transition-opacity" onClick={onDelete}><Trash2 className="w-4 h-4" /></Button>
+              </div>
             </div>
-            <div className="flex items-center gap-1 shrink-0 no-print">
-               <Button variant="ghost" size="icon" className="h-9 w-9 text-blue-500 opacity-30 group-hover:opacity-100 transition-opacity" onClick={(e) => onCopy(e, note)}><Copy className="w-4 h-4" /></Button>
-              <Button variant="ghost" size="icon" className="h-9 w-9 text-destructive opacity-30 group-hover:opacity-100 transition-opacity" onClick={onDelete}><Trash2 className="w-4 h-4" /></Button>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 mt-2">
-            <span className="text-[10px] text-muted-foreground uppercase font-bold">{note.band}</span>
-            <span className="text-[10px] text-muted-foreground opacity-30">•</span>
-            <span className="text-[10px] text-muted-foreground uppercase font-bold">{note.setlist}</span>
-            {note.presetSlot && (
-              <>
+          ) : (
+            <>
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex-1 min-w-0">
+                  <CardTitle className="text-[16px] font-black uppercase leading-tight whitespace-pre-wrap">{note.title}</CardTitle>
+                </div>
+                <div className="flex items-center gap-1 shrink-0 no-print">
+                   <Button variant="ghost" size="icon" className="h-9 w-9 text-blue-500 opacity-30 group-hover:opacity-100 transition-opacity" onClick={(e) => onCopy(e, note)}><Copy className="w-4 h-4" /></Button>
+                  <Button variant="ghost" size="icon" className="h-9 w-9 text-destructive opacity-30 group-hover:opacity-100 transition-opacity" onClick={onDelete}><Trash2 className="w-4 h-4" /></Button>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 mt-2">
+                <span className="text-[10px] text-muted-foreground uppercase font-bold">{note.band}</span>
                 <span className="text-[10px] text-muted-foreground opacity-30">•</span>
-                <span className="text-[10px] text-orange-500 uppercase font-bold">
-                  {(() => {
-                    const s = parseInt(note.presetSlot);
-                    const bank = Math.floor((s - 1) / 4) + 1;
-                    const sub = ['A', 'B', 'C', 'D'][(s - 1) % 4];
-                    return `${String(bank).padStart(2, '0')}${sub}`;
-                  })()}
-                  {note.presetScene && ` S${parseInt(note.presetScene) + 1}`}
-                </span>
-              </>
-            )}
-          </div>
+                <span className="text-[10px] text-muted-foreground uppercase font-bold">{note.setlist}</span>
+                {note.presetSlot && (
+                  <>
+                    <span className="text-[10px] text-muted-foreground opacity-30">•</span>
+                    <span className="text-[10px] text-orange-500 uppercase font-bold">
+                      {(() => {
+                        const s = parseInt(note.presetSlot);
+                        const bank = Math.floor((s - 1) / 4) + 1;
+                        const sub = ['A', 'B', 'C', 'D'][(s - 1) % 4];
+                        return `${String(bank).padStart(2, '0')}${sub}`;
+                      })()}
+                      {note.presetScene && ` S${parseInt(note.presetScene) + 1}`}
+                    </span>
+                  </>
+                )}
+              </div>
+            </>
+          )}
         </div>
       </Card>
     </div>

@@ -6,7 +6,7 @@ import { AppShell } from '@/components/layout/app-shell';
 import { Card, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { NotebookPen, Plus, Trash2, GripVertical, Music2, Layers, Printer, Copy, ArrowRight, FileText } from 'lucide-react';
+import { NotebookPen, Plus, Trash2, GripVertical, Music2, Layers, Printer, Copy, ArrowRight, FileText, Search, X } from 'lucide-react';
 import { useFirebase, useUser } from '@/firebase';
 import { collection, getDocs, query, where, doc, deleteDoc, writeBatch, addDoc, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
@@ -22,6 +22,16 @@ import { NoteSheet } from '@/components/notes/NoteSheet';
 import { NoteEditorContent } from '@/components/notes/NoteEditorContent';
 import { BlockEditorContent } from '@/components/notes/BlockEditorContent';
 import { useNotesCache } from '@/stores/use-notes-cache';
+
+const SECTION_COLORS: Record<string, { bg: string; text: string; border: string }> = {
+  Intro: { bg: "bg-cyan-500/15", text: "text-cyan-400", border: "border-cyan-500/40" },
+  Verse: { bg: "bg-green-500/15", text: "text-green-400", border: "border-green-500/40" },
+  Chorus: { bg: "bg-yellow-500/15", text: "text-yellow-400", border: "border-yellow-500/40" },
+  Bridge: { bg: "bg-pink-500/15", text: "text-pink-400", border: "border-pink-500/40" },
+  Strum: { bg: "bg-purple-500/15", text: "text-purple-400", border: "border-purple-500/40" },
+  Out: { bg: "bg-gray-500/15", text: "text-gray-300", border: "border-gray-500/40" },
+  Solo: { bg: "bg-orange-500/20", text: "text-orange-500", border: "border-orange-500/40" }
+};
 
 export interface NoteSection {
   id: string;
@@ -78,6 +88,10 @@ function NotesLibraryContent() {
   const [isEditing, setIsEditing] = useState(false);
   const [newBlockInitialBand, setNewBlockInitialBand] = useState<string | null>(null);
   const [newBlockInitialSetlist, setNewBlockInitialSetlist] = useState<string | null>(null);
+
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<SavedNote[]>([]);
 
   const scrollToId = searchParams.get('scrollTo');
 
@@ -142,8 +156,30 @@ function NotesLibraryContent() {
     let notesToFilter = [...cachedNotes].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
     if (selectedBand) notesToFilter = notesToFilter.filter(n => n.band === selectedBand);
     if (selectedSetlist) notesToFilter = notesToFilter.filter(n => n.setlist === selectedSetlist);
+    if (searchQuery) notesToFilter = notesToFilter.filter(n => n.title.toLowerCase().includes(searchQuery.toLowerCase()));
     return notesToFilter;
-  }, [cachedNotes, selectedBand, selectedSetlist]);
+  }, [cachedNotes, selectedBand, selectedSetlist, searchQuery]);
+
+  useEffect(() => {
+    if (searchQuery.trim()) {
+      let results = cachedNotes.filter(n => n.title.toLowerCase().includes(searchQuery.toLowerCase()));
+
+      // Apply filters based on selected band and setlist
+      if (selectedBand) {
+        results = results.filter(n => n.band === selectedBand);
+      }
+      if (selectedSetlist) {
+        results = results.filter(n => n.setlist === selectedSetlist);
+      }
+
+      results = results
+        .sort((a, b) => a.title.localeCompare(b.title))
+        .slice(0, 10);
+      setSearchResults(results);
+    } else {
+      setSearchResults([]);
+    }
+  }, [searchQuery, cachedNotes, selectedBand, selectedSetlist]);
 
   useEffect(() => {
     if (scrollToId && filteredNotes.length > 0) {
@@ -276,10 +312,13 @@ function NotesLibraryContent() {
           </div>
           <div className="flex items-center gap-2">
             {selectedSetlist && filteredNotes.length > 0 && (
-              <Button onClick={handleExportPdf} variant="outline" className="gap-2 border-orange-500/30 text-orange-500 hover:bg-orange-500/10">
-                <Printer className="w-4 h-4" /> Esporta PDF
+              <Button onClick={handleExportPdf} variant="outline" size="icon" className="h-11 w-11 border-orange-500/30 text-orange-500 hover:bg-orange-500/10">
+                <Printer className="w-5 h-5" />
               </Button>
             )}
+            <Button onClick={() => setIsSearchOpen(!isSearchOpen)} variant="outline" size="icon" className="h-11 w-11 border-primary/30 text-primary hover:bg-primary/10">
+              <Search className="w-5 h-5" />
+            </Button>
             <Popover open={isAddMenuOpen} onOpenChange={setIsAddMenuOpen}>
               <PopoverTrigger asChild>
                 <Button size="icon" className="w-11 h-11 bg-orange-600 hover:bg-orange-700 text-white font-bold rounded-full shadow-lg">
@@ -320,6 +359,61 @@ function NotesLibraryContent() {
           </div>
         </header>
 
+        {isSearchOpen && (
+          <div className="relative bg-card/40 p-3 rounded-2xl border border-border shadow-sm">
+            <div className="flex items-center gap-2">
+              <Search className="w-5 h-5 text-muted-foreground" />
+              <Input
+                placeholder="Cerca brano..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="flex-1 bg-background/50 border-border"
+                autoFocus
+              />
+              {searchQuery && (
+                <Button variant="ghost" size="icon" onClick={() => setSearchQuery('')}>
+                  <X className="w-4 h-4" />
+                </Button>
+              )}
+            </div>
+            {searchResults.length > 0 && (
+              <div className="absolute top-full left-0 right-0 mt-2 bg-background border border-border rounded-xl shadow-xl z-50 max-h-64 overflow-auto">
+                {searchResults.map((note) => (
+                  <button
+                    key={note.id}
+                    onClick={() => {
+                      setSelectedNoteId(note.id);
+                      setIsSheetOpen(true);
+                      setSearchQuery('');
+                      setIsSearchOpen(false);
+                    }}
+                    className="w-full px-4 py-3 text-left hover:bg-secondary/50 transition-colors border-b border-border/20 last:border-0 flex items-center justify-between gap-3"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="font-bold text-primary">{note.title}</div>
+                      <div className="text-xs text-muted-foreground">{note.band} - {note.setlist}</div>
+                    </div>
+                    {note.presetSlot && (
+                      <Badge variant="outline" className="h-6 px-2 text-[10px] font-black bg-orange-500/10 border-orange-500/20 text-orange-500 flex items-center gap-1.5 shrink-0">
+                        <span>{(() => {
+                          const s = parseInt(note.presetSlot);
+                          const bank = Math.floor((s - 1) / 4) + 1;
+                          const sub = ['A', 'B', 'C', 'D'][(s - 1) % 4];
+                          return `${String(bank).padStart(2, '0')}${sub}`;
+                        })()}</span>
+                        <>
+                          <span className="opacity-30">•</span>
+                          <span>S{note.presetScene ? parseInt(note.presetScene) + 1 : 1}</span>
+                        </>
+                      </Badge>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 bg-card/40 p-3 rounded-2xl border border-border shadow-sm">
           <Select value={selectedBand || 'all'} onValueChange={(v) => { setSelectedBand(v === 'all' ? null : v); setSelectedSetlist(null); }}>
             <SelectTrigger className="h-11 bg-background/50 border-border text-[14px] font-bold"><SelectValue placeholder="Tutte le band" /></SelectTrigger>
@@ -347,12 +441,15 @@ function NotesLibraryContent() {
               <SortableContext items={filteredNotes.map(n => n.id)} strategy={verticalListSortingStrategy}>
                 <div className="grid grid-cols-1 gap-2.5">
                   {filteredNotes.map((note, index) => (
-                    <SortableNoteCard 
-                      key={note.id} 
-                      note={note} 
-                      onDelete={(e) => handleDelete(e, note)} 
+                    <SortableNoteCard
+                      key={note.id}
+                      note={note}
+                      onDelete={(e) => handleDelete(e, note)}
                       onCopy={(e) => openCopyDialog(e, note)}
-                      onClick={() => { setSelectedNoteId(note.id); setIsSheetOpen(true); }}
+                      onClick={() => {
+                        setSelectedNoteId(note.id);
+                        setIsSheetOpen(true);
+                      }}
                       ref={(el) => { if(el) noteRefs.current[note.id] = el; }}
                       isHighlighted={note.id === selectedNoteId}
                     />
@@ -445,7 +542,10 @@ function NotesLibraryContent() {
               {note.sections?.map((section, sIdx) => (
                 <div key={`${note.id}-s-${sIdx}`} className="print-section-row">
                   <div className="shrink-0">
-                    <span className="print-section-badge">{section.type}</span>
+                    <span className={cn(
+                      "print-section-badge",
+                      SECTION_COLORS[section.type as keyof typeof SECTION_COLORS]?.text
+                    )}>{section.type}</span>
                   </div>
                   <div className="flex-1">
                     <div className="print-chord-container">
@@ -453,7 +553,10 @@ function NotesLibraryContent() {
                         chord.toUpperCase() === 'NEWLINE' ? (
                           <div key={`nl-${cIdx}`} className="basis-full" />
                         ) : (
-                          <span key={`c-${cIdx}`} className="print-chord">{chord}</span>
+                          <span key={`c-${cIdx}`} className={cn(
+                            "print-chord",
+                            SECTION_COLORS[section.type as keyof typeof SECTION_COLORS]?.text
+                          )}>{chord}</span>
                         )
                       ))}
                     </div>

@@ -22,6 +22,16 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 
 type SectionType = "Intro" | "Verse" | "Chorus" | "Bridge" | "Strum" | "Out" | "Solo";
 
+const SECTION_COLORS: Record<SectionType, { bg: string; text: string; border: string }> = {
+  Intro: { bg: "bg-cyan-500/15", text: "text-cyan-400", border: "border-cyan-500/40" },
+  Verse: { bg: "bg-green-500/15", text: "text-green-400", border: "border-green-500/40" },
+  Chorus: { bg: "bg-yellow-500/15", text: "text-yellow-400", border: "border-yellow-500/40" },
+  Bridge: { bg: "bg-pink-500/15", text: "text-pink-400", border: "border-pink-500/40" },
+  Strum: { bg: "bg-purple-500/15", text: "text-purple-400", border: "border-purple-500/40" },
+  Out: { bg: "bg-gray-500/15", text: "text-gray-300", border: "border-gray-500/40" },
+  Solo: { bg: "bg-orange-500/20", text: "text-orange-500", border: "border-orange-500/40" }
+};
+
 const CHORD_ROOTS = ["C", "C#", "Db", "D", "D#", "Eb", "E", "F", "F#", "Gb", "G", "G#", "Ab", "A", "A#", "Bb", "B"];
 const CHORD_TABLE: Record<string, string[]> = {
   "C": ["C", "Cm", "C7", "Cmaj7", "Cm7", "C/B", "C/Bb", "C/G", "C/E", "C aum", "Cdim", "Csus4", "Csus2", "Cadd9"],
@@ -449,11 +459,16 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange 
                     <div className="flex items-start border-b border-border/20 last:border-0 hover:bg-secondary/5 transition-colors">
                       <div className="p-3 w-[85px] shrink-0 align-top">
                         {editMode ? (
-                          <Select 
-                            value={section.type} 
+                          <Select
+                            value={section.type}
                             onValueChange={(val: SectionType) => setSections(sections.map(s => s.id === section.id ? { ...s, type: val } : s))}
                           >
-                            <SelectTrigger className="w-full h-9 text-[12px] font-black uppercase bg-primary/5 border-primary/20 text-primary p-1">
+                            <SelectTrigger className={cn(
+                              "w-full h-9 text-[12px] font-black uppercase border p-1",
+                              SECTION_COLORS[section.type as SectionType]?.bg,
+                              SECTION_COLORS[section.type as SectionType]?.text,
+                              SECTION_COLORS[section.type as SectionType]?.border
+                            )}>
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -463,7 +478,17 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange 
                             </SelectContent>
                           </Select>
                         ) : (
-                          <Badge variant="secondary" className="w-full justify-center h-9 text-[13px] font-black uppercase tracking-tighter bg-primary/10 text-primary border-primary/20">{section.type}</Badge>
+                          <Badge
+                            variant="secondary"
+                            className={cn(
+                              "w-full justify-center h-9 text-[13px] font-black uppercase tracking-tighter border",
+                              SECTION_COLORS[section.type as SectionType]?.bg,
+                              SECTION_COLORS[section.type as SectionType]?.text,
+                              SECTION_COLORS[section.type as SectionType]?.border
+                            )}
+                          >
+                            {section.type}
+                          </Badge>
                         )}
                       </div>
                       <div className="p-3 flex-1 flex flex-col gap-3">
@@ -503,18 +528,24 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange 
                               <React.Fragment key={`${section.id}-${cIdx}`}>
                               <Tooltip>
                                 <TooltipTrigger asChild>
-                                  <Badge 
-                                    variant="outline" 
+                                  <Badge
+                                    variant="outline"
                                     className={cn(
                                       "h-9 px-3 text-[20px] font-black shadow-sm cursor-help relative group/badge",
-                                      chord.startsWith('x') && chord.length <= 3 
-                                        ? "bg-orange-500/10 border-orange-500/30 text-orange-500" 
-                                        : "bg-background border-primary/30 text-primary"
+                                      chord.startsWith('x') && chord.length <= 3
+                                        ? "bg-orange-500/10 border-orange-500/30 text-orange-500"
+                                        : SECTION_COLORS[section.type as SectionType]?.bg,
+                                      chord.startsWith('x') && chord.length <= 3
+                                        ? ""
+                                        : SECTION_COLORS[section.type as SectionType]?.border,
+                                      chord.startsWith('x') && chord.length <= 3
+                                        ? ""
+                                        : SECTION_COLORS[section.type as SectionType]?.text
                                     )}
                                   >
                                     {chord}
                                     {editMode && (
-                                      <button 
+                                      <button
                                         className="ml-2 opacity-30 hover:opacity-100 text-destructive transition-opacity"
                                         onClick={(e) => {
                                           e.stopPropagation();

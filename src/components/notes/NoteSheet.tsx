@@ -13,9 +13,7 @@ interface NoteSheetProps {
 export function NoteSheet({ isOpen, onClose, children, disableGestures = false }: NoteSheetProps) {
   const sheetRef = useRef<HTMLDivElement>(null);
   const [touchStartX, setTouchStartX] = useState(0);
-  const [touchStartY, setTouchStartY] = useState(0);
   const [touchX, setTouchX] = useState(0);
-  const [touchY, setTouchY] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
 
   useEffect(() => {
@@ -32,43 +30,32 @@ export function NoteSheet({ isOpen, onClose, children, disableGestures = false }
   const handleTouchStart = (e: React.TouchEvent) => {
     if (disableGestures) return;
     setTouchStartX(e.touches[0].clientX);
-    setTouchStartY(e.touches[0].clientY);
     setTouchX(e.touches[0].clientX);
-    setTouchY(e.touches[0].clientY);
     setIsDragging(true);
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
     if (disableGestures || !isDragging) return;
     setTouchX(e.touches[0].clientX);
-    setTouchY(e.touches[0].clientY);
   };
 
   const handleTouchEnd = () => {
     if (disableGestures || !isDragging) return;
-    const diffY = touchY - touchStartY;
     const diffX = touchStartX - touchX;
     
-    // Swipe down threshold (100px)
-    if (diffY > 100) {
-      onClose();
-    }
-    // Swipe left threshold (100px)
-    else if (diffX > 100 && Math.abs(diffX) > Math.abs(diffY)) {
+    // Swipe left threshold (100px) - only horizontal swipe
+    if (diffX > 100) {
       onClose();
     }
     
     setIsDragging(false);
     setTouchStartX(0);
-    setTouchStartY(0);
     setTouchX(0);
-    setTouchY(0);
   };
 
   if (!isOpen) return null;
 
   const translateX = isDragging ? Math.min(0, touchX - touchStartX) : 0;
-  const translateY = isDragging ? Math.max(0, touchY - touchStartY) : 0;
 
   return (
     <div className="fixed inset-0 z-50 flex items-start lg:items-center justify-center">
@@ -86,7 +73,7 @@ export function NoteSheet({ isOpen, onClose, children, disableGestures = false }
           isDragging && "transition-none",
           disableGestures && "translate-x-0 translate-y-0"
         )}
-        style={{ transform: !disableGestures ? `translate3d(${translateX}px, ${translateY}px, 0)` : undefined }}
+        style={{ transform: !disableGestures ? `translate3d(${translateX}px, 0, 0)` : undefined }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}

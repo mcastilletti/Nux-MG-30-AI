@@ -6,8 +6,54 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useUser } from '@/firebase';
-import { Database, ShieldCheck, Info, ExternalLink, AlertCircle, Globe, HelpCircle } from 'lucide-react';
+import { Database, ShieldCheck, ExternalLink, AlertCircle, Globe, HelpCircle, Terminal, Trash2 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { useMidiStore } from '@/stores/use-midi-store';
+
+// ── MIDI Monitor (componente separato per evitare re-render pesanti) ────────
+function MidiMonitorCard() {
+  const midiLog = useMidiStore(s => s.midiLog);
+  const clearMidiLog = useMidiStore(s => s.clearMidiLog);
+
+  return (
+    <Card className="border-primary/20 bg-card">
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <Terminal className="w-4 h-4 text-primary" /> MIDI Monitor — Messaggi Grezzi
+          </CardTitle>
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="text-[10px]">{midiLog.length} msg</Badge>
+            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={clearMidiLog} title="Cancella log">
+              <Trash2 className="w-3.5 h-3.5" />
+            </Button>
+          </div>
+        </div>
+        <CardDescription className="text-[11px]">
+          Messaggi HEX ricevuti dalla pedaliera in tempo reale. I messaggi SysEx sono in <span className="text-amber-400 font-mono">arancione</span>.
+          Cambia preset sulla pedaliera (tasto fisico) per vedere cosa manda il NUX MG-30 quando cambia slot.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {midiLog.length === 0 ? (
+          <div className="text-center py-8 text-xs text-muted-foreground italic border border-dashed border-border rounded-md">
+            Nessun messaggio ancora. Collega la pedaliera e cambia preset con i pulsanti fisici.
+          </div>
+        ) : (
+          <div className="bg-background rounded-md border border-border overflow-hidden">
+            <div className="max-h-72 overflow-y-auto p-3 space-y-0.5 font-mono text-[11px]">
+              {midiLog.map((msg, i) => (
+                <div key={i} className={`leading-5 ${msg.includes('F0') ? 'text-amber-400' : 'text-muted-foreground'}`}>
+                  {msg}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function SettingsPage() {
   const { user } = useUser();
@@ -82,6 +128,9 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
         </div>
+
+        {/* MIDI Monitor — per diagnosticare i nomi dei preset */}
+        <MidiMonitorCard />
 
         <Card className="border-amber-500/20 bg-amber-500/5">
           <CardHeader>

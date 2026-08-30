@@ -111,6 +111,10 @@ interface MidiStore {
   syncProgress: number;
   lastError: string | null;
   
+  midiLog: string[];
+  addMidiLog: (msg: string) => void;
+  clearMidiLog: () => void;
+
   initialize: () => Promise<void>;
   sendControlChange: (cc: number, value: number) => void;
   sendProgramChange: (pc: number) => void;
@@ -127,6 +131,7 @@ interface MidiStore {
   refreshDevices: () => void;
   syncPresets: (force?: boolean) => Promise<void>;
   syncActivePreset: () => void;
+  requestPresetName: () => void;
   updatePresetName: (slot: number, newName: string) => void;
   handleIncomingMidi: (message: MIDIMessageEvent) => void;
 }
@@ -142,6 +147,10 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
   isInitializing: false,
   syncProgress: 0,
   lastError: null,
+  midiLog: [],
+
+  addMidiLog: (msg) => set(state => ({ midiLog: [msg, ...state.midiLog].slice(0, 200) })),
+  clearMidiLog: () => set({ midiLog: [] }),
 
   initialize: async () => {
     const state = get();
@@ -194,9 +203,57 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     if (!data) return;
     const statusByte = data[0] & 0xF0;
 
+    // Log every raw incoming message as HEX
+    const hex = Array.from(data).map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
+    get().addMidiLog(`[IN] ${hex}`);
+
+    // Gestione SysEx messages
+    if (data[0] === 0xF0 && data[data.length - 1] === 0xF7) {
+      const sysexData = Array.from(data);
+      console.log('[MIDI SysEx IN]', hex);
+
+      // Riconosce qualsiasi risposta NUX con header F0 00 20 6B
+      const isNuxMessage = sysexData.length >= 6 &&
+        sysexData[1] === 0x00 &&
+        sysexData[2] === 0x20 &&
+        sysexData[3] === 0x6B;
+
+      if (isNuxMessage) {
+        console.log('[MIDI] NUX SysEx - comando:', sysexData[5]?.toString(16).toUpperCase(), '- lunghezza:', sysexData.length);
+
+        // Prova a estrarre un nome leggibile da qualsiasi offset a partire da byte 6
+        // Il nome del preset NUX è tipicamente 16 byte ASCII (0x20-0x7E)
+        for (let startOffset = 6; startOffset <= Math.min(12, sysexData.length - 8); startOffset++) {
+          let candidate = '';
+          for (let i = startOffset; i < Math.min(startOffset + 16, sysexData.length - 1); i++) {
+            const c = sysexData[i];
+            if (c >= 0x20 && c <= 0x7E) {
+              candidate += String.fromCharCode(c);
+            } else if (c === 0x00) {
+              break; // null terminator
+            } else {
+              candidate = ''; // byte non stampabile interrompe la sequenza
+              break;
+            }
+          }
+          candidate = candidate.trim();
+          if (candidate.length >= 3) {
+            console.log(`[MIDI] Possibile nome preset (offset ${startOffset}): "${candidate}"`);
+            const activePreset = usePresetStore.getState().activePreset;
+            if (activePreset) {
+              get().updatePresetName(activePreset.slot, candidate);
+              usePresetStore.setState(s => ({ activePreset: { ...s.activePreset, name: candidate } }));
+            }
+            break; // usa il primo candidato valido
+          }
+        }
+      }
+    }
+
     if (statusByte === 0xC0) {
       const pc = data[1];
       const slot = pc + 1;
+      console.log('[MIDI] Program Change -> slot', slot);
       const activePreset = usePresetStore.getState().activePreset;
       const existingPreset = get().devicePresets.find(p => p.slot === slot);
       
@@ -212,6 +269,7 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     if (!output || isEditorSyncing) return;
     
     set({ isEditorSyncing: true });
+    // Request preset data (includes name)
     output.send([0xF0, 0x00, 0x20, 0x6B, 0x01, 0x00, 0x01, 0xF7]);
     setTimeout(() => set({ isEditorSyncing: false }), 2000);
   },
@@ -368,6 +426,7 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     setTimeout(() => set({ isEditorSyncing: false }), totalTime);
   },
 
+
   syncPresets: async () => {
     if (get().isSyncing) return;
     
@@ -376,13 +435,23 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
       if (!get().isSyncing) break;
       set({ syncProgress: Math.round((i / 128) * 100) });
       get().sendProgramChange(i - 1);
-      await new Promise(r => setTimeout(r, 800));
+      await new Promise(r => setTimeout(r, 300));
     }
     set({ isSyncing: false });
   },
 
+
   updatePresetName: (slot, newName) => {
     set(state => ({ devicePresets: state.devicePresets.map(p => p.slot === slot ? { ...p, name: newName } : p) }));
+  },
+
+  requestPresetName: () => {
+    const { output } = get();
+    if (!output) return;
+    
+    // Request preset name specifically
+    // Based on QuickTone protocol, command 0x01 0x07 might be for names
+    output.send([0xF0, 0x00, 0x20, 0x6B, 0x01, 0x01, 0x07, 0xF7]);
   },
 
   refreshDevices: () => get().initialize()

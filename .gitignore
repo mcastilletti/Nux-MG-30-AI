@@ -16,4 +16,13 @@ public/workbox-*.js.map
 public/worker-*.js
 public/worker-*.js.map
 public/fallback-*.js
-public/fallback-*.js.map
+
+# Executables
+*.exe
+docs/*.exe
+
+# Documentation processing artifacts
+docs/extracted_images/
+docs/organized_images/
+docs/parameter_schema.md
+tsconfig.tsbuildinfo

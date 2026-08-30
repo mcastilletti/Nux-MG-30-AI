@@ -139,6 +139,18 @@ service cloud.firestore {
         allow update: if isExistingOwner(userId) && isImmutable('id');
         allow delete: if isExistingOwner(userId);
       }
+
+      /**
+       * @description Nomi personalizzati dei 128 slot preset del NUX MG-30.
+       * @path /users/{userId}/settings/{document}
+       * @allow (read, write) owner only
+       * @principle Ownership for device-specific user settings.
+       */
+      match /settings/{document} {
+        allow get, list: if isOwner(userId);
+        allow create, update: if isOwner(userId);
+        allow delete: if isExistingOwner(userId);
+      }
     }
 
     /**

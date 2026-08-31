@@ -164,6 +164,26 @@ service cloud.firestore {
     }
 
     /**
+     * @description User bands for organizing setlists.
+     * @path /bands/{bandId}
+     * @allow (read, write) if the authenticated user's UID matches the document's userId field.
+     */
+    match /bands/{bandId} {
+      allow read, update, delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+    }
+
+    /**
+     * @description User setlists for organizing notes/songs within bands.
+     * @path /setlists/{setlistId}
+     * @allow (read, write) if the authenticated user's UID matches the document's userId field.
+     */
+    match /setlists/{setlistId} {
+      allow read, update, delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+    }
+
+    /**
      * @description Global amplifier definitions. Publicly readable, write-protected.
      * @path /ampModels/{ampModelId}
      * @allow (get, list) always

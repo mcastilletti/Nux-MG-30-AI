@@ -4,7 +4,7 @@
 import React, { useEffect } from 'react';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { useMidiStore } from '@/stores/use-midi-store';
-import { LayoutDashboard, Library, Sliders, Settings, Zap, Wifi, WifiOff, NotebookPen, LogIn, LogOut, User as UserIcon, AlertCircle } from 'lucide-react';
+import { LayoutDashboard, Library, Sliders, Settings, Zap, Wifi, WifiOff, NotebookPen, LogIn, LogOut, User as UserIcon, AlertCircle, Users } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
@@ -78,6 +78,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
     { label: 'Library', href: '/library', icon: Library },
     { label: 'Editor', href: '/editor', icon: Sliders },
     { label: 'Note', href: '/notes', icon: NotebookPen },
+    { label: 'Band', href: '/bands', icon: Users },
     { label: 'SysEx Analyzer', href: '/tools/sysex-analyzer', icon: Zap },
   ];
 

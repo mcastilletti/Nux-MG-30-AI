@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
-import { Undo2, Redo2, Save, Power, LayoutGrid, ChevronLeft, ChevronRight, Settings2, Sparkles, Loader2, RefreshCw, CheckCircle2, X, Layers } from 'lucide-react';
+import { Undo2, Redo2, Save, LayoutGrid, ChevronLeft, ChevronRight, Settings2, Sparkles, Loader2, RefreshCw, CheckCircle2, X, Layers } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { MG30_MODELS } from '@/lib/mg30-data';
 import { generateMG30Preset, MG30PresetOutput } from '@/ai/flows/mg30-preset-gen';
@@ -371,6 +371,23 @@ const getBlockColorVar = (type: string) => {
   }
 };
 
+const getEffectImage = (type: string) => {
+  switch (type) {
+    case 'wah': return '/wah.png';
+    case 'noise-gate': return '/gate.png';
+    case 'compressor': return '/cmp.png';
+    case 'efx': return '/efx.png';
+    case 'amp': return '/amp.png';
+    case 'ir': return '/ir.png';
+    case 'sr': return '/s-r.png';
+    case 'modulation': return '/mod.png';
+    case 'delay': return '/dly.png';
+    case 'reverb': return '/rvb.png';
+    case 'eq': return '/eq.png';
+    default: return '/amp.png';
+  }
+};
+
 const formatSlotLabel = (slot: number) => {
   const group = Math.floor((slot - 1) / 4) + 1;
   const letter = ['A', 'B', 'C', 'D'][(slot - 1) % 4];
@@ -677,13 +694,13 @@ Es. per JSON: { "amp": { "gain": 60, "master": 80 }, "delay": { "enabled": true 
           </div>
         </div>
 
-        <Card className="border-border bg-background/50 overflow-hidden shadow-lg">
+        <Card className="border-border bg-background/50 shadow-lg">
           <CardHeader className="py-3 border-b border-border bg-secondary/20 flex flex-row items-center justify-between">
             <CardTitle className="text-xs uppercase tracking-widest text-muted-foreground flex items-center gap-2"><LayoutGrid className="w-3 h-3" /> Signal Chain</CardTitle>
             <Button variant="ghost" size="sm" className="h-6 text-[9px] uppercase font-bold gap-2" onClick={exitBlockEditor}><X className="w-3 h-3" /> Close Editor</Button>
           </CardHeader>
-          <CardContent className="py-8">
-            <div className="flex items-center justify-between max-w-6xl mx-auto overflow-x-auto gap-4 pb-2 px-4">
+          <CardContent className="py-4">
+            <div className="flex items-center justify-between max-w-6xl mx-auto overflow-x-auto gap-4 py-6 px-8">
               {activePreset.effects.map((effect, idx) => {
                 const isSelected = selectedBlockId === effect.id;
                 const blockColor = getBlockColorVar(effect.type);
@@ -692,22 +709,22 @@ Es. per JSON: { "amp": { "gain": 60, "master": 80 }, "delay": { "enabled": true 
                     <div
                       onClick={() => handleSelectBlock(effect.id, effect.type)}
                       className={cn(
-                        "relative cursor-pointer w-24 flex flex-col items-center gap-2 p-3 rounded-lg border-2 transition-all flex-shrink-0 select-none",
+                        "relative cursor-pointer w-24 h-24 flex items-center justify-center rounded-lg transition-all flex-shrink-0 select-none overflow-hidden",
                         "bg-secondary/40",
-                        isSelected ? "scale-105 shadow-md" : "border-border/40",
+                        isSelected ? "scale-105 shadow-md border-2" : "",
                         !effect.enabled && "opacity-60"
                       )}
-                      style={{ borderColor: isSelected ? `hsl(${blockColor})` : '' }}
+                      style={{ borderColor: isSelected ? `hsl(${blockColor})` : 'transparent' }}
                     >
-                      <div
-                        onClick={(e) => handleToggleBlock(e, effect.id, effect.type, effect.enabled)}
-                        className="w-10 h-10 rounded-md flex items-center justify-center mb-1 bg-background/60 border border-border/50 hover:bg-background/80 transition-colors"
-                      >
-                        <Power className="w-5 h-5" style={{ color: effect.enabled ? `hsl(${blockColor})` : 'gray' }} />
-                      </div>
-                      <span className="text-[9px] font-bold uppercase truncate" style={{ color: effect.enabled ? `hsl(${blockColor})` : 'gray' }}>
-                        {effect.type}
-                      </span>
+                      <img
+                        src={getEffectImage(effect.type)}
+                        alt={effect.type}
+                        className="w-full h-full object-cover hover:bg-white/10 transition-colors pointer-events-none"
+                        style={{
+                          opacity: effect.enabled ? 1 : 0.4,
+                          filter: effect.enabled ? 'brightness(1.2)' : 'grayscale(100%) brightness(0.8)'
+                        }}
+                      />
                     </div>
                     {idx < activePreset.effects.length - 1 && <div className="flex-1 min-w-[20px] h-[2px] bg-border/40" />}
                   </React.Fragment>

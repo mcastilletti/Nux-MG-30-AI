@@ -3,7 +3,8 @@
 import { firebaseConfig } from '@/firebase/config';
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
-import { getFirestore, enableMultiTabIndexedDbPersistence } from 'firebase/firestore'
+import { getFirestore, enableMultiTabIndexedDbPersistence } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
 
 // IMPORTANT: DO NOT MODIFY THIS FUNCTION
 export function initializeFirebase() {
@@ -36,10 +37,12 @@ export function getSdks(firebaseApp: FirebaseApp) {
   const db = getFirestore(firebaseApp);
   const auth = getAuth(firebaseApp);
   const googleProvider = new GoogleAuthProvider();
+  const storage = getStorage(firebaseApp);
   return {
     firebaseApp,
     auth,
     firestore: db,
+    storage,
     googleProvider
   };
 }

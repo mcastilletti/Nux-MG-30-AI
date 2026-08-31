@@ -10,12 +10,14 @@ import { Badge } from '@/components/ui/badge';
 import { Music2, Plus, Trash2, Edit, Layers, ChevronRight, Users } from 'lucide-react';
 import { useFirebase, useUser } from '@/firebase';
 import { collection, getDocs, query, where, doc, deleteDoc, addDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
 export interface Band {
   id: string;
   name: string;
+  logoUrl?: string;
   userId: string;
   createdAt?: any;
   updatedAt?: any;
@@ -32,7 +34,7 @@ export interface Setlist {
 
 function BandsContent() {
   const { toast } = useToast();
-  const { firestore } = useFirebase();
+  const { firestore, storage } = useFirebase();
   const { user, isUserLoading: userLoading } = useUser();
   
   const [bands, setBands] = useState<Band[]>([]);
@@ -48,6 +50,9 @@ function BandsContent() {
   const [selectedBandForSetlist, setSelectedBandForSetlist] = useState<Band | null>(null);
   
   const [bandName, setBandName] = useState('');
+  const [bandLogo, setBandLogo] = useState<File | null>(null);
+  const [bandLogoPreview, setBandLogoPreview] = useState<string>('');
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   const [setlistName, setSetlistName] = useState('');
   
   const [isDeleteBandDialogOpen, setIsDeleteBandDialogOpen] = useState(false);
@@ -141,12 +146,35 @@ function BandsContent() {
     return allBands.sort((a, b) => a.name.localeCompare(b.name));
   };
 
+  const handleLogoUpload = async (file: File): Promise<string> => {
+    if (!storage || !user) {
+      toast({ title: "Storage non disponibile", variant: "destructive" });
+      throw new Error('Storage not available');
+    }
+    
+    const fileName = `${Date.now()}_${file.name}`;
+    const storageRef = ref(storage, `band-logos/${user.uid}/${fileName}`);
+    
+    await uploadBytes(storageRef, file);
+    const downloadURL = await getDownloadURL(storageRef);
+    
+    return downloadURL;
+  };
+
   const handleCreateBand = async () => {
     if (!bandName.trim() || !user) return;
     
     try {
+      setIsUploadingLogo(true);
+      
+      let logoUrl = '';
+      if (bandLogo) {
+        logoUrl = await handleLogoUpload(bandLogo);
+      }
+      
       const newBand = {
         name: bandName.trim(),
+        logoUrl,
         userId: user.uid,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
@@ -155,11 +183,15 @@ function BandsContent() {
       const docRef = await addDoc(collection(firestore, "bands"), newBand);
       setBands([...bands, { ...newBand, id: docRef.id }]);
       setBandName('');
+      setBandLogo(null);
+      setBandLogoPreview('');
       setIsBandDialogOpen(false);
       toast({ title: "Band creata con successo" });
     } catch (error) {
       console.error('Error creating band:', error);
       toast({ title: "Errore creazione band", variant: "destructive" });
+    } finally {
+      setIsUploadingLogo(false);
     }
   };
 
@@ -167,19 +199,57 @@ function BandsContent() {
     if (!editingBand || !bandName.trim()) return;
     
     try {
-      await updateDoc(doc(firestore, "bands", editingBand.id), {
-        name: bandName.trim(),
-        updatedAt: serverTimestamp()
-      });
+      setIsUploadingLogo(true);
       
-      setBands(bands.map(b => b.id === editingBand.id ? { ...b, name: bandName.trim() } : b));
+      let logoUrl = editingBand.logoUrl;
+      if (bandLogo) {
+        logoUrl = await handleLogoUpload(bandLogo);
+      }
+      
+      const isFromNotes = (editingBand as Band & { isFromNotes?: boolean }).isFromNotes;
+      
+      if (isFromNotes) {
+        // Se è una band dalle note, la creiamo formalmente
+        const newBand = {
+          name: bandName.trim(),
+          logoUrl,
+          userId: user?.uid,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        };
+        
+        const docRef = await addDoc(collection(firestore, "bands"), newBand);
+        const createdBand = { ...newBand, id: docRef.id };
+        
+        // Rimuovi dalle note bands e aggiungi alle bands formali
+        setNotesBands(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(editingBand.name);
+          return newSet;
+        });
+        setBands([...bands, createdBand]);
+      } else {
+        // Se è una band formale, la aggiorniamo normalmente
+        await updateDoc(doc(firestore, "bands", editingBand.id), {
+          name: bandName.trim(),
+          logoUrl,
+          updatedAt: serverTimestamp()
+        });
+        
+        setBands(bands.map(b => b.id === editingBand.id ? { ...b, name: bandName.trim(), logoUrl } : b));
+      }
+      
       setBandName('');
+      setBandLogo(null);
+      setBandLogoPreview('');
       setEditingBand(null);
       setIsBandDialogOpen(false);
-      toast({ title: "Band aggiornata con successo" });
+      toast({ title: isFromNotes ? "Band formalizzata con successo" : "Band aggiornata con successo" });
     } catch (error) {
       console.error('Error updating band:', error);
       toast({ title: "Errore aggiornamento band", variant: "destructive" });
+    } finally {
+      setIsUploadingLogo(false);
     }
   };
 
@@ -272,10 +342,13 @@ function BandsContent() {
     if (band) {
       setEditingBand(band);
       setBandName(band.name);
+      setBandLogoPreview(band.logoUrl || '');
     } else {
       setEditingBand(null);
       setBandName('');
+      setBandLogoPreview('');
     }
+    setBandLogo(null);
     setIsBandDialogOpen(true);
   };
 
@@ -356,12 +429,16 @@ function BandsContent() {
                       <div className="flex items-start justify-between mb-6">
                         <div className="flex items-center gap-4">
                           <div className={cn(
-                            "p-3 rounded-xl border transition-all duration-300",
+                            "w-16 h-16 rounded-xl border transition-all duration-300 flex items-center justify-center overflow-hidden",
                             isFromNotes 
                               ? "bg-muted/50 border-muted-foreground/30" 
                               : "bg-gradient-to-br from-blue-500/20 to-purple-500/20 border-blue-500/30 shadow-lg shadow-blue-500/10"
                           )}>
-                            <Music2 className={cn("w-6 h-6", isFromNotes ? "text-muted-foreground" : "text-blue-400")} />
+                            {band.logoUrl ? (
+                              <img src={band.logoUrl} alt={band.name} className="w-full h-full object-cover" />
+                            ) : (
+                              <Music2 className={cn("w-6 h-6", isFromNotes ? "text-muted-foreground" : "text-blue-400")} />
+                            )}
                           </div>
                           <div className="space-y-1">
                             <h3 className="text-xl font-bold">{band.name}</h3>
@@ -382,16 +459,16 @@ function BandsContent() {
                             </div>
                           </div>
                         </div>
-                        {!isFromNotes && (
-                          <div className="flex items-center gap-1">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-9 w-9 text-muted-foreground hover:text-blue-400 hover:bg-blue-500/10 transition-colors"
-                              onClick={() => openBandDialog(band)}
-                            >
-                              <Edit className="w-4 h-4" />
-                            </Button>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-9 w-9 text-muted-foreground hover:text-blue-400 hover:bg-blue-500/10 transition-colors"
+                            onClick={() => openBandDialog(band)}
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          {!isFromNotes && (
                             <Button
                               variant="ghost"
                               size="icon"
@@ -403,8 +480,8 @@ function BandsContent() {
                             >
                               <Trash2 className="w-4 h-4" />
                             </Button>
-                          </div>
-                        )}
+                          )}
+                        </div>
                       </div>
 
                       {bandSetlists.length > 0 ? (
@@ -511,6 +588,36 @@ function BandsContent() {
                   autoFocus
                 />
               </div>
+              <div className="space-y-2">
+                <label className="text-sm font-semibold">Logo Band (opzionale)</label>
+                <div className="flex items-center gap-4">
+                  <div className="w-20 h-20 rounded-lg border-2 border-dashed border-border/50 flex items-center justify-center overflow-hidden bg-muted/30">
+                    {bandLogoPreview ? (
+                      <img src={bandLogoPreview} alt="Logo preview" className="w-full h-full object-cover" />
+                    ) : (
+                      <Music2 className="w-8 h-8 text-muted-foreground" />
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          setBandLogo(file);
+                          const reader = new FileReader();
+                          reader.onloadend = () => {
+                            setBandLogoPreview(reader.result as string);
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                      className="h-11"
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
             <DialogFooter className="gap-2">
               <Button variant="outline" onClick={() => setIsBandDialogOpen(false)} className="font-semibold">
@@ -518,10 +625,17 @@ function BandsContent() {
               </Button>
               <Button 
                 onClick={editingBand ? handleUpdateBand : handleCreateBand}
-                disabled={!bandName.trim()}
+                disabled={!bandName.trim() || isUploadingLogo}
                 className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold shadow-lg shadow-blue-500/25 border-0"
               >
-                {editingBand ? 'Aggiorna' : 'Crea'}
+                {isUploadingLogo ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
+                    Caricamento...
+                  </>
+                ) : (
+                  editingBand ? 'Aggiorna' : 'Crea'
+                )}
               </Button>
             </DialogFooter>
           </DialogContent>

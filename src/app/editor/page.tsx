@@ -585,10 +585,10 @@ export default function EditorPage() {
 
   return (
     <AppShell>
-      <div className="space-y-6 relative">
+      <div className="relative mx-auto max-w-[1440px] space-y-5 py-1 md:space-y-6 md:py-2">
         {isEditorSyncing && (
           <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/60 backdrop-blur-sm rounded-xl">
-            <Card className="p-8 flex flex-col items-center gap-4 shadow-2xl border-primary/40 bg-card">
+            <Card role="status" aria-live="polite" className="p-8 flex flex-col items-center gap-4 shadow-2xl border-primary/40 bg-card">
               <Loader2 className="w-10 h-10 animate-spin text-primary" />
               <div className="text-center">
                 <h3 className="text-lg font-bold">Hardware Sync...</h3>
@@ -598,25 +598,25 @@ export default function EditorPage() {
           </div>
         )}
 
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-4 rounded-xl bg-card border border-border shadow-sm">
-          <div className="flex items-center gap-4 cursor-pointer hover:bg-secondary/20 p-2 rounded-lg transition-colors group">
+        <div className="app-surface flex flex-col gap-4 rounded-2xl p-3 md:p-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex min-w-0 items-center gap-3 rounded-xl p-1 transition-colors md:gap-4">
             <div className="flex items-center gap-2">
-              <button onClick={(e) => { e.stopPropagation(); handleSlotChange('prev'); }} className="p-2 hover:bg-secondary rounded-full transition-colors"><ChevronLeft className="w-4 h-4" /></button>
-              <div className="w-16 h-12 rounded-lg bg-primary/10 flex items-center justify-center font-mono font-bold text-xl text-primary border border-primary/20">{formatSlotLabel(activePreset.slot)}</div>
-              <button onClick={(e) => { e.stopPropagation(); handleSlotChange('next'); }} className="p-2 hover:bg-secondary rounded-full transition-colors"><ChevronRight className="w-4 h-4" /></button>
+              <button aria-label="Preset precedente" onClick={(e) => { e.stopPropagation(); handleSlotChange('prev'); }} className="touch-target rounded-full p-2 transition-colors hover:bg-secondary"><ChevronLeft className="mx-auto h-5 w-5" /></button>
+              <div className="flex h-12 w-[4.5rem] items-center justify-center rounded-lg border border-primary/30 bg-primary/10 font-mono text-lg font-bold text-primary">{formatSlotLabel(activePreset.slot)}</div>
+              <button aria-label="Preset successivo" onClick={(e) => { e.stopPropagation(); handleSlotChange('next'); }} className="touch-target rounded-full p-2 transition-colors hover:bg-secondary"><ChevronRight className="mx-auto h-5 w-5" /></button>
             </div>
-            <div>
-              <h3 className="text-xl font-bold">{activePreset.name}</h3>
-              <div className="flex items-center gap-2 mt-1">
-                <Badge variant="outline" className="text-[10px]">MG-30 CONNECTED</Badge>
-                <Badge variant="secondary" className="text-[10px] bg-primary/20 text-primary border-primary/30">SCENE {activePreset.activeScene + 1}</Badge>
+            <div className="min-w-0">
+              <h3 className="truncate text-lg font-bold md:text-xl">{activePreset.name}</h3>
+              <div className="mt-1 flex flex-wrap items-center gap-2">
+                <Badge variant="outline" className="text-[10px]">{status === 'connected' ? 'MG-30 CONNECTED' : 'MG-30 OFFLINE'}</Badge>
+                <Badge variant="secondary" className="border-primary/30 bg-primary/15 text-[10px] text-primary">SCENE {activePreset.activeScene + 1}</Badge>
               </div>
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex min-w-0 w-full flex-wrap items-center gap-2 md:gap-3 lg:w-auto lg:justify-end">
             {/* Scene Selector */}
-            <div className="flex items-center gap-1 bg-secondary/30 p-1 rounded-lg border border-border">
+            <div className="flex items-center gap-1 rounded-xl border border-border bg-secondary/30 p-1">
               <div className="px-2 text-[10px] font-black uppercase text-muted-foreground flex items-center gap-1"><Layers className="w-3 h-3" /> Scenes</div>
               {[0, 1, 2].map((idx) => (
                 <Button
@@ -625,7 +625,7 @@ export default function EditorPage() {
                   size="sm"
                   onClick={() => handleSceneChange(idx)}
                   className={cn(
-                    "h-8 w-10 font-bold transition-all",
+                    "h-10 w-10 font-bold transition-all",
                     activePreset.activeScene === idx ? "bg-primary shadow-lg scale-105" : "text-muted-foreground"
                   )}
                 >
@@ -686,46 +686,65 @@ Es. per JSON: { "amp": { "gain": 60, "master": 80 }, "delay": { "enabled": true 
                 </DialogContent>
               </Dialog>
               <div className="hidden sm:block w-[1px] h-8 bg-border mx-1" />
-              <Button variant="outline" size="icon" onClick={() => syncActivePreset()} title="Sync Hardware"><RefreshCw className={cn("w-4 h-4", isEditorSyncing && "animate-spin")} /></Button>
-              <Button variant="outline" size="icon" onClick={undo} title="Undo"><Undo2 className="w-4 h-4" /></Button>
-              <Button variant="outline" size="icon" onClick={redo} title="Redo"><Redo2 className="w-4 h-4" /></Button>
-              <Button className="gap-2" onClick={handleSave}><Save className="w-4 h-4" /> SAVE</Button>
+              <Button variant="outline" size="icon" className="touch-target" onClick={() => syncActivePreset()} title="Sincronizza hardware"><RefreshCw className={cn("h-4 w-4", isEditorSyncing && "animate-spin")} /></Button>
+              <Button variant="outline" size="icon" className="touch-target" onClick={undo} title="Annulla"><Undo2 className="h-4 w-4" /></Button>
+              <Button variant="outline" size="icon" className="touch-target" onClick={redo} title="Ripristina"><Redo2 className="h-4 w-4" /></Button>
+              <Button className="touch-target shrink-0 gap-2 px-4 sm:px-5" onClick={handleSave}><Save className="h-4 w-4" /> <span className="hidden sm:inline">SALVA</span><span className="sm:hidden">SAVE</span></Button>
             </div>
           </div>
         </div>
 
-        <Card className="border-border bg-background/50 shadow-lg">
-          <CardHeader className="py-3 border-b border-border bg-secondary/20 flex flex-row items-center justify-between">
-            <CardTitle className="text-xs uppercase tracking-widest text-muted-foreground flex items-center gap-2"><LayoutGrid className="w-3 h-3" /> Signal Chain</CardTitle>
-            <Button variant="ghost" size="sm" className="h-6 text-[9px] uppercase font-bold gap-2" onClick={exitBlockEditor}><X className="w-3 h-3" /> Close Editor</Button>
+        <Card className="app-surface overflow-hidden rounded-2xl bg-background/40 shadow-none">
+          <CardHeader className="flex flex-row items-center justify-between border-b border-border/80 bg-secondary/20 py-3">
+            <CardTitle className="section-kicker flex items-center gap-2"><LayoutGrid className="h-4 w-4 text-primary" /> Signal Chain</CardTitle>
+            <Button variant="ghost" size="sm" className="h-9 gap-2 text-[10px] font-bold uppercase" onClick={exitBlockEditor}><X className="h-3.5 w-3.5" /> Chiudi</Button>
           </CardHeader>
           <CardContent className="py-4">
-            <div className="flex items-center justify-between max-w-6xl mx-auto overflow-x-auto gap-4 py-6 px-8">
+            <div className="mx-auto flex max-w-6xl items-center gap-3 overflow-x-auto px-4 py-5 md:gap-4 md:px-8 md:py-6">
               {activePreset.effects.map((effect, idx) => {
                 const isSelected = selectedBlockId === effect.id;
                 const blockColor = getBlockColorVar(effect.type);
                 return (
                   <React.Fragment key={effect.id}>
-                    <div
+                    <button
+                      type="button"
                       onClick={() => handleSelectBlock(effect.id, effect.type)}
+                      aria-label={`Apri ${effect.type}`}
                       className={cn(
-                        "relative cursor-pointer w-24 h-24 flex items-center justify-center rounded-lg transition-all flex-shrink-0 select-none overflow-hidden",
-                        "bg-secondary/40",
-                        isSelected ? "scale-105 shadow-md border-2" : "",
+                        "relative flex h-[7.25rem] w-24 shrink-0 cursor-pointer flex-col items-stretch justify-between overflow-hidden rounded-xl border bg-secondary/40 text-left transition-colors md:h-[8.25rem] md:w-28",
+                        isSelected ? "border-2 shadow-md" : "border-border/50 hover:border-primary/40",
                         !effect.enabled && "opacity-60"
                       )}
-                      style={{ borderColor: isSelected ? `hsl(${blockColor})` : 'transparent' }}
+                      style={{
+                        ...(isSelected ? { borderColor: `hsl(${blockColor})` } : {}),
+                        ...(effect.type === 'modulation' ? { backgroundColor: `hsla(${blockColor}, 0.1)` } : {})
+                      }}
                     >
-                      <img
-                        src={getEffectImage(effect.type)}
-                        alt={effect.type}
-                        className="w-full h-full object-cover hover:bg-white/10 transition-colors pointer-events-none"
-                        style={{
-                          opacity: effect.enabled ? 1 : 0.4,
-                          filter: effect.enabled ? 'brightness(1.2)' : 'grayscale(100%) brightness(0.8)'
-                        }}
-                      />
-                    </div>
+                      <div className="relative min-h-0 flex-1">
+                        <span
+                          aria-hidden="true"
+                          className="absolute inset-1.5 drop-shadow-[0_0_5px_hsl(var(--icon-color)_/_0.7)]"
+                          style={{
+                            '--icon-color': blockColor,
+                            backgroundColor: `hsl(${blockColor})`,
+                            maskImage: `url(${getEffectImage(effect.type)})`,
+                            WebkitMaskImage: `url(${getEffectImage(effect.type)})`,
+                            maskRepeat: 'no-repeat',
+                            WebkitMaskRepeat: 'no-repeat',
+                            maskPosition: 'center',
+                            WebkitMaskPosition: 'center',
+                            maskSize: 'contain',
+                            WebkitMaskSize: 'contain'
+                          } as React.CSSProperties}
+                        />
+                        <span className={cn("absolute left-1.5 top-1.5 rounded-md px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide", effect.enabled ? "bg-background/80 text-foreground" : "bg-background/80 text-muted-foreground")}>
+                          {effect.enabled ? 'ON' : 'OFF'}
+                        </span>
+                      </div>
+                      <span className="truncate border-t border-border/50 px-2 py-2 text-[10px] font-semibold uppercase tracking-wide text-foreground">
+                        {effect.type === 'noise-gate' ? 'Gate' : effect.type === 'modulation' ? 'Mod' : effect.type}
+                      </span>
+                    </button>
                     {idx < activePreset.effects.length - 1 && <div className="flex-1 min-w-[20px] h-[2px] bg-border/40" />}
                   </React.Fragment>
                 );
@@ -736,27 +755,36 @@ Es. per JSON: { "amp": { "gain": 60, "master": 80 }, "delay": { "enabled": true 
 
         {selectedEffect && (
           <Card
-            className="shadow-xl"
+            className="rounded-2xl shadow-none"
             style={{ borderColor: `hsla(${getBlockColorVar(selectedEffect.type)}, 0.3)` }}
           >
-            <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-border/50 gap-4">
+            <CardHeader className="flex flex-col items-start justify-between gap-4 border-b border-border/50 sm:flex-row sm:items-center">
               <div className="flex items-center gap-4">
                 <Settings2 className="w-5 h-5" style={{ color: `hsl(${getBlockColorVar(selectedEffect.type)})` }} />
-                <CardTitle className="text-lg uppercase" style={{ color: `hsl(${getBlockColorVar(selectedEffect.type)})` }}>
+                <CardTitle className="text-base uppercase md:text-lg" style={{ color: `hsl(${getBlockColorVar(selectedEffect.type)})` }}>
                   {selectedEffect?.type} <Badge variant="outline" className="text-[10px] ml-2">{selectedEffect?.model}</Badge>
                 </CardTitle>
               </div>
-              <div className="flex items-center gap-4">
+              <div className="flex w-full items-center gap-3 sm:w-auto sm:gap-4">
                 <Select value={selectedEffect?.model} onValueChange={(val) => handleModelChange(selectedEffect!.id, selectedEffect!.type, val)}>
-                  <SelectTrigger className="w-[200px]"><SelectValue placeholder="Model" /></SelectTrigger>
+                  <SelectTrigger className="h-11 w-full sm:w-[220px]"><SelectValue placeholder="Model" /></SelectTrigger>
                   <SelectContent>{availableModels.map(m => <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>)}</SelectContent>
                 </Select>
-                <Switch checked={selectedEffect?.enabled} onCheckedChange={() => handleToggleBlock({ stopPropagation: () => { } } as any, selectedEffect!.id, selectedEffect!.type, selectedEffect!.enabled)} />
+                <div className="flex shrink-0 items-center gap-2 text-xs font-semibold text-muted-foreground">
+                  <span className="hidden sm:inline">{selectedEffect?.enabled ? 'Attivo' : 'Bypass'}</span>
+                  <Switch
+                    aria-label={`${selectedEffect?.enabled ? 'Disattiva' : 'Attiva'} ${selectedEffect?.type}`}
+                    checked={selectedEffect?.enabled}
+                    className="data-[state=checked]:bg-transparent"
+                    style={selectedEffect?.enabled ? { backgroundColor: `hsl(${getBlockColorVar(selectedEffect.type)})` } : undefined}
+                    onCheckedChange={() => handleToggleBlock({ stopPropagation: () => { } } as any, selectedEffect!.id, selectedEffect!.type, selectedEffect!.enabled)}
+                  />
+                </div>
               </div>
             </CardHeader>
-            <CardContent className="p-10">
+            <CardContent className="p-5 md:p-8 lg:p-10">
               {currentModelData && (
-                <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-y-12 gap-x-8 justify-items-center">
+                <div className="grid grid-cols-2 justify-items-center gap-x-3 gap-y-9 sm:grid-cols-4 sm:gap-x-8 lg:grid-cols-5 lg:gap-y-12">
                   {currentModelData.parameters.map((param, index) => (
                     <div key={param.id}>
                       <RotaryKnob label={param.name} value={Number(selectedEffect.parameters[param.id.toLowerCase()] ?? param.default)} min={param.min} max={param.max} step={param.step} onChange={(v) => handleParamChange(selectedEffect.type, param.id, v, index)} color={currentBlockColor} />

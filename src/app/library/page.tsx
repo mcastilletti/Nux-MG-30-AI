@@ -100,13 +100,14 @@ export default function LibraryPage() {
 
   return (
     <AppShell>
-      <div className="space-y-6">
+      <div className="mx-auto max-w-7xl space-y-5 py-1 md:space-y-7 md:py-2">
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h2 className="text-3xl font-bold tracking-tight">Libreria Preset</h2>
-            <p className="text-muted-foreground">Gestisci i 128 slot della tua pedaliera MG-30.</p>
+            <p className="section-kicker mb-1">Preset manager</p>
+            <h2 className="text-2xl font-bold tracking-tight md:text-3xl">Libreria preset</h2>
+            <p className="mt-1 text-sm text-muted-foreground">Trova rapidamente il suono giusto e invialo alla pedaliera.</p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex w-full flex-wrap items-center gap-2 md:w-auto">
             {/* Indicatore stato cloud */}
             <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
               {namesLoading ? (
@@ -121,13 +122,13 @@ export default function LibraryPage() {
             <Button
               onClick={() => syncPresets()}
               variant={isSyncing ? 'secondary' : 'outline'}
-              className="gap-2"
+              className="touch-target gap-2"
               disabled={isSyncing}
             >
               {isSyncing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
               Sync Hardware
             </Button>
-            <Button className="gap-2">
+            <Button className="touch-target gap-2">
               <Plus className="w-4 h-4" /> Nuovo
             </Button>
           </div>
@@ -143,22 +144,22 @@ export default function LibraryPage() {
           </div>
         )}
 
-        <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-card p-3 rounded-xl border border-border shadow-sm">
-          <div className="relative w-full md:w-96">
+        <div className="app-surface flex flex-col items-center justify-between gap-3 rounded-2xl p-3 md:flex-row">
+          <div className="relative w-full md:w-[min(28rem,50vw)]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               placeholder="Cerca tra i preset..."
-              className="pl-10 bg-background/50 border-border"
+              className="h-11 border-border bg-background/50 pl-10"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
           <div className="flex items-center gap-2">
             <div className="flex rounded-md border border-border p-1 bg-background/40">
-              <Button variant={view === 'grid' ? 'secondary' : 'ghost'} size="icon" className="h-8 w-8" onClick={() => setView('grid')}>
+              <Button aria-label="Vista griglia" variant={view === 'grid' ? 'secondary' : 'ghost'} size="icon" className="touch-target h-10 w-10" onClick={() => setView('grid')}>
                 <LayoutGrid className="w-4 h-4" />
               </Button>
-              <Button variant={view === 'list' ? 'secondary' : 'ghost'} size="icon" className="h-8 w-8" onClick={() => setView('list')}>
+              <Button aria-label="Vista elenco" variant={view === 'list' ? 'secondary' : 'ghost'} size="icon" className="touch-target h-10 w-10" onClick={() => setView('list')}>
                 <List className="w-4 h-4" />
               </Button>
             </div>
@@ -170,15 +171,16 @@ export default function LibraryPage() {
             <h3 className="text-xl font-bold">Nessun Preset trovato</h3>
           </Card>
         ) : view === 'grid' ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredPresets.map((preset) => {
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 md:gap-4">
+            {filteredPresets.map((preset, index) => {
               const displayName = getDisplayName(preset);
               const hasCustomName = !!savedNames[preset.slot];
               return (
                 <Card
                   key={preset.slot}
-                  className="group relative overflow-hidden hover:border-primary/50 transition-all cursor-pointer bg-card/40 border-border"
+                  className="app-surface group relative cursor-pointer overflow-hidden rounded-2xl transition-colors hover:border-primary/60"
                   onClick={() => handleSelectPreset(preset)}
+                  style={{ animationDelay: `${index * 0.05}s` }}
                 >
                   <CardHeader className="pb-2">
                     <div className="flex items-center justify-between">
@@ -188,7 +190,7 @@ export default function LibraryPage() {
                       <div className="flex items-center gap-1">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => e.stopPropagation()}>
+                              <Button aria-label="Altre azioni" variant="ghost" size="icon" className="touch-target h-10 w-10" onClick={(e) => e.stopPropagation()}>
                               <MoreVertical className="w-4 h-4" />
                             </Button>
                           </DropdownMenuTrigger>
@@ -230,7 +232,7 @@ export default function LibraryPage() {
                       <div className="text-sm font-medium">{preset.ampModel}</div>
                     </div>
                   </CardContent>
-                  <CardFooter className="pt-2 border-t border-border/30 flex items-center justify-between bg-secondary/10">
+                  <CardFooter className="flex items-center justify-between border-t border-border/30 bg-secondary/10 pt-2">
                     <span className="text-[10px] text-muted-foreground font-mono">PC: {preset.slot - 1}</span>
                     <Button
                       size="sm"

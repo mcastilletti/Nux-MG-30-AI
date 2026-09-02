@@ -15,6 +15,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useWakeLock } from '@/hooks/use-wake-lock';
+import { cn } from '@/lib/utils';
 
 export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { status, initialize, syncActivePreset } = useMidiStore();
@@ -84,9 +85,9 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
 
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen w-full bg-background overflow-hidden">
-        <Sidebar className="border-r border-border">
-          <SidebarHeader className="p-4 border-b border-border">
+      <div className="flex min-h-[100dvh] w-full bg-background overflow-hidden">
+        <Sidebar className="border-r border-white/5">
+          <SidebarHeader className="p-4 border-b border-white/5">
             <div className="flex items-center gap-3">
               <div className="w-[70px] h-[70px] flex items-center justify-center overflow-hidden">
                 <img 
@@ -109,7 +110,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
                 {navItems.map((item) => (
                   <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton asChild isActive={pathname === item.href}>
-                      <Link href={item.href}>
+                      <Link href={item.href} aria-current={pathname === item.href ? 'page' : undefined}>
                         <item.icon className="w-4 h-4" />
                         <span className="text-base">{item.label}</span>
                       </Link>
@@ -160,7 +161,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
             </SidebarGroup>
           </SidebarContent>
 
-          <SidebarFooter className="p-4 border-t border-border">
+          <SidebarFooter className="p-4 border-t border-white/5">
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
@@ -174,28 +175,38 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
           </SidebarFooter>
         </Sidebar>
 
-        <main className="flex-1 flex flex-col min-w-0 bg-background h-screen">
-          <header className="h-14 border-b border-border flex items-center justify-between px-6 bg-card/30 backdrop-blur-md sticky top-0 z-20">
+        <main className="flex-1 flex flex-col min-w-0 bg-background min-h-[100dvh]">
+          <header className="h-14 md:h-16 border-b border-border/70 flex items-center justify-between px-4 md:px-6 bg-background/90 backdrop-blur-md sticky top-0 z-20">
             <div className="flex items-center gap-4">
               <SidebarTrigger />
-              <div className="h-4 w-[1px] bg-border mx-2" />
+              <div className="h-4 w-[1px] bg-white/10 mx-2" />
               <div className="flex items-center gap-2">
                 <span className="text-base font-semibold">
                   {navItems.find(i => i.href === pathname)?.label || 'App'}
                 </span>
-                {status === 'connected' && (
-                  <Badge variant="outline" className="text-[12px] h-5 border-green-500/50 text-green-500">
-                    USB MIDI ACTIVE
-                  </Badge>
-                )}
+                <Badge variant="outline" className={cn("h-5 text-[11px]", status === 'connected' ? "border-green-500/50 text-green-500" : "border-border text-muted-foreground")}>
+                  {status === 'connected' ? 'USB MIDI ACTIVE' : 'USB MIDI OFFLINE'}
+                </Badge>
               </div>
             </div>
           </header>
 
-          <div className="flex-1 overflow-auto p-4 md:p-6">
+          <div className="flex-1 overflow-auto px-4 py-5 pb-24 md:p-8 md:pb-8">
             {children}
           </div>
         </main>
+
+        <nav aria-label="Navigazione rapida" className="fixed inset-x-3 bottom-3 z-30 grid grid-cols-5 gap-1 rounded-2xl border border-border bg-sidebar/95 p-1.5 shadow-2xl backdrop-blur-xl md:hidden">
+          {navItems.slice(0, 5).map((item) => {
+            const active = pathname === item.href;
+            return (
+              <Link key={item.href} href={item.href} aria-current={active ? 'page' : undefined} className={cn("flex min-h-12 flex-col items-center justify-center gap-1 rounded-xl text-[10px] font-semibold text-muted-foreground transition-colors", active && "bg-primary/15 text-primary")}>
+                <item.icon className="h-4 w-4" />
+                <span>{item.label === 'Dashboard' ? 'Home' : item.label}</span>
+              </Link>
+            );
+          })}
+        </nav>
       </div>
       <Toaster />
     </SidebarProvider>

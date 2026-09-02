@@ -566,7 +566,7 @@ function NoteEditorContent() {
                                       className={cn(
                                         "h-9 px-3 text-[20px] font-black shadow-sm cursor-help relative group/badge",
                                         chord.startsWith('x') && chord.length <= 3 
-                                          ? "bg-orange-500/10 border-orange-500/30 text-orange-500" 
+                                          ? "bg-primary/10 border-primary/30 text-primary"
                                           : "bg-background border-primary/30 text-primary"
                                       )}
                                     >
@@ -720,7 +720,7 @@ function ChordPicker({ onSelect, step, setStep, selectedLetter, setSelectedLette
           <label className="text-[10px] font-bold uppercase text-muted-foreground">Ripetizioni</label>
           <div className="grid grid-cols-4 gap-2">
             {["x2", "x3", "x4", "x5", "x6", "x7", "x8"].map(mult => (
-              <Button key={`mult-${mult}`} variant="secondary" onClick={() => onSelect(mult)} className="font-black text-orange-500">{mult}</Button>
+              <Button key={`mult-${mult}`} variant="secondary" onClick={() => onSelect(mult)} className="font-black text-primary">{mult}</Button>
             ))}
           </div>
         </div>

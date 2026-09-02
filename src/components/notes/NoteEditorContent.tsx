@@ -533,7 +533,7 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange 
                                     className={cn(
                                       "h-9 px-3 text-[20px] font-black shadow-sm cursor-help relative group/badge",
                                       chord.startsWith('x') && chord.length <= 3
-                                        ? "bg-orange-500/10 border-orange-500/30 text-orange-500"
+                                        ? "bg-primary/10 border-primary/30 text-primary"
                                         : SECTION_COLORS[section.type as SectionType]?.bg,
                                       chord.startsWith('x') && chord.length <= 3
                                         ? ""

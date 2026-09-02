@@ -4,35 +4,35 @@
 
 @layer base {
   :root {
-    --background: 260 10% 10%;
-    --foreground: 0 0% 98%;
-    --card: 260 10% 12%;
-    --card-foreground: 0 0% 98%;
-    --popover: 260 10% 12%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 261 43% 48%;
+    --background: 240 10% 3%;
+    --foreground: 0 0% 99%;
+    --card: 240 10% 5%;
+    --card-foreground: 0 0% 99%;
+    --popover: 240 10% 5%;
+    --popover-foreground: 0 0% 99%;
+    --primary: 261 43% 65%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 260 10% 20%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 260 10% 16%;
-    --muted-foreground: 0 0% 70%;
-    --accent: 282 75% 55%;
-    --accent-foreground: 0 0% 98%;
+    --secondary: 240 10% 10%;
+    --secondary-foreground: 0 0% 99%;
+    --muted: 240 10% 8%;
+    --muted-foreground: 0 0% 75%;
+    --accent: 282 75% 70%;
+    --accent-foreground: 0 0% 100%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    --border: 260 10% 18%;
-    --input: 260 10% 18%;
-    --ring: 261 43% 48%;
+    --border: 240 10% 12%;
+    --input: 240 10% 12%;
+    --ring: 261 43% 65%;
     --radius: 0.75rem;
 
-    --sidebar-background: 260 10% 8%;
-    --sidebar-foreground: 0 0% 90%;
-    --sidebar-primary: 261 43% 48%;
+    --sidebar-background: 240 10% 2%;
+    --sidebar-foreground: 0 0% 94%;
+    --sidebar-primary: 261 43% 65%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 282 65% 40%;
+    --sidebar-accent: 282 65% 55%;
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 260 10% 15%;
-    --sidebar-ring: 261 43% 48%;
+    --sidebar-border: 240 10% 8%;
+    --sidebar-ring: 261 43% 65%;
   }
 }
 
@@ -41,6 +41,45 @@
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
+    min-width: 320px;
+    overflow-x: hidden;
+  }
+
+  /* Enhanced text contrast for low-light conditions */
+  h1, h2, h3, h4, h5, h6 { letter-spacing: -0.02em; }
+
+  /* Enhanced focus states for accessibility */
+  *:focus-visible {
+    outline: 2px solid hsl(var(--primary));
+    outline-offset: 2px;
+  }
+
+  button, a, input, textarea, select { -webkit-tap-highlight-color: transparent; }
+
+  /* Interactive controls stay comfortable on a touchscreen. */
+  button, [role="button"], [role="switch"] { touch-action: manipulation; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      scroll-behavior: auto !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer components {
+  .app-surface {
+    @apply border border-border/80 bg-card;
+  }
+
+  .touch-target {
+    @apply min-h-11 min-w-11;
+  }
+
+  .section-kicker {
+    @apply text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground;
   }
 }
 

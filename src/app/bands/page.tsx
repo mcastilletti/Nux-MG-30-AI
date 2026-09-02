@@ -382,17 +382,17 @@ function BandsContent() {
       <div className="max-w-5xl mx-auto space-y-6 pb-20 px-2 md:px-0">
         <header className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <div className="p-3 rounded-2xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 border border-blue-500/30 shadow-lg shadow-blue-500/10">
-              <Users className="w-6 h-6 text-blue-400" />
+            <div className="rounded-xl border border-primary/30 bg-primary/10 p-3">
+              <Users className="h-6 w-6 text-primary" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold tracking-tight bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Gestione Band</h2>
+              <h2 className="text-2xl font-bold tracking-tight text-foreground">Gestione band</h2>
               <p className="text-sm text-muted-foreground">Organizza le tue scalette musicali</p>
             </div>
           </div>
           <Button 
             onClick={() => openBandDialog()} 
-            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold gap-2 shadow-lg shadow-blue-500/25 border-0"
+            className="gap-2 font-semibold"
           >
             <Plus className="w-4 h-4" />
             Nuova Band
@@ -402,13 +402,12 @@ function BandsContent() {
         {getAllBands().length === 0 ? (
           <div className="flex flex-col items-center justify-center py-32 text-center space-y-6">
             <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-full blur-3xl" />
-              <div className="relative p-6 rounded-2xl bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-blue-500/20">
-                <Users className="w-16 h-16 text-blue-400" />
+              <div className="relative rounded-2xl border border-primary/20 bg-primary/10 p-6">
+                <Users className="h-16 w-16 text-primary" />
               </div>
             </div>
             <div className="space-y-2">
-              <h3 className="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Nessuna Band</h3>
+              <h3 className="text-xl font-bold text-foreground">Nessuna band</h3>
               <p className="text-sm text-muted-foreground max-w-md">Crea la tua prima band per iniziare a organizzare le tue scalette musicali in modo professionale</p>
             </div>
           </div>
@@ -422,7 +421,7 @@ function BandsContent() {
                   "overflow-hidden transition-all duration-300 hover:shadow-xl",
                   isFromNotes 
                     ? "border-muted-foreground/20 bg-muted/30" 
-                    : "border-blue-500/20 bg-gradient-to-br from-blue-500/5 to-purple-500/5"
+                    : "border-primary/20 bg-primary/[0.03]"
                 )}>
                   <CardContent className="p-0">
                     <div className="p-6">
@@ -432,12 +431,12 @@ function BandsContent() {
                             "w-16 h-16 rounded-xl border transition-all duration-300 flex items-center justify-center overflow-hidden",
                             isFromNotes 
                               ? "bg-muted/50 border-muted-foreground/30" 
-                              : "bg-gradient-to-br from-blue-500/20 to-purple-500/20 border-blue-500/30 shadow-lg shadow-blue-500/10"
+                              : "bg-primary/10 border-primary/30"
                           )}>
                             {band.logoUrl ? (
                               <img src={band.logoUrl} alt={band.name} className="w-full h-full object-cover" />
                             ) : (
-                              <Music2 className={cn("w-6 h-6", isFromNotes ? "text-muted-foreground" : "text-blue-400")} />
+                              <Music2 className={cn("w-6 h-6", isFromNotes ? "text-muted-foreground" : "text-primary")} />
                             )}
                           </div>
                           <div className="space-y-1">
@@ -447,7 +446,7 @@ function BandsContent() {
                                 "text-xs font-semibold px-2.5 py-0.5",
                                 isFromNotes 
                                   ? "bg-muted/50 border-muted-foreground/30 text-muted-foreground" 
-                                  : "bg-blue-500/10 border-blue-500/30 text-blue-400"
+                                    : "bg-primary/10 border-primary/30 text-primary"
                               )}>
                                 {bandSetlists.length} {bandSetlists.length === 1 ? 'scaletta' : 'scalette'}
                               </Badge>
@@ -463,7 +462,7 @@ function BandsContent() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-9 w-9 text-muted-foreground hover:text-blue-400 hover:bg-blue-500/10 transition-colors"
+                            className="h-9 w-9 text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
                             onClick={() => openBandDialog(band)}
                           >
                             <Edit className="w-4 h-4" />
@@ -495,7 +494,7 @@ function BandsContent() {
                                   "flex items-center justify-between p-4 rounded-xl border transition-all duration-200 hover:scale-[1.02]",
                                   isSetlistFromNotes 
                                     ? "bg-muted/30 border-muted-foreground/20 hover:bg-muted/50" 
-                                    : "bg-purple-500/5 border-purple-500/20 hover:bg-purple-500/10 hover:border-purple-500/30"
+                                    : "bg-primary/[0.03] border-primary/20 hover:bg-primary/10 hover:border-primary/30"
                                 )}
                               >
                                 <div className="flex items-center gap-3">
@@ -503,9 +502,9 @@ function BandsContent() {
                                     "p-2 rounded-lg border transition-colors",
                                     isSetlistFromNotes 
                                       ? "bg-muted/50 border-muted-foreground/30" 
-                                      : "bg-purple-500/10 border-purple-500/30"
+                                      : "bg-primary/10 border-primary/30"
                                   )}>
-                                    <Layers className={cn("w-4 h-4", isSetlistFromNotes ? "text-muted-foreground" : "text-purple-400")} />
+                                    <Layers className={cn("w-4 h-4", isSetlistFromNotes ? "text-muted-foreground" : "text-primary")} />
                                   </div>
                                   <span className="font-medium text-sm">{setlist.name}</span>
                                   {isSetlistFromNotes && (
@@ -519,7 +518,7 @@ function BandsContent() {
                                     <Button
                                       variant="ghost"
                                       size="icon"
-                                      className="h-8 w-8 text-muted-foreground hover:text-purple-400 hover:bg-purple-500/10 transition-colors"
+                                      className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
                                       onClick={() => openSetlistDialog(band, setlist)}
                                     >
                                       <Edit className="w-3.5 h-3.5" />
@@ -552,7 +551,7 @@ function BandsContent() {
                           <Button
                             variant="outline"
                             size="sm"
-                            className="gap-2 text-sm font-semibold border-purple-500/30 text-purple-400 hover:bg-purple-500/10 hover:border-purple-500/50 transition-all"
+                            className="gap-2 text-sm font-semibold border-primary/30 text-primary hover:bg-primary/10 hover:border-primary/50 transition-colors"
                             onClick={() => openSetlistDialog(band)}
                           >
                             <Plus className="w-4 h-4" />
@@ -626,7 +625,7 @@ function BandsContent() {
               <Button 
                 onClick={editingBand ? handleUpdateBand : handleCreateBand}
                 disabled={!bandName.trim() || isUploadingLogo}
-                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold shadow-lg shadow-blue-500/25 border-0"
+                className="font-semibold"
               >
                 {isUploadingLogo ? (
                   <>
@@ -671,7 +670,7 @@ function BandsContent() {
               <Button 
                 onClick={editingSetlist ? handleUpdateSetlist : handleCreateSetlist}
                 disabled={!setlistName.trim()}
-                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold shadow-lg shadow-purple-500/25 border-0"
+                className="font-semibold"
               >
                 {editingSetlist ? 'Aggiorna' : 'Crea'}
               </Button>

@@ -36,41 +36,59 @@ export const RotaryKnob: React.FC<RotaryKnobProps> = ({
   const rafRef = useRef<number | null>(null);
   const { saveToHistory } = usePresetStore();
 
-  const handleMouseDown = (e: React.MouseEvent) => {
+  const updateFromPointer = (clientY: number, shiftKey = false) => {
+    const deltaY = startY.current - clientY;
+    const sensitivity = (max - min) / 200;
+    let newValue = startValue.current + deltaY * sensitivity;
+    if (shiftKey) newValue = startValue.current + (deltaY * sensitivity) / 5;
+    newValue = Math.max(min, Math.min(max, newValue));
+    onChange(Math.round(newValue / step) * step);
+  };
+
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    e.preventDefault();
     setIsDragging(true);
     startY.current = e.clientY;
     startValue.current = value;
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
+    e.currentTarget.setPointerCapture(e.pointerId);
   };
 
-  const handleMouseMove = (e: MouseEvent) => {
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDragging) return;
     // Throttling tramite requestAnimationFrame per fluidità e performance
     if (rafRef.current) return;
 
     rafRef.current = requestAnimationFrame(() => {
-      const deltaY = startY.current - e.clientY;
-      const sensitivity = (max - min) / 200;
-      let newValue = startValue.current + deltaY * sensitivity;
-
-      if (e.shiftKey) newValue = startValue.current + (deltaY * sensitivity) / 5;
-
-      newValue = Math.max(min, Math.min(max, newValue));
-      onChange(Math.round(newValue / step) * step);
+      updateFromPointer(e.clientY, e.shiftKey);
       rafRef.current = null;
     });
   };
 
-  const handleMouseUp = () => {
+  const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
     setIsDragging(false);
-    document.removeEventListener('mousemove', handleMouseMove);
-    document.removeEventListener('mouseup', handleMouseUp);
+    if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    }
     if (rafRef.current) {
       cancelAnimationFrame(rafRef.current);
       rafRef.current = null;
     }
     // Salviamo lo stato finale in cronologia alla fine del trascinamento
     saveToHistory();
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    const delta = e.shiftKey ? step : step * 5;
+    if (e.key === 'ArrowUp' || e.key === 'ArrowRight') {
+      e.preventDefault();
+      onChange(Math.min(max, value + delta));
+    } else if (e.key === 'ArrowDown' || e.key === 'ArrowLeft') {
+      e.preventDefault();
+      onChange(Math.max(min, value - delta));
+    } else if (e.key === 'Home' || e.key === 'End') {
+      e.preventDefault();
+      onChange(e.key === 'Home' ? min : max);
+    }
   };
 
   const rotation = ((value - min) / (max - min)) * 270 - 135;
@@ -86,8 +104,19 @@ export const RotaryKnob: React.FC<RotaryKnobProps> = ({
     <div className={cn("flex flex-col items-center gap-1 knob-container", className)}>
       <span className="text-[10px] font-medium uppercase text-muted-foreground select-none">{label}</span>
       <div 
-        className="relative cursor-ns-resize group"
-        onMouseDown={handleMouseDown}
+        className="relative cursor-ns-resize group touch-none rounded-full outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp}
+        onKeyDown={handleKeyDown}
+        role="slider"
+        tabIndex={0}
+        aria-label={label}
+        aria-valuemin={min}
+        aria-valuemax={max}
+        aria-valuenow={value}
+        aria-valuetext={`${value}${unit}`}
         onDoubleClick={() => {
           onChange((max + min) / 2);
           saveToHistory();

@@ -61,8 +61,8 @@ export default function SysExAnalyzerPage() {
     <AppShell>
       <div className="max-w-4xl mx-auto space-y-8">
         <header className="flex items-center gap-4">
-          <div className="p-3 rounded-2xl bg-yellow-500/10 border border-yellow-500/20">
-            <Zap className="w-8 h-8 text-yellow-500" />
+          <div className="rounded-xl border border-primary/30 bg-primary/10 p-3">
+            <Zap className="h-8 w-8 text-primary" />
           </div>
           <div>
             <h2 className="text-3xl font-bold tracking-tight">AI SysEx Analyzer</h2>
@@ -95,14 +95,14 @@ export default function SysExAnalyzerPage() {
               </div>
               <div className="flex gap-2 pt-2">
                 <Button 
-                  className="flex-1 gap-2 bg-yellow-600 hover:bg-yellow-700 text-white" 
+                  className="flex-1 gap-2"
                   onClick={handleAnalyze}
                   disabled={analyzing}
                 >
                   {analyzing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
                   Analyze with AI
                 </Button>
-                <Button variant="outline" size="icon" onClick={handleClear} disabled={analyzing}>
+                <Button variant="outline" size="icon" className="touch-target" aria-label="Cancella dati" onClick={handleClear} disabled={analyzing}>
                   <Trash2 className="w-4 h-4" />
                 </Button>
               </div>

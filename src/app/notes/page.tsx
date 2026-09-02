@@ -302,17 +302,17 @@ function NotesLibraryContent() {
 
   return (
     <AppShell>
-      <div className="max-w-7xl mx-auto space-y-6 pb-20 px-2 md:px-0 no-print">
+      <div className="max-w-7xl mx-auto space-y-8 py-8 pb-20 px-2 md:px-0 no-print">
         <header className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <div className="p-2.5 rounded-xl bg-orange-500/10 border border-orange-500/20">
-              <NotebookPen className="w-5 h-5 text-orange-500" />
+            <div className="rounded-xl border border-primary/20 bg-primary/10 p-2.5">
+              <NotebookPen className="h-5 w-5 text-primary" />
             </div>
             <h2 className="text-xl font-black tracking-tight uppercase">Archivio Note</h2>
           </div>
           <div className="flex items-center gap-2">
             {selectedSetlist && filteredNotes.length > 0 && (
-              <Button onClick={handleExportPdf} variant="outline" size="icon" className="h-11 w-11 border-orange-500/30 text-orange-500 hover:bg-orange-500/10">
+                <Button onClick={handleExportPdf} variant="outline" size="icon" className="h-11 w-11 border-primary/30 text-primary hover:bg-primary/10">
                 <Printer className="w-5 h-5" />
               </Button>
             )}
@@ -321,7 +321,7 @@ function NotesLibraryContent() {
             </Button>
             <Popover open={isAddMenuOpen} onOpenChange={setIsAddMenuOpen}>
               <PopoverTrigger asChild>
-                <Button size="icon" className="w-11 h-11 bg-orange-600 hover:bg-orange-700 text-white font-bold rounded-full shadow-lg">
+                <Button size="icon" aria-label="Aggiungi nota" className="h-11 w-11 rounded-full font-bold">
                   <Plus className="w-6 h-6" />
                 </Button>
               </PopoverTrigger>
@@ -394,7 +394,7 @@ function NotesLibraryContent() {
                       <div className="text-xs text-muted-foreground">{note.band} - {note.setlist}</div>
                     </div>
                     {note.presetSlot && (
-                      <Badge variant="outline" className="h-6 px-2 text-[10px] font-black bg-orange-500/10 border-orange-500/20 text-orange-500 flex items-center gap-1.5 shrink-0">
+                      <Badge variant="outline" className="flex h-6 shrink-0 items-center gap-1.5 border-primary/20 bg-primary/10 px-2 text-[10px] font-black text-primary">
                         <span>{(() => {
                           const s = parseInt(note.presetSlot);
                           const bank = Math.floor((s - 1) / 4) + 1;
@@ -444,6 +444,7 @@ function NotesLibraryContent() {
                     <SortableNoteCard
                       key={note.id}
                       note={note}
+                      index={index}
                       onDelete={(e) => handleDelete(e, note)}
                       onCopy={(e) => openCopyDialog(e, note)}
                       onClick={() => {
@@ -610,13 +611,14 @@ function NotesLibraryContent() {
   );
 }
 
-const SortableNoteCard = React.memo(React.forwardRef<HTMLDivElement, { 
-  note: SavedNote; 
-  onDelete: (e: React.MouseEvent) => void; 
-  onCopy: (e: React.MouseEvent, note: SavedNote) => void; 
-  onClick: () => void; 
+const SortableNoteCard = React.memo(React.forwardRef<HTMLDivElement, {
+  note: SavedNote;
+  index: number;
+  onDelete: (e: React.MouseEvent) => void;
+  onCopy: (e: React.MouseEvent, note: SavedNote) => void;
+  onClick: () => void;
   isHighlighted?: boolean;
-}>(({ note, onDelete, onCopy, onClick, isHighlighted }, ref) => {
+}>(({ note, index, onDelete, onCopy, onClick, isHighlighted }, ref) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: note.id });
   const style = { transform: CSS.Transform.toString(transform), transition, zIndex: isDragging ? 50 : 0, opacity: isDragging ? 0.6 : 1 };
 
@@ -634,22 +636,24 @@ const SortableNoteCard = React.memo(React.forwardRef<HTMLDivElement, {
   return (
     <div ref={combinedRef} style={style} onClick={onClick}>
        <Card className={cn(
-         "group relative flex items-center pl-1 pr-4 py-4 hover:border-orange-500/50 transition-all cursor-pointer bg-card/60 border-border overflow-hidden",
-         note.type === 'block' && "bg-blue-500/10 border-blue-500/30 hover:border-blue-500/50",
-         isDragging && "shadow-2xl shadow-orange-500/30 border-orange-500/50",
-         isHighlighted && "ring-2 ring-orange-500 border-orange-500 shadow-lg shadow-orange-500/20 bg-orange-500/5"
-       )}>
-        <div {...attributes} {...listeners} className="px-1 text-muted-foreground/30 hover:text-orange-500 cursor-grab active:cursor-grabbing touch-none flex items-center justify-center h-full" onClick={(e) => e.stopPropagation()}>
+         "group relative flex items-center overflow-hidden rounded-xl border-border bg-card/60 py-4 pl-1 pr-4 transition-all duration-300 hover:border-primary/50",
+         note.type === 'block' && "border-primary/30 bg-primary/10 hover:border-primary/50",
+         isDragging && "border-primary/50 shadow-2xl shadow-primary/30",
+         isHighlighted && "border-primary bg-primary/5 shadow-lg shadow-primary/20 ring-2 ring-primary"
+       )}
+       style={{ animationDelay: `${index * 0.05}s` }}
+       >
+        <div {...attributes} {...listeners} className="flex h-full cursor-grab touch-none items-center justify-center px-1 text-muted-foreground/30 hover:text-primary active:cursor-grabbing" onClick={(e) => e.stopPropagation()}>
           <GripVertical className="w-5 h-5" />
         </div>
         <div className="flex-1 min-w-0 pl-3">
           {note.type === 'block' ? (
             <div className="flex items-start justify-between gap-3">
               <div className="flex-1 min-w-0">
-                <CardTitle className="text-[16px] font-black uppercase leading-tight break-words text-blue-600">{note.title}</CardTitle>
+                <CardTitle className="break-words text-[16px] font-black uppercase leading-tight text-primary">{note.title}</CardTitle>
               </div>
               <div className="flex items-center gap-1 shrink-0 no-print">
-                 <Button variant="ghost" size="icon" className="h-9 w-9 text-blue-500 opacity-30 group-hover:opacity-100 transition-opacity" onClick={(e) => onCopy(e, note)}><Copy className="w-4 h-4" /></Button>
+                 <Button variant="ghost" size="icon" aria-label="Copia nota" className="h-9 w-9 text-primary opacity-30 transition-opacity group-hover:opacity-100" onClick={(e) => onCopy(e, note)}><Copy className="w-4 h-4" /></Button>
                 <Button variant="ghost" size="icon" className="h-9 w-9 text-destructive opacity-30 group-hover:opacity-100 transition-opacity" onClick={onDelete}><Trash2 className="w-4 h-4" /></Button>
               </div>
             </div>
@@ -660,7 +664,7 @@ const SortableNoteCard = React.memo(React.forwardRef<HTMLDivElement, {
                   <CardTitle className="text-[16px] font-black uppercase leading-tight whitespace-pre-wrap">{note.title}</CardTitle>
                 </div>
                 <div className="flex items-center gap-1 shrink-0 no-print">
-                   <Button variant="ghost" size="icon" className="h-9 w-9 text-blue-500 opacity-30 group-hover:opacity-100 transition-opacity" onClick={(e) => onCopy(e, note)}><Copy className="w-4 h-4" /></Button>
+                  <Button variant="ghost" size="icon" aria-label="Copia nota" className="h-9 w-9 text-primary opacity-30 transition-opacity group-hover:opacity-100" onClick={(e) => onCopy(e, note)}><Copy className="w-4 h-4" /></Button>
                   <Button variant="ghost" size="icon" className="h-9 w-9 text-destructive opacity-30 group-hover:opacity-100 transition-opacity" onClick={onDelete}><Trash2 className="w-4 h-4" /></Button>
                 </div>
               </div>
@@ -671,7 +675,7 @@ const SortableNoteCard = React.memo(React.forwardRef<HTMLDivElement, {
                 {note.presetSlot && (
                   <>
                     <span className="text-[10px] text-muted-foreground opacity-30">•</span>
-                    <span className="text-[10px] text-orange-500 uppercase font-bold">
+                    <span className="text-[10px] uppercase font-bold text-primary">
                       {(() => {
                         const s = parseInt(note.presetSlot);
                         const bank = Math.floor((s - 1) / 4) + 1;

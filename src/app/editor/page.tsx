@@ -17,9 +17,11 @@ import { cn } from '@/lib/utils';
 import { MG30_MODELS } from '@/lib/mg30-data';
 import { generateMG30Preset, MG30PresetOutput } from '@/ai/flows/mg30-preset-gen';
 import { useToast } from '@/hooks/use-toast';
-import { Preset } from '@/types/preset';
+import { EffectType, Preset } from '@/types/preset';
+import { formatValue, normalizePresetState, normalizePresetSuggestion, PresetNormalizationResult } from '@/lib/mg30-preset-normalizer';
+import { useInstrumentationStore } from '@/stores/use-instrumentation-store';
 
-function applyJsonToPreset(preset: Preset, json: any): { updatedPreset: Preset; appliedCount: number } {
+function applyJsonToPreset(preset: Preset, json: any): { updatedPreset: Preset; appliedCount: number; warnings: string[] } {
   let appliedCount = 0;
 
   // Clone the preset to avoid direct mutations
@@ -76,8 +78,8 @@ function applyJsonToPreset(preset: Preset, json: any): { updatedPreset: Preset; 
     return null;
   };
 
-  const findModel = (effectType: string, modelName: string) => {
-    const models = MG30_MODELS[effectType as any] || [];
+  const findModel = (effectType: EffectType, modelName: string) => {
+    const models = MG30_MODELS[effectType] || [];
     const cleanName = modelName.toLowerCase().replace(/[^a-z0-9]/g, '');
 
     let found = models.find(m => m.id.toLowerCase() === cleanName);
@@ -349,8 +351,13 @@ function applyJsonToPreset(preset: Preset, json: any): { updatedPreset: Preset; 
     }
   }
 
-  newPreset.lastModified = new Date();
-  return { updatedPreset: newPreset, appliedCount };
+  const normalized = normalizePresetState(newPreset);
+  normalized.preset.lastModified = new Date();
+  return {
+    updatedPreset: normalized.preset,
+    appliedCount: appliedCount + normalized.correctedCount,
+    warnings: normalized.warnings
+  };
 }
 
 const getBlockColorVar = (type: string) => {
@@ -404,6 +411,10 @@ export default function EditorPage() {
   const [aiPrompt, setAiPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [proposedPreset, setProposedPreset] = useState<MG30PresetOutput | null>(null);
+  const [proposedNormalization, setProposedNormalization] = useState<PresetNormalizationResult | null>(null);
+  const { guitars, amplifiers, selectedGuitarId, selectedAmplifierId, selectGuitar, selectAmplifier } = useInstrumentationStore();
+  const selectedGuitar = guitars.find(guitar => guitar.id === selectedGuitarId);
+  const selectedAmplifier = amplifiers.find(amplifier => amplifier.id === selectedAmplifierId);
 
   const selectedEffect = useMemo(() =>
     activePreset.effects.find(e => e.id === selectedBlockId),
@@ -412,7 +423,7 @@ export default function EditorPage() {
 
   const currentModelData = useMemo(() => {
     if (!selectedEffect) return null;
-    return MG30_MODELS[selectedEffect.type as any]?.find(m => m.id === selectedEffect.model) || MG30_MODELS[selectedEffect.type as any]?.[0];
+    return MG30_MODELS[selectedEffect.type]?.find(m => m.id === selectedEffect.model) || MG30_MODELS[selectedEffect.type]?.[0];
   }, [selectedEffect]);
 
   useEffect(() => {
@@ -490,13 +501,13 @@ export default function EditorPage() {
       try {
         const parsedJson = JSON.parse(trimmedPrompt);
         // Applica i parametri JSON al preset attivo
-        const { updatedPreset, appliedCount } = applyJsonToPreset(activePreset, parsedJson);
+        const { updatedPreset, appliedCount, warnings } = applyJsonToPreset(activePreset, parsedJson);
 
         if (appliedCount > 0) {
           setActivePreset(updatedPreset);
           toast({
             title: "Parametri JSON Applicati",
-            description: `Applicati con successo ${appliedCount} parametri/configurazioni. Clicca SAVE per sincronizzare la pedaliera.`,
+            description: `${appliedCount} modifiche applicate${warnings.length ? `, ${warnings.length} valori corretti.` : '.'} Clicca SAVE per sincronizzare la pedaliera.`,
           });
           setIsAiModalOpen(false);
           setAiPrompt('');
@@ -522,9 +533,15 @@ export default function EditorPage() {
     // Altrimenti, procedi con la generazione tramite Intelligenza Artificiale
     setIsGenerating(true);
     setProposedPreset(null);
+    setProposedNormalization(null);
     try {
-      const result = await generateMG30Preset({ description: aiPrompt });
+      const instrumentation = [
+        selectedGuitar ? `Chitarra: ${selectedGuitar.model}; pickup: ${selectedGuitar.pickups.map(pickup => `${(pickup.position || 'bridge') === 'neck' ? 'manico' : (pickup.position || 'bridge') === 'middle' ? 'centrale' : 'ponte'} ${pickup.type}${pickup.model ? ` (${pickup.model})` : ''}`).join(', ')}` : 'Chitarra: non selezionata',
+        selectedAmplifier ? `Amplificatore: ${selectedAmplifier.model}; ingresso: ${selectedAmplifier.inputPosition === 'before-preamp' ? 'prima del preamplificatore' : 'dopo il preamplificatore'}` : 'Amplificatore: non selezionato',
+      ].join('\n');
+      const result = await generateMG30Preset({ description: aiPrompt, instrumentation });
       setProposedPreset(result);
+      setProposedNormalization(normalizePresetSuggestion(activePreset, result));
     } catch (error: any) {
       const isRateLimit = error.message?.includes('429') || error.message?.toLowerCase().includes('rate');
       toast({
@@ -538,35 +555,9 @@ export default function EditorPage() {
   };
 
   const applyProposedPreset = () => {
-    if (!proposedPreset) return;
+    if (!proposedPreset || !proposedNormalization) return;
 
-    const updatedEffects = activePreset.effects.map(effect => {
-      const propEffect = proposedPreset.effects.find(pe => pe.type === effect.type);
-
-      if (propEffect) {
-        const paramRecord: Record<string, number> = {};
-        if (propEffect.parameters) {
-          propEffect.parameters.forEach(p => {
-            paramRecord[p.name.toLowerCase()] = p.value;
-          });
-        }
-
-        return {
-          ...effect,
-          model: propEffect.model || effect.model,
-          enabled: propEffect.enabled ?? effect.enabled,
-          parameters: { ...effect.parameters, ...paramRecord }
-        };
-      }
-      return effect;
-    });
-
-    const newPreset = {
-      ...activePreset,
-      name: proposedPreset.name,
-      effects: updatedEffects,
-      lastModified: new Date()
-    };
+    const newPreset = proposedNormalization.updatedPreset;
 
     setActivePreset(newPreset);
 
@@ -576,11 +567,12 @@ export default function EditorPage() {
     });
 
     setProposedPreset(null);
+    setProposedNormalization(null);
     setIsAiModalOpen(false);
     setAiPrompt('');
   };
 
-  const availableModels = selectedEffect ? MG30_MODELS[selectedEffect.type as any] || [] : [];
+  const availableModels = selectedEffect ? MG30_MODELS[selectedEffect.type] || [] : [];
   const currentBlockColor = selectedEffect ? `hsl(${getBlockColorVar(selectedEffect.type)})` : 'hsl(var(--primary))';
 
   return (
@@ -648,11 +640,28 @@ export default function EditorPage() {
                     <>
                       <DialogHeader>
                         <DialogTitle className="flex items-center gap-2"><Sparkles className="w-5 h-5 text-primary" /> AI Tone Designer</DialogTitle>
-                        <DialogDescription>Descrivi il suono desiderato o incolla un JSON con i parametri per aggiornare direttamente il preset.</DialogDescription>
+                        <DialogDescription>Indica band, brano, periodo e tipo di chitarra: l'AI creerà una reinterpretazione plausibile per MG-30. Puoi anche incollare un JSON tecnico.</DialogDescription>
                       </DialogHeader>
                       <div className="space-y-4 py-4">
+                        <div className="grid gap-3 rounded-lg border border-primary/20 bg-primary/5 p-3 sm:grid-cols-2">
+                          <div className="space-y-2">
+                            <p className="text-xs font-semibold uppercase tracking-wide text-primary">Chitarra</p>
+                            <Select value={selectedGuitarId || 'none'} onValueChange={(value) => selectGuitar(value === 'none' ? undefined : value)}>
+                              <SelectTrigger className="bg-background/60"><SelectValue placeholder="Nessuna selezionata" /></SelectTrigger>
+                              <SelectContent><SelectItem value="none">Nessuna selezionata</SelectItem>{guitars.map(guitar => <SelectItem key={guitar.id} value={guitar.id}>{guitar.model}</SelectItem>)}</SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-2">
+                            <p className="text-xs font-semibold uppercase tracking-wide text-primary">Amplificatore</p>
+                            <Select value={selectedAmplifierId || 'none'} onValueChange={(value) => selectAmplifier(value === 'none' ? undefined : value)}>
+                              <SelectTrigger className="bg-background/60"><SelectValue placeholder="Nessuno selezionato" /></SelectTrigger>
+                              <SelectContent><SelectItem value="none">Nessuno selezionato</SelectItem>{amplifiers.map(amplifier => <SelectItem key={amplifier.id} value={amplifier.id}>{amplifier.model}</SelectItem>)}</SelectContent>
+                            </Select>
+                          </div>
+                          <p className="text-[11px] text-muted-foreground sm:col-span-2">La selezione viene applicata automaticamente a ogni nuova generazione AI.</p>
+                        </div>
                         <Textarea
-                          placeholder={`Es. per prompt AI: Suono Gilmour anni '70 con molto delay...
+                          placeholder={`Es. per prompt AI: Suono grosso in stile Oasis, chitarra humbucker, ritmica anni '90, medi presenti e ambiente contenuto...
 Es. per JSON: { "amp": { "gain": 60, "master": 80 }, "delay": { "enabled": true } }`}
                           value={aiPrompt}
                           onChange={(e) => setAiPrompt(e.target.value)}
@@ -676,10 +685,33 @@ Es. per JSON: { "amp": { "gain": 60, "master": 80 }, "delay": { "enabled": true 
                         <div className="p-3 rounded-lg bg-secondary/30 border border-border text-xs italic">
                           "{proposedPreset.explanation}"
                         </div>
+                        <div className="rounded-lg border border-border bg-background/40 p-3">
+                          <p className="section-kicker mb-2">Modifiche rilevate</p>
+                          {proposedNormalization?.changes.length ? (
+                            <div className="max-h-44 space-y-1.5 overflow-y-auto">
+                              {proposedNormalization.changes.map((change, index) => (
+                                <div key={`${change.type}-${change.label}-${index}`} className="flex items-center justify-between gap-3 text-xs">
+                                  <span className="truncate text-muted-foreground"><span className="font-semibold uppercase text-foreground">{change.type}</span> · {change.label}</span>
+                                  <span className="shrink-0 font-mono text-primary">{formatValue(change.from)} → {formatValue(change.to)}</span>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="text-xs text-muted-foreground">Nessuna modifica applicabile trovata.</p>
+                          )}
+                        </div>
+                        {!!proposedNormalization?.warnings.length && (
+                          <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 text-xs text-amber-200">
+                            <p className="mb-1 font-semibold">Avvisi di validazione</p>
+                            <ul className="list-disc space-y-1 pl-4">
+                              {proposedNormalization.warnings.map((warning, index) => <li key={`${warning}-${index}`}>{warning}</li>)}
+                            </ul>
+                          </div>
+                        )}
                       </div>
                       <DialogFooter className="gap-2">
-                        <Button variant="ghost" onClick={() => setProposedPreset(null)}>Scarta</Button>
-                        <Button onClick={applyProposedPreset} className="bg-green-600 hover:bg-green-700 text-white flex-1">Applica all'Editor</Button>
+                        <Button variant="ghost" onClick={() => { setProposedPreset(null); setProposedNormalization(null); }}>Scarta</Button>
+                        <Button onClick={applyProposedPreset} disabled={!proposedNormalization?.changes.length} className="flex-1">Applica all'Editor</Button>
                       </DialogFooter>
                     </>
                   )}

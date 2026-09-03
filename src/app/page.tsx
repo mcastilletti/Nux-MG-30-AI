@@ -5,7 +5,7 @@ import { AppShell } from '@/components/layout/app-shell';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useMidiStore } from '@/stores/use-midi-store';
 import { Button } from '@/components/ui/button';
-import { Sliders, Library, Zap, Download, RotateCw, Usb, NotebookPen, Users } from 'lucide-react';
+import { Sliders, Library, Zap, Download, RotateCw, Usb, NotebookPen, Users, Guitar } from 'lucide-react';
 import Link from 'next/link';
 
 export default function HomePage() {
@@ -66,15 +66,29 @@ export default function HomePage() {
             </Card>
           </Link>
 
-          <Link href="/tools/sysex-analyzer" className="group">
+          <Link href="/bands" className="group">
             <Card className="app-surface h-full transition-colors hover:border-primary/50">
               <CardContent className="flex h-full flex-col items-start justify-between gap-5 p-4 md:items-center md:p-6 md:text-center">
                 <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                  <Zap className="w-7 h-7" />
+                  <Users className="h-7 w-7" />
                 </div>
                 <div className="text-center">
-                  <h4 className="font-bold md:text-lg">AI Analyzer</h4>
-                  <p className="text-xs text-muted-foreground">Reverse engineering</p>
+                  <h4 className="font-bold md:text-lg">Gestione Band</h4>
+                  <p className="text-xs text-muted-foreground">Organizza i tuoi progetti</p>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link href="/instrumentation" className="group">
+            <Card className="app-surface h-full transition-colors hover:border-primary/50">
+              <CardContent className="flex h-full flex-col items-start justify-between gap-5 p-4 md:items-center md:p-6 md:text-center">
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                  <Guitar className="h-7 w-7" />
+                </div>
+                <div className="text-center">
+                  <h4 className="font-bold md:text-lg">Strumentazione</h4>
+                  <p className="text-xs text-muted-foreground">Chitarre e amplificatori</p>
                 </div>
               </CardContent>
             </Card>
@@ -97,15 +111,15 @@ export default function HomePage() {
             </Card>
           </div>
 
-          <Link href="/bands" className="group">
+          <Link href="/tools/sysex-analyzer" className="group">
             <Card className="app-surface h-full transition-colors hover:border-primary/50">
               <CardContent className="flex flex-col items-start gap-4 p-5 md:items-center md:p-6 md:text-center">
                 <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10 text-primary">
-                  <Users className="h-7 w-7" />
+                  <Zap className="h-7 w-7" />
                 </div>
                 <div className="text-center">
-                  <h4 className="font-bold text-lg">Gestione Band</h4>
-                  <p className="text-sm text-muted-foreground">Organizza i tuoi progetti</p>
+                  <h4 className="font-bold text-lg">AI Analyzer</h4>
+                  <p className="text-sm text-muted-foreground">Reverse engineering</p>
                 </div>
               </CardContent>
             </Card>

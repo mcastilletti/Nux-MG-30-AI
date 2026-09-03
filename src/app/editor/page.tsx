@@ -12,7 +12,8 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
-import { Undo2, Redo2, Save, LayoutGrid, ChevronLeft, ChevronRight, Settings2, Sparkles, Loader2, RefreshCw, CheckCircle2, X, Layers, Copy } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Undo2, Redo2, Save, LayoutGrid, ChevronLeft, ChevronRight, Settings2, Sparkles, Loader2, RefreshCw, CheckCircle2, X, Layers, Copy, Pencil } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { MG30_MODELS } from '@/lib/mg30-data';
 import { generateMG30Preset, MG30PresetOutput } from '@/ai/flows/mg30-preset-gen';
@@ -201,16 +202,10 @@ function applyJsonToPreset(preset: Preset, json: any): { updatedPreset: Preset; 
 
   // Main JSON processing
   if (json && typeof json === 'object') {
-    // 1. Preset Name
-    if (json.preset_goal) {
-      newPreset.name = json.preset_goal;
-      appliedCount++;
-    } else if (json.name) {
-      newPreset.name = json.name;
-      appliedCount++;
-    }
+    // Il nome del preset è gestito esclusivamente dall'utente, mai dal JSON.
+    // preset_goal/name restano descrittivi e non vengono applicati allo slot.
 
-    // 2. Signal Chain
+    // Signal Chain
     const signalChain = json.signal_chain ?? json.SignalChain;
     if (signalChain && typeof signalChain === 'object') {
       Object.keys(signalChain).forEach(key => {
@@ -422,10 +417,10 @@ const formatSlotLabel = (slot: number) => {
 };
 
 export default function EditorPage() {
-  const { activePreset, updateParameter, updateModel, updateScene, toggleEffect, undo, redo, setActivePreset } = usePresetStore();
+  const { activePreset, updateParameter, updateModel, updateScene, toggleEffect, undo, redo, setActivePreset, updatePresetName } = usePresetStore();
   const { status, devicePresets, sendProgramChange, sendKnobParameter, sendModelChange, sendSceneChange, toggleBlock, enterBlockEditor, exitBlockEditor, isEditorSyncing, syncActivePreset, syncFullPreset } = useMidiStore();
   const { toast } = useToast();
-  const { savedNames } = usePresetNames();
+  const { savedNames, savePresetName } = usePresetNames();
 
   const [selectedBlockId, setSelectedBlockId] = useState<string>('amp');
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
@@ -436,6 +431,8 @@ export default function EditorPage() {
   const [isCopySceneOpen, setIsCopySceneOpen] = useState(false);
   const [copyTargetSlot, setCopyTargetSlot] = useState(String(activePreset.slot));
   const [copyTargetScene, setCopyTargetScene] = useState(String(activePreset.activeScene));
+  const [isEditingPresetName, setIsEditingPresetName] = useState(false);
+  const [presetNameDraft, setPresetNameDraft] = useState('');
   const { guitars, amplifiers, selectedGuitarId, selectedAmplifierId, selectGuitar, selectAmplifier } = useInstrumentationStore();
   const selectedGuitar = guitars.find(guitar => guitar.id === selectedGuitarId);
   const selectedAmplifier = amplifiers.find(amplifier => amplifier.id === selectedAmplifierId);
@@ -507,6 +504,15 @@ export default function EditorPage() {
 
   const getPresetDisplayName = (preset: Preset) =>
     savedNames[preset.slot] || preset.name || formatSlotLabel(preset.slot);
+
+  const saveEditorPresetName = () => {
+    const nextName = presetNameDraft.trim();
+    if (!nextName) return;
+    updatePresetName(nextName);
+    savePresetName(activePreset.slot, nextName);
+    useMidiStore.getState().updatePresetName(activePreset.slot, nextName);
+    setIsEditingPresetName(false);
+  };
 
   const handlePresetSelect = (value: string) => {
     const slot = Number(value);
@@ -682,22 +688,52 @@ export default function EditorPage() {
               <button aria-label="Preset successivo" onClick={(e) => { e.stopPropagation(); handleSlotChange('next'); }} className="touch-target rounded-full p-2 transition-colors hover:bg-secondary"><ChevronRight className="mx-auto h-5 w-5" /></button>
             </div>
             <div className="min-w-0">
-              <Select value={String(activePreset.slot)} onValueChange={handlePresetSelect}>
-                <SelectTrigger
-                  className="mb-1 h-auto min-h-8 w-full max-w-[19rem] justify-start border-0 bg-transparent px-0 py-0 text-left text-lg font-bold shadow-none hover:text-primary focus:ring-0 md:text-xl"
-                  aria-label="Seleziona preset"
-                >
-                  <SelectValue placeholder="Seleziona preset">{getPresetDisplayName(activePreset)}</SelectValue>
-                </SelectTrigger>
-                <SelectContent className="max-h-[min(24rem,60vh)]">
-                  {devicePresets.map((preset) => (
-                    <SelectItem key={preset.slot} value={String(preset.slot)}>
-                      <span className="font-mono text-primary">{formatSlotLabel(preset.slot)}</span>
-                      <span className="ml-2">{getPresetDisplayName(preset)}</span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex items-center gap-1">
+                {isEditingPresetName ? (
+                  <Input
+                    autoFocus
+                    value={presetNameDraft}
+                    onChange={(event) => setPresetNameDraft(event.target.value)}
+                    onBlur={saveEditorPresetName}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter') saveEditorPresetName();
+                      if (event.key === 'Escape') setIsEditingPresetName(false);
+                    }}
+                    className="h-8 w-full max-w-[19rem] text-lg font-bold md:text-xl"
+                    aria-label="Modifica nome preset"
+                  />
+                ) : (
+                  <Select value={String(activePreset.slot)} onValueChange={handlePresetSelect}>
+                    <SelectTrigger
+                      className="h-auto min-h-8 w-full max-w-[19rem] justify-start border-0 bg-transparent px-0 py-0 text-left text-lg font-bold shadow-none hover:text-primary focus:ring-0 md:text-xl"
+                      aria-label="Seleziona preset"
+                    >
+                      <SelectValue placeholder="Seleziona preset">{getPresetDisplayName(activePreset)}</SelectValue>
+                    </SelectTrigger>
+                    <SelectContent className="max-h-[min(24rem,60vh)]">
+                      {devicePresets.map((preset) => (
+                        <SelectItem key={preset.slot} value={String(preset.slot)}>
+                          <span className="font-mono text-primary">{formatSlotLabel(preset.slot)}</span>
+                          <span className="ml-2">{getPresetDisplayName(preset)}</span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+                {!isEditingPresetName && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 shrink-0 text-muted-foreground hover:text-primary"
+                    aria-label="Modifica nome preset"
+                    title="Modifica nome preset"
+                    onClick={() => { setPresetNameDraft(activePreset.name); setIsEditingPresetName(true); }}
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                  </Button>
+                )}
+              </div>
               <div className="mt-1 flex flex-wrap items-center gap-2">
                 <Badge variant="outline" className="text-[10px]">{status === 'connected' ? 'MG-30 CONNECTED' : 'MG-30 OFFLINE'}</Badge>
                 <Badge variant="secondary" className="border-primary/30 bg-primary/15 text-[10px] text-primary">SCENE {activePreset.activeScene + 1}</Badge>

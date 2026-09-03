@@ -74,10 +74,8 @@ export function normalizePresetSuggestion(preset: Preset, suggestion: PresetSugg
   const warnings: string[] = [];
   const seenTypes = new Set<EffectType>();
 
-  updatedPreset.name = suggestion.name?.trim() || preset.name;
-  if (updatedPreset.name !== preset.name) {
-    changes.push({ type: 'amp', label: 'Nome preset', from: preset.name, to: updatedPreset.name });
-  }
+  // Il nome del preset è sempre deciso manualmente dall'utente.
+  // Il nome generato dall'AI viene ignorato durante l'applicazione.
 
   for (const proposedEffect of suggestion.effects || []) {
     if (seenTypes.has(proposedEffect.type)) {

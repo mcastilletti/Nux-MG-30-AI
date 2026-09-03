@@ -31,10 +31,28 @@ export const RotaryKnob: React.FC<RotaryKnobProps> = ({
   color = 'hsl(var(--primary))'
 }) => {
   const [isDragging, setIsDragging] = useState(false);
+  const [inputValue, setInputValue] = useState(String(value));
+  const [isInputFocused, setIsInputFocused] = useState(false);
   const startY = useRef(0);
   const startValue = useRef(0);
   const rafRef = useRef<number | null>(null);
   const { saveToHistory } = usePresetStore();
+
+  useEffect(() => {
+    if (!isInputFocused) setInputValue(String(value));
+  }, [value, isInputFocused]);
+
+  const commitInputValue = () => {
+    const parsed = Number(inputValue);
+    if (!Number.isFinite(parsed)) {
+      setInputValue(String(value));
+      return;
+    }
+    const clamped = Math.max(min, Math.min(max, parsed));
+    const stepped = Math.round(clamped / step) * step;
+    onChange(Number(stepped.toFixed(6)));
+    setInputValue(String(Number(stepped.toFixed(step < 1 ? 4 : 0))));
+  };
 
   const updateFromPointer = (clientY: number, shiftKey = false) => {
     const deltaY = startY.current - clientY;
@@ -164,9 +182,35 @@ export const RotaryKnob: React.FC<RotaryKnobProps> = ({
           </span>
         </div>
       </div>
-      <span className="text-[11px] font-mono mt-1 select-none font-bold" style={{ color: color }}>
-        {value.toFixed(step < 1 ? 1 : 0)}
-      </span>
+      <input
+        type="number"
+        inputMode="decimal"
+        min={min}
+        max={max}
+        step={step}
+        value={inputValue}
+        aria-label={`${label} valore numerico`}
+        onPointerDown={(event) => event.stopPropagation()}
+        onFocus={() => { setIsInputFocused(true); setInputValue(String(value)); }}
+        onChange={(event) => {
+          const next = event.target.value;
+          setInputValue(next);
+          if (next !== '' && Number.isFinite(Number(next))) {
+            const parsed = Math.max(min, Math.min(max, Number(next)));
+            onChange(Number(parsed.toFixed(step < 1 ? 4 : 0)));
+          }
+        }}
+        onBlur={() => { commitInputValue(); setIsInputFocused(false); }}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter') {
+            event.preventDefault();
+            commitInputValue();
+            event.currentTarget.blur();
+          }
+        }}
+        className="no-number-spinner mt-1 h-6 w-16 rounded border border-transparent bg-transparent px-1 text-center text-[11px] font-mono font-bold outline-none transition-colors focus:border-primary focus:bg-background"
+        style={{ color }}
+      />
     </div>
   );
 };

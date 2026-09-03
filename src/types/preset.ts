@@ -20,6 +20,8 @@ export interface Preset {
   lastModified: Date;
   ampModel: string;
   effects: EffectState[];
+  /** Snapshot delle configurazioni per scena. I preset legacy usano ancora effects. */
+  scenes?: Record<number, EffectState[]>;
 }
 
 export interface PresetLibraryMetadata {

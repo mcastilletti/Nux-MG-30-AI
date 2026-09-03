@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
-import { Undo2, Redo2, Save, LayoutGrid, ChevronLeft, ChevronRight, Settings2, Sparkles, Loader2, RefreshCw, CheckCircle2, X, Layers } from 'lucide-react';
+import { Undo2, Redo2, Save, LayoutGrid, ChevronLeft, ChevronRight, Settings2, Sparkles, Loader2, RefreshCw, CheckCircle2, X, Layers, Copy } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { MG30_MODELS } from '@/lib/mg30-data';
 import { generateMG30Preset, MG30PresetOutput } from '@/ai/flows/mg30-preset-gen';
@@ -20,6 +20,7 @@ import { useToast } from '@/hooks/use-toast';
 import { EffectType, Preset } from '@/types/preset';
 import { formatValue, normalizePresetState, normalizePresetSuggestion, PresetNormalizationResult } from '@/lib/mg30-preset-normalizer';
 import { useInstrumentationStore } from '@/stores/use-instrumentation-store';
+import { usePresetNames } from '@/hooks/use-preset-names';
 
 function parseDirectJsonInput(value: string): { parsed: any | null; looksLikeJson: boolean; error?: string } {
   const trimmed = value.trim();
@@ -44,6 +45,9 @@ function applyJsonToPreset(preset: Preset, json: any): { updatedPreset: Preset; 
   // Synonym mapping for common parameter names
   const PARAM_SYNONYMS: Record<string, string[]> = {
     'level': ['echo', 'mix', 'intensity', 'level', 'volume', 'vol', 'effect level'],
+    'irlevel': ['level', 'volume', 'vol', 'ir level'],
+    'lowcut': ['lowcut', 'low cut', 'lo cut', 'locut'],
+    'highcut': ['highcut', 'high cut', 'hi cut', 'hicut'],
     'time': ['time', 'repeat', 'speed', 'rate', 'position', 'delay time'],
     'feedback': ['feedback', 'repeat', 'decay', 'fback'],
     'threshold': ['threshold', 'sensitivity', 'sens'],
@@ -115,16 +119,17 @@ function applyJsonToPreset(preset: Preset, json: any): { updatedPreset: Preset; 
 
   // Helper to update a parameter in a specific effect
   const setParam = (effect: any, paramName: string, val: any) => {
+    const normalizedParamName = paramName.toLowerCase().replace(/[\s_-]/g, '');
     let targetKey = Object.keys(effect.parameters || {}).find(
       k => k.toLowerCase() === paramName.toLowerCase() ||
-        k.toLowerCase().replace(/[-_]/g, '') === paramName.toLowerCase().replace(/[-_]/g, '')
+        k.toLowerCase().replace(/[\s_-]/g, '') === normalizedParamName
     );
 
     if (targetKey === undefined) {
-      const synonyms = PARAM_SYNONYMS[paramName.toLowerCase()];
+      const synonyms = PARAM_SYNONYMS[paramName.toLowerCase()] || PARAM_SYNONYMS[normalizedParamName];
       if (synonyms) {
         targetKey = Object.keys(effect.parameters || {}).find(
-          pk => synonyms.includes(pk.toLowerCase())
+          pk => synonyms.some(synonym => synonym.replace(/[\s_-]/g, '') === pk.toLowerCase().replace(/[\s_-]/g, ''))
         );
       }
     }
@@ -418,8 +423,9 @@ const formatSlotLabel = (slot: number) => {
 
 export default function EditorPage() {
   const { activePreset, updateParameter, updateModel, updateScene, toggleEffect, undo, redo, setActivePreset } = usePresetStore();
-  const { status, sendProgramChange, sendKnobParameter, sendModelChange, sendSceneChange, toggleBlock, enterBlockEditor, exitBlockEditor, isEditorSyncing, syncActivePreset, syncFullPreset } = useMidiStore();
+  const { status, devicePresets, sendProgramChange, sendKnobParameter, sendModelChange, sendSceneChange, toggleBlock, enterBlockEditor, exitBlockEditor, isEditorSyncing, syncActivePreset, syncFullPreset } = useMidiStore();
   const { toast } = useToast();
+  const { savedNames } = usePresetNames();
 
   const [selectedBlockId, setSelectedBlockId] = useState<string>('amp');
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
@@ -427,6 +433,9 @@ export default function EditorPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [proposedPreset, setProposedPreset] = useState<MG30PresetOutput | null>(null);
   const [proposedNormalization, setProposedNormalization] = useState<PresetNormalizationResult | null>(null);
+  const [isCopySceneOpen, setIsCopySceneOpen] = useState(false);
+  const [copyTargetSlot, setCopyTargetSlot] = useState(String(activePreset.slot));
+  const [copyTargetScene, setCopyTargetScene] = useState(String(activePreset.activeScene));
   const { guitars, amplifiers, selectedGuitarId, selectedAmplifierId, selectGuitar, selectAmplifier } = useInstrumentationStore();
   const selectedGuitar = guitars.find(guitar => guitar.id === selectedGuitarId);
   const selectedAmplifier = amplifiers.find(amplifier => amplifier.id === selectedAmplifierId);
@@ -488,7 +497,58 @@ export default function EditorPage() {
     if (nextSlot < 1) nextSlot = 128;
     if (nextSlot > 128) nextSlot = 1;
     sendProgramChange(nextSlot - 1);
-    setActivePreset({ ...activePreset, slot: nextSlot });
+    const nextPreset = devicePresets.find((preset) => preset.slot === nextSlot);
+    if (nextPreset) {
+      setActivePreset({ ...nextPreset, name: getPresetDisplayName(nextPreset) });
+    } else {
+      setActivePreset({ ...activePreset, slot: nextSlot });
+    }
+  };
+
+  const getPresetDisplayName = (preset: Preset) =>
+    savedNames[preset.slot] || preset.name || formatSlotLabel(preset.slot);
+
+  const handlePresetSelect = (value: string) => {
+    const slot = Number(value);
+    const preset = devicePresets.find((item) => item.slot === slot);
+    if (!preset || preset.slot === activePreset.slot) return;
+
+    if (status === 'connected') {
+      sendProgramChange(preset.slot - 1);
+    }
+
+    setActivePreset({ ...preset, name: getPresetDisplayName(preset) });
+  };
+
+  const handleCopyScene = () => {
+    const targetSlot = Number(copyTargetSlot);
+    const targetScene = Number(copyTargetScene);
+    const target = devicePresets.find((preset) => preset.slot === targetSlot) || activePreset;
+    const copied = usePresetStore.getState().copyActiveSceneTo(target, targetScene);
+    const destination: Preset = {
+      ...copied,
+      activeScene: targetScene,
+      effects: copied.scenes?.[targetScene] || copied.effects,
+      name: getPresetDisplayName(target),
+      lastModified: new Date(),
+    };
+
+    useMidiStore.setState((state) => ({
+      devicePresets: state.devicePresets.map((preset) => preset.slot === targetSlot ? destination : preset),
+    }));
+    setActivePreset(destination);
+
+    if (status === 'connected') {
+      sendProgramChange(targetSlot - 1);
+      sendSceneChange(targetScene);
+      syncFullPreset(destination);
+    }
+
+    setIsCopySceneOpen(false);
+    toast({
+      title: 'Scena copiata',
+      description: `${formatSlotLabel(activePreset.slot)} / Scena ${activePreset.activeScene + 1} copiata in ${formatSlotLabel(targetSlot)} / Scena ${targetScene + 1}.`,
+    });
   };
 
   const handleSave = () => {
@@ -622,7 +682,22 @@ export default function EditorPage() {
               <button aria-label="Preset successivo" onClick={(e) => { e.stopPropagation(); handleSlotChange('next'); }} className="touch-target rounded-full p-2 transition-colors hover:bg-secondary"><ChevronRight className="mx-auto h-5 w-5" /></button>
             </div>
             <div className="min-w-0">
-              <h3 className="truncate text-lg font-bold md:text-xl">{activePreset.name}</h3>
+              <Select value={String(activePreset.slot)} onValueChange={handlePresetSelect}>
+                <SelectTrigger
+                  className="mb-1 h-auto min-h-8 w-full max-w-[19rem] justify-start border-0 bg-transparent px-0 py-0 text-left text-lg font-bold shadow-none hover:text-primary focus:ring-0 md:text-xl"
+                  aria-label="Seleziona preset"
+                >
+                  <SelectValue placeholder="Seleziona preset">{getPresetDisplayName(activePreset)}</SelectValue>
+                </SelectTrigger>
+                <SelectContent className="max-h-[min(24rem,60vh)]">
+                  {devicePresets.map((preset) => (
+                    <SelectItem key={preset.slot} value={String(preset.slot)}>
+                      <span className="font-mono text-primary">{formatSlotLabel(preset.slot)}</span>
+                      <span className="ml-2">{getPresetDisplayName(preset)}</span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <div className="mt-1 flex flex-wrap items-center gap-2">
                 <Badge variant="outline" className="text-[10px]">{status === 'connected' ? 'MG-30 CONNECTED' : 'MG-30 OFFLINE'}</Badge>
                 <Badge variant="secondary" className="border-primary/30 bg-primary/15 text-[10px] text-primary">SCENE {activePreset.activeScene + 1}</Badge>
@@ -649,6 +724,57 @@ export default function EditorPage() {
                 </Button>
               ))}
             </div>
+
+            <Dialog open={isCopySceneOpen} onOpenChange={setIsCopySceneOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm" className="h-10 gap-2">
+                  <Copy className="h-4 w-4" />
+                  <span className="hidden sm:inline">Copia scena</span>
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[430px]">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2"><Copy className="h-5 w-5 text-primary" /> Copia preset su scena</DialogTitle>
+                  <DialogDescription>
+                    Copia la configurazione della scena attuale su una scena dello stesso preset o di un altro codice.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-3">
+                  <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 text-sm">
+                    Origine: <span className="font-mono font-bold text-primary">{formatSlotLabel(activePreset.slot)}</span> · Scena {activePreset.activeScene + 1}
+                  </div>
+                  <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Preset destinazione</label>
+                      <Select value={copyTargetSlot} onValueChange={setCopyTargetSlot}>
+                        <SelectTrigger aria-label="Preset destinazione"><SelectValue /></SelectTrigger>
+                        <SelectContent className="max-h-[min(24rem,60vh)]">
+                          {devicePresets.map((preset) => (
+                            <SelectItem key={preset.slot} value={String(preset.slot)}>
+                              <span className="font-mono text-primary">{formatSlotLabel(preset.slot)}</span>
+                              <span className="ml-2">{getPresetDisplayName(preset)}</span>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Scena</label>
+                      <Select value={copyTargetScene} onValueChange={setCopyTargetScene}>
+                        <SelectTrigger aria-label="Scena destinazione"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {[0, 1, 2].map((scene) => <SelectItem key={scene} value={String(scene)}>Scena {scene + 1}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setIsCopySceneOpen(false)}>Annulla</Button>
+                  <Button onClick={handleCopyScene}>Copia scena</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
 
             <div className="hidden sm:block w-[1px] h-8 bg-border mx-1" />
 

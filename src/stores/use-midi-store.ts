@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { MidiConnectionStatus, MidiDevice } from '@/types/midi';
-import { Preset, EffectState } from '@/types/preset';
+import { EffectType, Preset, EffectState } from '@/types/preset';
 import { usePresetStore } from './use-preset-store';
 import { MG30_MODELS } from '@/lib/mg30-data';
 
@@ -47,7 +47,8 @@ const BLOCK_PARAM_CCS: Record<string, number[]> = {
   'reverb': [62, 63, 64],
   'ir': [66, 67, 68, 69, 70],
   'sr': [72],
-  'vol': [74]
+  // PATCH VOL: accesso editor B0 4E 0B, MIN su 4B (0..50), MAX su 4C (0..64)
+  'vol': [75, 76]
 };
 
 const BLOCK_INDEX_MAP: Record<string, number> = {
@@ -61,6 +62,37 @@ const BLOCK_INDEX_MAP: Record<string, number> = {
   'delay': 7,
   'reverb': 8,
   'ir': 9
+};
+
+/** Converte il valore usato dall'editor nel range MIDI 0-127. */
+const parameterToMidiValue = (value: number, parameter: { id?: string; min: number; max: number; unit?: string }) => {
+  const clamped = Math.min(parameter.max, Math.max(parameter.min, value));
+  // PATCH VOL usa due scale hardware distinte: MIN 0..50 e MAX 51..100
+  // (il MAX viene rappresentato dalla MG-30 su CC 76 nel range 0..100).
+  if (parameter.id === 'min' && parameter.min === 0 && parameter.max === 50) {
+    return Math.round(clamped);
+  }
+  if (parameter.id === 'max' && parameter.min === 51 && parameter.max === 100) {
+    return Math.round(((clamped - 51) / 49) * 100);
+  }
+  // IR Level usa il CC 68 e la NUX lo rappresenta nel range 0..100,
+  // mentre l'Editor mostra il valore equivalente -12..+12 dB.
+  if (parameter.id === 'level' && parameter.min === -12 && parameter.max === 12) {
+    return Math.round(((clamped - parameter.min) / (parameter.max - parameter.min)) * 100);
+  }
+  if (parameter.min === 0 && parameter.max === 127) return Math.round(clamped);
+  if (parameter.max === parameter.min) return 0;
+  return Math.round(((clamped - parameter.min) / (parameter.max - parameter.min)) * 127);
+};
+
+const blockStateMidiValue = (blockType: string, modelIndex: number, enabled: boolean) => {
+  const baseOffset = BLOCK_MODEL_OFFSET[blockType] || 1;
+  const onValue = modelIndex + baseOffset;
+
+  // Il Wah usa la polarità inversa per il bypass rispetto agli altri blocchi.
+  if (blockType === 'wah') return enabled ? onValue - 64 : onValue;
+  if (baseOffset >= 64) return enabled ? onValue : onValue - 64;
+  return enabled ? onValue : onValue + 64;
 };
 
 const SELECT_BLOCK_CC = 75; 
@@ -83,7 +115,7 @@ const createDefaultEffects = (): EffectState[] => [
   { id: 'mod', type: 'modulation', model: 'mod-ce1', enabled: false, parameters: { intensity: 50, depth: 50, rate: 50 } },
   { id: 'delay', type: 'delay', model: 'dly-analog', enabled: false, parameters: { repeat: 30, echo: 30, intensity: 30 } },
   { id: 'reverb', type: 'reverb', model: 'room', enabled: true, parameters: { decay: 50, tone: 50, level: 30 } },
-  { id: 'vol', type: 'vol', model: 'patch-vol', enabled: true, parameters: { level: 100 } }
+  { id: 'vol', type: 'vol', model: 'patch-vol', enabled: true, parameters: { min: 30, max: 60 } }
 ];
 
 const INITIAL_PRESETS: Preset[] = Array.from({ length: 128 }, (_, i) => ({
@@ -309,30 +341,25 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
   sendKnobParameter: (blockType, knobIndex, value) => {
     const ccs = BLOCK_PARAM_CCS[blockType];
     if (ccs && ccs[knobIndex] !== undefined) {
-      get().sendControlChange(ccs[knobIndex], value);
+      const effect = usePresetStore.getState().activePreset.effects.find(e => e.type === blockType);
+      const model = effect && MG30_MODELS[effect.type]?.find(m => m.id === effect.model);
+      const parameter = model?.parameters[knobIndex];
+      get().sendControlChange(ccs[knobIndex], parameter ? parameterToMidiValue(value, parameter) : value);
     }
   },
 
   sendModelChange: (blockType, modelId) => {
     const { sendControlChange, enterBlockEditor } = get();
     const cc = BLOCK_MODEL_CC[blockType];
-    const baseOffset = BLOCK_MODEL_OFFSET[blockType] || 1;
     if (cc === undefined) return;
 
-    const models = MG30_MODELS[blockType as any];
+    const models = MG30_MODELS[blockType as EffectType];
     const modelIndex = models?.findIndex(m => m.id === modelId) ?? 0;
     const safeIndex = modelIndex === -1 ? 0 : modelIndex;
 
     const effect = usePresetStore.getState().activePreset.effects.find(e => e.type === blockType);
     const isEnabled = effect?.enabled ?? true;
-    const onValue = safeIndex + baseOffset;
-
-    let midiValue: number;
-    if (baseOffset >= 64) {
-      midiValue = isEnabled ? onValue : onValue - 64;
-    } else {
-      midiValue = isEnabled ? onValue : onValue + 64;
-    }
+    const midiValue = blockStateMidiValue(blockType, safeIndex, isEnabled);
     
     enterBlockEditor(blockType);
     setTimeout(() => sendControlChange(cc, midiValue), 400);
@@ -345,18 +372,10 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     const effect = usePresetStore.getState().activePreset.effects.find(e => e.type === blockType);
     if (!effect) return;
 
-    const models = MG30_MODELS[blockType as any];
+    const models = MG30_MODELS[blockType as EffectType];
     const modelIndex = models?.findIndex(m => m.id === effect.model) ?? 0;
     const safeIndex = modelIndex === -1 ? 0 : modelIndex;
-    const baseOffset = BLOCK_MODEL_OFFSET[blockType] || 1;
-    const onValue = safeIndex + baseOffset;
-
-    let midiValue: number;
-    if (baseOffset >= 64) {
-      midiValue = enabled ? onValue : onValue - 64;
-    } else {
-      midiValue = enabled ? onValue : onValue + 64;
-    }
+    const midiValue = blockStateMidiValue(blockType, safeIndex, enabled);
 
     get().sendControlChange(cc, midiValue);
   },
@@ -367,6 +386,11 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
   },
 
   enterBlockEditor: (blockType) => {
+    if (blockType === 'vol') {
+      // La pagina PATCH VOL si apre con B0 4E 0B.
+      get().sendControlChange(78, 11);
+      return;
+    }
     const index = BLOCK_INDEX_MAP[blockType];
     if (index !== undefined) {
       get().sendControlChange(SELECT_BLOCK_CC, index);
@@ -385,13 +409,14 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     const effect = usePresetStore.getState().activePreset.effects.find(e => e.type === blockType);
     if (!effect) return;
 
-    const modelData = MG30_MODELS[effect.type as any]?.find(m => m.id === effect.model);
+    const modelData = MG30_MODELS[effect.type]?.find(m => m.id === effect.model);
     if (!modelData) return;
 
     modelData.parameters.forEach((param, index) => {
       const val = Number(parameters[param.id.toLowerCase()] ?? param.default);
       if (ccs[index] !== undefined) {
-        setTimeout(() => get().sendControlChange(ccs[index], Math.round(val)), index * 100);
+        const midiValue = parameterToMidiValue(val, param);
+        setTimeout(() => get().sendControlChange(ccs[index], midiValue), index * 100);
       }
     });
   },
@@ -407,19 +432,16 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     preset.effects.forEach((e, idx) => {
       setTimeout(() => {
         get().enterBlockEditor(e.type);
-        
         setTimeout(() => {
           sendModelChange(e.type, e.model);
-          
           setTimeout(() => {
             toggleBlock(e.type, e.enabled);
-            
             setTimeout(() => {
               syncBlockParameters(e.type, e.parameters);
             }, 300);
           }, 300);
         }, 300);
-      }, idx * 1500); 
+      }, idx * 1500);
     });
 
     const totalTime = preset.effects.length * 1500 + 500;

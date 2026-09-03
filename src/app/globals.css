@@ -56,6 +56,17 @@
 
   button, a, input, textarea, select { -webkit-tap-highlight-color: transparent; }
 
+  /* I valori delle manopole sono editabili da tastiera senza spinner nativi. */
+  input.no-number-spinner::-webkit-inner-spin-button,
+  input.no-number-spinner::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input.no-number-spinner {
+    appearance: textfield;
+    -moz-appearance: textfield;
+  }
+
   /* Interactive controls stay comfortable on a touchscreen. */
   button, [role="button"], [role="switch"] { touch-action: manipulation; }
 

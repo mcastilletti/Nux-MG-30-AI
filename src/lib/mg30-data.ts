@@ -175,7 +175,15 @@ export const MG30_MODELS: Record<EffectType, MG30Model[]> = {
     { id: 'shimmer', name: 'SHIMMER', fullName: 'SHIMMER REVERB', parameters: [P1('mix', 'MIX'), P1('decay', 'DECAY'), P1('shim', 'SHIM')] }
   ],
   'vol': [
-    { id: 'patch-vol', name: 'VOL', fullName: 'PATCH VOLUME', parameters: [P1('level', 'Level', 100)] }
+    {
+      id: 'patch-vol',
+      name: 'VOL',
+      fullName: 'PATCH VOLUME',
+      parameters: [
+        { id: 'min', name: 'VOL MIN', min: 0, max: 50, step: 1, default: 30 },
+        { id: 'max', name: 'VOL MAX', min: 51, max: 100, step: 1, default: 60 },
+      ],
+    }
   ],
   'eq': [
     { id: 'eq-ge6', name: '6-BAND EQ', fullName: 'BOSS GE-6', parameters: [P1('100hz', '100Hz'), P1('220hz', '220Hz'), P1('500hz', '500Hz'), P1('1.2khz', '1.2kHz'), P1('2.6khz', '2.6kHz'), P1('6.4khz', '6.4kHz'), P1('level', 'Level')] },

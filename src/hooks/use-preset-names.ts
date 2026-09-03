@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { doc, onSnapshot, setDoc } from 'firebase/firestore';
 import { useFirebase } from '@/firebase';
+import { usePresetStore } from '@/stores/use-preset-store';
 
 /** Record<slot, name> — slot è 1-indexed (1..128) */
 export type PresetNamesMap = Record<number, string>;
@@ -45,6 +46,17 @@ export function usePresetNames() {
   const { firestore, user } = useFirebase();
   const [savedNames, setSavedNames] = useState<PresetNamesMap>(loadFromLocalStorage);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Mantiene il nome del preset attivo allineato alla cache condivisa dei nomi.
+  useEffect(() => {
+    const activePreset = usePresetStore.getState().activePreset;
+    const savedName = savedNames[activePreset.slot];
+    if (savedName && savedName !== activePreset.name) {
+      usePresetStore.setState(state => ({
+        activePreset: { ...state.activePreset, name: savedName },
+      }));
+    }
+  }, [savedNames]);
 
   // Sottoscrizione real-time a Firestore quando l'utente è loggato
   useEffect(() => {

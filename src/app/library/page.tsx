@@ -32,7 +32,7 @@ export default function LibraryPage() {
   const [editName, setEditName] = useState('');
 
   const { sendProgramChange, status, devicePresets, syncPresets, isSyncing, syncProgress, updatePresetName } = useMidiStore();
-  const { setActivePreset } = usePresetStore();
+  const { setActivePreset, updatePresetName: updateActivePresetName } = usePresetStore();
   const { toast } = useToast();
   const { user } = useUser();
 
@@ -86,6 +86,9 @@ export default function LibraryPage() {
     if (editingSlot && editName.trim().length > 0) {
       // Aggiorna Zustand store (in-memory)
       updatePresetName(editingSlot, editName.trim());
+      if (usePresetStore.getState().activePreset.slot === editingSlot) {
+        updateActivePresetName(editName.trim());
+      }
       // Persiste su Firestore + localStorage
       savePresetName(editingSlot, editName.trim());
       setEditingSlot(null);

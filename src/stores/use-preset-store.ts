@@ -13,7 +13,7 @@ const createDefaultEffects = (): EffectState[] => [
   { id: 'mod', type: 'modulation', model: 'mod-ce1', enabled: false, parameters: { intensity: 50, depth: 50, rate: 50 } },
   { id: 'delay', type: 'delay', model: 'dly-analog', enabled: false, parameters: { repeat: 30, echo: 30, intensity: 30 } },
   { id: 'reverb', type: 'reverb', model: 'room', enabled: true, parameters: { decay: 50, tone: 50, level: 30 } },
-  { id: 'vol', type: 'vol', model: 'patch-vol', enabled: true, parameters: { level: 100 } }
+  { id: 'vol', type: 'vol', model: 'patch-vol', enabled: true, parameters: { min: 30, max: 60 } }
 ];
 
 const DEFAULT_PRESET: Preset = {
@@ -29,17 +29,31 @@ const DEFAULT_PRESET: Preset = {
   effects: createDefaultEffects()
 };
 
+const cloneEffects = (effects: EffectState[]): EffectState[] =>
+  effects.map((effect) => ({ ...effect, parameters: { ...effect.parameters } }));
+
+const sceneEffects = (preset: Preset, scene: number): EffectState[] =>
+  cloneEffects(preset.scenes?.[scene] || preset.effects);
+
+const withCurrentScene = (preset: Preset, effects: EffectState[]): Preset => ({
+  ...preset,
+  effects,
+  scenes: { ...(preset.scenes || {}), [preset.activeScene]: cloneEffects(effects) },
+});
+
 interface PresetStore {
   activePreset: Preset;
   history: Preset[];
   historyIndex: number;
   
   setActivePreset: (preset: Preset) => void;
+  updatePresetName: (name: string) => void;
   updateParameter: (effectId: string, param: string, value: number | string) => void;
   updateModel: (effectId: string, modelId: string) => void;
   updateScene: (sceneIndex: number) => void;
   toggleEffect: (effectId: string) => void;
   updateBlockStateLocally: (blockType: string, enabled: boolean) => void;
+  copyActiveSceneTo: (target: Preset, targetScene: number) => Preset;
   undo: () => void;
   redo: () => void;
   saveToHistory: () => void;
@@ -51,7 +65,17 @@ export const usePresetStore = create<PresetStore>((set, get) => ({
   historyIndex: 0,
 
   setActivePreset: (preset) => {
-    set({ activePreset: preset });
+    const effects = sceneEffects(preset, preset.activeScene);
+    set({ activePreset: { ...preset, effects, scenes: { ...(preset.scenes || {}), [preset.activeScene]: cloneEffects(effects) } } });
+    get().saveToHistory();
+  },
+
+  updatePresetName: (name) => {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    const { activePreset } = get();
+    if (activePreset.name === trimmed) return;
+    set({ activePreset: { ...activePreset, name: trimmed, lastModified: new Date() } });
     get().saveToHistory();
   },
 
@@ -65,7 +89,7 @@ export const usePresetStore = create<PresetStore>((set, get) => ({
       return e;
     });
 
-    set({ activePreset: { ...activePreset, effects: newEffects, lastModified: new Date() } });
+    set({ activePreset: withCurrentScene({ ...activePreset, lastModified: new Date() }, newEffects) });
   },
 
   updateModel: (effectId, modelId) => {
@@ -88,14 +112,15 @@ export const usePresetStore = create<PresetStore>((set, get) => ({
       }
       return e;
     });
-    set({ activePreset: { ...activePreset, effects: newEffects, lastModified: new Date() } });
+    set({ activePreset: withCurrentScene({ ...activePreset, lastModified: new Date() }, newEffects) });
     get().saveToHistory();
   },
 
   updateScene: (sceneIndex) => {
     const { activePreset } = get();
     if (activePreset.activeScene === sceneIndex) return;
-    set({ activePreset: { ...activePreset, activeScene: sceneIndex, lastModified: new Date() } });
+    const nextEffects = sceneEffects(activePreset, sceneIndex);
+    set({ activePreset: { ...activePreset, activeScene: sceneIndex, effects: nextEffects, scenes: { ...(activePreset.scenes || {}), [sceneIndex]: cloneEffects(nextEffects) }, lastModified: new Date() } });
     get().saveToHistory();
   },
 
@@ -107,7 +132,7 @@ export const usePresetStore = create<PresetStore>((set, get) => ({
       }
       return e;
     });
-    set({ activePreset: { ...activePreset, effects: newEffects, lastModified: new Date() } });
+    set({ activePreset: withCurrentScene({ ...activePreset, lastModified: new Date() }, newEffects) });
     get().saveToHistory();
   },
 
@@ -120,7 +145,20 @@ export const usePresetStore = create<PresetStore>((set, get) => ({
       }
       return e;
     });
-    set({ activePreset: { ...activePreset, effects: newEffects } });
+    set({ activePreset: withCurrentScene(activePreset, newEffects) });
+  },
+
+  copyActiveSceneTo: (target, targetScene) => {
+    const { activePreset } = get();
+    const copiedEffects = cloneEffects(activePreset.effects);
+    const copiedTarget: Preset = {
+      ...target,
+      scenes: { ...(target.scenes || {}), [targetScene]: copiedEffects },
+    };
+    if (targetScene === copiedTarget.activeScene) {
+      copiedTarget.effects = cloneEffects(copiedEffects);
+    }
+    return copiedTarget;
   },
 
   undo: () => {

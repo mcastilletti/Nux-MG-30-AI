@@ -144,6 +144,12 @@ export function normalizePresetState(preset: Preset): PresetStateNormalizationRe
       continue;
     }
 
+    for (const parameter of model.parameters) {
+      if (effect.parameters[parameter.id] === undefined) {
+        effect.parameters[parameter.id] = parameter.default;
+      }
+    }
+
     for (const [key, value] of Object.entries(effect.parameters || {})) {
       const parameter = model.parameters.find(candidate => normalizeKey(candidate.id) === normalizeKey(key));
       if (!parameter || typeof value !== 'number' || !Number.isFinite(value)) continue;

@@ -1,6 +1,6 @@
 export type PickupType = 'single-coil' | 'humbucker';
 export type PickupPosition = 'neck' | 'middle' | 'bridge';
-export type AmpInputPosition = 'before-preamp' | 'after-preamp';
+export type AmpInputPosition = 'before-preamp' | 'after-preamp' | 'active-cab' | 'passive-cab' | 'frfr-cab';
 
 export interface GuitarPickup {
   id: string;

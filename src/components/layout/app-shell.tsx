@@ -4,7 +4,7 @@
 import React, { useEffect } from 'react';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { useMidiStore } from '@/stores/use-midi-store';
-import { LayoutDashboard, Library, Sliders, Settings, Zap, Wifi, WifiOff, NotebookPen, LogIn, LogOut, User as UserIcon, AlertCircle, Users, Guitar } from 'lucide-react';
+import { LayoutDashboard, Library, Sliders, Settings, Zap, Wifi, WifiOff, NotebookPen, LogIn, LogOut, User as UserIcon, AlertCircle, Users } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useWakeLock } from '@/hooks/use-wake-lock';
 import { cn } from '@/lib/utils';
+import { ElectricGuitarIcon } from '@/components/icons/electric-guitar-icon';
 
 export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { status, initialize, syncActivePreset } = useMidiStore();
@@ -80,7 +81,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
     { label: 'Editor', href: '/editor', icon: Sliders },
     { label: 'Note', href: '/notes', icon: NotebookPen },
     { label: 'Band', href: '/bands', icon: Users },
-    { label: 'Strumentazione', href: '/instrumentation', icon: Guitar },
+    { label: 'Strumentazione', href: '/instrumentation', icon: ElectricGuitarIcon },
     { label: 'SysEx Analyzer', href: '/tools/sysex-analyzer', icon: Zap },
   ];
 

@@ -537,7 +537,7 @@ export default function EditorPage() {
     try {
       const instrumentation = [
         selectedGuitar ? `Chitarra: ${selectedGuitar.model}; pickup: ${selectedGuitar.pickups.map(pickup => `${(pickup.position || 'bridge') === 'neck' ? 'manico' : (pickup.position || 'bridge') === 'middle' ? 'centrale' : 'ponte'} ${pickup.type}${pickup.model ? ` (${pickup.model})` : ''}`).join(', ')}` : 'Chitarra: non selezionata',
-        selectedAmplifier ? `Amplificatore: ${selectedAmplifier.model}; ingresso: ${selectedAmplifier.inputPosition === 'before-preamp' ? 'prima del preamplificatore' : 'dopo il preamplificatore'}` : 'Amplificatore: non selezionato',
+        selectedAmplifier ? `Amplificatore: ${selectedAmplifier.model}; collegamento: ${selectedAmplifier.inputPosition === 'before-preamp' ? 'prima del preamplificatore' : selectedAmplifier.inputPosition === 'after-preamp' ? 'dopo il preamplificatore' : selectedAmplifier.inputPosition === 'active-cab' ? 'cassa attiva' : selectedAmplifier.inputPosition === 'passive-cab' ? 'cassa passiva' : 'cassa FRFR'}` : 'Amplificatore: non selezionato',
       ].join('\n');
       const result = await generateMG30Preset({ description: aiPrompt, instrumentation });
       setProposedPreset(result);

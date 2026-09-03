@@ -21,6 +21,20 @@ import { EffectType, Preset } from '@/types/preset';
 import { formatValue, normalizePresetState, normalizePresetSuggestion, PresetNormalizationResult } from '@/lib/mg30-preset-normalizer';
 import { useInstrumentationStore } from '@/stores/use-instrumentation-store';
 
+function parseDirectJsonInput(value: string): { parsed: any | null; looksLikeJson: boolean; error?: string } {
+  const trimmed = value.trim();
+  const fenced = trimmed.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i);
+  const candidate = fenced?.[1]?.trim() || trimmed;
+  const looksLikeJson = Boolean(fenced) || candidate.startsWith('{') || candidate.startsWith('[');
+  if (!looksLikeJson) return { parsed: null, looksLikeJson: false };
+
+  try {
+    return { parsed: JSON.parse(candidate), looksLikeJson: true };
+  } catch (error: any) {
+    return { parsed: null, looksLikeJson: true, error: error?.message || 'JSON non valido.' };
+  }
+}
+
 function applyJsonToPreset(preset: Preset, json: any): { updatedPreset: Preset; appliedCount: number; warnings: string[] } {
   let appliedCount = 0;
 
@@ -390,6 +404,7 @@ const getEffectImage = (type: string) => {
     case 'modulation': return '/mod.png';
     case 'delay': return '/dly.png';
     case 'reverb': return '/rvb.png';
+    case 'vol': return '/speaker.svg';
     case 'eq': return '/eq.png';
     default: return '/amp.png';
   }
@@ -495,11 +510,20 @@ export default function EditorPage() {
     const trimmedPrompt = aiPrompt.trim();
     if (!trimmedPrompt) return;
 
-    // Controlla se l'input inizia con { o [ (indicando che l'utente vuole inserire un JSON)
-    const isJsonStyle = trimmedPrompt.startsWith('{') || trimmedPrompt.startsWith('[');
-    if (isJsonStyle) {
+    // Un JSON, anche dentro un blocco markdown, è sempre un comando diretto e non passa dall'AI.
+    const directJson = parseDirectJsonInput(trimmedPrompt);
+    if (directJson.looksLikeJson) {
+      if (directJson.error) {
+        toast({
+          title: "Errore nel JSON",
+          description: "La configurazione diretta non è valida: " + directJson.error,
+          variant: "destructive"
+        });
+        return;
+      }
+
       try {
-        const parsedJson = JSON.parse(trimmedPrompt);
+        const parsedJson = directJson.parsed;
         // Applica i parametri JSON al preset attivo
         const { updatedPreset, appliedCount, warnings } = applyJsonToPreset(activePreset, parsedJson);
 
@@ -640,7 +664,7 @@ export default function EditorPage() {
                     <>
                       <DialogHeader>
                         <DialogTitle className="flex items-center gap-2"><Sparkles className="w-5 h-5 text-primary" /> AI Tone Designer</DialogTitle>
-                        <DialogDescription>Indica band, brano, periodo e tipo di chitarra: l'AI creerà una reinterpretazione plausibile per MG-30. Puoi anche incollare un JSON tecnico.</DialogDescription>
+                        <DialogDescription>Per l’AI descrivi genericamente band, brano, periodo e tipo di chitarra. Se incolli un JSON, verrà applicato direttamente senza interpretazione AI.</DialogDescription>
                       </DialogHeader>
                       <div className="space-y-4 py-4">
                         <div className="grid gap-3 rounded-lg border border-primary/20 bg-primary/5 p-3 sm:grid-cols-2">
@@ -753,9 +777,16 @@ Es. per JSON: { "amp": { "gain": 60, "master": 80 }, "delay": { "enabled": true 
                       }}
                     >
                       <div className="relative min-h-0 flex-1">
+                        {effect.type === 'vol' && (
+                          <span
+                            aria-hidden="true"
+                            className="absolute inset-x-4 inset-y-3 rounded-xl border bg-background/60"
+                            style={{ borderColor: `hsla(${blockColor}, 0.45)`, boxShadow: `0 0 14px hsla(${blockColor}, 0.16)` }}
+                          />
+                        )}
                         <span
                           aria-hidden="true"
-                          className="absolute inset-1.5 drop-shadow-[0_0_5px_hsl(var(--icon-color)_/_0.7)]"
+                          className={cn("absolute drop-shadow-[0_0_5px_hsl(var(--icon-color)_/_0.7)]", effect.type === 'vol' ? "inset-5" : "inset-1.5")}
                           style={{
                             '--icon-color': blockColor,
                             backgroundColor: `hsl(${blockColor})`,
@@ -773,7 +804,7 @@ Es. per JSON: { "amp": { "gain": 60, "master": 80 }, "delay": { "enabled": true 
                           {effect.enabled ? 'ON' : 'OFF'}
                         </span>
                       </div>
-                      <span className="truncate border-t border-border/50 px-2 py-2 text-[10px] font-semibold uppercase tracking-wide text-foreground">
+                      <span className="truncate border-t border-border/50 px-2 py-2 text-[10px] font-semibold uppercase tracking-wide text-foreground" style={effect.type === 'vol' ? { color: `hsl(${blockColor})` } : undefined}>
                         {effect.type === 'noise-gate' ? 'Gate' : effect.type === 'modulation' ? 'Mod' : effect.type}
                       </span>
                     </button>

@@ -922,23 +922,16 @@ Es. per JSON: { "amp": { "gain": 60, "master": 80 }, "delay": { "enabled": true 
                       }}
                     >
                       <div className="relative min-h-0 flex-1">
-                        {effect.type === 'vol' && (
-                          <span
-                            aria-hidden="true"
-                            className="absolute inset-x-4 inset-y-3 rounded-xl border bg-background/60"
-                            style={{ borderColor: `hsla(${blockColor}, 0.45)`, boxShadow: `0 0 14px hsla(${blockColor}, 0.16)` }}
-                          />
-                        )}
                         <BlockIcon
                           type={effect.type}
-                          className={cn("absolute drop-shadow-[0_0_5px_hsl(var(--icon-color)_/_0.7)]", effect.type === 'vol' ? "inset-5" : "inset-1.5")}
+                          className="absolute inset-1.5 drop-shadow-[0_0_5px_hsl(var(--icon-color)_/_0.7)]"
                           style={{ '--icon-color': blockColor, color: `hsl(${blockColor})` } as React.CSSProperties}
                         />
                         <span className={cn("absolute left-1.5 top-1.5 rounded-md px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide", effect.enabled ? "bg-background/80 text-foreground" : "bg-background/80 text-muted-foreground")}>
                           {effect.enabled ? 'ON' : 'OFF'}
                         </span>
                       </div>
-                      <span className="truncate border-t border-border/50 px-2 py-2 text-[10px] font-semibold uppercase tracking-wide text-foreground" style={effect.type === 'vol' ? { color: `hsl(${blockColor})` } : undefined}>
+                      <span className="truncate border-t border-border/50 px-2 py-2 text-[10px] font-semibold uppercase tracking-wide text-foreground">
                         {effect.type === 'noise-gate' ? 'Gate' : effect.type === 'modulation' ? 'Mod' : effect.type}
                       </span>
                     </button>

@@ -525,36 +525,39 @@ export default function EditorPage() {
 
     const updatedTarget = copyScene(sourceScene, targetPresetRaw, targetScene);
 
+    const destination: Preset = {
+      ...updatedTarget,
+      slot: targetSlot,
+      activeScene: targetScene,
+      effects: cloneEffects(updatedTarget.scenes![targetScene]),
+      name: getPresetDisplayName(updatedTarget),
+      lastModified: new Date(),
+    };
+
     useMidiStore.setState((state) => ({
-      devicePresets: state.devicePresets.map((preset) => preset.slot === targetSlot ? updatedTarget : preset),
+      devicePresets: state.devicePresets.map((preset) => preset.slot === targetSlot ? destination : preset),
     }));
 
-    if (activePreset.slot === targetSlot) {
-      const destination: Preset = {
-        ...updatedTarget,
-        activeScene: targetScene,
-        effects: cloneEffects(updatedTarget.scenes![targetScene]),
-        name: getPresetDisplayName(updatedTarget),
-        lastModified: new Date(),
-      };
-      setActivePreset(destination);
+    // Posiziona l'app direttamente sul preset e sulla scena di destinazione
+    setActivePreset(destination);
 
-      if (status === 'connected') {
+    if (status === 'connected') {
+      if (activePreset.slot !== targetSlot) {
+        sendProgramChange(targetSlot - 1);
+        setTimeout(() => {
+          sendSceneChange(targetScene);
+          syncFullPreset(destination);
+        }, 300);
+      } else {
         sendSceneChange(targetScene);
         syncFullPreset(destination);
-      }
-    } else {
-      if (status === 'connected') {
-        sendProgramChange(targetSlot - 1);
-        sendSceneChange(targetScene);
-        syncFullPreset(updatedTarget);
       }
     }
 
     setIsCopySceneOpen(false);
     toast({
-      title: 'Scena duplicata con successo',
-      description: `${formatSlotLabel(activePreset.slot)} / Scena ${sourceScene + 1} copiata in ${formatSlotLabel(targetSlot)} / Scena ${targetScene + 1}. Tutti i blocchi e i parametri sono stati duplicati.`,
+      title: 'Scena copiata e attivata',
+      description: `Posizionato su ${formatSlotLabel(targetSlot)} / Scena ${targetScene + 1}. Duplicata da Scena ${sourceScene + 1}.`,
     });
   };
 
@@ -977,19 +980,26 @@ Es. per JSON: { "amp": { "gain": 60, "master": 80 }, "delay": { "enabled": true 
                             color: isEnabled ? `hsl(${blockColor})` : 'hsl(0, 0%, 50%)'
                           } as React.CSSProperties}
                         />
-                        <button
-                          type="button"
+                        <span
+                          role="button"
+                          tabIndex={0}
                           onClick={(e) => handleToggleBlock(e, effect.id, effect.type, effect.enabled)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.stopPropagation();
+                              handleToggleBlock(e as any, effect.id, effect.type, effect.enabled);
+                            }
+                          }}
                           title={effect.enabled ? "Disattiva blocco" : "Attiva blocco"}
                           className={cn(
-                            "absolute left-1.5 top-1.5 rounded-md px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide border transition-all hover:scale-105",
+                            "absolute left-1.5 top-1.5 rounded-md px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide border transition-all hover:scale-105 cursor-pointer select-none",
                             isEnabled
                               ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/40 hover:bg-emerald-500/30"
                               : "bg-zinc-800/90 text-zinc-400 border-zinc-700/60 hover:bg-zinc-700/80 hover:text-zinc-200"
                           )}
                         >
                           {effect.enabled ? 'ON' : 'OFF'}
-                        </button>
+                        </span>
                       </div>
                       <span
                         className={cn(

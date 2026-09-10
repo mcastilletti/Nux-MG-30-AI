@@ -16,10 +16,17 @@ const createDefaultEffects = (): EffectState[] => [
   { id: 'vol', type: 'vol', model: 'patch-vol', enabled: true, parameters: { min: 30, max: 60 } }
 ];
 
+const defaultEnabledForType = (type: string): boolean => {
+  return ['noise-gate', 'amp', 'ir', 'reverb', 'vol'].includes(type);
+};
+
 export const cloneEffects = (effects: EffectState[]): EffectState[] =>
   effects.map((effect) => ({
-    ...effect,
-    parameters: { ...effect.parameters }
+    id: effect.id,
+    type: effect.type,
+    model: effect.model,
+    enabled: typeof effect.enabled === 'boolean' ? effect.enabled : defaultEnabledForType(effect.type),
+    parameters: { ...(effect.parameters || {}) }
   }));
 
 export const ensurePresetScenes = (preset: Preset): Preset => {
@@ -209,19 +216,21 @@ export const usePresetStore = create<PresetStore>((set, get) => ({
   copyScene: (sourceSceneIndex, targetPreset, targetSceneIndex) => {
     const { activePreset } = get();
 
-    // Source preset is activePreset if slots match
-    const rawSource = activePreset.slot === targetPreset.slot ? activePreset : activePreset;
-    const normSource = ensurePresetScenes(rawSource);
+    // Source preset is activePreset if copying from activePreset slot
+    const sourcePreset = activePreset.slot === targetPreset.slot ? activePreset : targetPreset;
+    const normSource = ensurePresetScenes(sourcePreset);
 
-    // Deep clone source scene effects (all 11 blocks + all parameters)
-    const sourceEffects = cloneEffects(
-      normSource.scenes[sourceSceneIndex] || normSource.effects
-    );
+    // If sourceSceneIndex is current active scene, use live normSource.effects to capture latest ON/OFF states
+    const rawSourceEffects = sourceSceneIndex === normSource.activeScene
+      ? normSource.effects
+      : (normSource.scenes[sourceSceneIndex] || normSource.effects);
+
+    const sourceEffects = cloneEffects(rawSourceEffects);
 
     // Ensure target preset has scenes initialized
     const normTarget = ensurePresetScenes(targetPreset);
 
-    // Replace target scene with exact deep copy of source scene
+    // Replace target scene with exact deep copy of source scene (including ON/OFF enabled status)
     const updatedScenes = {
       ...normTarget.scenes,
       [targetSceneIndex]: cloneEffects(sourceEffects),

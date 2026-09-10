@@ -44,8 +44,12 @@ function persistToLocalStorage(names: PresetNamesMap) {
  */
 export function usePresetNames() {
   const { firestore, user } = useFirebase();
-  const [savedNames, setSavedNames] = useState<PresetNamesMap>(loadFromLocalStorage);
+  const [savedNames, setSavedNames] = useState<PresetNamesMap>({});
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    setSavedNames(loadFromLocalStorage());
+  }, []);
 
   // Mantiene il nome del preset attivo allineato alla cache condivisa dei nomi.
   useEffect(() => {
@@ -61,7 +65,6 @@ export function usePresetNames() {
   // Sottoscrizione real-time a Firestore quando l'utente è loggato
   useEffect(() => {
     if (!user || !firestore) {
-      // Non loggato: usa solo localStorage (già caricato nello state iniziale)
       setIsLoading(false);
       return;
     }

@@ -6,8 +6,7 @@ const withPWA = withPWAInit({
   cacheOnFrontEndNav: true,
   aggressiveFrontEndNavCaching: true,
   reloadOnOnline: true,
-  swMinify: true,
-  disable: false, // Forziamo l'abilitazione per testare l'offline
+  disable: process.env.NODE_ENV === "development",
   workboxOptions: {
     skipWaiting: true,
   },

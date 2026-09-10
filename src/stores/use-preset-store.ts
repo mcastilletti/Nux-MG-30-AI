@@ -16,7 +16,39 @@ const createDefaultEffects = (): EffectState[] => [
   { id: 'vol', type: 'vol', model: 'patch-vol', enabled: true, parameters: { min: 30, max: 60 } }
 ];
 
-const DEFAULT_PRESET: Preset = {
+export const cloneEffects = (effects: EffectState[]): EffectState[] =>
+  effects.map((effect) => ({
+    ...effect,
+    parameters: { ...effect.parameters }
+  }));
+
+export const ensurePresetScenes = (preset: Preset): Preset => {
+  const activeScene = typeof preset.activeScene === 'number' ? preset.activeScene : 0;
+  const baseEffects = cloneEffects(preset.effects && preset.effects.length ? preset.effects : createDefaultEffects());
+  
+  const existingScenes = preset.scenes || {};
+
+  const scene0 = existingScenes[0] ? cloneEffects(existingScenes[0]) : cloneEffects(baseEffects);
+  const scene1 = existingScenes[1] ? cloneEffects(existingScenes[1]) : cloneEffects(baseEffects);
+  const scene2 = existingScenes[2] ? cloneEffects(existingScenes[2]) : cloneEffects(baseEffects);
+
+  const scenes: Record<number, EffectState[]> = {
+    0: scene0,
+    1: scene1,
+    2: scene2,
+  };
+
+  scenes[activeScene] = cloneEffects(baseEffects);
+
+  return {
+    ...preset,
+    activeScene,
+    effects: cloneEffects(scenes[activeScene]),
+    scenes,
+  };
+};
+
+const DEFAULT_PRESET: Preset = ensurePresetScenes({
   name: 'Active MG-30 Tone',
   slot: 1,
   activeScene: 0,
@@ -27,19 +59,20 @@ const DEFAULT_PRESET: Preset = {
   lastModified: new Date(),
   ampModel: 'NUX MG-30',
   effects: createDefaultEffects()
-};
-
-const cloneEffects = (effects: EffectState[]): EffectState[] =>
-  effects.map((effect) => ({ ...effect, parameters: { ...effect.parameters } }));
-
-const sceneEffects = (preset: Preset, scene: number): EffectState[] =>
-  cloneEffects(preset.scenes?.[scene] || preset.effects);
-
-const withCurrentScene = (preset: Preset, effects: EffectState[]): Preset => ({
-  ...preset,
-  effects,
-  scenes: { ...(preset.scenes || {}), [preset.activeScene]: cloneEffects(effects) },
 });
+
+const withCurrentScene = (preset: Preset, effects: EffectState[]): Preset => {
+  const norm = ensurePresetScenes(preset);
+  const cloned = cloneEffects(effects);
+  return {
+    ...norm,
+    effects: cloned,
+    scenes: {
+      ...norm.scenes,
+      [norm.activeScene]: cloneEffects(cloned),
+    },
+  };
+};
 
 interface PresetStore {
   activePreset: Preset;
@@ -53,6 +86,7 @@ interface PresetStore {
   updateScene: (sceneIndex: number) => void;
   toggleEffect: (effectId: string) => void;
   updateBlockStateLocally: (blockType: string, enabled: boolean) => void;
+  copyScene: (sourceSceneIndex: number, targetPreset: Preset, targetSceneIndex: number) => Preset;
   copyActiveSceneTo: (target: Preset, targetScene: number) => Preset;
   undo: () => void;
   redo: () => void;
@@ -65,8 +99,8 @@ export const usePresetStore = create<PresetStore>((set, get) => ({
   historyIndex: 0,
 
   setActivePreset: (preset) => {
-    const effects = sceneEffects(preset, preset.activeScene);
-    set({ activePreset: { ...preset, effects, scenes: { ...(preset.scenes || {}), [preset.activeScene]: cloneEffects(effects) } } });
+    const norm = ensurePresetScenes(preset);
+    set({ activePreset: norm });
     get().saveToHistory();
   },
 
@@ -118,9 +152,33 @@ export const usePresetStore = create<PresetStore>((set, get) => ({
 
   updateScene: (sceneIndex) => {
     const { activePreset } = get();
+    if (sceneIndex < 0 || sceneIndex > 2) return;
     if (activePreset.activeScene === sceneIndex) return;
-    const nextEffects = sceneEffects(activePreset, sceneIndex);
-    set({ activePreset: { ...activePreset, activeScene: sceneIndex, effects: nextEffects, scenes: { ...(activePreset.scenes || {}), [sceneIndex]: cloneEffects(nextEffects) }, lastModified: new Date() } });
+
+    const norm = ensurePresetScenes(activePreset);
+
+    // Save current active scene effects
+    const currentEffects = cloneEffects(norm.effects);
+    const updatedScenes = {
+      ...norm.scenes,
+      [norm.activeScene]: currentEffects,
+    };
+
+    // Load target scene effects
+    const nextEffects = cloneEffects(updatedScenes[sceneIndex]);
+
+    const nextPreset: Preset = {
+      ...norm,
+      activeScene: sceneIndex,
+      effects: nextEffects,
+      scenes: {
+        ...updatedScenes,
+        [sceneIndex]: cloneEffects(nextEffects),
+      },
+      lastModified: new Date(),
+    };
+
+    set({ activePreset: nextPreset });
     get().saveToHistory();
   },
 
@@ -148,17 +206,41 @@ export const usePresetStore = create<PresetStore>((set, get) => ({
     set({ activePreset: withCurrentScene(activePreset, newEffects) });
   },
 
-  copyActiveSceneTo: (target, targetScene) => {
+  copyScene: (sourceSceneIndex, targetPreset, targetSceneIndex) => {
     const { activePreset } = get();
-    const copiedEffects = cloneEffects(activePreset.effects);
-    const copiedTarget: Preset = {
-      ...target,
-      scenes: { ...(target.scenes || {}), [targetScene]: copiedEffects },
+
+    // Source preset is activePreset if slots match
+    const rawSource = activePreset.slot === targetPreset.slot ? activePreset : activePreset;
+    const normSource = ensurePresetScenes(rawSource);
+
+    // Deep clone source scene effects (all 11 blocks + all parameters)
+    const sourceEffects = cloneEffects(
+      normSource.scenes[sourceSceneIndex] || normSource.effects
+    );
+
+    // Ensure target preset has scenes initialized
+    const normTarget = ensurePresetScenes(targetPreset);
+
+    // Replace target scene with exact deep copy of source scene
+    const updatedScenes = {
+      ...normTarget.scenes,
+      [targetSceneIndex]: cloneEffects(sourceEffects),
     };
-    if (targetScene === copiedTarget.activeScene) {
-      copiedTarget.effects = cloneEffects(copiedEffects);
-    }
-    return copiedTarget;
+
+    const isTargetActive = normTarget.activeScene === targetSceneIndex;
+
+    const resultPreset: Preset = {
+      ...normTarget,
+      scenes: updatedScenes,
+      effects: isTargetActive ? cloneEffects(sourceEffects) : cloneEffects(normTarget.effects),
+      lastModified: new Date(),
+    };
+
+    return resultPreset;
+  },
+
+  copyActiveSceneTo: (target, targetScene) => {
+    return get().copyScene(get().activePreset.activeScene, target, targetScene);
   },
 
   undo: () => {

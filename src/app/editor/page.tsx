@@ -400,7 +400,7 @@ const formatSlotLabel = (slot: number) => {
 };
 
 export default function EditorPage() {
-  const { activePreset, updateParameter, updateModel, updateScene, toggleEffect, undo, redo, setActivePreset, updatePresetName } = usePresetStore();
+  const { activePreset, updateParameter, updateModel, updateScene, toggleEffect, undo, redo, setActivePreset, updatePresetName, copyScene } = usePresetStore();
   const { status, devicePresets, sendProgramChange, sendKnobParameter, sendModelChange, sendSceneChange, toggleBlock, enterBlockEditor, exitBlockEditor, isEditorSyncing, syncActivePreset, syncFullPreset } = useMidiStore();
   const { toast } = useToast();
   const { savedNames, savePresetName } = usePresetNames();
@@ -412,13 +412,21 @@ export default function EditorPage() {
   const [proposedPreset, setProposedPreset] = useState<MG30PresetOutput | null>(null);
   const [proposedNormalization, setProposedNormalization] = useState<PresetNormalizationResult | null>(null);
   const [isCopySceneOpen, setIsCopySceneOpen] = useState(false);
+  const [copySourceScene, setCopySourceScene] = useState(String(activePreset.activeScene));
   const [copyTargetSlot, setCopyTargetSlot] = useState(String(activePreset.slot));
-  const [copyTargetScene, setCopyTargetScene] = useState(String(activePreset.activeScene));
+  const [copyTargetScene, setCopyTargetScene] = useState(String(activePreset.activeScene === 0 ? 1 : 0));
   const [isEditingPresetName, setIsEditingPresetName] = useState(false);
   const [presetNameDraft, setPresetNameDraft] = useState('');
   const { guitars, amplifiers, selectedGuitarId, selectedAmplifierId, selectGuitar, selectAmplifier } = useInstrumentationStore();
   const selectedGuitar = guitars.find(guitar => guitar.id === selectedGuitarId);
   const selectedAmplifier = amplifiers.find(amplifier => amplifier.id === selectedAmplifierId);
+
+  const handleOpenCopyDialog = () => {
+    setCopySourceScene(String(activePreset.activeScene));
+    setCopyTargetSlot(String(activePreset.slot));
+    setCopyTargetScene(String(activePreset.activeScene === 0 ? 1 : 0));
+    setIsCopySceneOpen(true);
+  };
 
   const selectedEffect = useMemo(() =>
     activePreset.effects.find(e => e.id === selectedBlockId),
@@ -510,33 +518,43 @@ export default function EditorPage() {
   };
 
   const handleCopyScene = () => {
+    const sourceScene = Number(copySourceScene);
     const targetSlot = Number(copyTargetSlot);
     const targetScene = Number(copyTargetScene);
-    const target = devicePresets.find((preset) => preset.slot === targetSlot) || activePreset;
-    const copied = usePresetStore.getState().copyActiveSceneTo(target, targetScene);
-    const destination: Preset = {
-      ...copied,
-      activeScene: targetScene,
-      effects: copied.scenes?.[targetScene] || copied.effects,
-      name: getPresetDisplayName(target),
-      lastModified: new Date(),
-    };
+    const targetPresetRaw = devicePresets.find((preset) => preset.slot === targetSlot) || activePreset;
+
+    const updatedTarget = copyScene(sourceScene, targetPresetRaw, targetScene);
 
     useMidiStore.setState((state) => ({
-      devicePresets: state.devicePresets.map((preset) => preset.slot === targetSlot ? destination : preset),
+      devicePresets: state.devicePresets.map((preset) => preset.slot === targetSlot ? updatedTarget : preset),
     }));
-    setActivePreset(destination);
 
-    if (status === 'connected') {
-      sendProgramChange(targetSlot - 1);
-      sendSceneChange(targetScene);
-      syncFullPreset(destination);
+    if (activePreset.slot === targetSlot) {
+      const destination: Preset = {
+        ...updatedTarget,
+        activeScene: targetScene,
+        effects: cloneEffects(updatedTarget.scenes![targetScene]),
+        name: getPresetDisplayName(updatedTarget),
+        lastModified: new Date(),
+      };
+      setActivePreset(destination);
+
+      if (status === 'connected') {
+        sendSceneChange(targetScene);
+        syncFullPreset(destination);
+      }
+    } else {
+      if (status === 'connected') {
+        sendProgramChange(targetSlot - 1);
+        sendSceneChange(targetScene);
+        syncFullPreset(updatedTarget);
+      }
     }
 
     setIsCopySceneOpen(false);
     toast({
-      title: 'Scena copiata',
-      description: `${formatSlotLabel(activePreset.slot)} / Scena ${activePreset.activeScene + 1} copiata in ${formatSlotLabel(targetSlot)} / Scena ${targetScene + 1}.`,
+      title: 'Scena duplicata con successo',
+      description: `${formatSlotLabel(activePreset.slot)} / Scena ${sourceScene + 1} copiata in ${formatSlotLabel(targetSlot)} / Scena ${targetScene + 1}. Tutti i blocchi e i parametri sono stati duplicati.`,
     });
   };
 
@@ -744,24 +762,38 @@ export default function EditorPage() {
               ))}
             </div>
 
-            <Dialog open={isCopySceneOpen} onOpenChange={setIsCopySceneOpen}>
+            <Dialog open={isCopySceneOpen} onOpenChange={(open) => { if (open) handleOpenCopyDialog(); else setIsCopySceneOpen(false); }}>
               <DialogTrigger asChild>
-                <Button variant="outline" size="sm" className="h-10 gap-2">
+                <Button variant="outline" size="sm" className="h-10 gap-2" onClick={handleOpenCopyDialog}>
                   <Copy className="h-4 w-4" />
                   <span className="hidden sm:inline">Copia scena</span>
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-[430px]">
+              <DialogContent className="sm:max-w-[440px]">
                 <DialogHeader>
                   <DialogTitle className="flex items-center gap-2"><Copy className="h-5 w-5 text-primary" /> Copia preset su scena</DialogTitle>
                   <DialogDescription>
-                    Copia la configurazione della scena attuale su una scena dello stesso preset o di un altro codice.
+                    Duplica esattamente la configurazione di tutti i blocchi e parametri da una scena all'altra.
                   </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 py-3">
-                  <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 text-sm">
-                    Origine: <span className="font-mono font-bold text-primary">{formatSlotLabel(activePreset.slot)}</span> · Scena {activePreset.activeScene + 1}
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Scena Origine</label>
+                    <div className="flex items-center gap-2">
+                      <div className="flex h-10 items-center shrink-0 rounded-md border border-primary/30 bg-primary/10 px-3 text-xs font-mono font-bold text-primary">
+                        {formatSlotLabel(activePreset.slot)}
+                      </div>
+                      <Select value={copySourceScene} onValueChange={setCopySourceScene}>
+                        <SelectTrigger aria-label="Scena di origine" className="flex-1"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {[0, 1, 2].map((scene) => (
+                            <SelectItem key={scene} value={String(scene)}>Scena {scene + 1}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
+
                   <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
                     <div className="space-y-2">
                       <label className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Preset destinazione</label>
@@ -778,11 +810,13 @@ export default function EditorPage() {
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <label className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Scena</label>
+                      <label className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Scena Destinazione</label>
                       <Select value={copyTargetScene} onValueChange={setCopyTargetScene}>
                         <SelectTrigger aria-label="Scena destinazione"><SelectValue /></SelectTrigger>
                         <SelectContent>
-                          {[0, 1, 2].map((scene) => <SelectItem key={scene} value={String(scene)}>Scena {scene + 1}</SelectItem>)}
+                          {[0, 1, 2].map((scene) => (
+                            <SelectItem key={scene} value={String(scene)}>Scena {scene + 1}</SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </div>
@@ -905,6 +939,8 @@ Es. per JSON: { "amp": { "gain": 60, "master": 80 }, "delay": { "enabled": true 
               {activePreset.effects.map((effect, idx) => {
                 const isSelected = selectedBlockId === effect.id;
                 const blockColor = getBlockColorVar(effect.type);
+                const isEnabled = effect.enabled;
+
                 return (
                   <React.Fragment key={effect.id}>
                     <button
@@ -912,30 +948,68 @@ Es. per JSON: { "amp": { "gain": 60, "master": 80 }, "delay": { "enabled": true 
                       onClick={() => handleSelectBlock(effect.id, effect.type)}
                       aria-label={`Apri ${effect.type}`}
                       className={cn(
-                        "relative flex h-[7.25rem] w-24 shrink-0 cursor-pointer flex-col items-stretch justify-between overflow-hidden rounded-xl border bg-secondary/40 text-left transition-colors md:h-[8.25rem] md:w-28",
-                        isSelected ? "border-2 shadow-md" : "border-border/50 hover:border-primary/40",
-                        !effect.enabled && "opacity-60"
+                        "relative flex h-[7.25rem] w-24 shrink-0 cursor-pointer flex-col items-stretch justify-between overflow-hidden rounded-xl border transition-all md:h-[8.25rem] md:w-28",
+                        isEnabled
+                          ? isSelected
+                            ? "border-2 shadow-[0_0_15px_hsla(var(--block-glow),0.35)]"
+                            : "border-border/60 hover:border-primary/50 bg-secondary/40"
+                          : isSelected
+                            ? "border-2 border-zinc-500 bg-zinc-950/80 shadow-md grayscale"
+                            : "border-zinc-800/80 hover:border-zinc-700 bg-zinc-950/60 grayscale"
                       )}
                       style={{
-                        ...(isSelected ? { borderColor: `hsl(${blockColor})` } : {}),
-                        ...(effect.type === 'modulation' ? { backgroundColor: `hsla(${blockColor}, 0.1)` } : {})
-                      }}
+                        '--block-glow': blockColor,
+                        ...(isEnabled && isSelected ? { borderColor: `hsl(${blockColor})` } : {}),
+                        ...(isEnabled && effect.type === 'modulation' ? { backgroundColor: `hsla(${blockColor}, 0.12)` } : {})
+                      } as React.CSSProperties}
                     >
                       <div className="relative min-h-0 flex-1">
                         <BlockIcon
                           type={effect.type}
-                          className="absolute inset-1.5 drop-shadow-[0_0_5px_hsl(var(--icon-color)_/_0.7)]"
-                          style={{ '--icon-color': blockColor, color: `hsl(${blockColor})` } as React.CSSProperties}
+                          className={cn(
+                            "absolute inset-1.5 transition-all",
+                            isEnabled
+                              ? "drop-shadow-[0_0_8px_hsl(var(--icon-color)_/_0.7)]"
+                              : "drop-shadow-none opacity-40"
+                          )}
+                          style={{
+                            '--icon-color': isEnabled ? blockColor : '0 0% 50%',
+                            color: isEnabled ? `hsl(${blockColor})` : 'hsl(0, 0%, 50%)'
+                          } as React.CSSProperties}
                         />
-                        <span className={cn("absolute left-1.5 top-1.5 rounded-md px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide", effect.enabled ? "bg-background/80 text-foreground" : "bg-background/80 text-muted-foreground")}>
+                        <button
+                          type="button"
+                          onClick={(e) => handleToggleBlock(e, effect.id, effect.type, effect.enabled)}
+                          title={effect.enabled ? "Disattiva blocco" : "Attiva blocco"}
+                          className={cn(
+                            "absolute left-1.5 top-1.5 rounded-md px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide border transition-all hover:scale-105",
+                            isEnabled
+                              ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/40 hover:bg-emerald-500/30"
+                              : "bg-zinc-800/90 text-zinc-400 border-zinc-700/60 hover:bg-zinc-700/80 hover:text-zinc-200"
+                          )}
+                        >
                           {effect.enabled ? 'ON' : 'OFF'}
-                        </span>
+                        </button>
                       </div>
-                      <span className="truncate border-t border-border/50 px-2 py-2 text-[10px] font-semibold uppercase tracking-wide text-foreground">
+                      <span
+                        className={cn(
+                          "truncate border-t px-2 py-2 text-[10px] font-semibold uppercase tracking-wide transition-colors",
+                          isEnabled
+                            ? "border-border/50 text-foreground"
+                            : "border-zinc-800/80 text-zinc-500"
+                        )}
+                      >
                         {effect.type === 'noise-gate' ? 'Gate' : effect.type === 'modulation' ? 'Mod' : effect.type}
                       </span>
                     </button>
-                    {idx < activePreset.effects.length - 1 && <div className="flex-1 min-w-[20px] h-[2px] bg-border/40" />}
+                    {idx < activePreset.effects.length - 1 && (
+                      <div
+                        className={cn(
+                          "flex-1 min-w-[20px] h-[2px] transition-colors",
+                          isEnabled ? "bg-border/60" : "bg-zinc-800/50"
+                        )}
+                      />
+                    )}
                   </React.Fragment>
                 );
               })}
@@ -945,14 +1019,32 @@ Es. per JSON: { "amp": { "gain": 60, "master": 80 }, "delay": { "enabled": true 
 
         {selectedEffect && (
           <Card
-            className="rounded-2xl shadow-none"
-            style={{ borderColor: `hsla(${getBlockColorVar(selectedEffect.type)}, 0.3)` }}
+            className="rounded-2xl shadow-none transition-colors"
+            style={{
+              borderColor: selectedEffect.enabled
+                ? `hsla(${getBlockColorVar(selectedEffect.type)}, 0.4)`
+                : 'rgba(255, 255, 255, 0.1)'
+            }}
           >
             <CardHeader className="flex flex-col items-start justify-between gap-4 border-b border-border/50 sm:flex-row sm:items-center">
               <div className="flex items-center gap-4">
-                <Settings2 className="w-5 h-5" style={{ color: `hsl(${getBlockColorVar(selectedEffect.type)})` }} />
-                <CardTitle className="text-base uppercase md:text-lg" style={{ color: `hsl(${getBlockColorVar(selectedEffect.type)})` }}>
-                  {selectedEffect?.type} <Badge variant="outline" className="text-[10px] ml-2">{selectedEffect?.model}</Badge>
+                <Settings2
+                  className="w-5 h-5 transition-colors"
+                  style={{
+                    color: selectedEffect.enabled
+                      ? `hsl(${getBlockColorVar(selectedEffect.type)})`
+                      : 'hsl(0, 0%, 50%)'
+                  }}
+                />
+                <CardTitle
+                  className="text-base uppercase md:text-lg transition-colors"
+                  style={{
+                    color: selectedEffect.enabled
+                      ? `hsl(${getBlockColorVar(selectedEffect.type)})`
+                      : 'hsl(0, 0%, 65%)'
+                  }}
+                >
+                  {selectedEffect?.type} <Badge variant="outline" className={cn("text-[10px] ml-2", !selectedEffect.enabled && "text-muted-foreground border-zinc-700")}>{selectedEffect?.model}</Badge>
                 </CardTitle>
               </div>
               <div className="flex w-full items-center gap-3 sm:w-auto sm:gap-4">

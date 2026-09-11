@@ -17,10 +17,11 @@ import { cn } from '@/lib/utils';
 export interface Band {
   id: string;
   name: string;
-  logoUrl?: string;
+  logoUrl?: string | null;
   userId: string;
   createdAt?: any;
   updatedAt?: any;
+  isFromNotes?: boolean;
 }
 
 export interface Setlist {
@@ -30,6 +31,7 @@ export interface Setlist {
   userId: string;
   createdAt?: any;
   updatedAt?: any;
+  isFromNotes?: boolean;
 }
 
 function BandsContent() {
@@ -122,7 +124,7 @@ function BandsContent() {
           bandId: bandId,
           userId: user?.uid || '',
           isFromNotes: true
-        } as Setlist & { isFromNotes?: boolean });
+        });
       }
     });
     
@@ -140,7 +142,7 @@ function BandsContent() {
         name: bandName,
         userId: user?.uid || '',
         isFromNotes: true
-      } as Band & { isFromNotes?: boolean });
+      });
     });
     
     return allBands.sort((a, b) => a.name.localeCompare(b.name));
@@ -167,18 +169,21 @@ function BandsContent() {
     try {
       setIsUploadingLogo(true);
       
-      let logoUrl = '';
+      let logoUrl: string | undefined = undefined;
       if (bandLogo) {
         logoUrl = await handleLogoUpload(bandLogo);
       }
       
-      const newBand = {
+      const newBand: any = {
         name: bandName.trim(),
-        logoUrl,
         userId: user.uid,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       };
+      
+      if (logoUrl) {
+        newBand.logoUrl = logoUrl;
+      }
       
       const docRef = await addDoc(collection(firestore, "bands"), newBand);
       setBands([...bands, { ...newBand, id: docRef.id }]);
@@ -201,22 +206,25 @@ function BandsContent() {
     try {
       setIsUploadingLogo(true);
       
-      let logoUrl = editingBand.logoUrl;
+      let logoUrl: string | undefined = editingBand.logoUrl;
       if (bandLogo) {
         logoUrl = await handleLogoUpload(bandLogo);
       }
       
-      const isFromNotes = (editingBand as Band & { isFromNotes?: boolean }).isFromNotes;
+      const isFromNotes = editingBand.isFromNotes;
       
       if (isFromNotes) {
         // Se è una band dalle note, la creiamo formalmente
-        const newBand = {
+        const newBand: any = {
           name: bandName.trim(),
-          logoUrl,
           userId: user?.uid,
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp()
         };
+        
+        if (logoUrl) {
+          newBand.logoUrl = logoUrl;
+        }
         
         const docRef = await addDoc(collection(firestore, "bands"), newBand);
         const createdBand = { ...newBand, id: docRef.id };
@@ -230,11 +238,16 @@ function BandsContent() {
         setBands([...bands, createdBand]);
       } else {
         // Se è una band formale, la aggiorniamo normalmente
-        await updateDoc(doc(firestore, "bands", editingBand.id), {
+        const updateData: any = {
           name: bandName.trim(),
-          logoUrl,
           updatedAt: serverTimestamp()
-        });
+        };
+        
+        if (logoUrl) {
+          updateData.logoUrl = logoUrl;
+        }
+        
+        await updateDoc(doc(firestore, "bands", editingBand.id), updateData);
         
         setBands(bands.map(b => b.id === editingBand.id ? { ...b, name: bandName.trim(), logoUrl } : b));
       }
@@ -415,7 +428,7 @@ function BandsContent() {
           <div className="grid grid-cols-1 gap-6">
             {getAllBands().map((band) => {
               const bandSetlists = getSetlistsForBand(band.id, band.name);
-              const isFromNotes = (band as Band & { isFromNotes?: boolean }).isFromNotes;
+              const isFromNotes = band.isFromNotes;
               return (
                 <Card key={band.id} className={cn(
                   "overflow-hidden transition-all duration-300 hover:shadow-xl",
@@ -486,7 +499,7 @@ function BandsContent() {
                       {bandSetlists.length > 0 ? (
                         <div className="space-y-2 pl-16">
                           {bandSetlists.map((setlist) => {
-                            const isSetlistFromNotes = (setlist as Setlist & { isFromNotes?: boolean }).isFromNotes;
+                            const isSetlistFromNotes = setlist.isFromNotes;
                             return (
                               <div
                                 key={setlist.id}

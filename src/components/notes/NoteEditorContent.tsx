@@ -12,13 +12,15 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Plus, Trash2, ChevronDown, ChevronUp, Save, Layers, Pencil, X } from 'lucide-react';
+import { Plus, Trash2, ChevronDown, ChevronUp, Save, Layers, Pencil, X, Copy, ArrowUp, ArrowDown, MoreVertical } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { getChordPositions } from '@/lib/chord-data';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
 type SectionType = "Intro" | "Verse" | "Chorus" | "Bridge" | "Strum" | "Out" | "Solo";
 
@@ -329,6 +331,40 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange 
 
   const handleDeleteSection = (id: string) => {
     setSections(sections.filter(s => s.id !== id));
+  };
+
+  const handleDuplicateSection = (id: string) => {
+    const sectionIndex = sections.findIndex(s => s.id === id);
+    if (sectionIndex === -1) return;
+    
+    const sectionToDuplicate = sections[sectionIndex];
+    const duplicatedSection: NoteSection = {
+      ...sectionToDuplicate,
+      id: `duplicated-${Date.now()}-${Math.random()}`,
+      chords: [...(sectionToDuplicate.chords || [])]
+    };
+    
+    const newSections = [...sections];
+    newSections.splice(sectionIndex + 1, 0, duplicatedSection);
+    setSections(newSections);
+  };
+
+  const handleMoveSectionUp = (id: string) => {
+    const sectionIndex = sections.findIndex(s => s.id === id);
+    if (sectionIndex <= 0) return;
+    
+    const newSections = [...sections];
+    [newSections[sectionIndex - 1], newSections[sectionIndex]] = [newSections[sectionIndex], newSections[sectionIndex - 1]];
+    setSections(newSections);
+  };
+
+  const handleMoveSectionDown = (id: string) => {
+    const sectionIndex = sections.findIndex(s => s.id === id);
+    if (sectionIndex === -1 || sectionIndex >= sections.length - 1) return;
+    
+    const newSections = [...sections];
+    [newSections[sectionIndex], newSections[sectionIndex + 1]] = [newSections[sectionIndex + 1], newSections[sectionIndex]];
+    setSections(newSections);
   };
 
   const handleAddChordAt = (sectionId: string, chordIndex: number, chord: string) => {
@@ -672,10 +708,32 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange 
                         )}
                       </div>
                       {editMode && (
-                        <div className="p-3 w-auto flex items-center justify-center align-top">
-                          <button className="h-10 w-10 text-muted-foreground/30 hover:text-destructive transition-colors flex items-center justify-center" onClick={() => { setSectionToDelete(section.id); setIsDeleteSectionDialogOpen(true); }} title="Elimina sezione">
-                            <Trash2 className="w-6 h-6" />
-                          </button>
+                        <div className="p-3 w-auto flex items-center justify-center align-top gap-1">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button className="h-10 w-10 text-muted-foreground/30 hover:text-primary transition-colors flex items-center justify-center" title="Opzioni sezione">
+                                <MoreVertical className="w-5 h-5" />
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => handleDuplicateSection(section.id)}>
+                                <Copy className="w-4 h-4 mr-2" />
+                                Duplica
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleMoveSectionUp(section.id)} disabled={sIdx === 0}>
+                                <ArrowUp className="w-4 h-4 mr-2" />
+                                Sposta su
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleMoveSectionDown(section.id)} disabled={sIdx === sections.length - 1}>
+                                <ArrowDown className="w-4 h-4 mr-2" />
+                                Sposta giù
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => { setSectionToDelete(section.id); setIsDeleteSectionDialogOpen(true); }} className="text-destructive">
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                Elimina
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </div>
                       )}
                     </div>
@@ -693,6 +751,29 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange 
             </CardContent>
           </Card>
         </div>
+        
+        {/* Delete Section Confirmation Dialog */}
+        <AlertDialog open={isDeleteSectionDialogOpen} onOpenChange={setIsDeleteSectionDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Eliminare sezione?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Questa azione non può essere annullata. La sezione verrà rimossa definitivamente.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Annulla</AlertDialogCancel>
+              <AlertDialogAction onClick={() => {
+                if (sectionToDelete) {
+                  handleDeleteSection(sectionToDelete);
+                  setSectionToDelete(null);
+                }
+              }} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                Elimina
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </TooltipProvider>
   );

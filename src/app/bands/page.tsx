@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Music2, Plus, Trash2, Edit, Layers, ChevronRight, Users } from 'lucide-react';
+import { Music2, Plus, Trash2, Edit, Layers, ChevronRight, Users, X } from 'lucide-react';
 import { useFirebase, useUser } from '@/firebase';
 import { collection, getDocs, query, where, doc, deleteDoc, addDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
@@ -55,6 +55,7 @@ function BandsContent() {
   const [bandLogo, setBandLogo] = useState<File | null>(null);
   const [bandLogoPreview, setBandLogoPreview] = useState<string>('');
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+  const [removeLogo, setRemoveLogo] = useState(false);
   const [setlistName, setSetlistName] = useState('');
   
   const [isDeleteBandDialogOpen, setIsDeleteBandDialogOpen] = useState(false);
@@ -154,13 +155,30 @@ function BandsContent() {
       throw new Error('Storage not available');
     }
     
-    const fileName = `${Date.now()}_${file.name}`;
-    const storageRef = ref(storage, `band-logos/${user.uid}/${fileName}`);
-    
-    await uploadBytes(storageRef, file);
-    const downloadURL = await getDownloadURL(storageRef);
-    
-    return downloadURL;
+    try {
+      const fileName = `${Date.now()}_${file.name}`;
+      const storageRef = ref(storage, `band-logos/${user.uid}/${fileName}`);
+      
+      await uploadBytes(storageRef, file);
+      const downloadURL = await getDownloadURL(storageRef);
+      
+      return downloadURL;
+    } catch (error: any) {
+      console.error('Logo upload error:', error);
+      
+      // Check if it's a CORS error
+      if (error.code === 'storage/cors-error' || error.message?.includes('CORS') || error.message?.includes('blocked by CORS policy')) {
+        toast({ 
+          title: "Errore CORS Firebase Storage", 
+          description: "Il caricamento dei logo non è disponibile. Configura le regole CORS per Firebase Storage.",
+          variant: "destructive" 
+        });
+        throw new Error('CORS error - Storage not configured');
+      }
+      
+      toast({ title: "Errore caricamento logo", variant: "destructive" });
+      throw error;
+    }
   };
 
   const handleCreateBand = async () => {
@@ -171,7 +189,13 @@ function BandsContent() {
       
       let logoUrl: string | undefined = undefined;
       if (bandLogo) {
-        logoUrl = await handleLogoUpload(bandLogo);
+        try {
+          logoUrl = await handleLogoUpload(bandLogo);
+        } catch (logoError) {
+          // If logo upload fails, continue without logo
+          console.warn('Logo upload failed, creating band without logo:', logoError);
+          logoUrl = undefined;
+        }
       }
       
       const newBand: any = {
@@ -207,8 +231,17 @@ function BandsContent() {
       setIsUploadingLogo(true);
       
       let logoUrl: string | undefined = editingBand.logoUrl;
-      if (bandLogo) {
-        logoUrl = await handleLogoUpload(bandLogo);
+      
+      if (removeLogo) {
+        logoUrl = undefined;
+      } else if (bandLogo) {
+        try {
+          logoUrl = await handleLogoUpload(bandLogo);
+        } catch (logoError) {
+          // If logo upload fails, keep existing logo or continue without logo
+          console.warn('Logo upload failed, updating band without new logo:', logoError);
+          logoUrl = editingBand.logoUrl; // Keep existing logo
+        }
       }
       
       const isFromNotes = editingBand.isFromNotes;
@@ -245,6 +278,8 @@ function BandsContent() {
         
         if (logoUrl) {
           updateData.logoUrl = logoUrl;
+        } else if (removeLogo) {
+          updateData.logoUrl = null;
         }
         
         await updateDoc(doc(firestore, "bands", editingBand.id), updateData);
@@ -255,6 +290,7 @@ function BandsContent() {
       setBandName('');
       setBandLogo(null);
       setBandLogoPreview('');
+      setRemoveLogo(false);
       setEditingBand(null);
       setIsBandDialogOpen(false);
       toast({ title: isFromNotes ? "Band formalizzata con successo" : "Band aggiornata con successo" });
@@ -362,6 +398,7 @@ function BandsContent() {
       setBandLogoPreview('');
     }
     setBandLogo(null);
+    setRemoveLogo(false);
     setIsBandDialogOpen(true);
   };
 
@@ -603,9 +640,24 @@ function BandsContent() {
               <div className="space-y-2">
                 <label className="text-sm font-semibold">Logo Band (opzionale)</label>
                 <div className="flex items-center gap-4">
-                  <div className="w-20 h-20 rounded-lg border-2 border-dashed border-border/50 flex items-center justify-center overflow-hidden bg-muted/30">
+                  <div className="w-20 h-20 rounded-lg border-2 border-dashed border-border/50 flex items-center justify-center overflow-hidden bg-muted/30 relative">
                     {bandLogoPreview ? (
-                      <img src={bandLogoPreview} alt="Logo preview" className="w-full h-full object-cover" />
+                      <>
+                        <img src={bandLogoPreview} alt="Logo preview" className="w-full h-full object-cover" />
+                        {editingBand && editingBand.logoUrl && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setBandLogoPreview('');
+                              setRemoveLogo(true);
+                            }}
+                            className="absolute top-1 right-1 bg-destructive/80 hover:bg-destructive text-white rounded-full p-1 transition-colors"
+                            title="Rimuovi logo"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        )}
+                      </>
                     ) : (
                       <Music2 className="w-8 h-8 text-muted-foreground" />
                     )}
@@ -618,6 +670,7 @@ function BandsContent() {
                         const file = e.target.files?.[0];
                         if (file) {
                           setBandLogo(file);
+                          setRemoveLogo(false);
                           const reader = new FileReader();
                           reader.onloadend = () => {
                             setBandLogoPreview(reader.result as string);

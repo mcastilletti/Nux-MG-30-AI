@@ -61,22 +61,83 @@ interface NoteEditorContentProps {
 }
 
 function ChordPicker({ onSelect, step, setStep, selectedLetter, setSelectedLetter, selectedRoot, setSelectedRoot }: any) {
+  // Initial step: choose what to insert
+  if (step === 'type') {
+    return (
+      <div className="flex flex-col gap-3">
+        <p className="text-[11px] font-bold uppercase text-muted-foreground tracking-wider">Inserisci</p>
+        <div className="grid grid-cols-3 gap-2">
+          <button
+            onClick={() => setStep('letter')}
+            className="p-3 flex flex-col items-center gap-1 text-sm font-bold bg-secondary hover:bg-secondary/80 rounded-lg border border-border/50 transition-colors"
+          >
+            <span className="text-xl">🎵</span>
+            <span className="text-[11px] uppercase tracking-wide">Accordo</span>
+          </button>
+          <button
+            onClick={() => onSelect('NEWLINE')}
+            className="p-3 flex flex-col items-center gap-1 text-sm font-bold bg-secondary hover:bg-secondary/80 rounded-lg border border-border/50 transition-colors"
+          >
+            <span className="text-xl">↵</span>
+            <span className="text-[11px] uppercase tracking-wide">A Capo</span>
+          </button>
+          <button
+            onClick={() => setStep('multiplier')}
+            className="p-3 flex flex-col items-center gap-1 text-sm font-bold bg-secondary hover:bg-secondary/80 rounded-lg border border-border/50 transition-colors"
+          >
+            <span className="text-xl">×</span>
+            <span className="text-[11px] uppercase tracking-wide">Ripeti</span>
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Multiplier step
+  if (step === 'multiplier') {
+    return (
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center gap-2">
+          <button onClick={() => setStep('type')} className="text-[11px] text-muted-foreground hover:text-foreground transition-colors">← Indietro</button>
+          <p className="text-[11px] font-bold uppercase text-muted-foreground tracking-wider">Ripetizioni</p>
+        </div>
+        <div className="grid grid-cols-4 gap-2">
+          {[2, 3, 4, 5, 6, 7, 8].map(n => (
+            <button
+              key={n}
+              onClick={() => onSelect(`x${n}`)}
+              className="p-2 text-sm font-bold bg-primary/10 hover:bg-primary/20 text-primary rounded border border-primary/20 transition-colors"
+            >
+              x{n}
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   if (step === 'letter') {
     return (
-      <div className="grid grid-cols-4 gap-2">
-        {CHORD_ROOTS.map(root => (
-          <button
-            key={root}
-            onClick={() => {
-              setSelectedLetter(root);
-              setSelectedRoot(root);
-              setStep('quality');
-            }}
-            className="p-2 text-sm font-bold bg-secondary hover:bg-secondary/80 rounded"
-          >
-            {root}
-          </button>
-        ))}
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center gap-2">
+          <button onClick={() => setStep('type')} className="text-[11px] text-muted-foreground hover:text-foreground transition-colors">← Indietro</button>
+          <p className="text-[11px] font-bold uppercase text-muted-foreground tracking-wider">Nota</p>
+        </div>
+        <div className="grid grid-cols-4 gap-2">
+          {CHORD_ROOTS.map(root => (
+            <button
+              key={root}
+              onClick={() => {
+                setSelectedLetter(root);
+                setSelectedRoot(root);
+                setStep('quality');
+              }}
+              className="p-2 text-sm font-bold bg-secondary hover:bg-secondary/80 rounded"
+            >
+              {root}
+            </button>
+          ))}
+        </div>
       </div>
     );
   }
@@ -84,16 +145,22 @@ function ChordPicker({ onSelect, step, setStep, selectedLetter, setSelectedLette
   if (step === 'quality' && selectedRoot) {
     const chords = CHORD_TABLE[selectedRoot] || [];
     return (
-      <div className="grid grid-cols-3 gap-2">
-        {chords.map(chord => (
-          <button
-            key={chord}
-            onClick={() => onSelect(chord)}
-            className="p-2 text-sm font-bold bg-primary/10 hover:bg-primary/20 text-primary rounded"
-          >
-            {chord}
-          </button>
-        ))}
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center gap-2">
+          <button onClick={() => setStep('letter')} className="text-[11px] text-muted-foreground hover:text-foreground transition-colors">← Indietro</button>
+          <p className="text-[11px] font-bold uppercase text-muted-foreground tracking-wider">{selectedRoot}</p>
+        </div>
+        <div className="grid grid-cols-3 gap-2">
+          {chords.map(chord => (
+            <button
+              key={chord}
+              onClick={() => onSelect(chord)}
+              className="p-2 text-sm font-bold bg-primary/10 hover:bg-primary/20 text-primary rounded"
+            >
+              {chord}
+            </button>
+          ))}
+        </div>
       </div>
     );
   }
@@ -125,7 +192,7 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange 
     onEditModeChange?.(editMode);
   }, [editMode, onEditModeChange]);
 
-  const [chordPickerStep, setChordPickerStep] = useState<'letter' | 'quality'>('letter');
+  const [chordPickerStep, setChordPickerStep] = useState<'type' | 'letter' | 'quality' | 'multiplier'>('type');
   const [selectedLetter, setSelectedLetter] = useState<string | null>(null);
   const [selectedRoot, setSelectedRoot] = useState<string | null>(null);
 
@@ -494,7 +561,7 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange 
                       <div className="p-3 flex-1 flex flex-col gap-3">
                         <div className="flex flex-wrap items-center gap-2">
                           {editMode && (
-                            <Popover onOpenChange={() => { setChordPickerStep('letter'); setSelectedLetter(null); setSelectedRoot(null); }}>
+                            <Popover onOpenChange={() => { setChordPickerStep('type'); setSelectedLetter(null); setSelectedRoot(null); }}>
                               <PopoverTrigger asChild>
                                 <button className="h-8 w-8 rounded-full border border-dashed border-primary/20 text-primary/40 hover:text-primary hover:border-primary/50 flex items-center justify-center" title="Inserisci accordo all'inizio">
                                   <Plus className="w-4 h-4" />
@@ -578,7 +645,7 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange 
                                 </TooltipContent>
                               </Tooltip>
                               {editMode && (
-                                <Popover onOpenChange={() => { setChordPickerStep('letter'); setSelectedLetter(null); setSelectedRoot(null); }}>
+                                <Popover onOpenChange={() => { setChordPickerStep('type'); setSelectedLetter(null); setSelectedRoot(null); }}>
                                   <PopoverTrigger asChild>
                                     <button className="h-8 w-8 rounded-full border border-dashed border-primary/10 text-primary/20 hover:text-primary hover:border-primary/50 transition-all opacity-0 hover:opacity-100 flex items-center justify-center">
                                       <Plus className="w-3 h-3" />

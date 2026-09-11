@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { AppShell } from '@/components/layout/app-shell';
-import { usePresetStore } from '@/stores/use-preset-store';
+import { usePresetStore, cloneEffects } from '@/stores/use-preset-store';
 import { useMidiStore } from '@/stores/use-midi-store';
 import { RotaryKnob } from '@/components/controls/rotary-knob';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';

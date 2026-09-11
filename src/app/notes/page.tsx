@@ -17,6 +17,7 @@ import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { NoteSheet } from '@/components/notes/NoteSheet';
 import { NoteEditorContent } from '@/components/notes/NoteEditorContent';
@@ -92,6 +93,11 @@ function NotesLibraryContent() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<SavedNote[]>([]);
+
+  const [isImportJsonDialogOpen, setIsImportJsonDialogOpen] = useState(false);
+  const [importJsonText, setImportJsonText] = useState('');
+  const [importJsonError, setImportJsonError] = useState('');
+  const [isImporting, setIsImporting] = useState(false);
 
   const scrollToId = searchParams.get('scrollTo');
 
@@ -300,6 +306,77 @@ function NotesLibraryContent() {
     setIsCopyDialogOpen(false);
   }
 
+  const handleImportFromJson = async () => {
+    setImportJsonError('');
+    let parsed: any;
+    try {
+      parsed = JSON.parse(importJsonText.trim());
+    } catch (e) {
+      setImportJsonError('JSON non valido. Controlla la sintassi.');
+      return;
+    }
+
+    // Validate required fields
+    if (!parsed.title || typeof parsed.title !== 'string') {
+      setImportJsonError('Campo "title" mancante o non valido.');
+      return;
+    }
+
+    if (!user) {
+      setImportJsonError('Devi essere autenticato.');
+      return;
+    }
+
+    // Normalize sections: add unique IDs if missing
+    const rawSections = Array.isArray(parsed.sections) ? parsed.sections : [];
+    const validTypes = ['Intro', 'Verse', 'Chorus', 'Bridge', 'Strum', 'Out', 'Solo'];
+    const typeAliases: Record<string, string> = { 'Outro': 'Out' };
+    const sections: NoteSection[] = rawSections.map((s: any, idx: number) => {
+      const normalizedType = typeAliases[s.type] ?? s.type;
+      return {
+        id: `section-${Date.now()}-${idx}-${Math.random()}`,
+        type: validTypes.includes(normalizedType) ? normalizedType : 'Verse',
+        text: typeof s.text === 'string' ? s.text : '',
+        chords: Array.isArray(s.chords) ? s.chords.map(String) : [],
+      };
+    });
+
+    const allNotes = useNotesCache.getState().notes;
+    const newOrder = allNotes.length > 0 ? Math.max(...allNotes.map(n => n.order ?? 0)) + 1 : 0;
+
+    const newNote = {
+      title: parsed.title,
+      band: typeof parsed.band === 'string' ? parsed.band : '',
+      setlist: typeof parsed.setlist === 'string' ? parsed.setlist : '',
+      generalNotes: typeof parsed.generalNotes === 'string' ? parsed.generalNotes : '',
+      presetSlot: typeof parsed.presetSlot === 'string' ? parsed.presetSlot : '',
+      presetScene: typeof parsed.presetScene === 'string' ? parsed.presetScene : '',
+      sections,
+      order: newOrder,
+      updatedAt: serverTimestamp(),
+      userId: user.uid,
+      type: 'song' as const,
+    };
+
+    setIsImporting(true);
+    try {
+      const docRef = await addDoc(collection(firestore, 'notes'), newNote);
+      const createdNote = { ...newNote, id: docRef.id } as SavedNote;
+      addNote(createdNote);
+      toast({ title: `Brano "${newNote.title}" importato con successo!` });
+      setIsImportJsonDialogOpen(false);
+      setImportJsonText('');
+      setImportJsonError('');
+      // Open the newly created note
+      setSelectedNoteId(docRef.id);
+      setIsSheetOpen(true);
+    } catch (e) {
+      setImportJsonError('Errore durante il salvataggio. Riprova.');
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
   return (
     <AppShell>
       <div className="max-w-7xl mx-auto space-y-8 py-8 pb-20 px-2 md:px-0 no-print">
@@ -352,6 +429,19 @@ function NotesLibraryContent() {
                   >
                     <FileText className="w-4 h-4" />
                     Nuovo Blocco
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    className="justify-start gap-2 h-10"
+                    onClick={() => {
+                      setImportJsonText('');
+                      setImportJsonError('');
+                      setIsImportJsonDialogOpen(true);
+                      setIsAddMenuOpen(false);
+                    }}
+                  >
+                    <ArrowRight className="w-4 h-4" />
+                    Importa da JSON
                   </Button>
                 </div>
               </PopoverContent>
@@ -517,6 +607,41 @@ function NotesLibraryContent() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>Annulla</Button>
             <Button variant="destructive" onClick={handleConfirmDelete}>Elimina</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* JSON Import Dialog */}
+      <Dialog open={isImportJsonDialogOpen} onOpenChange={(open) => { setIsImportJsonDialogOpen(open); if (!open) { setImportJsonText(''); setImportJsonError(''); } }}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Importa brano da JSON</DialogTitle>
+            <DialogDescription>
+              Incolla il JSON del brano. Campi supportati: <code className="text-primary">title</code>, <code className="text-primary">band</code>, <code className="text-primary">setlist</code>, <code className="text-primary">generalNotes</code>, <code className="text-primary">sections</code> (array con <code className="text-primary">type</code>, <code className="text-primary">text</code>, <code className="text-primary">chords</code>).
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-3">
+            <Textarea
+              value={importJsonText}
+              onChange={(e) => { setImportJsonText(e.target.value); setImportJsonError(''); }}
+              placeholder={`{\n  "title": "Nome Brano",\n  "band": "Nome Band",\n  "sections": [...]\n}`}
+              className="font-mono text-xs min-h-[200px] resize-y bg-background/50"
+              spellCheck={false}
+            />
+            {importJsonError && (
+              <p className="text-sm text-destructive font-medium flex items-center gap-2">
+                <span>⚠️</span> {importJsonError}
+              </p>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsImportJsonDialogOpen(false)}>Annulla</Button>
+            <Button
+              onClick={handleImportFromJson}
+              disabled={!importJsonText.trim() || isImporting}
+            >
+              {isImporting ? 'Importazione...' : 'Importa'}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

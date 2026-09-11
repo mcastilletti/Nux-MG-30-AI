@@ -56,6 +56,7 @@ function BandsContent() {
   const [bandLogoPreview, setBandLogoPreview] = useState<string>('');
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   const [removeLogo, setRemoveLogo] = useState(false);
+  const [storageDisabled, setStorageDisabled] = useState(false);
   const [setlistName, setSetlistName] = useState('');
   
   const [isDeleteBandDialogOpen, setIsDeleteBandDialogOpen] = useState(false);
@@ -159,18 +160,30 @@ function BandsContent() {
       const fileName = `${Date.now()}_${file.name}`;
       const storageRef = ref(storage, `band-logos/${user.uid}/${fileName}`);
       
-      await uploadBytes(storageRef, file);
+      // Set a timeout to prevent infinite retries (reduced to 3 seconds for better UX)
+      const uploadPromise = uploadBytes(storageRef, file);
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Upload timeout - CORS blocked')), 3000)
+      );
+      
+      await Promise.race([uploadPromise, timeoutPromise]);
       const downloadURL = await getDownloadURL(storageRef);
       
       return downloadURL;
     } catch (error: any) {
       console.error('Logo upload error:', error);
       
-      // Check if it's a CORS error
-      if (error.code === 'storage/cors-error' || error.message?.includes('CORS') || error.message?.includes('blocked by CORS policy')) {
+      // Check if it's a CORS error or timeout
+      if (error.code === 'storage/cors-error' || 
+          error.message?.includes('CORS') || 
+          error.message?.includes('blocked by CORS policy') ||
+          error.message?.includes('Upload timeout') ||
+          error.message?.includes('ERR_FAILED') ||
+          error.message?.includes('Upload timeout - CORS blocked')) {
+        setStorageDisabled(true);
         toast({ 
-          title: "Errore CORS Firebase Storage", 
-          description: "Il caricamento dei logo non è disponibile. Configura le regole CORS per Firebase Storage.",
+          title: "Storage disabilitato temporaneamente", 
+          description: "Il caricamento dei logo non è disponibile. Le altre funzionalità continuano a funzionare.",
           variant: "destructive" 
         });
         throw new Error('CORS error - Storage not configured');
@@ -188,7 +201,7 @@ function BandsContent() {
       setIsUploadingLogo(true);
       
       let logoUrl: string | undefined = undefined;
-      if (bandLogo) {
+      if (bandLogo && !storageDisabled) {
         try {
           logoUrl = await handleLogoUpload(bandLogo);
         } catch (logoError) {
@@ -234,7 +247,7 @@ function BandsContent() {
       
       if (removeLogo) {
         logoUrl = undefined;
-      } else if (bandLogo) {
+      } else if (bandLogo && !storageDisabled) {
         try {
           logoUrl = await handleLogoUpload(bandLogo);
         } catch (logoError) {
@@ -666,6 +679,7 @@ function BandsContent() {
                     <Input
                       type="file"
                       accept="image/*"
+                      disabled={storageDisabled}
                       onChange={(e) => {
                         const file = e.target.files?.[0];
                         if (file) {
@@ -680,6 +694,9 @@ function BandsContent() {
                       }}
                       className="h-11"
                     />
+                    {storageDisabled && (
+                      <p className="text-xs text-destructive mt-1">Caricamento logo disabilitato (errore CORS)</p>
+                    )}
                   </div>
                 </div>
               </div>

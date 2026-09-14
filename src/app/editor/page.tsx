@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
-import { Undo2, Redo2, Save, LayoutGrid, ChevronLeft, ChevronRight, Settings2, Sparkles, Loader2, RefreshCw, CheckCircle2, X, Layers, Copy, Pencil } from 'lucide-react';
+import { Undo2, Redo2, Save, LayoutGrid, ChevronLeft, ChevronRight, Settings2, Sparkles, Loader2, RefreshCw, CheckCircle2, X, Layers, Copy, Pencil, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { MG30_MODELS } from '@/lib/mg30-data';
 import { generateMG30Preset, MG30PresetOutput } from '@/ai/flows/mg30-preset-gen';
@@ -401,7 +401,7 @@ const formatSlotLabel = (slot: number) => {
 
 export default function EditorPage() {
   const { activePreset, updateParameter, updateModel, updateScene, toggleEffect, undo, redo, setActivePreset, updatePresetName, copyScene } = usePresetStore();
-  const { status, devicePresets, sendProgramChange, sendKnobParameter, sendModelChange, sendSceneChange, toggleBlock, enterBlockEditor, exitBlockEditor, isEditorSyncing, syncActivePreset, syncFullPreset } = useMidiStore();
+  const { status, devicePresets, sendProgramChange, sendKnobParameter, sendModelChange, sendSceneChange, toggleBlock, enterBlockEditor, exitBlockEditor, isEditorSyncing, syncActivePreset, syncFullPreset, updatePresetName: updateMidiPresetName } = useMidiStore();
   const { toast } = useToast();
   const { savedNames, savePresetName } = usePresetNames();
 
@@ -574,6 +574,25 @@ export default function EditorPage() {
         description: "Pedaliera non connessa. Preset aggiornato localmente."
       });
     }
+  };
+
+  const handleSyncFromHardware = () => {
+    if (status !== 'connected') {
+      toast({
+        title: "Pedaliera non connessa",
+        description: "Connetti la pedaliera per sincronizzare i dati.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Richiede il nome del preset alla pedaliera
+    syncActivePreset();
+
+    toast({
+      title: "Sincronizzazione automatica attiva",
+      description: "Modifica i parametri sulla pedaliera e l'editor si aggiornerà automaticamente in tempo reale.",
+    });
   };
 
   const handleAiModeGenerate = async () => {
@@ -923,6 +942,15 @@ Es. per JSON: { "amp": { "gain": 60, "master": 80 }, "delay": { "enabled": true 
                   )}
                 </DialogContent>
               </Dialog>
+              <Button
+                variant="outline"
+                size="icon"
+                className="touch-target"
+                onClick={handleSyncFromHardware}
+                title="Sincronizza dalla pedaliera"
+              >
+                <Download className="h-4 w-4" />
+              </Button>
               <div className="hidden sm:block w-[1px] h-8 bg-border mx-1" />
               <Button variant="outline" size="icon" className="touch-target" onClick={() => syncFullPreset(activePreset)} title="Sincronizza hardware"><RefreshCw className={cn("h-4 w-4", isEditorSyncing && "animate-spin")} /></Button>
               <Button variant="outline" size="icon" className="touch-target" onClick={undo} title="Annulla"><Undo2 className="h-4 w-4" /></Button>

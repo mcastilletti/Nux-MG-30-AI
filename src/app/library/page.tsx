@@ -6,17 +6,19 @@ import { useRouter } from 'next/navigation';
 import { AppShell } from '@/components/layout/app-shell';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, Plus, RefreshCw, Loader2, Check, MoreVertical, LayoutGrid, List, Settings2, CloudOff, Cloud } from 'lucide-react';
+import { Search, Plus, RefreshCw, Loader2, Check, MoreVertical, LayoutGrid, List, Settings2, CloudOff, Cloud, CheckSquare, Square, X } from 'lucide-react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Progress } from '@/components/ui/progress';
+import { Slider } from '@/components/ui/slider';
+import { Label } from '@/components/ui/label';
 import { useMidiStore } from '@/stores/use-midi-store';
 import { usePresetStore } from '@/stores/use-preset-store';
 import { useToast } from '@/hooks/use-toast';
 import { usePresetNames } from '@/hooks/use-preset-names';
 import { useUser } from '@/firebase';
-import { Preset } from '@/types/preset';
+import { Preset, EffectState } from '@/types/preset';
 
 const formatSlotLabel = (slot: number) => {
   const group = Math.floor((slot - 1) / 4) + 1;
@@ -30,6 +32,10 @@ export default function LibraryPage() {
   const [search, setSearch] = useState('');
   const [editingSlot, setEditingSlot] = useState<number | null>(null);
   const [editName, setEditName] = useState('');
+  const [selectedSlots, setSelectedSlots] = useState<Set<number>>(new Set());
+  const [isBulkMode, setIsBulkMode] = useState(false);
+  const [bulkVolumeMin, setBulkVolumeMin] = useState(30);
+  const [bulkVolumeMax, setBulkVolumeMax] = useState(60);
 
   const { sendProgramChange, status, devicePresets, syncPresets, isSyncing, syncProgress, updatePresetName } = useMidiStore();
   const { setActivePreset, updatePresetName: updateActivePresetName } = usePresetStore();
@@ -55,7 +61,102 @@ export default function LibraryPage() {
     );
   });
 
+  const toggleSelection = (slot: number) => {
+    setSelectedSlots(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(slot)) {
+        newSet.delete(slot);
+      } else {
+        newSet.add(slot);
+      }
+      return newSet;
+    });
+  };
+
+  const selectAll = () => {
+    setSelectedSlots(new Set(filteredPresets.map(p => p.slot)));
+  };
+
+  const clearSelection = () => {
+    setSelectedSlots(new Set());
+  };
+
+  const applyBulkVolume = () => {
+    if (selectedSlots.size === 0) {
+      toast({
+        title: 'Nessun preset selezionato',
+        description: 'Seleziona almeno un preset per applicare le modifiche.',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    // Aggiorna i preset nel MIDI store
+    const { devicePresets } = useMidiStore.getState();
+    const updatedPresets = devicePresets.map(preset => {
+      if (selectedSlots.has(preset.slot)) {
+        const updatedEffects = preset.effects.map(effect => {
+          if (effect.type === 'vol') {
+            return {
+              ...effect,
+              parameters: {
+                ...effect.parameters,
+                min: bulkVolumeMin,
+                max: bulkVolumeMax
+              }
+            };
+          }
+          return effect;
+        });
+
+        // Aggiorna anche le scene se esistono
+        const updatedScenes: Record<number, EffectState[]> | undefined = preset.scenes ? { ...preset.scenes } : undefined;
+        if (preset.scenes && updatedScenes) {
+          Object.keys(preset.scenes).forEach(sceneKey => {
+            const sceneEffects = preset.scenes![Number(sceneKey)];
+            updatedScenes[Number(sceneKey)] = sceneEffects.map(effect => {
+              if (effect.type === 'vol') {
+                return {
+                  ...effect,
+                  parameters: {
+                    ...effect.parameters,
+                    min: bulkVolumeMin,
+                    max: bulkVolumeMax
+                  }
+                };
+              }
+              return effect;
+            });
+          });
+        }
+
+        return {
+          ...preset,
+          effects: updatedEffects,
+          scenes: updatedScenes,
+          lastModified: new Date()
+        };
+      }
+      return preset;
+    });
+
+    useMidiStore.setState({ devicePresets: updatedPresets });
+
+    toast({
+      title: 'Volume aggiornato',
+      description: `Modificato volume su ${selectedSlots.size} preset (MIN: ${bulkVolumeMin}, MAX: ${bulkVolumeMax}).`,
+    });
+
+    clearSelection();
+    setIsBulkMode(false);
+  };
+
   const handleSelectPreset = (preset: Preset) => {
+    if (isBulkMode) {
+      toggleSelection(preset.slot);
+      return;
+    }
+
     if (status === 'connected') {
       sendProgramChange(preset.slot - 1);
     }
@@ -158,6 +259,18 @@ export default function LibraryPage() {
             />
           </div>
           <div className="flex items-center gap-2">
+            <Button
+              variant={isBulkMode ? 'secondary' : 'outline'}
+              size="sm"
+              onClick={() => {
+                setIsBulkMode(!isBulkMode);
+                if (!isBulkMode) clearSelection();
+              }}
+              className="h-10 text-xs font-bold uppercase"
+            >
+              {isBulkMode ? <X className="w-4 h-4 mr-2" /> : <CheckSquare className="w-4 h-4 mr-2" />}
+              {isBulkMode ? 'Chiudi Selezione' : 'Selezione Multipla'}
+            </Button>
             <div className="flex rounded-md border border-border p-1 bg-background/40">
               <Button aria-label="Vista griglia" variant={view === 'grid' ? 'secondary' : 'ghost'} size="icon" className="touch-target h-10 w-10" onClick={() => setView('grid')}>
                 <LayoutGrid className="w-4 h-4" />
@@ -169,6 +282,67 @@ export default function LibraryPage() {
           </div>
         </div>
 
+        {isBulkMode && (
+          <Card className="border-primary/40 bg-primary/5">
+            <CardContent className="p-4">
+              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="text-sm font-bold">
+                    {selectedSlots.size} preset selezionati
+                  </div>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" onClick={selectAll} className="text-xs">
+                      Seleziona Tutti
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={clearSelection} className="text-xs">
+                      Cancella Selezione
+                    </Button>
+                  </div>
+                </div>
+                <div className="flex flex-col gap-3 w-full md:w-auto">
+                  <div className="flex items-center gap-4">
+                    <div className="flex-1">
+                      <Label className="text-xs font-bold uppercase mb-2 block">Volume MIN</Label>
+                      <div className="flex items-center gap-2">
+                        <Slider
+                          value={[bulkVolumeMin]}
+                          onValueChange={(v) => setBulkVolumeMin(v[0])}
+                          min={0}
+                          max={50}
+                          step={1}
+                          className="flex-1"
+                        />
+                        <span className="text-xs font-mono w-8 text-right">{bulkVolumeMin}</span>
+                      </div>
+                    </div>
+                    <div className="flex-1">
+                      <Label className="text-xs font-bold uppercase mb-2 block">Volume MAX</Label>
+                      <div className="flex items-center gap-2">
+                        <Slider
+                          value={[bulkVolumeMax]}
+                          onValueChange={(v) => setBulkVolumeMax(v[0])}
+                          min={51}
+                          max={100}
+                          step={1}
+                          className="flex-1"
+                        />
+                        <span className="text-xs font-mono w-8 text-right">{bulkVolumeMax}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <Button
+                    onClick={applyBulkVolume}
+                    disabled={selectedSlots.size === 0}
+                    className="w-full md:w-auto"
+                  >
+                    Applica Volume a {selectedSlots.size} Preset
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {filteredPresets.length === 0 ? (
           <Card className="p-12 border-dashed border-2 flex flex-col items-center justify-center opacity-60">
             <h3 className="text-xl font-bold">Nessun Preset trovato</h3>
@@ -178,13 +352,31 @@ export default function LibraryPage() {
             {filteredPresets.map((preset, index) => {
               const displayName = getDisplayName(preset);
               const hasCustomName = !!savedNames[preset.slot];
+              const isSelected = selectedSlots.has(preset.slot);
               return (
                 <Card
                   key={preset.slot}
-                  className="app-surface group relative cursor-pointer overflow-hidden rounded-2xl transition-colors hover:border-primary/60"
+                  className={`app-surface group relative cursor-pointer overflow-hidden rounded-2xl transition-colors hover:border-primary/60 ${isSelected ? 'border-primary bg-primary/10' : ''}`}
                   onClick={() => handleSelectPreset(preset)}
                   style={{ animationDelay: `${index * 0.05}s` }}
                 >
+                  {isBulkMode && (
+                    <div className="absolute top-3 left-3 z-10">
+                      <div
+                        className={`w-6 h-6 rounded border-2 flex items-center justify-center cursor-pointer ${
+                          isSelected
+                            ? 'bg-primary border-primary text-primary-foreground'
+                            : 'border-border bg-background/50 hover:border-primary/60'
+                        }`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleSelection(preset.slot);
+                        }}
+                      >
+                        {isSelected && <Check className="w-4 h-4" />}
+                      </div>
+                    </div>
+                  )}
                   <CardHeader className="pb-2">
                     <div className="flex items-center justify-between">
                       <Badge variant="outline" className="text-[10px] border-primary/20 text-primary bg-primary/5">
@@ -256,6 +448,20 @@ export default function LibraryPage() {
               <table className="w-full text-sm">
                 <thead className="bg-secondary/40 border-b border-border">
                   <tr className="text-left">
+                    {isBulkMode && (
+                      <th className="p-4 font-bold uppercase text-[11px] w-12 text-center">
+                        <div
+                          className="w-5 h-5 mx-auto cursor-pointer"
+                          onClick={() => selectedSlots.size === filteredPresets.length ? clearSelection() : selectAll()}
+                        >
+                          {selectedSlots.size === filteredPresets.length ? (
+                            <Check className="w-4 h-4 text-primary" />
+                          ) : (
+                            <Square className="w-4 h-4 text-muted-foreground" />
+                          )}
+                        </div>
+                      </th>
+                    )}
                     <th className="p-4 font-bold uppercase text-[11px] w-20 text-center">Slot</th>
                     <th className="p-4 font-bold uppercase text-[11px]">Nome</th>
                     <th className="p-4 font-bold uppercase text-[11px]">Amp</th>
@@ -266,12 +472,30 @@ export default function LibraryPage() {
                   {filteredPresets.map((preset) => {
                     const displayName = getDisplayName(preset);
                     const hasCustomName = !!savedNames[preset.slot];
+                    const isSelected = selectedSlots.has(preset.slot);
                     return (
                       <tr
                         key={preset.slot}
-                        className="hover:bg-primary/5 transition-colors group cursor-pointer"
+                        className={`hover:bg-primary/5 transition-colors group cursor-pointer ${isSelected ? 'bg-primary/10' : ''}`}
                         onClick={() => handleSelectPreset(preset)}
                       >
+                        {isBulkMode && (
+                          <td className="p-4 text-center">
+                            <div
+                              className={`w-5 h-5 mx-auto rounded border-2 flex items-center justify-center cursor-pointer ${
+                                isSelected
+                                  ? 'bg-primary border-primary text-primary-foreground'
+                                  : 'border-border bg-background/50 hover:border-primary/60'
+                              }`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleSelection(preset.slot);
+                              }}
+                            >
+                              {isSelected && <Check className="w-3 h-3" />}
+                            </div>
+                          </td>
+                        )}
                         <td className="p-4 font-mono font-bold text-primary text-center">{formatSlotLabel(preset.slot)}</td>
                         <td className="p-4">
                           {editingSlot === preset.slot ? (

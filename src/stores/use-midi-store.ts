@@ -253,6 +253,66 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     const hex = Array.from(data).map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
     get().addMidiLog(`[IN] ${hex}`);
 
+    // Gestione Control Change messages per sincronizzazione parametri
+    if (statusByte === 0xB0) {
+      const cc = data[1];
+      const value = data[2];
+      console.log('[MIDI] CC received:', cc, 'value:', value);
+      
+      // Mappa inversa dei CC per trovare il tipo di blocco e parametro
+      const findBlockAndParam = (ccNumber: number) => {
+        for (const [blockType, ccs] of Object.entries(BLOCK_PARAM_CCS)) {
+          const paramIndex = ccs.indexOf(ccNumber);
+          if (paramIndex !== -1) {
+            return { blockType, paramIndex };
+          }
+        }
+        return null;
+      };
+
+      const blockInfo = findBlockAndParam(cc);
+      if (blockInfo) {
+        const { blockType, paramIndex } = blockInfo;
+        const activePreset = usePresetStore.getState().activePreset;
+        const effect = activePreset.effects.find(e => e.type === blockType);
+        
+        if (effect) {
+          const model = MG30_MODELS[effect.type]?.find(m => m.id === effect.model);
+          if (model && model.parameters[paramIndex]) {
+            const param = model.parameters[paramIndex];
+            
+            // Converte il valore MIDI (0-127) nel range del parametro
+            let convertedValue: number;
+            if (param.min === 0 && param.max === 127) {
+              convertedValue = value;
+            } else if (param.max === param.min) {
+              convertedValue = param.min;
+            } else {
+              convertedValue = Math.round((value / 127) * (param.max - param.min) + param.min);
+            }
+            
+            // Caso speciale per IR Level (range -12..+12 dB, MIDI 0..100)
+            if (param.id === 'level' && param.min === -12 && param.max === 12) {
+              convertedValue = Math.round((value / 100) * 24 - 12);
+            }
+            
+            // Caso speciale per PATCH VOL MIN (0..50) e MAX (51..100)
+            if (param.id === 'min' && param.min === 0 && param.max === 50) {
+              convertedValue = value;
+            }
+            if (param.id === 'max' && param.min === 51 && param.max === 100) {
+              convertedValue = Math.round((value / 100) * 49 + 51);
+            }
+            
+            console.log(`[MIDI] Syncing ${blockType}.${param.id}: ${value} -> ${convertedValue}`);
+            
+            // Aggiorna il preset nello store
+            usePresetStore.getState().updateParameter(effect.id, param.id, convertedValue);
+          }
+        }
+      }
+    }
+
     // Gestione SysEx messages
     if (data[0] === 0xF0 && data[data.length - 1] === 0xF7) {
       const sysexData = Array.from(data);
@@ -479,14 +539,24 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
 
   syncPresets: async () => {
     if (get().isSyncing) return;
-    
+
     set({ isSyncing: true, syncProgress: 0 });
+
+    // Sincronizza tutti i preset attivandoli uno alla volta e richiedendo i dati
     for (let i = 1; i <= 128; i++) {
       if (!get().isSyncing) break;
       set({ syncProgress: Math.round((i / 128) * 100) });
+
+      // Attiva il preset
       get().sendProgramChange(i - 1);
-      await new Promise(r => setTimeout(r, 300));
+
+      // Richiede i dati del preset (SysEx)
+      get().syncActivePreset();
+
+      // Attendi per permettere alla pedaliera di rispondere
+      await new Promise(r => setTimeout(r, 500));
     }
+
     set({ isSyncing: false });
   },
 

@@ -924,7 +924,7 @@ Es. per JSON: { "amp": { "gain": 60, "master": 80 }, "delay": { "enabled": true 
                 </DialogContent>
               </Dialog>
               <div className="hidden sm:block w-[1px] h-8 bg-border mx-1" />
-              <Button variant="outline" size="icon" className="touch-target" onClick={() => syncActivePreset()} title="Sincronizza hardware"><RefreshCw className={cn("h-4 w-4", isEditorSyncing && "animate-spin")} /></Button>
+              <Button variant="outline" size="icon" className="touch-target" onClick={() => syncFullPreset(activePreset)} title="Sincronizza hardware"><RefreshCw className={cn("h-4 w-4", isEditorSyncing && "animate-spin")} /></Button>
               <Button variant="outline" size="icon" className="touch-target" onClick={undo} title="Annulla"><Undo2 className="h-4 w-4" /></Button>
               <Button variant="outline" size="icon" className="touch-target" onClick={redo} title="Ripristina"><Redo2 className="h-4 w-4" /></Button>
               <Button className="touch-target shrink-0 gap-2 px-4 sm:px-5" onClick={handleSave}><Save className="h-4 w-4" /> <span className="hidden sm:inline">SALVA</span><span className="sm:hidden">SAVE</span></Button>

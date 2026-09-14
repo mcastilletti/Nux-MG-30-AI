@@ -31,7 +31,9 @@ const BLOCK_MODEL_OFFSET: Record<string, number> = {
   'modulation': 65,
   'delay': 1,
   'reverb': 1,
-  'ir': 1
+  'ir': 1,
+  'sr': 1,
+  'vol': 1
 };
 
 // CC per i parametri dei blocchi
@@ -61,7 +63,9 @@ const BLOCK_INDEX_MAP: Record<string, number> = {
   'modulation': 6,
   'delay': 7,
   'reverb': 8,
-  'ir': 9
+  'ir': 9,
+  'sr': 10,
+  'vol': 11
 };
 
 /** Converte il valore usato dall'editor nel range MIDI 0-127. */
@@ -91,7 +95,10 @@ const blockStateMidiValue = (blockType: string, modelIndex: number, enabled: boo
 
   // Il Wah usa la polarità inversa per il bypass rispetto agli altri blocchi.
   if (blockType === 'wah') return enabled ? onValue - 64 : onValue;
-  if (baseOffset >= 64) return enabled ? onValue : onValue - 64;
+  // Comp e Gate hanno la polarità inversa rispetto agli altri blocchi
+  if (blockType === 'compressor' || blockType === 'noise-gate') return enabled ? onValue - 64 : onValue;
+  // Per i blocchi con baseOffset >= 64 (bypass-active), ON è il valore basso
+  if (baseOffset >= 64) return enabled ? onValue - 64 : onValue;
   return enabled ? onValue : onValue + 64;
 };
 
@@ -110,6 +117,7 @@ const createDefaultEffects = (): EffectState[] => [
   { id: 'cmp', type: 'compressor', model: 'rose', enabled: false, parameters: { sustain: 50, level: 50 } },
   { id: 'efx', type: 'efx', model: 'tscream', enabled: false, parameters: { drive: 50, tone: 50, level: 50 } },
   { id: 'amp', type: 'amp', model: 'plexi100w', enabled: true, parameters: { gain: 50, master: 50, bass: 50, mid: 50, treble: 50, presence: 50 } },
+  { id: 'eq', type: 'eq', model: 'eq-ge6', enabled: false, parameters: { '100hz': 50, '220hz': 50, '500hz': 50, '1.2khz': 50, '2.6khz': 50, '6.4khz': 50, level: 50 } },
   { id: 'ir', type: 'ir', model: 'ir-jz120', enabled: true, parameters: { level: 0, lowcut: 20, highcut: 20000 } },
   { id: 'sr', type: 'sr', model: 'send-return', enabled: false, parameters: { send: 100, return: 100 } },
   { id: 'mod', type: 'modulation', model: 'mod-ce1', enabled: false, parameters: { intensity: 50, depth: 50, rate: 50 } },
@@ -144,8 +152,11 @@ interface MidiStore {
   lastError: string | null;
   
   midiLog: string[];
+  midiOutLog: string[];
   addMidiLog: (msg: string) => void;
+  addMidiOutLog: (msg: string) => void;
   clearMidiLog: () => void;
+  clearMidiOutLog: () => void;
 
   initialize: () => Promise<void>;
   sendControlChange: (cc: number, value: number) => void;
@@ -180,9 +191,12 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
   syncProgress: 0,
   lastError: null,
   midiLog: [],
+  midiOutLog: [],
 
   addMidiLog: (msg) => set(state => ({ midiLog: [msg, ...state.midiLog].slice(0, 200) })),
+  addMidiOutLog: (msg) => set(state => ({ midiOutLog: [msg, ...state.midiOutLog].slice(0, 200) })),
   clearMidiLog: () => set({ midiLog: [] }),
+  clearMidiOutLog: () => set({ midiOutLog: [] }),
 
   initialize: async () => {
     const state = get();
@@ -299,22 +313,33 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
   syncActivePreset: () => {
     const { output, isEditorSyncing } = get();
     if (!output || isEditorSyncing) return;
-    
+
     set({ isEditorSyncing: true });
     // Request preset data (includes name)
-    output.send([0xF0, 0x00, 0x20, 0x6B, 0x01, 0x00, 0x01, 0xF7]);
+    const message = [0xF0, 0x00, 0x20, 0x6B, 0x01, 0x00, 0x01, 0xF7];
+    output.send(message);
+    const hex = message.map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
+    get().addMidiOutLog(`[OUT] ${hex}`);
     setTimeout(() => set({ isEditorSyncing: false }), 2000);
   },
 
   sendControlChange: (cc, value) => {
     const { output } = get();
-    if (output) output.send([0xB0, cc, Math.min(127, Math.max(0, value))]);
+    if (output) {
+      const message = [0xB0, cc, Math.min(127, Math.max(0, value))];
+      output.send(message);
+      const hex = message.map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
+      get().addMidiOutLog(`[OUT] ${hex}`);
+    }
   },
 
   sendProgramChange: (pc) => {
     const { output, isSyncing } = get();
     if (output) {
-      output.send([0xC0, pc]);
+      const message = [0xC0, pc];
+      output.send(message);
+      const hex = message.map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
+      get().addMidiOutLog(`[OUT] ${hex}`);
       if (!isSyncing) {
         setTimeout(() => get().syncActivePreset(), 200);
       }
@@ -336,6 +361,8 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     const footer = [0xF7];
     const message = new Uint8Array([...header, ...nameBytes, ...footer]);
     output.send(message);
+    const hex = Array.from(message).map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
+    get().addMidiOutLog(`[OUT] ${hex}`);
   },
 
   sendKnobParameter: (blockType, knobIndex, value) => {
@@ -344,7 +371,8 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
       const effect = usePresetStore.getState().activePreset.effects.find(e => e.type === blockType);
       const model = effect && MG30_MODELS[effect.type]?.find(m => m.id === effect.model);
       const parameter = model?.parameters[knobIndex];
-      get().sendControlChange(ccs[knobIndex], parameter ? parameterToMidiValue(value, parameter) : value);
+      const midiValue = parameter ? parameterToMidiValue(value, parameter) : value;
+      get().sendControlChange(ccs[knobIndex], midiValue);
     }
   },
 
@@ -470,10 +498,13 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
   requestPresetName: () => {
     const { output } = get();
     if (!output) return;
-    
+
     // Request preset name specifically
     // Based on QuickTone protocol, command 0x01 0x07 might be for names
-    output.send([0xF0, 0x00, 0x20, 0x6B, 0x01, 0x01, 0x07, 0xF7]);
+    const message = [0xF0, 0x00, 0x20, 0x6B, 0x01, 0x01, 0x07, 0xF7];
+    output.send(message);
+    const hex = message.map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
+    get().addMidiOutLog(`[OUT] ${hex}`);
   },
 
   refreshDevices: () => get().initialize()

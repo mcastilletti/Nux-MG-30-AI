@@ -224,7 +224,7 @@ export const usePresetStore = create<PresetStore>((set, get) => ({
     // If sourceSceneIndex is current active scene, use live normSource.effects to capture latest ON/OFF states
     const rawSourceEffects = sourceSceneIndex === normSource.activeScene
       ? normSource.effects
-      : (normSource.scenes[sourceSceneIndex] || normSource.effects);
+      : (normSource.scenes?.[sourceSceneIndex] || normSource.effects);
 
     const sourceEffects = cloneEffects(rawSourceEffects);
 

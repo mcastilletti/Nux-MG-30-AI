@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useFirebase, useUser } from '@/firebase';
 import { collection, doc, updateDoc, addDoc, serverTimestamp } from 'firebase/firestore';
-import { SavedNote } from '@/app/notes/page';
+import type { SavedNote } from '@/types/note';
 import { useNotesCache } from '@/stores/use-notes-cache';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';

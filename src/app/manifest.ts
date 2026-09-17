@@ -12,64 +12,16 @@ export default function manifest(): MetadataRoute.Manifest {
     icons: [
       {
         src: '/icon.png',
-        sizes: '72x72',
-        type: 'image/png',
-        purpose: 'any',
-      },
-      {
-        src: '/icon.png',
-        sizes: '96x96',
-        type: 'image/png',
-        purpose: 'any',
-      },
-      {
-        src: '/icon.png',
-        sizes: '128x128',
-        type: 'image/png',
-        purpose: 'any',
-      },
-      {
-        src: '/icon.png',
-        sizes: '144x144',
-        type: 'image/png',
-        purpose: 'any',
-      },
-      {
-        src: '/icon.png',
-        sizes: '152x152',
-        type: 'image/png',
-        purpose: 'any',
-      },
-      {
-        src: '/icon.png',
-        sizes: '192x192',
-        type: 'image/png',
-        purpose: 'any',
-      },
-      {
-        src: '/icon-android.png',
-        sizes: '192x192',
-        type: 'image/png',
-        purpose: 'maskable',
-      },
-      {
-        src: '/icon.png',
-        sizes: '384x384',
-        type: 'image/png',
-        purpose: 'any',
-      },
-      {
-        src: '/icon.png',
         sizes: '512x512',
         type: 'image/png',
         purpose: 'any',
       },
       {
-        src: '/icon-android.png',
-        sizes: '512x512',
-        type: 'image/png',
+        src: '/icon-maskable.svg',
+        sizes: 'any',
+        type: 'image/svg+xml',
         purpose: 'maskable',
-      }
+      },
     ],
   }
 }

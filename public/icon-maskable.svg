@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="MG30 Studio">
+  <!-- Full-bleed background: Android applies the launcher shape to this canvas. -->
+  <rect width="512" height="512" fill="#ffd500"/>
+  <rect x="69" y="69" width="374" height="374" rx="82" fill="#ffd20a" stroke="#e9b900" stroke-width="2"/>
+
+  <!-- Simplified NUX MG-30 pedal mark, kept inside the maskable safe zone. -->
+  <g fill="none" stroke="#11170f" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="132" y="178" width="248" height="160" rx="14" stroke-width="8"/>
+    <path d="M132 275h166" stroke-width="8"/>
+    <rect x="307" y="184" width="62" height="144" rx="7" stroke-width="7"/>
+    <rect x="196" y="196" width="72" height="45" rx="4" fill="#11170f" stroke-width="5"/>
+    <path d="M282 204h12M282 222h12" stroke-width="7"/>
+  </g>
+
+  <g fill="#11170f">
+    <circle cx="208" cy="255" r="8"/>
+    <circle cx="232" cy="255" r="8"/>
+    <circle cx="256" cy="255" r="8"/>
+    <circle cx="160" cy="310" r="9"/>
+    <circle cx="217" cy="310" r="9"/>
+    <circle cx="274" cy="310" r="9"/>
+    <circle cx="160" cy="289" r="4"/>
+    <circle cx="217" cy="289" r="4"/>
+    <circle cx="274" cy="289" r="4"/>
+  </g>
+
+  <g fill="#11170f" font-family="Arial, Helvetica, sans-serif" font-weight="900">
+    <text x="145" y="215" font-size="15">NUX</text>
+    <text x="145" y="229" font-size="11">MG-30</text>
+  </g>
+</svg>

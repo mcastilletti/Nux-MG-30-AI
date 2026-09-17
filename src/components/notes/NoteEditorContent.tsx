@@ -5,7 +5,7 @@ import { useMidiStore } from '@/stores/use-midi-store';
 import { useToast } from '@/hooks/use-toast';
 import { useFirebase, useUser } from '@/firebase';
 import { collection, addDoc, doc, updateDoc, serverTimestamp } from 'firebase/firestore';
-import { NoteSection, SavedNote } from '@/app/notes/page';
+import type { NoteSection, SavedNote } from '@/types/note';
 import { useNotesCache } from '@/stores/use-notes-cache';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -262,8 +262,9 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange 
     setIsNotesOpen(true);
     if (note.presetSlot && status === 'connected') {
       sendProgramChange(parseInt(note.presetSlot) - 1);
-      if (note.presetScene) {
-        setTimeout(() => sendSceneChange(parseInt(note.presetScene)), 500);
+      if (note.presetScene !== undefined) {
+        const presetScene = note.presetScene;
+        setTimeout(() => sendSceneChange(parseInt(presetScene)), 500);
       }
     }
   };

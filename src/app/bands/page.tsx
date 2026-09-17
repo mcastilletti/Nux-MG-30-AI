@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Badge } from '@/components/ui/badge';
 import { Music2, Plus, Trash2, Edit, Layers, ChevronRight, Users, X } from 'lucide-react';
 import { useFirebase, useUser } from '@/firebase';
-import { collection, getDocs, query, where, doc, deleteDoc, addDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, getDocs, query, where, doc, deleteDoc, addDoc, updateDoc, serverTimestamp, writeBatch } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -243,7 +243,7 @@ function BandsContent() {
     try {
       setIsUploadingLogo(true);
       
-      let logoUrl: string | undefined = editingBand.logoUrl;
+      let logoUrl: string | undefined = editingBand.logoUrl ?? undefined;
       
       if (removeLogo) {
         logoUrl = undefined;
@@ -253,7 +253,7 @@ function BandsContent() {
         } catch (logoError) {
           // If logo upload fails, keep existing logo or continue without logo
           console.warn('Logo upload failed, updating band without new logo:', logoError);
-          logoUrl = editingBand.logoUrl; // Keep existing logo
+          logoUrl = editingBand.logoUrl ?? undefined; // Keep existing logo
         }
       }
       
@@ -319,9 +319,9 @@ function BandsContent() {
     if (!bandToDelete) return;
     
     try {
-      const bandSetlists = getSetlistsForBand(bandToDelete.id);
+      const bandSetlists = getSetlistsForBand(bandToDelete.id, bandToDelete.name);
       
-      const batch = firestore.batch();
+      const batch = writeBatch(firestore);
       batch.delete(doc(firestore, "bands", bandToDelete.id));
       
       bandSetlists.forEach(setlist => {

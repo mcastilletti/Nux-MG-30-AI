@@ -20,11 +20,9 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: '/icon.png', sizes: '192x192', type: 'image/png' },
       { url: '/icon.png', sizes: '512x512', type: 'image/png' }
     ],
     apple: [
-      { url: '/icon.png', sizes: '192x192', type: 'image/png' },
       { url: '/icon.png', sizes: '512x512', type: 'image/png' }
     ],
   },
@@ -45,11 +43,6 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Source+Code+Pro:wght@400;500;600&display=swap" rel="stylesheet" />
-        <link rel="icon" href="/icon.png" sizes="32x32" />
-        <link rel="icon" href="/icon.png" sizes="192x192" />
-        <link rel="icon" href="/icon.png" sizes="512x512" />
-        <link rel="shortcut icon" href="/icon.png" />
-        <link rel="apple-touch-icon" href="/icon.png" />
       </head>
       <body className="font-body antialiased selection:bg-primary/30">
         <FirebaseClientProvider>

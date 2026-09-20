@@ -4,7 +4,7 @@ import React, { DependencyList, createContext, useContext, ReactNode, useMemo, u
 import { FirebaseApp } from 'firebase/app';
 import { Firestore } from 'firebase/firestore';
 import { Auth, User, onAuthStateChanged, AuthProvider } from 'firebase/auth';
-import { Storage } from 'firebase/storage';
+import { FirebaseStorage } from 'firebase/storage';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener'
 
 interface FirebaseProviderProps {
@@ -12,7 +12,7 @@ interface FirebaseProviderProps {
   firebaseApp: FirebaseApp;
   firestore: Firestore;
   auth: Auth;
-  storage: Storage;
+  storage: FirebaseStorage;
   googleProvider: AuthProvider;
 }
 
@@ -29,7 +29,7 @@ export interface FirebaseContextState {
   firebaseApp: FirebaseApp | null;
   firestore: Firestore | null;
   auth: Auth | null; // The Auth service instance
-  storage: Storage | null; // The Storage service instance
+  storage: FirebaseStorage | null; // The Storage service instance
   googleProvider: AuthProvider | null; // Google Auth provider
   // User authentication state
   user: User | null;
@@ -42,7 +42,7 @@ export interface FirebaseServicesAndUser {
   firebaseApp: FirebaseApp;
   firestore: Firestore;
   auth: Auth;
-  storage: Storage;
+  storage: FirebaseStorage;
   googleProvider: AuthProvider;
   user: User | null;
   isUserLoading: boolean;

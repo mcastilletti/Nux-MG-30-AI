@@ -1,7 +1,7 @@
 "use client"
 
-import React, { useState, useMemo, useEffect, useRef, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import React, { useState, useMemo, useEffect, useRef, useReducer, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { AppShell } from '@/components/layout/app-shell';
 import { Card, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -23,6 +23,15 @@ import { NoteSheet } from '@/components/notes/NoteSheet';
 import { NoteEditorContent } from '@/components/notes/NoteEditorContent';
 import { BlockEditorContent } from '@/components/notes/BlockEditorContent';
 import { useNotesCache } from '@/stores/use-notes-cache';
+import {
+  getNoteSheetStateFromSearchParams,
+  initialNoteSheetState,
+  NOTE_SHEET_KIND_PARAM,
+  NOTE_SHEET_OPEN_PARAM,
+  noteSheetReducer,
+} from '@/components/notes/note-sheet-state';
+import type { NoteSection, SavedNote } from '@/types/note';
+import { getNextNoteInSetlist } from '@/components/notes/note-navigation';
 
 const SECTION_COLORS: Record<string, { bg: string; text: string; border: string }> = {
   Intro: { bg: "bg-cyan-500/15", text: "text-cyan-400", border: "border-cyan-500/40" },
@@ -34,39 +43,15 @@ const SECTION_COLORS: Record<string, { bg: string; text: string; border: string 
   Solo: { bg: "bg-orange-500/20", text: "text-orange-500", border: "border-orange-500/40" }
 };
 
-export interface NoteSection {
-  id: string;
-  type: string;
-  text: string;
-  chords?: string[];
-}
-
-export interface SavedNote {
-  id: string;
-  title: string;
-  band: string;
-  setlist: string;
-  generalNotes?: string;
-  sections?: NoteSection[];
-  presetSlot?: string;
-  presetScene?: string;
-  order?: number;
-  updatedAt?: any;
-  userId?: string;
-  type?: 'song' | 'block';
-  blockContent?: string;
-}
-
 const FILTER_BAND_KEY = 'mg30_notes_filter_band';
 const FILTER_SETLIST_KEY = 'mg30_notes_filter_setlist';
 
 function NotesLibraryContent() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
   const { firestore } = useFirebase();
   const { user, isUserLoading: userLoading } = useUser();
-  const { notes: cachedNotes, setNotes, isLoading: cacheLoading, updateNote, addNote, deleteNote, getNoteById } = useNotesCache();
+  const { notes: cachedNotes, setNotes, updateNote, addNote, deleteNote } = useNotesCache();
   
   const [selectedBand, setSelectedBand] = useState<string | null>(null);
   const [selectedSetlist, setSelectedSetlist] = useState<string | null>(null);
@@ -84,8 +69,9 @@ function NotesLibraryContent() {
 
   const [isAddMenuOpen, setIsAddMenuOpen] = useState(false);
 
-  const [isSheetOpen, setIsSheetOpen] = useState(false);
-  const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
+  const [noteSheet, dispatchNoteSheet] = useReducer(noteSheetReducer, initialNoteSheetState);
+  const { isOpen: isSheetOpen, noteId: selectedNoteId, editorKind } = noteSheet;
+  const hasRestoredNoteSheet = useRef(false);
   const [isEditing, setIsEditing] = useState(false);
   const [newBlockInitialBand, setNewBlockInitialBand] = useState<string | null>(null);
   const [newBlockInitialSetlist, setNewBlockInitialSetlist] = useState<string | null>(null);
@@ -102,10 +88,32 @@ function NotesLibraryContent() {
   const scrollToId = searchParams.get('scrollTo');
 
   useEffect(() => {
-    if (scrollToId) {
-      setSelectedNoteId(scrollToId);
+    if (!hasRestoredNoteSheet.current) {
+      hasRestoredNoteSheet.current = true;
+      const restoredState = getNoteSheetStateFromSearchParams(
+        new URLSearchParams(window.location.search),
+      );
+
+      if (restoredState) {
+        dispatchNoteSheet({
+          type: 'open',
+          noteId: restoredState.noteId,
+          editorKind: restoredState.editorKind,
+        });
+      }
+      return;
     }
-  }, [scrollToId]);
+
+    const url = new URL(window.location.href);
+    if (noteSheet.isOpen) {
+      url.searchParams.set(NOTE_SHEET_OPEN_PARAM, noteSheet.noteId ?? '');
+      url.searchParams.set(NOTE_SHEET_KIND_PARAM, noteSheet.editorKind);
+    } else {
+      url.searchParams.delete(NOTE_SHEET_OPEN_PARAM);
+      url.searchParams.delete(NOTE_SHEET_KIND_PARAM);
+    }
+    window.history.replaceState(window.history.state, '', url);
+  }, [noteSheet]);
 
   useEffect(() => {
     const savedBand = localStorage.getItem(FILTER_BAND_KEY);
@@ -165,6 +173,19 @@ function NotesLibraryContent() {
     if (searchQuery) notesToFilter = notesToFilter.filter(n => n.title.toLowerCase().includes(searchQuery.toLowerCase()));
     return notesToFilter;
   }, [cachedNotes, selectedBand, selectedSetlist, searchQuery]);
+
+  const nextNote = useMemo(() => {
+    return getNextNoteInSetlist(cachedNotes, selectedNoteId);
+  }, [cachedNotes, selectedNoteId]);
+
+  const openNextNote = () => {
+    if (!nextNote) return;
+    dispatchNoteSheet({
+      type: 'open',
+      noteId: nextNote.id,
+      editorKind: nextNote.type === 'block' ? 'block' : 'song',
+    });
+  };
 
   useEffect(() => {
     if (searchQuery.trim()) {
@@ -368,8 +389,7 @@ function NotesLibraryContent() {
       setImportJsonText('');
       setImportJsonError('');
       // Open the newly created note
-      setSelectedNoteId(docRef.id);
-      setIsSheetOpen(true);
+      dispatchNoteSheet({ type: 'open', noteId: docRef.id, editorKind: 'song' });
     } catch (e) {
       setImportJsonError('Errore durante il salvataggio. Riprova.');
     } finally {
@@ -408,8 +428,7 @@ function NotesLibraryContent() {
                     variant="ghost"
                     className="justify-start gap-2 h-10"
                     onClick={() => {
-                      setSelectedNoteId(null);
-                      setIsSheetOpen(true);
+                      dispatchNoteSheet({ type: 'open', noteId: null, editorKind: 'song' });
                       setIsAddMenuOpen(false);
                     }}
                   >
@@ -422,8 +441,7 @@ function NotesLibraryContent() {
                     onClick={() => {
                       setNewBlockInitialBand(selectedBand);
                       setNewBlockInitialSetlist(selectedSetlist);
-                      setSelectedNoteId('new-block');
-                      setIsSheetOpen(true);
+                      dispatchNoteSheet({ type: 'open', noteId: 'new-block', editorKind: 'block' });
                       setIsAddMenuOpen(false);
                     }}
                   >
@@ -472,8 +490,7 @@ function NotesLibraryContent() {
                   <button
                     key={note.id}
                     onClick={() => {
-                      setSelectedNoteId(note.id);
-                      setIsSheetOpen(true);
+                      dispatchNoteSheet({ type: 'open', noteId: note.id, editorKind: note.type === 'block' ? 'block' : 'song' });
                       setSearchQuery('');
                       setIsSearchOpen(false);
                     }}
@@ -538,11 +555,10 @@ function NotesLibraryContent() {
                       onDelete={(e) => handleDelete(e, note)}
                       onCopy={(e) => openCopyDialog(e, note)}
                       onClick={() => {
-                        setSelectedNoteId(note.id);
-                        setIsSheetOpen(true);
+                        dispatchNoteSheet({ type: 'open', noteId: note.id, editorKind: note.type === 'block' ? 'block' : 'song' });
                       }}
                       ref={(el) => { if(el) noteRefs.current[note.id] = el; }}
-                      isHighlighted={note.id === selectedNoteId}
+                      isHighlighted={note.id === (selectedNoteId ?? scrollToId)}
                     />
                   ))}
                 </div>
@@ -695,38 +711,40 @@ function NotesLibraryContent() {
         ))}
       </div>
 
-      <NoteSheet isOpen={isSheetOpen} onClose={() => setIsSheetOpen(false)} disableGestures={isEditing}>
-        {selectedNoteId === 'new-block' || (selectedNoteId && getNoteById(selectedNoteId)?.type === 'block') ? (
+      <NoteSheet isOpen={isSheetOpen} onClose={() => dispatchNoteSheet({ type: 'close' })} disableGestures={isEditing}>
+        {editorKind === 'block' ? (
           <BlockEditorContent
             noteId={selectedNoteId}
             initialBand={newBlockInitialBand}
             initialSetlist={newBlockInitialSetlist}
             onClose={() => {
-              setIsSheetOpen(false);
+              dispatchNoteSheet({ type: 'close' });
               setNewBlockInitialBand(null);
               setNewBlockInitialSetlist(null);
             }}
             onEditModeChange={setIsEditing}
+            onNext={nextNote ? openNextNote : undefined}
             onUpdate={(note: SavedNote) => {
               if (selectedNoteId && selectedNoteId !== 'new-block') {
                 updateNote(note);
               } else {
                 addNote(note);
-                setSelectedNoteId(note.id);
+                dispatchNoteSheet({ type: 'saved', noteId: note.id, editorKind: 'block' });
               }
             }}
           />
         ) : (
           <NoteEditorContent
             noteId={selectedNoteId}
-            onClose={() => setIsSheetOpen(false)}
+            onClose={() => dispatchNoteSheet({ type: 'close' })}
             onEditModeChange={setIsEditing}
+            onNext={nextNote ? openNextNote : undefined}
             onUpdate={(note: SavedNote) => {
               if (selectedNoteId) {
                 updateNote(note);
               } else {
                 addNote(note);
-                setSelectedNoteId(note.id);
+                dispatchNoteSheet({ type: 'saved', noteId: note.id, editorKind: 'song' });
               }
             }}
           />

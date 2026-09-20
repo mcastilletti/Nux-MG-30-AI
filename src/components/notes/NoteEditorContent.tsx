@@ -405,6 +405,7 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
               ) : (
                 <h2 onClick={() => setIsDetailsOpen(!isDetailsOpen)} className="flex cursor-pointer items-center gap-2 text-2xl font-black text-primary transition-opacity hover:opacity-80 lg:text-3xl">
                   {title || "Scegli un brano..."}
+                  {noteId && (isDetailsOpen ? <ChevronUp className="h-5 w-5 opacity-40" /> : <ChevronDown className="h-5 w-5 opacity-40" />)}
                 </h2>
               )}
             </div>

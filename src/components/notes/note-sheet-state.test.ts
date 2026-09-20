@@ -3,6 +3,7 @@ import test from 'node:test';
 
 import {
   initialNoteSheetState,
+  getNoteSheetStateFromSearchParams,
   noteSheetReducer,
   type NoteSheetState,
 } from './note-sheet-state';
@@ -56,4 +57,28 @@ test('only the explicit close action transitions an open note to the list', () =
 
   assert.equal(noteSheetReducer(openState, { type: 'data-updated' }).isOpen, true);
   assert.equal(noteSheetReducer(openState, { type: 'close' }).isOpen, false);
+});
+
+test('restores an open note after a document reload', () => {
+  const restoredState = getNoteSheetStateFromSearchParams(
+    new URLSearchParams('openNote=song-42&noteKind=song'),
+  );
+
+  assert.deepEqual(restoredState, {
+    isOpen: true,
+    noteId: 'song-42',
+    editorKind: 'song',
+  });
+});
+
+test('restores a new unsaved note without inventing an id', () => {
+  const restoredState = getNoteSheetStateFromSearchParams(
+    new URLSearchParams('openNote=&noteKind=song'),
+  );
+
+  assert.deepEqual(restoredState, {
+    isOpen: true,
+    noteId: null,
+    editorKind: 'song',
+  });
 });

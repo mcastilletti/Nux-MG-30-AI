@@ -9,7 +9,7 @@ import { useNotesCache } from '@/stores/use-notes-cache';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { X, Save, Pencil } from 'lucide-react';
+import { ChevronRight, X, Save, Pencil } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface BlockEditorContentProps {
@@ -19,9 +19,10 @@ interface BlockEditorContentProps {
   onClose: () => void;
   onUpdate: (note: SavedNote) => void;
   onEditModeChange?: (isEditing: boolean) => void;
+  onNext?: () => void;
 }
 
-export function BlockEditorContent({ noteId, initialBand, initialSetlist, onClose, onUpdate, onEditModeChange }: BlockEditorContentProps) {
+export function BlockEditorContent({ noteId, initialBand, initialSetlist, onClose, onUpdate, onEditModeChange, onNext }: BlockEditorContentProps) {
   const { toast } = useToast();
   const { firestore } = useFirebase();
   const { user } = useUser();
@@ -102,7 +103,7 @@ export function BlockEditorContent({ noteId, initialBand, initialSetlist, onClos
 
   return (
     <div className="flex flex-col gap-6 h-full">
-      <div className="flex items-center justify-between gap-4 py-2 lg:py-4 border-b border-border/50">
+      <div className="sticky top-0 z-20 flex items-center justify-between gap-4 border-b border-border/50 bg-background py-2 lg:py-4">
         <div className="flex items-center gap-2 lg:gap-3 flex-1 min-w-0">
            <button onClick={onClose} className="h-9 w-9 lg:h-10 lg:w-10 rounded-full hover:bg-secondary/40 flex items-center justify-center">
               <X className="w-5 h-5 lg:w-6 lg:h-6" />
@@ -124,6 +125,11 @@ export function BlockEditorContent({ noteId, initialBand, initialSetlist, onClos
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {!editMode && onNext && (
+            <button onClick={onNext} className="h-9 w-9 lg:h-11 lg:w-11 text-muted-foreground rounded-full hover:bg-primary/10 hover:text-primary flex items-center justify-center" title="Nota successiva" aria-label="Apri la nota successiva">
+              <ChevronRight className="w-5 h-5 lg:w-7 lg:h-7" />
+            </button>
+          )}
           {!editMode && noteId && noteId !== 'new-block' && (
             <button onClick={() => setEditMode(true)} className="h-9 w-9 lg:h-11 lg:w-11 text-muted-foreground rounded-full hover:bg-primary/10 hover:text-primary flex items-center justify-center" title="Modifica">
               <Pencil className="w-5 h-5 lg:w-7 lg:h-7" />

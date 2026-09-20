@@ -23,7 +23,14 @@ import { NoteSheet } from '@/components/notes/NoteSheet';
 import { NoteEditorContent } from '@/components/notes/NoteEditorContent';
 import { BlockEditorContent } from '@/components/notes/BlockEditorContent';
 import { useNotesCache } from '@/stores/use-notes-cache';
-import { initialNoteSheetState, noteSheetReducer } from '@/components/notes/note-sheet-state';
+import {
+  getNoteSheetStateFromSearchParams,
+  initialNoteSheetState,
+  NOTE_SHEET_KIND_PARAM,
+  NOTE_SHEET_OPEN_PARAM,
+  noteSheetReducer,
+} from '@/components/notes/note-sheet-state';
+import { getNextNoteInSetlist } from '@/components/notes/note-navigation';
 import type { NoteSection, SavedNote } from '@/types/note';
 
 const SECTION_COLORS: Record<string, { bg: string; text: string; border: string }> = {
@@ -64,6 +71,7 @@ function NotesLibraryContent() {
 
   const [noteSheet, dispatchNoteSheet] = useReducer(noteSheetReducer, initialNoteSheetState);
   const { isOpen: isSheetOpen, noteId: selectedNoteId, editorKind } = noteSheet;
+  const hasRestoredNoteSheet = useRef(false);
   const [isEditing, setIsEditing] = useState(false);
   const [newBlockInitialBand, setNewBlockInitialBand] = useState<string | null>(null);
   const [newBlockInitialSetlist, setNewBlockInitialSetlist] = useState<string | null>(null);
@@ -78,6 +86,34 @@ function NotesLibraryContent() {
   const [isImporting, setIsImporting] = useState(false);
 
   const scrollToId = searchParams.get('scrollTo');
+
+  useEffect(() => {
+    if (!hasRestoredNoteSheet.current) {
+      hasRestoredNoteSheet.current = true;
+      const restoredState = getNoteSheetStateFromSearchParams(
+        new URLSearchParams(window.location.search),
+      );
+
+      if (restoredState) {
+        dispatchNoteSheet({
+          type: 'open',
+          noteId: restoredState.noteId,
+          editorKind: restoredState.editorKind,
+        });
+      }
+      return;
+    }
+
+    const url = new URL(window.location.href);
+    if (noteSheet.isOpen) {
+      url.searchParams.set(NOTE_SHEET_OPEN_PARAM, noteSheet.noteId ?? '');
+      url.searchParams.set(NOTE_SHEET_KIND_PARAM, noteSheet.editorKind);
+    } else {
+      url.searchParams.delete(NOTE_SHEET_OPEN_PARAM);
+      url.searchParams.delete(NOTE_SHEET_KIND_PARAM);
+    }
+    window.history.replaceState(window.history.state, '', url);
+  }, [noteSheet]);
 
   useEffect(() => {
     const savedBand = localStorage.getItem(FILTER_BAND_KEY);
@@ -137,6 +173,19 @@ function NotesLibraryContent() {
     if (searchQuery) notesToFilter = notesToFilter.filter(n => n.title.toLowerCase().includes(searchQuery.toLowerCase()));
     return notesToFilter;
   }, [cachedNotes, selectedBand, selectedSetlist, searchQuery]);
+
+  const nextNote = useMemo(() => {
+    return getNextNoteInSetlist(cachedNotes, selectedNoteId);
+  }, [cachedNotes, selectedNoteId]);
+
+  const openNextNote = () => {
+    if (!nextNote) return;
+    dispatchNoteSheet({
+      type: 'open',
+      noteId: nextNote.id,
+      editorKind: nextNote.type === 'block' ? 'block' : 'song',
+    });
+  };
 
   useEffect(() => {
     if (searchQuery.trim()) {
@@ -509,7 +558,7 @@ function NotesLibraryContent() {
                         dispatchNoteSheet({ type: 'open', noteId: note.id, editorKind: note.type === 'block' ? 'block' : 'song' });
                       }}
                       ref={(el) => { if(el) noteRefs.current[note.id] = el; }}
-                      isHighlighted={note.id === (isSheetOpen ? selectedNoteId : scrollToId)}
+                      isHighlighted={note.id === (selectedNoteId ?? scrollToId)}
                     />
                   ))}
                 </div>
@@ -674,6 +723,7 @@ function NotesLibraryContent() {
               setNewBlockInitialSetlist(null);
             }}
             onEditModeChange={setIsEditing}
+            onNext={nextNote ? openNextNote : undefined}
             onUpdate={(note: SavedNote) => {
               if (selectedNoteId && selectedNoteId !== 'new-block') {
                 updateNote(note);
@@ -688,6 +738,7 @@ function NotesLibraryContent() {
             noteId={selectedNoteId}
             onClose={() => dispatchNoteSheet({ type: 'close' })}
             onEditModeChange={setIsEditing}
+            onNext={nextNote ? openNextNote : undefined}
             onUpdate={(note: SavedNote) => {
               if (selectedNoteId) {
                 updateNote(note);

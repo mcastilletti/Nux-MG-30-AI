@@ -18,6 +18,26 @@ export const initialNoteSheetState: NoteSheetState = {
   editorKind: 'song',
 };
 
+export const NOTE_SHEET_OPEN_PARAM = 'openNote';
+export const NOTE_SHEET_KIND_PARAM = 'noteKind';
+
+export function getNoteSheetStateFromSearchParams(
+  searchParams: Pick<URLSearchParams, 'get'>,
+): NoteSheetState | null {
+  const openNote = searchParams.get(NOTE_SHEET_OPEN_PARAM);
+  const editorKind = searchParams.get(NOTE_SHEET_KIND_PARAM);
+
+  if (openNote === null || (editorKind !== 'song' && editorKind !== 'block')) {
+    return null;
+  }
+
+  return {
+    isOpen: true,
+    noteId: openNote || null,
+    editorKind,
+  };
+}
+
 /**
  * Keeps navigation state independent from the notes collection.
  *

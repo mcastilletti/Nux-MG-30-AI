@@ -383,72 +383,97 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
   return (
     <TooltipProvider>
       <div className="flex flex-col gap-6 h-full">
-        <div className="sticky top-0 z-20 flex items-center justify-between gap-2 border-b border-border/50 bg-background py-1 lg:gap-4 lg:py-4">
-          <div className="flex items-center gap-2 lg:gap-3 flex-1 min-w-0">
-             <button
-               onClick={onClose}
-               className="flex h-12 w-12 shrink-0 touch-manipulation select-none items-center justify-center rounded-xl border-2 border-destructive/70 bg-destructive/15 text-destructive shadow-md transition-colors hover:bg-destructive/25 active:bg-destructive/35 lg:h-14 lg:w-14"
-               title="Chiudi nota"
-               aria-label="Chiudi nota"
-             >
-                <X className="h-7 w-7 lg:h-8 lg:w-8" strokeWidth={3} />
-              </button>
-            <div className="flex flex-col flex-1 min-w-0">
+        <div className="sticky top-0 z-20 border-b border-white/10 bg-background/95 px-3 py-3 shadow-[0_10px_30px_-24px_hsl(var(--primary))] backdrop-blur-xl lg:px-5">
+          <div className="grid min-h-11 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex h-11 w-11 shrink-0 touch-manipulation items-center justify-center rounded-xl border border-border/80 bg-secondary/70 text-muted-foreground shadow-sm transition-[background-color,border-color,color,transform] duration-150 hover:border-destructive/40 hover:bg-destructive/10 hover:text-destructive active:scale-95"
+              title="Chiudi nota"
+              aria-label="Chiudi nota"
+            >
+              <X className="h-5 w-5" strokeWidth={2.25} />
+            </button>
+
+            <div className="min-w-0">
+              <span className="section-kicker block leading-none">Nota brano</span>
               {editMode ? (
-                <Input 
-                  placeholder="Titolo Brano..." 
-                  value={title} 
-                  onChange={(e) => setTitle(e.target.value)} 
-                  className="h-11 border-none bg-transparent p-0 text-2xl font-black text-primary shadow-none focus-visible:ring-0 lg:text-3xl"
+                <Input
+                  aria-label="Titolo brano"
+                  placeholder="Titolo brano..."
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  className="mt-1 h-8 border-none bg-transparent p-0 text-xl font-bold leading-tight text-foreground shadow-none focus-visible:ring-0 lg:text-2xl"
                   autoFocus
                 />
               ) : (
-                <h2 onClick={() => setIsDetailsOpen(!isDetailsOpen)} className="flex cursor-pointer items-center gap-2 text-2xl font-black text-primary transition-opacity hover:opacity-80 lg:text-3xl">
-                  {title || "Scegli un brano..."}
-                  {noteId && (isDetailsOpen ? <ChevronUp className="h-5 w-5 opacity-40" /> : <ChevronDown className="h-5 w-5 opacity-40" />)}
-                </h2>
+                <button
+                  type="button"
+                  onClick={() => setIsDetailsOpen(!isDetailsOpen)}
+                  className="mt-1 flex max-w-full items-center gap-1.5 text-left text-xl font-bold leading-tight text-foreground transition-colors hover:text-primary lg:text-2xl"
+                  aria-expanded={isDetailsOpen}
+                  title="Mostra dettagli brano"
+                >
+                  <span className="truncate">{title || "Scegli un brano..."}</span>
+                  {noteId && (isDetailsOpen ? <ChevronUp className="h-4 w-4 shrink-0 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />)}
+                </button>
               )}
             </div>
-          </div>
-          <div className="flex items-center gap-2">
-            {!editMode && onNext && (
-              <button onClick={onNext} className="h-9 w-9 lg:h-11 lg:w-11 text-muted-foreground rounded-full hover:bg-primary/10 hover:text-primary flex items-center justify-center" title="Nota successiva" aria-label="Apri la nota successiva">
-                <ChevronRight className="w-5 h-5 lg:w-7 lg:h-7" />
-              </button>
-            )}
-            {!editMode && noteId && (
-              <button onClick={() => setEditMode(true)} className="h-9 w-9 lg:h-11 lg:w-11 text-muted-foreground rounded-full hover:bg-primary/10 hover:text-primary flex items-center justify-center" title="Modifica">
-                <Pencil className="w-5 h-5 lg:w-7 lg:h-7" />
-              </button>
-            )}
-            {!editMode && onNext && (
-              <button
-                onClick={onNext}
-                className="flex h-12 w-12 shrink-0 touch-manipulation select-none items-center justify-center rounded-xl border-2 border-primary bg-primary text-primary-foreground shadow-lg shadow-primary/25 transition-colors hover:bg-primary/90 active:bg-primary/75 lg:h-14 lg:w-14"
-                title="Nota successiva"
-                aria-label="Apri la nota successiva"
-              >
-                <ChevronRight className="h-8 w-8 lg:h-9 lg:w-9" strokeWidth={3} />
-              </button>
-            )}
-            {editMode && (
-              <div className="flex items-center gap-2">
-                <button onClick={() => {
-                   if (noteId) {
-                      const note = getNoteById(noteId);
-                      if (note) loadNote(note);
-                      setEditMode(false);
-                   } else {
-                      onClose();
-                   }
-                }} className="h-9 w-9 lg:h-11 lg:w-11 text-muted-foreground rounded-full hover:bg-destructive/10 hover:text-destructive flex items-center justify-center" title="Annulla">
-                  <X className="w-5 h-5 lg:w-7 lg:h-7" />
+
+            <div className="flex items-center gap-2">
+              {!editMode && noteId && (
+                <button
+                  type="button"
+                  onClick={() => setEditMode(true)}
+                  className="flex h-11 w-11 items-center justify-center rounded-xl border border-border/80 bg-secondary/70 text-muted-foreground shadow-sm transition-[background-color,border-color,color,transform] duration-150 hover:border-primary/40 hover:bg-primary/10 hover:text-primary active:scale-95"
+                  title="Modifica nota"
+                  aria-label="Modifica nota"
+                >
+                  <Pencil className="h-5 w-5" />
                 </button>
-                <button onClick={handleSaveNote} className="h-9 w-9 lg:h-11 lg:w-11 bg-primary shadow-lg rounded-full flex items-center justify-center" title="Salva">
-                  <Save className="w-5 h-5 lg:w-7 lg:h-7" />
+              )}
+              {!editMode && onNext && (
+                <button
+                  type="button"
+                  onClick={onNext}
+                  className="flex h-11 w-11 items-center justify-center rounded-xl border border-primary/30 bg-primary text-primary-foreground shadow-md shadow-primary/20 transition-[background-color,box-shadow,transform] duration-150 hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/25 active:scale-95"
+                  title="Nota successiva"
+                  aria-label="Apri la nota successiva"
+                >
+                  <ChevronRight className="h-5 w-5" strokeWidth={2.5} />
                 </button>
-              </div>
-            )}
+              )}
+              {editMode && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (noteId) {
+                        const note = getNoteById(noteId);
+                        if (note) loadNote(note);
+                        setEditMode(false);
+                      } else {
+                        onClose();
+                      }
+                    }}
+                    className="flex h-11 w-11 items-center justify-center rounded-xl border border-border/80 bg-secondary/70 text-muted-foreground shadow-sm transition-[background-color,border-color,color,transform] duration-150 hover:border-destructive/40 hover:bg-destructive/10 hover:text-destructive active:scale-95"
+                    title="Annulla modifiche"
+                    aria-label="Annulla modifiche"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSaveNote}
+                    className="flex h-11 w-11 items-center justify-center rounded-xl border border-primary/30 bg-primary text-primary-foreground shadow-md shadow-primary/20 transition-[background-color,box-shadow,transform] duration-150 hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/25 active:scale-95"
+                    title="Salva nota"
+                    aria-label="Salva nota"
+                  >
+                    <Save className="h-5 w-5" />
+                  </button>
+                </>
+              )}
+            </div>
           </div>
         </div>
 

@@ -5,14 +5,14 @@ import { useMidiStore } from '@/stores/use-midi-store';
 import { useToast } from '@/hooks/use-toast';
 import { useFirebase, useUser } from '@/firebase';
 import { collection, addDoc, doc, updateDoc, serverTimestamp } from 'firebase/firestore';
-import { NoteSection, SavedNote } from '@/app/notes/page';
+import type { NoteSection, SavedNote } from '@/types/note';
 import { useNotesCache } from '@/stores/use-notes-cache';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Plus, Trash2, ChevronDown, ChevronUp, Save, Layers, Pencil, X, Copy, ArrowUp, ArrowDown, MoreVertical } from 'lucide-react';
+import { Plus, Trash2, ChevronDown, ChevronUp, ChevronRight, Save, Layers, Pencil, X, Copy, ArrowUp, ArrowDown, MoreVertical } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
@@ -60,6 +60,7 @@ interface NoteEditorContentProps {
   onClose: () => void;
   onUpdate: (note: SavedNote) => void;
   onEditModeChange?: (isEditing: boolean) => void;
+  onNext?: () => void;
 }
 
 function ChordPicker({ onSelect, step, setStep, selectedLetter, setSelectedLetter, selectedRoot, setSelectedRoot }: any) {
@@ -170,7 +171,7 @@ function ChordPicker({ onSelect, step, setStep, selectedLetter, setSelectedLette
   return null;
 }
 
-export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange }: NoteEditorContentProps) {
+export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange, onNext }: NoteEditorContentProps) {
   const { devicePresets, status, sendProgramChange, sendSceneChange } = useMidiStore();
   const { toast } = useToast();
   const { firestore } = useFirebase();
@@ -262,8 +263,9 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange 
     setIsNotesOpen(true);
     if (note.presetSlot && status === 'connected') {
       sendProgramChange(parseInt(note.presetSlot) - 1);
-      if (note.presetScene) {
-        setTimeout(() => sendSceneChange(parseInt(note.presetScene)), 500);
+      if (note.presetScene !== undefined) {
+        const presetScene = note.presetScene;
+        setTimeout(() => sendSceneChange(parseInt(presetScene)), 500);
       }
     }
   };
@@ -381,10 +383,15 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange 
   return (
     <TooltipProvider>
       <div className="flex flex-col gap-6 h-full">
-        <div className="flex items-center justify-between gap-2 lg:gap-4 py-1 lg:py-4 border-b border-border/50">
+        <div className="sticky top-0 z-20 flex items-center justify-between gap-2 border-b border-border/50 bg-background py-1 lg:gap-4 lg:py-4">
           <div className="flex items-center gap-2 lg:gap-3 flex-1 min-w-0">
-             <button onClick={onClose} className="h-9 w-9 lg:h-10 lg:w-10 rounded-full hover:bg-secondary/40 flex items-center justify-center">
-                <X className="w-5 h-5 lg:w-6 lg:h-6" />
+             <button
+               onClick={onClose}
+               className="flex h-12 w-12 shrink-0 touch-manipulation select-none items-center justify-center rounded-xl border-2 border-destructive/70 bg-destructive/15 text-destructive shadow-md transition-colors hover:bg-destructive/25 active:bg-destructive/35 lg:h-14 lg:w-14"
+               title="Chiudi nota"
+               aria-label="Chiudi nota"
+             >
+                <X className="h-7 w-7 lg:h-8 lg:w-8" strokeWidth={3} />
               </button>
             <div className="flex flex-col flex-1 min-w-0">
               {editMode ? (
@@ -392,13 +399,12 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange 
                   placeholder="Titolo Brano..." 
                   value={title} 
                   onChange={(e) => setTitle(e.target.value)} 
-                  className="text-xl font-black h-10 bg-transparent border-none shadow-none focus-visible:ring-0 p-0 text-primary" 
+                  className="h-11 border-none bg-transparent p-0 text-2xl font-black text-primary shadow-none focus-visible:ring-0 lg:text-3xl"
                   autoFocus
                 />
               ) : (
-                <h2 onClick={() => setIsDetailsOpen(!isDetailsOpen)} className="text-xl font-black text-primary cursor-pointer hover:opacity-80 transition-opacity flex items-center gap-2">
+                <h2 onClick={() => setIsDetailsOpen(!isDetailsOpen)} className="flex cursor-pointer items-center gap-2 text-2xl font-black text-primary transition-opacity hover:opacity-80 lg:text-3xl">
                   {title || "Scegli un brano..."}
-                  {noteId && (isDetailsOpen ? <ChevronUp className="w-5 h-5 opacity-40" /> : <ChevronDown className="w-5 h-5 opacity-40" />)}
                 </h2>
               )}
             </div>
@@ -407,6 +413,16 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange 
             {!editMode && noteId && (
               <button onClick={() => setEditMode(true)} className="h-9 w-9 lg:h-11 lg:w-11 text-muted-foreground rounded-full hover:bg-primary/10 hover:text-primary flex items-center justify-center" title="Modifica">
                 <Pencil className="w-5 h-5 lg:w-7 lg:h-7" />
+              </button>
+            )}
+            {!editMode && onNext && (
+              <button
+                onClick={onNext}
+                className="flex h-12 w-12 shrink-0 touch-manipulation select-none items-center justify-center rounded-xl border-2 border-primary bg-primary text-primary-foreground shadow-lg shadow-primary/25 transition-colors hover:bg-primary/90 active:bg-primary/75 lg:h-14 lg:w-14"
+                title="Nota successiva"
+                aria-label="Apri la nota successiva"
+              >
+                <ChevronRight className="h-8 w-8 lg:h-9 lg:w-9" strokeWidth={3} />
               </button>
             )}
             {editMode && (

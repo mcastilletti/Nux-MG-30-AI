@@ -75,7 +75,7 @@ function NoteEditorContent() {
   const { devicePresets, status, sendProgramChange, sendSceneChange } = useMidiStore();
   const { toast } = useToast();
   const { firestore } = useFirebase();
-  const { user, loading: userLoading } = useUser();
+  const { user, isUserLoading: userLoading } = useUser();
   
   const [savedNotes, setSavedNotes] = useState<SavedNote[]>([]);
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(noteIdFromUrl);
@@ -177,8 +177,9 @@ function NoteEditorContent() {
     setIsNotesOpen(true);
     if (note.presetSlot && status === 'connected') {
       sendProgramChange(parseInt(note.presetSlot) - 1);
-      if (note.presetScene) {
-        setTimeout(() => sendSceneChange(parseInt(note.presetScene)), 500);
+      if (note.presetScene !== undefined) {
+        const presetScene = note.presetScene;
+        setTimeout(() => sendSceneChange(parseInt(presetScene)), 500);
       }
     }
   };

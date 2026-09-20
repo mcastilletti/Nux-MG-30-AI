@@ -405,7 +405,7 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
               ) : (
                 <h2 onClick={() => setIsDetailsOpen(!isDetailsOpen)} className="flex cursor-pointer items-center gap-2 text-2xl font-black text-primary transition-opacity hover:opacity-80 lg:text-3xl">
                   {title || "Scegli un brano..."}
-                  {noteId && (isDetailsOpen ? <ChevronUp className="w-5 h-5 opacity-40" /> : <ChevronDown className="w-5 h-5 opacity-40" />)}
+                  {noteId && (isDetailsOpen ? <ChevronUp className="h-5 w-5 opacity-40" /> : <ChevronDown className="h-5 w-5 opacity-40" />)}
                 </h2>
               )}
             </div>
@@ -424,12 +424,11 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
             {!editMode && onNext && (
               <button
                 onClick={onNext}
-                className="flex h-12 min-w-20 shrink-0 touch-manipulation select-none items-center justify-center gap-1 rounded-xl border-2 border-primary bg-primary px-2 text-primary-foreground shadow-lg shadow-primary/25 transition-colors hover:bg-primary/90 active:bg-primary/75 lg:h-14 lg:min-w-24"
+                className="flex h-12 w-12 shrink-0 touch-manipulation select-none items-center justify-center rounded-xl border-2 border-primary bg-primary text-primary-foreground shadow-lg shadow-primary/25 transition-colors hover:bg-primary/90 active:bg-primary/75 lg:h-14 lg:w-14"
                 title="Nota successiva"
                 aria-label="Apri la nota successiva"
               >
-                <span className="text-xs font-black uppercase tracking-wide lg:text-sm">Avanti</span>
-                <ChevronRight className="h-7 w-7 lg:h-8 lg:w-8" strokeWidth={3} />
+                <ChevronRight className="h-8 w-8 lg:h-9 lg:w-9" strokeWidth={3} />
               </button>
             )}
             {editMode && (

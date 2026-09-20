@@ -30,8 +30,8 @@ import {
   NOTE_SHEET_OPEN_PARAM,
   noteSheetReducer,
 } from '@/components/notes/note-sheet-state';
-import { getNextNoteInSetlist } from '@/components/notes/note-navigation';
 import type { NoteSection, SavedNote } from '@/types/note';
+import { getNextNoteInSetlist } from '@/components/notes/note-navigation';
 
 const SECTION_COLORS: Record<string, { bg: string; text: string; border: string }> = {
   Intro: { bg: "bg-cyan-500/15", text: "text-cyan-400", border: "border-cyan-500/40" },

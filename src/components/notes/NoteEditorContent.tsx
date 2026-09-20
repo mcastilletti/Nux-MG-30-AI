@@ -385,8 +385,13 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
       <div className="flex flex-col gap-6 h-full">
         <div className="sticky top-0 z-20 flex items-center justify-between gap-2 border-b border-border/50 bg-background py-1 lg:gap-4 lg:py-4">
           <div className="flex items-center gap-2 lg:gap-3 flex-1 min-w-0">
-             <button onClick={onClose} className="h-9 w-9 lg:h-10 lg:w-10 rounded-full hover:bg-secondary/40 flex items-center justify-center">
-                <X className="w-5 h-5 lg:w-6 lg:h-6" />
+             <button
+               onClick={onClose}
+               className="flex h-12 w-12 shrink-0 touch-manipulation select-none items-center justify-center rounded-xl border-2 border-destructive/70 bg-destructive/15 text-destructive shadow-md transition-colors hover:bg-destructive/25 active:bg-destructive/35 lg:h-14 lg:w-14"
+               title="Chiudi nota"
+               aria-label="Chiudi nota"
+             >
+                <X className="h-7 w-7 lg:h-8 lg:w-8" strokeWidth={3} />
               </button>
             <div className="flex flex-col flex-1 min-w-0">
               {editMode ? (
@@ -414,6 +419,16 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
             {!editMode && noteId && (
               <button onClick={() => setEditMode(true)} className="h-9 w-9 lg:h-11 lg:w-11 text-muted-foreground rounded-full hover:bg-primary/10 hover:text-primary flex items-center justify-center" title="Modifica">
                 <Pencil className="w-5 h-5 lg:w-7 lg:h-7" />
+              </button>
+            )}
+            {!editMode && onNext && (
+              <button
+                onClick={onNext}
+                className="flex h-12 w-12 shrink-0 touch-manipulation select-none items-center justify-center rounded-xl border-2 border-primary bg-primary text-primary-foreground shadow-lg shadow-primary/25 transition-colors hover:bg-primary/90 active:bg-primary/75 lg:h-14 lg:w-14"
+                title="Nota successiva"
+                aria-label="Apri la nota successiva"
+              >
+                <ChevronRight className="h-8 w-8 lg:h-9 lg:w-9" strokeWidth={3} />
               </button>
             )}
             {editMode && (

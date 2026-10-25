@@ -534,7 +534,7 @@ F0 Baseline ──┬─► F0b Correzioni P0 ───────────�
   - screenshot identici alla baseline dopo l'introduzione dei token;
   - componenti con test di accessibilità di base.
 
-### Fase 3 — Progettazione della sezione Note (M)
+### Fase 3 — Progettazione della sezione Note (M) — 📝 specifica e prototipo da approvare (`docs/spec-note-live.md`)
 - **Deliverable:**
   - specifica funzionale approvata di:
     - lettura in prova;

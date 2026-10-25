@@ -27,3 +27,13 @@ test('impostazione invio automatico', () => {
   assert.equal(readAutoSendSetting({ getItem: () => 'off' }), false);
   assert.equal(readAutoSendSetting({ getItem: () => { throw new Error('blocked'); } }), true);
 });
+
+test('etichetta del preset: stato e testo', async () => {
+  const { getPresetChipState, formatPresetLabel } = await import('./preset-send');
+  assert.deepEqual(getPresetChipState({ connected: false, sent: true }), { text: 'non collegata', tone: 'muted' });
+  assert.deepEqual(getPresetChipState({ connected: true, sent: true }), { text: 'inviato', tone: 'success' });
+  assert.equal(getPresetChipState({ connected: true, sent: false }).text, 'tocca per inviare');
+  assert.equal(formatPresetLabel('03B', '1'), '03B · S2');
+  assert.equal(formatPresetLabel('03B', ''), '03B');
+  assert.equal(formatPresetLabel('03B', '9'), '03B');
+});

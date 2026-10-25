@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prototipo Note Live</title>
+<!-- Prototipo statico della specifica docs/spec-note-live.md. Non è codice dell'app. -->
+<style>
+  :root {
+    --bg: hsl(240 10% 3%); --card: hsl(240 10% 5%); --secondary: hsl(240 10% 10%); --border: hsl(240 10% 12%);
+    --fg: hsl(0 0% 99%); --muted: hsl(0 0% 75%); --primary: hsl(261 43% 65%); --primary-fg: hsl(240 10% 6%);
+    --success: hsl(142.1 70.6% 45.3%); --warning: hsl(37.7 92.1% 50.2%);
+    --intro: #22d3ee; --verse: #4ade80; --chorus: #facc15; --solo: #f97316;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body { background: #1b1b22; color: var(--fg); font-family: Outfit, system-ui, -apple-system, "Segoe UI", sans-serif; padding: 24px; }
+  h1 { font-size: 18px; margin-bottom: 4px; } .lead { color: var(--muted); font-size: 13px; margin-bottom: 20px; }
+  .row { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start; }
+  figure { display: flex; flex-direction: column; gap: 8px; } figcaption { font-size: 13px; color: var(--muted); max-width: 360px; }
+  figcaption b { color: var(--fg); }
+  .phone { width: 360px; height: 740px; background: var(--bg); border-radius: 28px; border: 1px solid #333; overflow: hidden; position: relative; display: flex; flex-direction: column; }
+  .status { height: 24px; font-size: 11px; color: var(--muted); display: flex; justify-content: space-between; padding: 4px 18px; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; min-width: 44px; border-radius: 12px; border: 1px solid var(--border); background: var(--secondary); color: var(--fg); font: inherit; font-size: 14px; font-weight: 600; padding: 0 12px; }
+  .btn.primary { background: var(--primary); color: var(--primary-fg); border-color: transparent; }
+  .chip { white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; border-radius: 999px; border: 1px solid var(--border); font-size: 12px; font-weight: 600; }
+  .chip.ok { color: var(--success); border-color: color-mix(in srgb, var(--success) 50%, transparent); }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+  /* lista */
+  .appbar { height: 56px; display: flex; align-items: center; gap: 10px; padding: 0 16px; border-bottom: 1px solid var(--border); font-weight: 600; }
+  .content { flex: 1; overflow: hidden; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+  .filters { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .select { height: 44px; border: 1px solid var(--border); border-radius: 12px; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; font-size: 14px; background: var(--card); }
+  .item { display: flex; align-items: center; gap: 12px; min-height: 60px; padding: 8px 12px; border: 1px solid var(--border); border-radius: 14px; background: var(--card); }
+  .item .n { width: 22px; color: var(--muted); font-weight: 700; } .item .t { flex: 1; font-weight: 700; } .item .p { font-size: 12px; color: var(--primary); font-weight: 700; }
+  .nav { margin: 0 12px 12px; display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; padding: 6px; border-radius: 16px; border: 1px solid var(--border); background: hsl(240 10% 2%); font-size: 11px; color: var(--muted); text-align: center; }
+  .nav span { padding: 10px 0; border-radius: 10px; } .nav .on { background: color-mix(in srgb, var(--primary) 15%, transparent); color: var(--primary); }
+  /* foglio */
+  .sheethead { padding: 12px 16px; display: flex; gap: 10px; align-items: flex-start; border-bottom: 1px solid var(--border); }
+  .kicker { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+  .title { font-size: 20px; font-weight: 800; line-height: 1.2; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .sections { flex: 1; overflow: hidden; padding: 14px 16px; display: flex; flex-direction: column; gap: 14px; }
+  .sec { display: grid; grid-template-columns: 64px 1fr; gap: 10px; }
+  .tag { font-size: 11px; font-weight: 800; border-radius: 999px; padding: 4px 8px; height: fit-content; text-align: center; }
+  .chords { display: flex; flex-wrap: wrap; gap: 6px; } .ch { font-size: 20px; font-weight: 800; padding: 2px 10px; border-radius: 999px; border: 1px solid var(--border); }
+  .lyr { font-size: 16px; font-weight: 600; margin-top: 6px; }
+  .bottombar { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; padding: 10px 12px 14px; border-top: 1px solid var(--border); background: var(--card); }
+  .bottombar .btn { min-height: 48px; } .pos { font-weight: 800; color: var(--muted); font-variant-numeric: tabular-nums; }
+  /* live */
+  .live { background: #000; }
+  .livehead { padding: 10px 14px; display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; border-bottom: 1px solid #222; }
+  .livehead .title { font-size: 18px; }
+  .lsec { display: grid; grid-template-columns: 6px 1fr; gap: 12px; }
+  .bar { border-radius: 3px; } .lname { font-size: 13px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; margin-bottom: 6px; }
+  .lch { font-size: 28px; font-weight: 800; color: #fafafa; margin-right: 14px; } .lly { font-size: 22px; font-weight: 600; color: #f4f4f5; line-height: 1.4; margin-top: 4px; }
+  .livebar { display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px; padding: 10px 12px 16px; background: #0a0a0a; border-top: 1px solid #222; }
+  .livebar .btn { min-height: 64px; font-size: 18px; background: #18181b; }
+  .livebar .btn.primary { background: var(--primary); color: var(--primary-fg); }
+  .lock { position: relative; width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center; border: 2px solid #333; font-size: 20px; }
+  .lock.on { border-color: var(--warning); color: var(--warning); }
+  .ring { position: absolute; inset: -4px; border-radius: 50%; background: conic-gradient(var(--warning) 0 62%, transparent 62% 100%); -webkit-mask: radial-gradient(circle, transparent 25px, #000 26px); mask: radial-gradient(circle, transparent 25px, #000 26px); }
+  .hint { position: absolute; left: 50%; bottom: 100px; transform: translateX(-50%); background: #18181b; border: 1px solid #333; color: #fafafa; font-size: 13px; padding: 8px 12px; border-radius: 10px; white-space: nowrap; }
+  .wake { white-space: nowrap; font-size: 11px; color: var(--success); display: flex; align-items: center; gap: 4px; }
+  .note { margin-top: 28px; max-width: 1560px; color: var(--muted); font-size: 13px; line-height: 1.5; }
+</style>
+</head>
+<body>
+<h1>Note in prova e dal vivo: prototipo statico</h1>
+<p class="lead">Specifica: docs/spec-note-live.md. Larghezza 360px (telefono piccolo). Solo per approvazione: non è codice dell'app.</p>
+<div class="row">
+
+<figure>
+  <div class="phone">
+    <div class="status"><span>21:30</span><span>● ●</span></div>
+    <div class="appbar"><span>Note</span><span class="chip ok" style="margin-left:auto"><span class="dot"></span>MG-30 collegata</span></div>
+    <div class="content">
+      <div class="filters"><div class="select">Demo Band <span>▾</span></div><div class="select">Live 2026 <span>▾</span></div></div>
+      <button class="btn primary" style="min-height:52px;font-size:16px">▶ Avvia live · 12 brani</button>
+      <div class="item"><span class="n">1</span><span class="t">Wonderwall</span><span class="p">03B · S2</span><span>⋮</span></div>
+      <div class="item"><span class="n">2</span><span class="t">Don't Look Back in Anger</span><span class="p">05A</span><span>⋮</span></div>
+      <div class="item"><span class="n">3</span><span class="t" style="color:var(--primary)">Pausa / cambio accordatura</span><span>⋮</span></div>
+      <div class="item"><span class="n">4</span><span class="t">Champagne Supernova</span><span class="p">07C · S1</span><span>⋮</span></div>
+    </div>
+    <div class="nav"><span>Editor</span><span>Library</span><span class="on">Note</span><span>Band</span><span>Altro</span></div>
+  </div>
+  <figcaption><b>Lista.</b> "Avvia live" compare solo con band e scaletta selezionate e parte dal primo brano. La barra in basso segue la nuova navigazione approvata (con "Altro").</figcaption>
+</figure>
+
+<figure>
+  <div class="phone">
+    <div class="status"><span>21:31</span><span>● ●</span></div>
+    <div class="sheethead">
+      <button class="btn">✕</button>
+      <div style="flex:1;min-width:0">
+        <div class="kicker">Nota brano</div>
+        <div class="title" title="Wonderwall (intro lunga, versione acustica)">Wonderwall (intro lunga, versione acustica)</div>
+        <div style="margin-top:8px"><span class="chip ok"><span class="dot"></span>03B · S2 · inviato</span></div>
+      </div>
+      <button class="btn">✎</button><button class="btn">⋮</button>
+    </div>
+    <div class="sections">
+      <div class="sec"><span class="tag" style="color:var(--intro);border:1px solid var(--intro)">INTRO</span><div><div class="chords"><span class="ch" style="color:var(--intro)">Em7</span><span class="ch" style="color:var(--intro)">G</span><span class="ch" style="color:var(--intro)">Dsus4</span><span class="ch" style="color:var(--primary)">x2</span></div><div class="lyr">Arpeggio leggero</div></div></div>
+      <div class="sec"><span class="tag" style="color:var(--verse);border:1px solid var(--verse)">VERSE</span><div><div class="chords"><span class="ch" style="color:var(--verse)">Em7</span><span class="ch" style="color:var(--verse)">G</span><span class="ch" style="color:var(--verse)">Dsus4</span><span class="ch" style="color:var(--verse)">A7sus4</span></div><div class="lyr">Today is gonna be the day</div></div></div>
+      <div class="sec"><span class="tag" style="color:var(--chorus);border:1px solid var(--chorus)">CHORUS</span><div><div class="chords"><span class="ch" style="color:var(--chorus)">Cadd9</span><span class="ch" style="color:var(--chorus)">Em7</span><span class="ch" style="color:var(--chorus)">G</span></div><div class="lyr">Pieno, gain su</div></div></div>
+    </div>
+    <div class="bottombar"><button class="btn">◀ Prec</button><span class="pos">1 / 12</span><button class="btn primary">Succ ▶</button></div>
+  </div>
+  <figcaption><b>Lettura in prova.</b> Titolo su due righe, chip del preset con lo stato dell'invio (tocco = invia di nuovo), barra Prec/Succ con posizione. Nel menu ⋮: A−/A+, Avvia live da qui, invio automatico.</figcaption>
+</figure>
+
+<figure>
+  <div class="phone live">
+    <div class="status"><span>21:45</span><span>● ●</span></div>
+    <div class="livehead">
+      <span class="pos" style="font-size:16px">2 / 12</span>
+      <div style="min-width:0"><div class="title">Don't Look Back in Anger</div><div style="display:flex;gap:8px;margin-top:6px;align-items:center"><span class="chip ok"><span class="dot"></span>05A · inviato</span><span class="wake">☀ schermo acceso</span></div></div>
+      <div class="lock">🔓</div>
+    </div>
+    <div class="sections" style="gap:22px">
+      <div class="lsec"><span class="bar" style="background:var(--intro)"></span><div><div class="lname" style="color:var(--intro)">Intro</div><div><span class="lch">C</span><span class="lch">G</span><span class="lch">Am</span><span class="lch">E</span></div><div><span class="lch">F</span><span class="lch">G</span><span class="lch">C</span><span class="lch">G</span></div></div></div>
+      <div class="lsec"><span class="bar" style="background:var(--chorus)"></span><div><div class="lname" style="color:var(--chorus)">Chorus</div><div><span class="lch">C</span><span class="lch">G</span><span class="lch">Am</span><span class="lch">E</span><span class="lch">F</span><span class="lch">G</span></div><div class="lly">So Sally can wait, she knows it's too late…</div></div></div>
+    </div>
+    <div class="livebar"><button class="btn">◀ Prec</button><span class="pos" style="align-self:center">A− A+</span><button class="btn primary">Succ ▶</button></div>
+  </div>
+  <figcaption><b>Live.</b> Sola lettura, accordi 28px e testo 22px, fondo nero e colore di sezione come barra laterale. Comandi alti 64px. Nessuna matita, nessun cestino.</figcaption>
+</figure>
+
+<figure>
+  <div class="phone live">
+    <div class="status"><span>21:52</span><span>● ●</span></div>
+    <div class="livehead">
+      <span class="pos" style="font-size:16px">5 / 12</span>
+      <div style="min-width:0"><div class="title">Champagne Supernova</div><div style="display:flex;gap:8px;margin-top:6px;align-items:center"><span class="chip ok"><span class="dot"></span>07C · S1 · inviato</span></div></div>
+      <div class="lock on"><span class="ring"></span>🔒</div>
+    </div>
+    <div class="hint">Tieni premuto 1 s per sbloccare</div>
+    <div class="sections" style="gap:22px;opacity:.95">
+      <div class="lsec"><span class="bar" style="background:var(--verse)"></span><div><div class="lname" style="color:var(--verse)">Verse</div><div><span class="lch">A</span><span class="lch">Asus2/G</span><span class="lch">F#m</span></div><div class="lly">How many special people change…</div></div></div>
+      <div class="lsec"><span class="bar" style="background:var(--solo)"></span><div><div class="lname" style="color:var(--solo)">Solo</div><div><span class="lch">E</span><span class="lch">D</span><span class="lch">A</span></div></div></div>
+    </div>
+    <div class="livebar"><button class="btn">◀ Prec</button><span></span><button class="btn primary">Succ ▶</button></div>
+  </div>
+  <figcaption><b>Live bloccata.</b> Restano attivi solo Prec/Succ. Per sbloccare o uscire serve una pressione prolungata di 1 s sul lucchetto (anello di avanzamento). Il blocco resta attivo passando da un brano all'altro.</figcaption>
+</figure>
+
+</div>
+<p class="note">Fuori ambito: pedali Bluetooth (D4), auto-scroll, swipe, controllo dalla pedaliera, tema chiaro.</p>
+</body>
+</html>

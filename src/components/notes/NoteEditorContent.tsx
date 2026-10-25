@@ -4,7 +4,7 @@ import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useMidiStore } from '@/stores/use-midi-store';
 import { useToast } from '@/hooks/use-toast';
 import { useFirebase, useUser } from '@/firebase';
-import { collection, addDoc, doc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, doc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import type { NoteSection, SavedNote } from '@/types/note';
 import { useNotesCache } from '@/stores/use-notes-cache';
 import { getNoteLoadAction } from './note-load-action';
@@ -30,6 +30,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { formatSlotLabel, matchesSlotSearch } from '@/lib/slot';
 import { SaveStatus } from '@/components/common/save-status';
+import { awaitWrite, isOnline } from '@/lib/firestore-write';
 
 
 
@@ -330,19 +331,19 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
     savingRef.current = true;
     setIsSaving(true);
     try {
-      if (noteId) {
-        await updateDoc(doc(firestore, "notes", noteId), noteData);
-        onUpdate({ ...noteData, id: noteId } as SavedNote);
-      } else {
-        const docRef = await addDoc(collection(firestore, "notes"), noteData);
-        // La nota appena creata è già nell'editor: non va ricaricata (né il preset reinviato).
-        loadedNoteIdRef.current = docRef.id;
-        onUpdate({ ...noteData, id: docRef.id } as SavedNote);
-      }
+      const isNew = !noteId;
+      const ref = isNew ? doc(collection(firestore, "notes")) : doc(firestore, "notes", noteId!);
+      // Offline la scrittura resta in coda sul dispositivo: non si attende il server (scenario 9).
+      const outcome = await awaitWrite(isNew ? setDoc(ref, noteData) : updateDoc(ref, noteData), { online: isOnline() });
+      // Una nota appena creata è già nell'editor: non va ricaricata (né il preset reinviato).
+      if (isNew) loadedNoteIdRef.current = ref.id;
+      onUpdate({ ...noteData, id: ref.id } as SavedNote);
       savedDraftRef.current = currentDraft;
       setSaveFailed(false);
       setEditMode(false);
-      toast({ title: "Nota Salvata nel Cloud" });
+      toast(outcome === 'synced'
+        ? { title: "Nota salvata" }
+        : { title: "Salvata sul dispositivo", description: "Verrà sincronizzata con il tuo account appena torna la connessione." });
     } catch (err) {
       setSaveFailed(true);
       toast({ title: "Errore salvataggio cloud", variant: "destructive" });

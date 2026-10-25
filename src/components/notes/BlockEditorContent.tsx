@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useFirebase, useUser } from '@/firebase';
-import { collection, doc, updateDoc, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, doc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import type { SavedNote } from '@/types/note';
 import { useNotesCache } from '@/stores/use-notes-cache';
 import { Input } from '@/components/ui/input';
@@ -17,6 +17,7 @@ import { serializeDraft } from './note-draft';
 import { useUnsavedChangesGuard } from '@/hooks/use-unsaved-changes-guard';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { SaveStatus } from '@/components/common/save-status';
+import { awaitWrite, isOnline } from '@/lib/firestore-write';
 
 interface BlockEditorContentProps {
   noteId: string | null;
@@ -120,18 +121,19 @@ export function BlockEditorContent({ noteId, initialBand, initialSetlist, onClos
     savingRef.current = true;
     setIsSaving(true);
     try {
-      if (noteId && noteId !== 'new-block') {
-        await updateDoc(doc(firestore, "notes", noteId), noteData);
-        onUpdate({ ...noteData, id: noteId } as SavedNote);
-      } else {
-        const docRef = await addDoc(collection(firestore, "notes"), noteData);
-        loadedNoteIdRef.current = docRef.id;
-        onUpdate({ ...noteData, id: docRef.id } as SavedNote);
-      }
+      const isNew = !noteId || noteId === 'new-block';
+      const ref = isNew ? doc(collection(firestore, "notes")) : doc(firestore, "notes", noteId!);
+      // Offline la scrittura resta in coda sul dispositivo: non si attende il server (scenario 9).
+      const outcome = await awaitWrite(isNew ? setDoc(ref, noteData) : updateDoc(ref, noteData), { online: isOnline() });
+      // Un blocco appena creato è già nell'editor: non va ricaricato.
+      if (isNew) loadedNoteIdRef.current = ref.id;
+      onUpdate({ ...noteData, id: ref.id } as SavedNote);
       savedDraftRef.current = currentDraft;
       setSaveFailed(false);
       setEditMode(false);
-      toast({ title: "Blocco Salvato nel Cloud" });
+      toast(outcome === 'synced'
+        ? { title: "Blocco salvato" }
+        : { title: "Salvato sul dispositivo", description: "Verrà sincronizzato con il tuo account appena torna la connessione." });
     } catch (err) {
       setSaveFailed(true);
       toast({ title: "Errore salvataggio cloud", variant: "destructive" });

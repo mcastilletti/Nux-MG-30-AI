@@ -11,6 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { ChevronRight, X, Save, Pencil } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { buildBlockNoteData } from './block-note-data';
 
 interface BlockEditorContentProps {
   noteId: string | null;
@@ -59,22 +60,15 @@ export function BlockEditorContent({ noteId, initialBand, initialSetlist, onClos
       return;
     }
 
-    // Calculate order for new blocks based on band and setlist
-    let orderToSave = 0;
-    if (!noteId || noteId === 'new-block') {
-      const bandToUse = initialBand || 'Senza Band';
-      const setlistToUse = initialSetlist || 'Senza Scaletta';
-      const sameSetNotes = notes.filter(n => n.band === bandToUse && n.setlist === setlistToUse);
-      orderToSave = sameSetNotes.length > 0 ? Math.max(...sameSetNotes.map(n => n.order ?? 0)) + 1 : 0;
+    const isExisting = !!noteId && noteId !== 'new-block';
+    const existing = isExisting ? getNoteById(noteId) : undefined;
+    if (isExisting && !existing) {
+      toast({ title: "Blocco non ancora caricato", description: "Attendi il caricamento delle note e riprova.", variant: "destructive" });
+      return;
     }
 
     const noteData = {
-      title,
-      band: initialBand || 'Senza Band',
-      setlist: initialSetlist || 'Senza Scaletta',
-      type: 'block' as const,
-      blockContent,
-      order: orderToSave,
+      ...buildBlockNoteData({ title, blockContent, existing, initialBand, initialSetlist, notes }),
       updatedAt: serverTimestamp(),
       userId: user?.uid
     };

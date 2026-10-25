@@ -3,6 +3,7 @@ import { MidiConnectionStatus, MidiDevice } from '@/types/midi';
 import { EffectType, Preset, EffectState } from '@/types/preset';
 import { usePresetStore } from './use-preset-store';
 import { MG30_MODELS } from '@/lib/mg30-data';
+import { formatSlotLabel } from '@/lib/slot';
 
 // Tabella CC per Modelli e Bypass
 const BLOCK_MODEL_CC: Record<string, number> = {
@@ -105,11 +106,6 @@ const blockStateMidiValue = (blockType: string, modelIndex: number, enabled: boo
 const SELECT_BLOCK_CC = 75; 
 const ENTER_EDITOR_CC = 78;
 
-const formatSlotLabel = (slot: number) => {
-  const bank = Math.floor((slot - 1) / 4) + 1;
-  const sub = ['A', 'B', 'C', 'D'][(slot - 1) % 4];
-  return `${String(bank).padStart(2, '0')}${sub}`;
-};
 
 const createDefaultEffects = (): EffectState[] => [
   { id: 'wah', type: 'wah', model: 'clyde', enabled: false, parameters: { position: 0 } },
@@ -126,7 +122,7 @@ const createDefaultEffects = (): EffectState[] => [
   { id: 'vol', type: 'vol', model: 'patch-vol', enabled: true, parameters: { min: 30, max: 60 } }
 ];
 
-const INITIAL_PRESETS: Preset[] = Array.from({ length: 128 }, (_, i) => ({
+export const INITIAL_PRESETS: Preset[] = Array.from({ length: 128 }, (_, i) => ({
   slot: i + 1,
   activeScene: 0,
   name: `Preset ${formatSlotLabel(i + 1)}`,

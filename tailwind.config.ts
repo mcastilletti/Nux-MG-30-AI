@@ -6,9 +6,18 @@ export default {
     './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
     './src/app/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/lib/**/*.{js,ts,jsx,tsx}',
   ],
   theme: {
     extend: {
+      // Scala dei testi piccoli: stessi valori dei text-[Npx] che sostituisce (solo font-size).
+      // Direzione approvata in Fase 1: portare label e caption a 12px pagina per pagina (F5).
+      fontSize: {
+        micro: '9px',
+        label: '10px',
+        caption: '11px',
+        'body-sm': '13px',
+      },
       fontFamily: {
         body: ['Outfit', 'sans-serif'],
         headline: ['Outfit', 'sans-serif'],
@@ -44,6 +53,18 @@ export default {
         destructive: {
           DEFAULT: 'hsl(var(--destructive))',
           foreground: 'hsl(var(--destructive-foreground))',
+        },
+        success: {
+          DEFAULT: 'hsl(var(--success))',
+          foreground: 'hsl(var(--success-foreground))',
+        },
+        warning: {
+          DEFAULT: 'hsl(var(--warning))',
+          foreground: 'hsl(var(--warning-foreground))',
+        },
+        info: {
+          DEFAULT: 'hsl(var(--info))',
+          foreground: 'hsl(var(--info-foreground))',
         },
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',

@@ -16,6 +16,7 @@ import { getNoteLoadAction } from './note-load-action';
 import { serializeDraft } from './note-draft';
 import { useUnsavedChangesGuard } from '@/hooks/use-unsaved-changes-guard';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { SaveStatus } from '@/components/common/save-status';
 
 interface BlockEditorContentProps {
   noteId: string | null;
@@ -45,6 +46,11 @@ export function BlockEditorContent({ noteId, initialBand, initialSetlist, onClos
   const savedDraftRef = useRef<string>('');
   const currentDraft = serializeDraft({ title, blockContent });
   const isDirty = editMode && currentDraft !== savedDraftRef.current;
+  // NT17: un solo salvataggio alla volta e stato visibile.
+  const [isSaving, setIsSaving] = useState(false);
+  const savingRef = useRef(false);
+  const [saveFailed, setSaveFailed] = useState(false);
+  const saveState = isSaving ? 'saving' : saveFailed ? 'error' : isDirty ? 'dirty' : 'idle';
   const [pendingExit, setPendingExit] = useState<'close' | 'cancel' | null>(null);
 
   const loadNote = (note: SavedNote) => {
@@ -88,6 +94,11 @@ export function BlockEditorContent({ noteId, initialBand, initialSetlist, onClos
   }, [noteId, existingId, cachedNote]);
 
   const handleSaveBlock = async () => {
+    if (savingRef.current) return;
+    if (!user) {
+      toast({ title: "Accedi per salvare", description: "Le note si salvano nel tuo account: accedi con Google dal menu laterale.", variant: "destructive" });
+      return;
+    }
     if (!title.trim()) {
       toast({ title: "Titolo mancante", variant: "destructive" });
       return;
@@ -106,20 +117,28 @@ export function BlockEditorContent({ noteId, initialBand, initialSetlist, onClos
       userId: user?.uid
     };
 
+    savingRef.current = true;
+    setIsSaving(true);
     try {
       if (noteId && noteId !== 'new-block') {
         await updateDoc(doc(firestore, "notes", noteId), noteData);
         onUpdate({ ...noteData, id: noteId } as SavedNote);
       } else {
         const docRef = await addDoc(collection(firestore, "notes"), noteData);
+        loadedNoteIdRef.current = docRef.id;
         onUpdate({ ...noteData, id: docRef.id } as SavedNote);
       }
       savedDraftRef.current = currentDraft;
+      setSaveFailed(false);
       setEditMode(false);
       toast({ title: "Blocco Salvato nel Cloud" });
     } catch (err) {
+      setSaveFailed(true);
       toast({ title: "Errore salvataggio cloud", variant: "destructive" });
       console.error("Errore salvataggio blocco:", err);
+    } finally {
+      savingRef.current = false;
+      setIsSaving(false);
     }
   };
 
@@ -159,13 +178,8 @@ export function BlockEditorContent({ noteId, initialBand, initialSetlist, onClos
           </div>
         </div>
         <div className="flex items-center gap-2">
-          {!editMode && onNext && (
-            <button onClick={onNext} className="h-9 w-9 lg:h-11 lg:w-11 text-muted-foreground rounded-full hover:bg-primary/10 hover:text-primary flex items-center justify-center" title="Nota successiva" aria-label="Apri la nota successiva">
-              <ChevronRight className="w-5 h-5 lg:w-7 lg:h-7" />
-            </button>
-          )}
           {!editMode && existingId && !isNoteMissing && (
-            <button onClick={() => setEditMode(true)} className="h-9 w-9 lg:h-11 lg:w-11 text-muted-foreground rounded-full hover:bg-primary/10 hover:text-primary flex items-center justify-center" title="Modifica">
+            <button onClick={() => setEditMode(true)} className="h-11 w-11 text-muted-foreground rounded-full hover:bg-primary/10 hover:text-primary flex items-center justify-center" title="Modifica" aria-label="Modifica blocco">
               <Pencil className="w-5 h-5 lg:w-7 lg:h-7" />
             </button>
           )}
@@ -181,10 +195,11 @@ export function BlockEditorContent({ noteId, initialBand, initialSetlist, onClos
           )}
           {editMode && (
             <div className="flex items-center gap-2">
+              <SaveStatus state={saveState} className="hidden sm:inline-flex" />
               <button onClick={() => (isDirty ? setPendingExit('cancel') : discardChanges())} aria-label="Annulla modifiche" className="h-9 w-9 lg:h-11 lg:w-11 text-muted-foreground rounded-full hover:bg-destructive/10 hover:text-destructive flex items-center justify-center" title="Annulla">
                 <X className="w-5 h-5 lg:w-7 lg:h-7" />
               </button>
-              <button onClick={handleSaveBlock} className="h-9 w-9 lg:h-11 lg:w-11 bg-primary shadow-lg rounded-full flex items-center justify-center" title="Salva">
+              <button onClick={handleSaveBlock} disabled={isSaving} aria-busy={isSaving} aria-label="Salva blocco" className="h-9 w-9 lg:h-11 lg:w-11 bg-primary text-primary-foreground shadow-lg rounded-full flex items-center justify-center disabled:opacity-60" title="Salva">
                 <Save className="w-5 h-5 lg:w-7 lg:h-7" />
               </button>
             </div>

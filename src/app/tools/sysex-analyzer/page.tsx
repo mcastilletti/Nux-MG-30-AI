@@ -77,7 +77,7 @@ export default function SysExAnalyzerPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <label className="text-[11px] font-bold uppercase text-muted-foreground">SysEx Message Sequence</label>
+                <label className="text-caption font-bold uppercase text-muted-foreground">SysEx Message Sequence</label>
                 <Textarea 
                   placeholder="e.g. F0 00 20 6B 01 00 00 45 F7..." 
                   className="font-mono text-sm h-48 bg-secondary/20"
@@ -86,7 +86,7 @@ export default function SysExAnalyzerPage() {
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-[11px] font-bold uppercase text-muted-foreground">Control Description</label>
+                <label className="text-caption font-bold uppercase text-muted-foreground">Control Description</label>
                 <Input 
                   placeholder="e.g. Changed Amp Gain from 0 to 100" 
                   value={description}

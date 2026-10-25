@@ -120,7 +120,7 @@ export const RotaryKnob: React.FC<RotaryKnobProps> = ({
 
   return (
     <div className={cn("flex flex-col items-center gap-1 knob-container", className)}>
-      <span className="text-[10px] font-medium uppercase text-muted-foreground select-none">{label}</span>
+      <span className="text-label font-medium uppercase text-muted-foreground select-none">{label}</span>
       <div 
         className="relative cursor-ns-resize group touch-none rounded-full outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         onPointerDown={handlePointerDown}
@@ -175,7 +175,7 @@ export const RotaryKnob: React.FC<RotaryKnobProps> = ({
           isDragging ? "opacity-100" : "opacity-0 group-hover:opacity-100"
         )}>
            <span 
-             className="text-[10px] font-mono bg-background/90 px-1.5 py-0.5 rounded border shadow-lg"
+             className="text-label font-mono bg-background/90 px-1.5 py-0.5 rounded border shadow-lg"
              style={{ borderColor: color }}
            >
             {value.toFixed(step < 1 ? 1 : 0)}{unit}
@@ -208,7 +208,7 @@ export const RotaryKnob: React.FC<RotaryKnobProps> = ({
             event.currentTarget.blur();
           }
         }}
-        className="no-number-spinner mt-1 h-6 w-16 rounded border border-transparent bg-transparent px-1 text-center text-[11px] font-mono font-bold outline-none transition-colors focus:border-primary focus:bg-background"
+        className="no-number-spinner mt-1 h-6 w-16 rounded border border-transparent bg-transparent px-1 text-center text-caption font-mono font-bold outline-none transition-colors focus:border-primary focus:bg-background"
         style={{ color }}
       />
     </div>

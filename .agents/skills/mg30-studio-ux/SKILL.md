@@ -88,12 +88,24 @@ Prima di progettare o modificare la sezione Note leggi `references/live-notes.md
 
 ## Ancoraggi tecnici del progetto
 
-- **Token e stili**: `src/app/globals.css` (variabili HSL, `.touch-target`, `.section-kicker`, stampa) e `tailwind.config.ts`. Nuovi colori come token semantici, non come `zinc-*`/`emerald-*` o HSL inline.
+- **Token e stili**: `src/app/globals.css` (variabili HSL, `.touch-target`, `.section-kicker`, stampa) e `tailwind.config.ts`. Nuovi colori come token semantici, non come `zinc-*`/`emerald-*` o HSL inline:
+  - stato: `success`, `warning`, `info`, `destructive` (es. `text-success`, `bg-warning/15`);
+  - blocchi della catena: `--block-<tipo>` (es. `hsl(var(--block-amp) / 0.4)`; mai `hsla(H S L, a)`, che è CSS non valido);
+  - testo piccolo: `text-label` (10px), `text-caption` (11px), `text-body-sm` (13px), `text-micro` (9px, da eliminare). Niente nuovi `text-[Npx]`; direzione: nessun testo sotto 12px salvo badge.
+  - `--primary-foreground` è scuro: sul viola usa `text-primary-foreground`, mai `text-white`.
+  - I moduli in `src/lib` sono analizzati da Tailwind: le classi lì dentro vengono generate.
 - **Componenti**: shadcn in `src/components/ui`. Attenzione: `button.tsx` applica `[&_svg]:size-4`, che annulla le classi di dimensione sulle icone dentro `<Button>`.
+- **Componenti comuni** (`src/components/common`), da preferire al markup ad hoc:
+  - `IconButton` per ogni pulsante con sola icona (`label` obbligatorio, 44×44px);
+  - `ConnectionStatus` per lo stato della pedaliera (mostra anche gli errori MIDI);
+  - `SaveStatus` accanto a ogni Salva, con guardia contro il doppio invio;
+  - `ConfirmDialog` per eliminazioni e azioni irreversibili;
+  - `EmptyState` / `ErrorState` (con Riprova) per liste vuote, caricamento ed errori.
 - **Shell e navigazione**: `src/components/layout/app-shell.tsx` (sidebar desktop, barra in basso mobile con 5 voci).
 - **Foglio Note**: `src/components/notes/NoteSheet.tsx` su Radix Dialog; stato di apertura in `note-sheet-state.ts`, sincronizzato con l'URL.
 - **Schermo sempre acceso**: `src/hooks/use-wake-lock.ts`, attivo su tutte le pagine.
-- **Catalogo MG-30**: `src/lib/mg30-data.ts`. **Etichetta slot** (es. `01A`): formula oggi duplicata in più file; riusa quella condivisa quando esiste.
+- **Catalogo MG-30**: `src/lib/mg30-data.ts`. **Etichetta slot** (es. `01A`): `formatSlotLabel` e `matchesSlotSearch` in `src/lib/slot.ts`. Colori delle sezioni in `src/lib/section-colors.ts`, accordi in `src/lib/chord-data.ts`.
+- **Safe area**: header, barra in basso e foglio nota usano `env(safe-area-inset-*)`; ogni nuovo elemento fisso ai bordi deve fare lo stesso.
 - **Verifica visiva**: Playwright è disponibile nell'ambiente; le note si possono iniettare in `localStorage` (`mg30-notes-cache`) per testare lista e foglio senza login.
 
 ## Razionalizzazioni comuni

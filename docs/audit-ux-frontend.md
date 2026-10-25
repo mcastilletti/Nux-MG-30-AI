@@ -19,7 +19,7 @@ Questo documento è il risultato della prima attività del refactoring: **audit 
 
 ## 0. Stato di avanzamento
 
-**Fase 0 completata** il 2026-10-25 (branch `claude/loving-ride-r0jfma`). Typecheck pulito, 26/26 test verdi (12 nuovi).
+**Fase 0 completata** il 2026-10-25 (branch `claude/loving-ride-r0jfma`), seguita dalle correzioni P1 che non richiedono decisioni. Typecheck pulito, 26/26 test verdi (12 nuovi).
 
 | Voce | Esito | Commit | Verifica eseguita |
 |---|---|---|---|
@@ -28,7 +28,11 @@ Questo documento è il risultato della prima attività del refactoring: **audit 
 | NT3 — nota non in cache sovrascrivibile vuota | ✅ Risolto | `5361261` | Test unitari + Playwright (nota/blocco presenti e assenti) |
 | NT2 — modifiche perse con X, Annulla, Indietro | ✅ Risolto (versione minima) | `9b1fc98` | Test unitari + Playwright, 15 controlli e cronologia. Restano da progettare in Fase 3 lo stato di salvataggio visibile e la modifica sicura completa |
 | E6, L3, L5 — messaggi di salvataggio ingannevoli | ✅ Testi corretti | `4e77d9b` | Playwright (toast offline di editor e Library) |
-| S1 / P0-4 — preset solo in memoria | ⏳ Aperto | — | In attesa della decisione D1 |
+| NT5, NT6, NT20, C1 — cache al logout, salvataggio da non loggati, doppio "successivo", Band da non loggati | ✅ Risolto | `0cd1f5a` | Playwright (messaggio Band, toast "Accedi per salvare", un solo pulsante nel blocco). NT5 **da provare con due account reali** |
+| NT8, NT13, NT14, NT15, E9 — scroll al cambio brano, ricerca nascosta, riordino in vista filtrata, altezza pannello e dialoghi | ✅ Risolto (NT14 in versione minima) | `637a7b6` | Playwright (scroll a 0 dopo "successiva", filtro azzerato, maniglie solo con scaletta). La modalità "Riordina" esplicita resta per la Fase 3 (F3) |
+| E5, L2 — pulsanti hardware attivi offline | ✅ Parziale | `338e6be` | Playwright (disattivati offline). Restano conferma, annullamento e avanzamento: decisione D8 |
+| S1 / P0-4, E6, L3 — preset solo in memoria | ✅ Risolto (D1) | `43c0105`, `d7dc107` | Test unitari (`preset-storage.test.ts`) + Playwright: SALVA, ricarica, esportazione, importazione valida e non valida. **Da provare con un account Google reale** (sincronizzazione Firestore) |
+| NT4 — preset inviato su Annulla e salvataggio, scena NaN | ✅ Risolto (D2) | `2b97066` | Test unitari (`preset-send.test.ts`) + Playwright con MIDI simulato: apertura, ▶, Annulla, interruttore spento/acceso, scena vuota. **Da provare con la MG-30 reale** |
 
 **Baseline visiva** (Playwright, 10 pagine × 4 viewport, da non loggati e con note iniettate in cache):
 - nessuno scroll orizzontale a livello di pagina;
@@ -37,6 +41,91 @@ Questo documento è il risultato della prima attività del refactoring: **audit 
 - confermata l'ipotesi E1 e trovata la nuova voce E10 (vedi §5.4).
 
 **Non verificato:** test su dispositivi reali (iOS/Android), con la pedaliera MG-30 collegata, e misure di contrasto. Sono previsti nella Fase 1.
+
+## 0.2 Fase 2 — design system (2026-10-25)
+
+| Voce | Esito | Commit |
+|---|---|---|
+| Token di stato (`success`, `warning`, `info`) e dei blocchi (`--block-*`) | ✅ Stessi valori di prima | `5dfea77` |
+| Scala dei testi piccoli (`text-label`, `text-caption`, `text-body-sm`, `text-micro`) al posto di `text-[Npx]` | ✅ Stessi valori; tailwind-merge configurato | `5dfea77` |
+| Moduli condivisi `slot.ts`, `section-colors.ts`, accordi in `chord-data.ts` (M3) | ✅ 10 copie dell'etichetta slot sostituite | `5dfea77` |
+| Bordo del blocco selezionato e sfondo della modulazione | ✅ Corretto: `hsla(H S L, a)` era CSS non valido e veniva ignorato | `5dfea77` |
+| Contrasti (pulsanti primari, slot, blocchi) | ✅ Nessun testo sotto soglia, esclusi i separatori decorativi | `697555a` |
+| `IconButton`, `ConnectionStatus`, `SaveStatus`, `ConfirmDialog`, `EmptyState`/`ErrorState` | ✅ Con test di base | `bf5a724` |
+| E8/H2 — errori MIDI invisibili | ✅ L'header mostra "Errore MIDI" con spiegazione | `bf5a724` |
+| NT17 — doppio salvataggio | ✅ Guardia sincrona e indicatore. **Da provare con un account reale** | `bf5a724` |
+| NT21 — stati della lista note | ✅ Caricamento, errore con Riprova, accesso, nessun risultato | `bf5a724` |
+| C2 — eliminazione strumentazione senza conferma | ✅ | `bf5a724` |
+| N4 — safe area | ✅ Implementata. **Da provare su iPhone in modalità PWA** | `bf5a724`, `bd2a5e2` |
+| Toast su mobile | ✅ Sotto l'header | `bd2a5e2` |
+| `DialogContent` con altezza massima | ✅ Già in `637a7b6` | — |
+
+**Verifica:**
+- confronto pixel a 4 viewport dopo i token: identico alla baseline, salvo il bordo corretto;
+- 15 controlli Playwright sui componenti;
+- regressioni NT2, NT3, cronologia, D1/D2 e P1 tutte verdi;
+- 43 test unitari, nessuno scroll orizzontale e nessun errore JavaScript sulle 40 combinazioni pagina × viewport.
+
+**Restano per la Fase 5:**
+- migrazione pagina per pagina dei colori `zinc-*`/`green-*` ai token;
+- testo minimo a 12px;
+- nuova barra mobile con "Altro" e header dell'editor su due righe (approvati);
+- `IconButton` sugli altri pulsanti icona.
+
+## 0.1 Esito della Fase 1 (2026-10-25)
+
+Verifiche con Playwright sulla build di produzione, da non loggati, con note iniettate in cache. Script nello scratchpad della sessione, non nel repository (D10).
+
+### Ipotesi [H]
+
+| Voce | Esito | Come |
+|---|---|---|
+| Toast mobile sopra l'header | ✅ **Confermato e peggiore del previsto**: toast fuori schermo sotto i 640px. Corretto in `e17f847` | Posizione misurata a 360/390/768/1280px |
+| NT11 — accordi in ordine inverso | ✅ Confermato | Picker: G poi Gm → "Gm, G" |
+| NT12 — posizioni accordi solo in tooltip | ✅ Confermato | Tocco su un accordo in lettura: nessun tooltip né popover |
+| NT17 — doppio salvataggio | ✅ Confermato dal codice | Il test richiede un account |
+| Tastiera aperta nell'editor delle note | ❌ Smentito | Viewport 390×420: il pulsante Salva resta visibile |
+| E1 — header dell'editor a 360px | ✅ Già confermato in Fase 0. In più: toccando SAVE il contenitore principale scorre di 55px in orizzontale (contenuto largo 445px) | Misura di `scrollLeft` |
+| N4 — safe area iOS | ⏳ Non verificabile in Chromium | Serve un iPhone in modalità PWA |
+
+### Contrasti (soglia WCAG AA 4,5:1, 3:1 per testo grande)
+
+Rapporto calcolato su ogni testo visibile, componendo colore, trasparenze e opacità degli antenati. Pagine: Home, Library, Editor, Note, foglio nota, Band, Settings, Strumentazione.
+
+| Elemento | Rapporto | Dove | Proposta (F2) |
+|---|---|---|---|
+| Testo bianco sul pulsante primario (`--primary` 261 43% 65%) | **3,34:1** | Tutti i pulsanti primari: SAVE, Nuovo, Aggiungi, scena attiva | `--primary-foreground` scuro (circa 240 10% 6%): circa 6:1 senza toccare il viola, che resta leggibile come accento su fondo scuro |
+| Nomi dei blocchi nella catena (`zinc-500`, 10px) | 4,14:1 | Editor | `zinc-400` e almeno 11–12px |
+| Etichette slot `muted-foreground/60` | 4,39:1 | Library, 128 card | Opacità almeno 80% |
+| Separatori "•" con `opacity-30` | 1,91:1 | Note | Decorativi: `aria-hidden`, nessun obbligo di contrasto |
+
+Home, Band, Settings e il foglio nota non hanno testi sotto soglia.
+
+### Proposta di architettura informativa (da approvare)
+
+**Barra mobile (5 voci, target ≥44px):** Editor · Library · Note · Band · **Altro**.
+- "Altro" apre un pannello con Home, Strumentazione (AI), Impostazioni, Avanzate (SysEx Analyzer, se resta dopo D5), account (accedi/esci) e stato MIDI.
+- Ogni sezione raggiungibile in al massimo 2 tocchi; scompare il trigger della sidebar da 28px (N1).
+
+**Sidebar desktop**, stesse voci raggruppate:
+- *Suono*: Editor, Library, Strumentazione;
+- *Palco*: Note, Band;
+- *Sistema*: Impostazioni, Avanzate.
+
+**Header essenziale dell'editor** (risolve E1, E10 e lo scroll orizzontale):
+- riga 1: ‹ slot › · nome del preset (intero su due righe o con tocco per leggerlo) · pallino di stato MIDI;
+- riga 2: Scene 1 · 2 · 3 · **SALVA**;
+- le azioni secondarie (AI Mode, leggi nome, invia preset, annulla/ripeti, copia scena) vanno in un menu ⋮.
+
+**Titoli:** una mappa route → titolo, così ogni pagina mostra il suo nome (N2).
+
+### Direzione visiva: "strumento da palco"
+
+- **Scuro e ad alto contrasto:** fondo quasi nero, testo principale ≥7:1, secondario ≥4,5:1; niente testo sotto 12px tranne badge di stato.
+- **Un solo accento** (viola) per azioni e selezione. Colori di stato fissi: verde = attivo/collegato, ambra = offline/attenzione, rosso = errore/elimina.
+- **Denso ma leggibile:** card compatte, numeri e accordi grandi, target sempre ≥44px.
+- **Poche animazioni,** brevi e disattivate da `prefers-reduced-motion` (già gestito).
+- **Modalità Live** (D4): testo regolabile, schermo intero, blocco anti-tocco, avanzamento a tocco.
 
 ## 1. Sintesi
 
@@ -189,7 +278,7 @@ Colonne: **ID** · **Problema** · **Evidenza** · **Impatto** · **P** · **Sol
 | N1 [V] | Strumentazione, SysEx e Settings sono raggiungibili su mobile solo da un pulsante di 28px | `app-shell.tsx:201-210`, `sidebar.tsx:275` | Configurazione dell'AI difficile da trovare su telefono | P2 | Barra mobile: Editor, Library, Note, Band, "Altro" (pannello con le sezioni restanti); trigger ≥44px | F1 (IA) | Basso | Playwright 360px: tutte le sezioni in ≤2 tocchi |
 | N2 [V] | Su Settings l'header mostra "App" | `app-shell.tsx:187` | Orientamento confuso | P3 | Titolo da una mappa delle route completa | — | Basso | Titolo corretto su ogni route |
 | N3 [V] | La shell si rimonta a ogni pagina | ogni `page.tsx` contiene `<AppShell>` | Wake lock, `initialize()` e sync MIDI rieseguiti a ogni navigazione; sidebar che "lampeggia" | P2 | Spostare `AppShell` in un layout condiviso (route group) | F4 | Medio (effetti MIDI) | Una sola inizializzazione MIDI per sessione (log) |
-| N4 [V] | Nessuna safe area con `black-translucent` e barra fissa in basso | `layout.tsx:18`, `app-shell.tsx:201`; nessun `env(safe-area-inset-*)` | [H] Header sotto la barra di stato e barra nav sotto l'indicatore home nella PWA iOS | P1 | `viewport-fit=cover` + padding con `env(safe-area-inset-*)` | F2 | Basso | Dispositivo iOS in modalità standalone |
+| N4 [V] | Nessuna safe area con `black-translucent` e barra fissa in basso | `layout.tsx:18`, `app-shell.tsx:201`; nessun `env(safe-area-inset-*)` | [H] (resta da provare su iPhone: non riproducibile in Chromium) Header sotto la barra di stato e barra nav sotto l'indicatore home nella PWA iOS | P1 | `viewport-fit=cover` + padding con `env(safe-area-inset-*)` | F2 | Basso | Dispositivo iOS in modalità standalone |
 | N5 [V] | Lingua mista: "Navigation", "Hardware Status", "Settings", pagina SysEx in inglese | `app-shell.tsx:110,153,172`; `tools/sysex-analyzer` | Incoerenza | P3 | Testi in italiano, termini tecnici del dispositivo invariati | F5 | Basso | Revisione dei testi |
 | N6 [V] | `/notes/editor` è orfana e duplica `NoteEditorContent` | nessun link (grep); `notes/editor/page.tsx:27-68,707` | Manutenzione doppia, divergenze | P2 | Decisione D5, poi rimozione dopo verifica | D5 | Basso | Nessun riferimento residuo; test verdi |
 
@@ -205,7 +294,7 @@ Colonne: **ID** · **Problema** · **Evidenza** · **Impatto** · **P** · **Sol
 | ID | Problema | Evidenza | Impatto | P | Soluzione | Dip. | Rischio | Verifica |
 |---|---|---|---|---|---|---|---|---|
 | L1 [V] | "Nuovo" non ha `onClick` | `library/page.tsx:235-237` | Pulsante morto | P1 | Rimuoverlo o definirne la funzione | — | Basso | Nessun pulsante senza azione |
-| L2 [V] | "Sync Hardware": 128 PC × 500ms ≈ 64s, senza conferma né annullamento, senza controllo della connessione, nessun effetto visibile, lascia la pedaliera sullo slot 128 | `library/page.tsx:226-234`; `use-midi-store.ts:544-565` | Attesa inutile e preset cambiato a sorpresa | P1 | Disabilitarlo offline, conferma, annullamento, ripristino dello slot iniziale; rivalutarne l'utilità | D8 | Medio (MIDI) | Test con e senza pedaliera |
+| L2 [V] ◐ `338e6be` | "Sync Hardware": 128 PC × 500ms ≈ 64s, senza conferma né annullamento, senza controllo della connessione, nessun effetto visibile, lascia la pedaliera sullo slot 128 | `library/page.tsx:226-234`; `use-midi-store.ts:544-565` | Attesa inutile e preset cambiato a sorpresa | P1 | Disabilitarlo offline, conferma, annullamento, ripristino dello slot iniziale; rivalutarne l'utilità | D8 | Medio (MIDI) | Test con e senza pedaliera |
 | L3 [V] ✅ `4e77d9b` (testo) | Il volume di massa modifica solo la memoria (non invia, non persiste) e il toast dice "aggiornato" | `library/page.tsx:84-152` | Modifica che si perde | P0 (legato a P0-4) | Testo veritiero subito; soluzione con D1 | D1 | Basso | Toast coerente con l'effetto reale |
 | L4 [V] | Card e righe cliccabili sono `div`/`tr` senza ruolo né tastiera; checkbox finte | `library/page.tsx:357-377,477-496` | Inaccessibile da tastiera e lettore di schermo | P1 | `button`/link reali, `ui/checkbox` | F2 | Basso | Navigazione completa da tastiera |
 | L5 [V] ✅ `4e77d9b` | Il toast "selezionato sull'hardware" compare anche offline | `library/page.tsx:160-167` | Feedback falso | P2 | Messaggio condizionato alla connessione | — | Basso | Verifica offline |
@@ -219,12 +308,12 @@ Colonne: **ID** · **Problema** · **Evidenza** · **Impatto** · **P** · **Sol
 | E2 [V] | Chip ON/OFF di circa 24×16px annidato dentro il `button` del blocco | `editor/page.tsx:988-1041` | HTML non valido, tocchi sbagliati (seleziona invece di spegnere), lettori di schermo confusi | P1 | Due controlli fratelli: blocco (seleziona) e switch ON/OFF ≥44px con `aria-pressed` | F2 | Medio | Test da tastiera e touch |
 | E3 [V] | Selezione del blocco indicata solo con colore e bordo; nessun `aria-pressed`/`aria-current` | `editor/page.tsx:995-1004` | Stato non percepibile | P2 | Indicatore testuale + attributo ARIA | F2 | Basso | Ispezione accessibilità |
 | E4 [V] | Catena di circa 1640px senza snap né suggerimento di scroll; nessuno scroll automatico al blocco selezionato | `editor/page.tsx:980` | Su mobile si vedono circa 3 blocchi su 12 | P2 | Scroll-snap, sfumatura ai bordi, scroll al blocco selezionato; valutare una vista a griglia compatta | F5 | Basso | Playwright |
-| E5 [V] | Due pulsanti "sync" quasi uguali: Download (chiede solo il nome) e RefreshCw (invia tutto, overlay di 18,5s anche offline) | `editor/page.tsx:593-610,966`; `use-midi-store.ts:516-541` | Confusione; editor bloccato senza motivo | P1 | Etichette chiare ("Leggi nome dalla pedaliera", "Invia preset alla pedaliera"), disabilitati offline, avanzamento visibile | D8 | Medio | Test offline e collegato |
+| E5 [V] ◐ `338e6be` | Due pulsanti "sync" quasi uguali: Download (chiede solo il nome) e RefreshCw (invia tutto, overlay di 18,5s anche offline) | `editor/page.tsx:593-610,966`; `use-midi-store.ts:516-541` | Confusione; editor bloccato senza motivo | P1 | Etichette chiare ("Leggi nome dalla pedaliera", "Invia preset alla pedaliera"), disabilitati offline, avanzamento visibile | D8 | Medio | Test offline e collegato |
 | E10 [V] | Nome del preset e titolo della nota troncati su una riga ("Activ…", "Wonderwall (I…"), anche a 1280px | baseline Playwright; `editor/page.tsx` (SelectTrigger), `NoteEditorContent.tsx` (`truncate` sul titolo) | Brano o preset non riconoscibili a colpo d'occhio | P2 | Titolo su 2 righe (`line-clamp-2`), nome completo nel selettore | F5 | Basso | Screenshot a 360px e 1280px |
 | E6 [V] ✅ `4e77d9b` (testi) | "SALVA": toast "Salvataggio in corso" anche quando `syncFullPreset` esce subito; offline "Local Save" non persistente | `editor/page.tsx:575-591`; `use-midi-store.ts:518` | Falsa sicurezza (vedi P0-4) | P0/P1 | Testo veritiero subito; persistenza con D1 | D1 | Basso | Toast coerenti |
 | E7 [V] | Pulsante "Chiudi" della catena invia solo un CC all'hardware, anche offline | `editor/page.tsx:977`; `use-midi-store.ts:493` | Etichetta ingannevole | P2 | Rinominarlo o rimuoverlo dalla UI principale | — | Basso | — |
 | E8 [V] | `lastError` MIDI e stati `connecting`/`error` mai mostrati | grep `lastError` | Errori di connessione invisibili | P1 | `ConnectionStatus` (vedi H2) | F2 | Basso | Simulazione errore |
-| E9 [V] | Dialoghi AI Mode e Copia scena senza altezza massima né scroll | `ui/dialog.tsx:41` | [H] Su mobile con tastiera aperta il contenuto non è raggiungibile | P1 | `max-h-[85dvh] overflow-y-auto` nel `DialogContent` | F2 | Basso | Dispositivo con tastiera |
+| E9 [V] ✅ `637a7b6` | Dialoghi AI Mode e Copia scena senza altezza massima né scroll | `ui/dialog.tsx:41` | [H] Su mobile con tastiera aperta il contenuto non è raggiungibile | P1 | `max-h-[85dvh] overflow-y-auto` nel `DialogContent` | F2 | Basso | Dispositivo con tastiera |
 
 ### 5.5 Controlli dei parametri (`src/components/controls/rotary-knob.tsx`)
 
@@ -247,30 +336,30 @@ Le voci Note sono **[V]** salvo dove indicato. Requisiti di dettaglio e scenari 
 | NT1 ✅ `2b58d38` | **Salvare un blocco esistente lo sposta** in "Senza Band / Senza Scaletta" con `order: 0` | `BlockEditorContent.tsx:63-84`; `notes/page.tsx:718-722` | Corruzione dati: il blocco sparisce dalla scaletta | **P0** | Per i blocchi esistenti conservare `band`/`setlist`/`order` della nota caricata | — | Basso | Test unitario sul payload; modifica di un blocco in una scaletta |
 | NT2 ✅ `9b1fc98` (minima) | **Modifiche perse senza avviso**: X, "Annulla" e Indietro di sistema | `NoteEditorContent.tsx:390,448-458`; `BlockEditorContent.tsx:109`; `notes/page.tsx:115` (`replaceState`) | Perdita di appunti durante le prove | **P0** | Rilevamento delle modifiche non salvate e conferma all'uscita; Indietro che chiude il foglio | F3 | Medio | Scenario 5 |
 | NT3 ✅ `5361261` | **Nota aperta con cache vuota** (URL `?openNote=`, altro dispositivo): editor vuoto, la matita resta attiva, il salvataggio sovrascrive | `NoteEditorContent.tsx:206-215,424,299-302` | [H sulla frequenza] Perdita del contenuto di una nota | **P0** | Ricaricare la nota quando arriva la cache; stato "nota non trovata"; salvataggio bloccato se non caricata | — | Basso | Test con cache vuota e URL diretto |
-| NT4 | Il preset viene inviato aprendo un brano, con ▶, su "Annulla" e al primo salvataggio; scena vuota → `parseInt('')` = NaN | `NoteEditorContent.tsx:206-215,264-270,453` | Cambio di suono imprevisto dal vivo | P1 | Decisione D2; invio visibile tramite chip; nessun invio su Annulla e salvataggio | D2 | Medio (comportamento) | Log MIDI durante la navigazione |
-| NT5 | Dopo il logout restano visibili le note del precedente utente | `clearCache` mai chiamato; `app-shell.tsx:70-76` | Privacy, dati mescolati | P1 | Svuotare la cache al logout e al cambio utente | — | Basso | Login, logout, login con un altro account |
-| NT6 | Salvataggio da non loggati con `userId: undefined` | `NoteEditorContent.tsx:296`; `BlockEditorContent.tsx:79` | [H] Errore generico senza invito ad accedere | P1 | Bloccare il salvataggio con messaggio "Accedi per salvare" | — | Basso | Test da non loggati |
+| NT4 ✅ `2b97066` | Il preset viene inviato aprendo un brano, con ▶, su "Annulla" e al primo salvataggio; scena vuota → `parseInt('')` = NaN | `NoteEditorContent.tsx:206-215,264-270,453` | Cambio di suono imprevisto dal vivo | P1 | Decisione D2; invio visibile tramite chip; nessun invio su Annulla e salvataggio | D2 | Medio (comportamento) | Log MIDI durante la navigazione |
+| NT5 ✅ `0cd1f5a` | Dopo il logout restano visibili le note del precedente utente | `clearCache` mai chiamato; `app-shell.tsx:70-76` | Privacy, dati mescolati | P1 | Svuotare la cache al logout e al cambio utente | — | Basso | Login, logout, login con un altro account |
+| NT6 ✅ `0cd1f5a` | Salvataggio da non loggati con `userId: undefined` | `NoteEditorContent.tsx:296`; `BlockEditorContent.tsx:79` | [H] Errore generico senza invito ad accedere | P1 | Bloccare il salvataggio con messaggio "Accedi per salvare" | — | Basso | Test da non loggati |
 | NT7 | Nessun "precedente", nessuna posizione "3/12"; ▶ in alto a destra | `note-navigation.ts`; `NoteEditorContent.tsx:435-445` | Navigazione dal vivo lenta e scomoda a una mano | P1 | Barra inferiore Prec/posizione/Succ ≥48px | F3 | Basso | Scenario 3 |
-| NT8 | Al cambio brano lo scroll e i pannelli restano com'erano | nessuna `key` per nota (`notes/page.tsx:737`; `NoteSheet.tsx:58`) | [H] Il nuovo brano si apre a metà | P1 | `key` per nota o reset dello scroll | — | Basso | Scenario 3 |
+| NT8 ✅ `637a7b6` | Al cambio brano lo scroll e i pannelli restano com'erano | nessuna `key` per nota (`notes/page.tsx:737`; `NoteSheet.tsx:58`) | [H] Il nuovo brano si apre a metà | P1 | `key` per nota o reset dello scroll | — | Basso | Scenario 3 |
 | NT9 | Rimozione accordo con un tap su una X di 14px, senza annullamento | `NoteEditorContent.tsx:698-706` | Cancellazioni accidentali | P1 | Target ≥44px, modalità modifica accordi esplicita, annullamento | F3 | Basso | Test touch |
 | NT10 | Controlli visibili solo al passaggio del mouse: inserisci accordo, inserisci sezione, rimuovi a capo, cestino al 30% | `NoteEditorContent.tsx:604,666,733,790`; `notes/page.tsx:799-811` | Invisibili ma toccabili su touch | P1 | Controlli sempre visibili in modalità modifica; azioni della card in un menu ⋮ | F3 | Basso | Ispezione su touch |
-| NT11 | Il picker inserisce più accordi in ordine inverso | `NoteEditorContent.tsx:654,738` | [H] Sequenze sbagliate | P2 | Indice di inserimento che avanza o chiusura dopo la scelta | — | Basso | Test unitario |
-| NT12 | Posizioni degli accordi solo in tooltip | `NoteEditorContent.tsx:679-729` | [H] Non consultabili su touch | P2 | Popover al tocco | F3 | Basso | Test su touch |
-| NT13 | La ricerca nascosta continua a filtrare la lista | `notes/page.tsx:173,416` | Lista "vuota" inspiegabile | P1 | Chiudere la ricerca azzera il filtro, oppure filtro attivo visibile | — | Basso | Test |
-| NT14 | Il trascinamento in vista filtrata o con ricerca rinumera `order` di un sottoinsieme | `notes/page.tsx:258-279` | Ordine delle scalette alterato | P1 | Riordino solo in modalità "Riordina" con una scaletta selezionata | F3 | Medio | Test sull'ordine |
-| NT15 | Foglio alto `h-[100vh]` | `NoteSheet.tsx:57` | [H] Fondo coperto dalla barra del browser | P1 | `h-[100dvh]` | — | Basso | Dispositivo |
+| NT11 [V] | Il picker inserisce più accordi in ordine inverso | `NoteEditorContent.tsx:654,738` | **Confermato** (Fase 1): scegliendo G e poi Gm si ottiene "Gm, G" | P2 | Indice di inserimento che avanza o chiusura dopo la scelta | — | Basso | Test unitario |
+| NT12 [V] | Posizioni degli accordi solo in tooltip | `NoteEditorContent.tsx:679-729` | **Confermato** (Fase 1): al tocco non compare né tooltip né popover | P2 | Popover al tocco | F3 | Basso | Test su touch |
+| NT13 ✅ `637a7b6` | La ricerca nascosta continua a filtrare la lista | `notes/page.tsx:173,416` | Lista "vuota" inspiegabile | P1 | Chiudere la ricerca azzera il filtro, oppure filtro attivo visibile | — | Basso | Test |
+| NT14 ◐ `637a7b6` | Il trascinamento in vista filtrata o con ricerca rinumera `order` di un sottoinsieme | `notes/page.tsx:258-279` | Ordine delle scalette alterato | P1 | Riordino solo in modalità "Riordina" con una scaletta selezionata | F3 | Medio | Test sull'ordine |
+| NT15 ✅ `637a7b6` | Foglio alto `h-[100vh]` | `NoteSheet.tsx:57` | [H] Fondo coperto dalla barra del browser | P1 | `h-[100dvh]` | — | Basso | Dispositivo |
 | NT16 | Testo non regolabile, zoom disabilitato, nessuna modalità di lettura live | `layout.tsx:9-10`; grep | Leggibilità sul palco | P1 | Modalità Live [P] e decisione D3 | D3, D4 | Medio | Scenari 2 e 7 |
-| NT17 | Nessuno stato di salvataggio e nessuna protezione dal doppio invio | `NoteEditorContent.tsx:465-473` | [H] Documenti doppi, incertezza | P1 | Componente `SaveStatus`, pulsante disabilitato durante il salvataggio | F2 | Basso | Scenario 4 |
+| NT17 [V] | Nessuno stato di salvataggio e nessuna protezione dal doppio invio | `handleSaveNote` senza stato di invio; pulsante mai disabilitato | **Confermato dal codice** (il test richiede login): due tocchi su una nota nuova creano due documenti | P1 | Componente `SaveStatus`, pulsante disabilitato durante il salvataggio | F2 | Basso | Scenario 4 |
 | NT18 | La stampa taglia i brani lunghi (pagina A4 fissa, `overflow: hidden`) e stampa lo slot grezzo | `globals.css:118-133`; `notes/page.tsx:673` | Scalette stampate incomplete | P2 | Più pagine per brano lungo; etichetta `01A` | F5 | Basso | Stampa di un brano lungo |
 | NT19 | Doppio modello band/scalette: le band create in Band non compaiono nell'editor note, e nel foglio non si può creare una nuova band o scaletta | `bands/page.tsx:74-98`; `NoteEditorContent.tsx:217-234,546-563` | Flusso di organizzazione spezzato | P2 | Decisione D7 | D7 | Alto (dati) | — |
-| NT20 | Il blocco ha due pulsanti "successivo" | `BlockEditorContent.tsx:133-152` | Incoerenza (corretta solo per i brani) | P3 | Tenere solo il primario | — | Basso | Ispezione |
+| NT20 ✅ `0cd1f5a` | Il blocco ha due pulsanti "successivo" | `BlockEditorContent.tsx:133-152` | Incoerenza (corretta solo per i brani) | P3 | Tenere solo il primario | — | Basso | Ispezione |
 | NT21 | La lista mostra "Nessun brano" anche durante il caricamento e da non loggati | `notes/page.tsx:542-545` | Stato ambiguo | P2 | Stati distinti: caricamento, accedi, vuoto, errore con riprova | F2 | Basso | Test |
 
 ### 5.7 Import, export e salvataggio
 
 | ID | Problema | Evidenza | Impatto | P | Soluzione | Dip. | Rischio | Verifica |
 |---|---|---|---|---|---|---|---|---|
-| S1 [V] | **Preset solo in memoria**: modifiche, volume di massa e "Local Save" persi al ricaricamento; nessun backup su file | `use-preset-store.ts`, `use-midi-store.ts` senza `persist`; grep `Blob`/`download` | Perdita del lavoro di programmazione | **P0** | Decisione D1; nel frattempo testi veritieri | D1 | Alto (dati) | — |
+| S1 [V] ✅ `43c0105` | **Preset solo in memoria**: modifiche, volume di massa e "Local Save" persi al ricaricamento; nessun backup su file | `use-preset-store.ts`, `use-midi-store.ts` senza `persist`; grep `Blob`/`download` | Perdita del lavoro di programmazione | **P0** | Decisione D1; nel frattempo testi veritieri | D1 | Alto (dati) | — |
 | S2 [V] | Import JSON delle note: guida incompleta (`presetSlot`/`presetScene` accettati ma non documentati); incollare JSON su mobile è scomodo | `notes/page.tsx:631-663,373-374` | Errori di import | P3 | Testo d'aiuto completo; valutare un selettore di file | — | Basso | Import di prova |
 | S3 [V] | Ordine dell'import calcolato su tutte le note invece che sulla scaletta | `notes/page.tsx:365-366` | Brano importato in fondo con ordine incoerente | P2 | Calcolo per band+scaletta come negli altri flussi | — | Basso | Test unitario |
 
@@ -278,7 +367,7 @@ Le voci Note sono **[V]** salvo dove indicato. Requisiti di dettaglio e scenari 
 
 | ID | Problema | Evidenza | Impatto | P | Soluzione | Dip. | Rischio | Verifica |
 |---|---|---|---|---|---|---|---|---|
-| C1 [V] | Band: spinner infinito da non loggati | `bands/page.tsx:46,68,430` | Pagina inutilizzabile senza spiegazione | P1 | Stato "Accedi per gestire le band" | — | Basso | Test da non loggati |
+| C1 [V] ✅ `0cd1f5a` | Band: spinner infinito da non loggati | `bands/page.tsx:46,68,430` | Pagina inutilizzabile senza spiegazione | P1 | Stato "Accedi per gestire le band" | — | Basso | Test da non loggati |
 | C2 [V] | Strumentazione: eliminazione senza conferma; icone senza nome; stella di circa 20px | `instrumentation/page.tsx:114-121,128,132` | Cancellazioni accidentali | P1 | Conferma, nomi accessibili, target 44px | F2 | Basso | Test |
 | C3 [V] | Settings: troubleshooting Firebase per sviluppatori, badge "ATTIVO" e versione hardcoded | `settings/page.tsx:100,138-165,177` | Rumore per l'utente finale | P3 | Sezione "Avanzate" comprimibile; versione da `package.json` | D5 | Basso | — |
 | C4 [V] | SysEx Analyzer in inglese; "History" senza effetto; strumento da sviluppatore nella navigazione principale | `tools/sysex-analyzer/page.tsx:133` | Confusione | P2 | Decisione D5 | D5 | Basso | — |
@@ -300,8 +389,8 @@ Le voci Note sono **[V]** salvo dove indicato. Requisiti di dettaglio e scenari 
   - scene e "Copia" 40px;
   - pulsanti `h-8`/`h-9` in Library, Band e Note.
 - [V] `.touch-target` è usato solo in Editor, Library e SysEx.
-- [H] Il toast mobile è `fixed top-0` e può coprire l'header (`ui/toast.tsx:19`).
-- Le verifiche visive ai 4 viewport sono in Fase 0/1: **non ancora eseguite**.
+- [V] **Toast su mobile** (Fase 1): erano **fuori schermo** sotto i 640px, non solo sopra l'header. Il contenitore `fixed` non aveva posizione orizzontale e finiva a x = larghezza dello schermo, quindi nessun messaggio era visibile su telefono, errori compresi. Corretto in `e17f847`. Ora compare in alto e copre l'header per la sua durata: posizionamento definitivo in F2 (sopra la barra di navigazione o con safe area).
+- Verifiche visive ai 4 viewport eseguite in Fase 0 (baseline) e Fase 1.
 
 ### 5.11 Accessibilità
 
@@ -328,7 +417,7 @@ Le voci Note sono **[V]** salvo dove indicato. Requisiti di dettaglio e scenari 
   - `role="slider"` con valori ARIA sulle manopole;
   - overlay di sync con `role="status" aria-live`;
   - titolo e descrizione `sr-only` nel `NoteSheet`.
-- [H] Contrasti da misurare: etichetta OFF `zinc-500` 10px su `zinc-950` (circa 4:1); nomi preset `muted-foreground/60` in Library.
+- [V] **Contrasti misurati** (Fase 1, vedi §0.1): pulsante primario 3,34:1; nomi dei blocchi nella catena `zinc-500` 10px 4,14:1; etichette slot in Library `muted-foreground/60` 4,39:1. Tutti sotto la soglia AA di 4,5:1.
 
 ### 5.12 Prestazioni e manutenibilità
 
@@ -418,7 +507,7 @@ F0 Baseline ──┬─► F0b Correzioni P0 ───────────�
   - typecheck e test verdi;
   - screenshot di baseline archiviati.
 
-### Fase 1 — Audit e direzione UX/UI (S)
+### Fase 1 — Audit e direzione UX/UI (S) — ✅ verifiche completate, IA da approvare (vedi §0.1)
 - **Deliverable:**
   - conferma o smentita delle ipotesi [H] con Playwright: header a 360px, foglio `100vh`, toast, tastiera;
   - misure di contrasto;
@@ -429,7 +518,7 @@ F0 Baseline ──┬─► F0b Correzioni P0 ───────────�
 - **Rischi:** nessuno sul codice.
 - **Accettazione:** ogni [H] della sezione 5 marcata come confermata o smentita; IA approvata.
 
-### Fase 2 — Skill MG30 Studio UX e design system (M)
+### Fase 2 — Skill MG30 Studio UX e design system (M) — ✅ completata (vedi §0.2)
 - **Deliverable:**
   - skill `mg30-studio-ux` (✅ creata in questa attività);
   - token semantici: successo, avviso, info; colori dei blocchi spostati da `getBlockColorVar` a variabili CSS;
@@ -666,6 +755,14 @@ Lista (scaletta filtrata)               Lettura in prova                  Modali
 ## 10. Decisioni richieste
 
 Solo quelle che non si possono prendere in sicurezza dal codice.
+
+**Decise il 2026-10-25:**
+- **D1** → Firestore per utente (`users/{uid}/presets/slot_{n}`) con cache locale ed esportazione/importazione JSON. Implementato (`43c0105`, `d7dc107`).
+- **D2** → invio solo all'apertura del brano e con ▶, disattivabile per dispositivo, mai su Annulla e salvataggio. Implementato (`2b97066`). Scegliere slot o scena in modifica invia ancora il comando, come anteprima voluta dall'utente.
+- **D3** → pinch-zoom resta bloccato; in Fase 3 si aggiunge il testo regolabile nelle Note.
+- **D4** → modalità Live approvata **senza pedale Bluetooth**: schermo intero, avanzamento a tocco, blocco anti-tocco (Fase 3/5).
+
+Restano aperte D5–D10.
 
 | ID | Decisione | Perché serve |
 |---|---|---|

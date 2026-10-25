@@ -427,6 +427,18 @@ function BandsContent() {
     setIsSetlistDialogOpen(true);
   };
 
+  if (!userLoading && !user) {
+    return (
+      <AppShell>
+        <div className="mx-auto max-w-md py-16 text-center space-y-3">
+          <Users className="w-10 h-10 mx-auto text-muted-foreground" aria-hidden="true" />
+          <h2 className="text-xl font-bold">Accedi per gestire band e scalette</h2>
+          <p className="text-sm text-muted-foreground">Band e scalette sono salvate nel tuo account. Accedi con Google dal menu laterale.</p>
+        </div>
+      </AppShell>
+    );
+  }
+
   if (isLoading) {
     return (
       <AppShell>
@@ -571,7 +583,7 @@ function BandsContent() {
                                   </div>
                                   <span className="font-medium text-sm">{setlist.name}</span>
                                   {isSetlistFromNotes && (
-                                    <Badge variant="outline" className="text-[10px] font-semibold px-2 py-0.5 bg-muted/50 border-muted-foreground/30 text-muted-foreground">
+                                    <Badge variant="outline" className="text-label font-semibold px-2 py-0.5 bg-muted/50 border-muted-foreground/30 text-muted-foreground">
                                       Dalle note
                                     </Badge>
                                   )}

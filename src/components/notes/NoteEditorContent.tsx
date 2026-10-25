@@ -10,53 +10,30 @@ import { useNotesCache } from '@/stores/use-notes-cache';
 import { getNoteLoadAction } from './note-load-action';
 import { serializeDraft } from './note-draft';
 import { useUnsavedChangesGuard } from '@/hooks/use-unsaved-changes-guard';
+import { getPresetSendCommands, readAutoSendSetting } from './preset-send';
+import { useNotesAutoSend } from '@/hooks/use-notes-auto-send';
+import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Plus, Trash2, ChevronDown, ChevronUp, ChevronRight, Save, Layers, Pencil, X, Copy, ArrowUp, ArrowDown, MoreVertical } from 'lucide-react';
+import { Plus, Trash2, ChevronDown, ChevronUp, ChevronRight, Save, Layers, Pencil, X, Copy, ArrowUp, ArrowDown, MoreVertical, Play } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
-import { getChordPositions } from '@/lib/chord-data';
+import { CHORD_ROOTS, CHORD_TABLE, getChordPositions } from '@/lib/chord-data';
+import { SECTION_COLORS, type SectionType } from '@/lib/section-colors';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { formatSlotLabel, matchesSlotSearch } from '@/lib/slot';
+import { SaveStatus } from '@/components/common/save-status';
 
-type SectionType = "Intro" | "Verse" | "Chorus" | "Bridge" | "Strum" | "Out" | "Solo";
 
-const SECTION_COLORS: Record<SectionType, { bg: string; text: string; border: string }> = {
-  Intro: { bg: "bg-cyan-500/15", text: "text-cyan-400", border: "border-cyan-500/40" },
-  Verse: { bg: "bg-green-500/15", text: "text-green-400", border: "border-green-500/40" },
-  Chorus: { bg: "bg-yellow-500/15", text: "text-yellow-400", border: "border-yellow-500/40" },
-  Bridge: { bg: "bg-pink-500/15", text: "text-pink-400", border: "border-pink-500/40" },
-  Strum: { bg: "bg-purple-500/15", text: "text-purple-400", border: "border-purple-500/40" },
-  Out: { bg: "bg-gray-500/15", text: "text-gray-300", border: "border-gray-500/40" },
-  Solo: { bg: "bg-orange-500/20", text: "text-orange-500", border: "border-orange-500/40" }
-};
 
-const CHORD_ROOTS = ["C", "C#", "Db", "D", "D#", "Eb", "E", "F", "F#", "Gb", "G", "G#", "Ab", "A", "A#", "Bb", "B"];
-const CHORD_TABLE: Record<string, string[]> = {
-  "C": ["C", "Cm", "C7", "Cmaj7", "Cm7", "C/B", "C/Bb", "C/G", "C/E", "C aum", "Cdim", "Csus4", "Csus2", "Cadd9"],
-  "C#": ["C#", "C#m", "C#m/B", "C#7", "C#maj7", "C#m7", "C# aum", "C#dim", "C#sus4", "C#sus2", "C#add9"],
-  "Db": ["Db", "Dbm", "Db7", "Dbmaj7", "Dbm7", "Db aum", "Dbdim", "Dbsus4", "Dbsus2", "Dbmadd9"],
-  "D": ["D", "D5", "Dm", "D7", "Dmaj7", "Dm7", "D/C", "D/B", "D/A", "D/F#", "Dm/C", "Dm/Bb", "D aum", "Ddim", "Dsus4", "Dsus2", "Dadd9"],
-  "D#": ["D#", "D#m", "D#7", "D#maj7", "D#m7", "D# aum", "D#dim", "D#sus4", "D#sus2", "D#add9"],
-  "Eb": ["Eb", "Ebm", "Eb7", "Ebmaj7", "Ebm7", "Eb aum", "Ebdim", "Ebsus4", "Ebsus2", "Ebadd9"],
-  "E": ["E", "Em", "E7", "Emaj7", "Em7", "E/D", "E/G#", "E/F#", "E aum", "Edim", "Esus4", "Esus2", "Eadd9"],
-  "F": ["F", "Fm", "F7", "Fmaj7", "Fm7", "F/E", "F/G", "F aum", "Fdim", "Fsus4", "Fsus2", "Fadd9"],
-  "F#": ["F#", "F#m", "F#m/E", "F#7", "F#maj7", "F#m7", "F# aum", "F#dim", "F#sus4", "F#sus2", "F#add9"],
-  "Gb": ["Gb", "Gbm", "Gb7", "Gbmaj7", "Gbm7", "Gb aum", "Gbdim", "Gbsus4", "Gbsus2", "Gbadd9"],
-  "G": ["G", "Gm", "G7", "Gmaj7", "Gm7", "G/F#", "G/F", "G/E", "G/D", "G/B", "G aum", "Gdim", "Gsus4", "Gsus2", "Gadd9"],
-  "G#": ["G#", "G#m", "G#7", "G#maj7", "G#m7", "G# aum", "G#dim", "G#sus4", "G#sus2", "G#add9"],
-  "Ab": ["Ab", "Abm", "Ab7", "Abmaj7", "Abm7", "Ab aum", "Abdim", "Absus4", "Absus2", "Abadd9"],
-  "A": ["A", "Am", "A7", "Amaj7", "Am7", "A/G", "A/F#", "A/E", "A/C#", "Am/G", "Am/F#", "Am/F", "A aum", "Adim", "Asus4", "Asus2", "Aadd9"],
-  "A#": ["A#", "A#m", "A#7", "A#maj7", "A#m7", "A# aum", "A#dim", "A#sus4", "A#sus2", "A#add9"],
-  "Bb": ["Bb", "Bbm", "Bb7", "Bbmaj7", "Bbm7", "Bb aum", "Bbdim", "Bbsus4", "Bbsus2", "Bbmadd9"],
-  "B": ["B", "Bm", "B7", "B7/A", "Bmaj7", "Bm7", "B/A", "B aum", "Bdim", "Bsus4", "Bsus2", "Badd9"],
-};
+
 
 interface NoteEditorContentProps {
   noteId: string | null;
@@ -71,28 +48,28 @@ function ChordPicker({ onSelect, step, setStep, selectedLetter, setSelectedLette
   if (step === 'type') {
     return (
       <div className="flex flex-col gap-3">
-        <p className="text-[11px] font-bold uppercase text-muted-foreground tracking-wider">Inserisci</p>
+        <p className="text-caption font-bold uppercase text-muted-foreground tracking-wider">Inserisci</p>
         <div className="grid grid-cols-3 gap-2">
           <button
             onClick={() => setStep('letter')}
             className="p-3 flex flex-col items-center gap-1 text-sm font-bold bg-secondary hover:bg-secondary/80 rounded-lg border border-border/50 transition-colors"
           >
             <span className="text-xl">🎵</span>
-            <span className="text-[11px] uppercase tracking-wide">Accordo</span>
+            <span className="text-caption uppercase tracking-wide">Accordo</span>
           </button>
           <button
             onClick={() => onSelect('NEWLINE')}
             className="p-3 flex flex-col items-center gap-1 text-sm font-bold bg-secondary hover:bg-secondary/80 rounded-lg border border-border/50 transition-colors"
           >
             <span className="text-xl">↵</span>
-            <span className="text-[11px] uppercase tracking-wide">A Capo</span>
+            <span className="text-caption uppercase tracking-wide">A Capo</span>
           </button>
           <button
             onClick={() => setStep('multiplier')}
             className="p-3 flex flex-col items-center gap-1 text-sm font-bold bg-secondary hover:bg-secondary/80 rounded-lg border border-border/50 transition-colors"
           >
             <span className="text-xl">×</span>
-            <span className="text-[11px] uppercase tracking-wide">Ripeti</span>
+            <span className="text-caption uppercase tracking-wide">Ripeti</span>
           </button>
         </div>
       </div>
@@ -104,8 +81,8 @@ function ChordPicker({ onSelect, step, setStep, selectedLetter, setSelectedLette
     return (
       <div className="flex flex-col gap-3">
         <div className="flex items-center gap-2">
-          <button onClick={() => setStep('type')} className="text-[11px] text-muted-foreground hover:text-foreground transition-colors">← Indietro</button>
-          <p className="text-[11px] font-bold uppercase text-muted-foreground tracking-wider">Ripetizioni</p>
+          <button onClick={() => setStep('type')} className="text-caption text-muted-foreground hover:text-foreground transition-colors">← Indietro</button>
+          <p className="text-caption font-bold uppercase text-muted-foreground tracking-wider">Ripetizioni</p>
         </div>
         <div className="grid grid-cols-4 gap-2">
           {[2, 3, 4, 5, 6, 7, 8].map(n => (
@@ -126,8 +103,8 @@ function ChordPicker({ onSelect, step, setStep, selectedLetter, setSelectedLette
     return (
       <div className="flex flex-col gap-3">
         <div className="flex items-center gap-2">
-          <button onClick={() => setStep('type')} className="text-[11px] text-muted-foreground hover:text-foreground transition-colors">← Indietro</button>
-          <p className="text-[11px] font-bold uppercase text-muted-foreground tracking-wider">Nota</p>
+          <button onClick={() => setStep('type')} className="text-caption text-muted-foreground hover:text-foreground transition-colors">← Indietro</button>
+          <p className="text-caption font-bold uppercase text-muted-foreground tracking-wider">Nota</p>
         </div>
         <div className="grid grid-cols-4 gap-2">
           {CHORD_ROOTS.map(root => (
@@ -153,8 +130,8 @@ function ChordPicker({ onSelect, step, setStep, selectedLetter, setSelectedLette
     return (
       <div className="flex flex-col gap-3">
         <div className="flex items-center gap-2">
-          <button onClick={() => setStep('letter')} className="text-[11px] text-muted-foreground hover:text-foreground transition-colors">← Indietro</button>
-          <p className="text-[11px] font-bold uppercase text-muted-foreground tracking-wider">{selectedRoot}</p>
+          <button onClick={() => setStep('letter')} className="text-caption text-muted-foreground hover:text-foreground transition-colors">← Indietro</button>
+          <p className="text-caption font-bold uppercase text-muted-foreground tracking-wider">{selectedRoot}</p>
         </div>
         <div className="grid grid-cols-3 gap-2">
           {chords.map(chord => (
@@ -176,6 +153,7 @@ function ChordPicker({ onSelect, step, setStep, selectedLetter, setSelectedLette
 
 export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange, onNext }: NoteEditorContentProps) {
   const { devicePresets, status, sendProgramChange, sendSceneChange } = useMidiStore();
+  const [autoSendPreset, setAutoSendPreset] = useNotesAutoSend();
   const { toast } = useToast();
   const { firestore } = useFirebase();
   const { user } = useUser();
@@ -211,6 +189,11 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
     title, band, setlist, presetSlot: selectedPresetSlot, presetScene: selectedPresetScene, generalNotes, sections,
   });
   const isDirty = editMode && currentDraft !== savedDraftRef.current;
+  // NT17: un solo salvataggio alla volta e stato visibile.
+  const [isSaving, setIsSaving] = useState(false);
+  const savingRef = useRef(false);
+  const [saveFailed, setSaveFailed] = useState(false);
+  const saveState = isSaving ? 'saving' : saveFailed ? 'error' : isDirty ? 'dirty' : 'idle';
   const [pendingExit, setPendingExit] = useState<'close' | 'cancel' | null>(null);
 
   const discardChanges = () => {
@@ -242,6 +225,8 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
     } else if (action === 'load' && cachedNote) {
       loadedNoteIdRef.current = cachedNote.id;
       loadNote(cachedNote);
+      // Letta al momento: lo stato del hook potrebbe non essere ancora sincronizzato.
+      if (readAutoSendSetting(window.localStorage)) sendNotePreset(cachedNote.presetSlot, cachedNote.presetScene);
     }
   }, [noteId, cachedNote]);
 
@@ -268,12 +253,7 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
     if (!presetSearch) return devicePresets;
     const search = presetSearch.toLowerCase();
     return devicePresets.filter(p => {
-      const bank = Math.floor((p.slot - 1) / 4) + 1;
-      const sub = ['A', 'B', 'C', 'D'][(p.slot - 1) % 4];
-      const label = `${bank}${sub}`.toLowerCase();
-      const fullLabel = `${String(bank).padStart(2, '0')}${sub}`.toLowerCase();
-      
-      return label.includes(search) || fullLabel.includes(search) || p.name.toLowerCase().includes(search);
+      return matchesSlotSearch(p, search);
     });
   }, [devicePresets, presetSearch]);
 
@@ -298,16 +278,26 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
     });
     setEditMode(false);
     setIsNotesOpen(true);
-    if (note.presetSlot && status === 'connected') {
-      sendProgramChange(parseInt(note.presetSlot) - 1);
-      if (note.presetScene !== undefined) {
-        const presetScene = note.presetScene;
-        setTimeout(() => sendSceneChange(parseInt(presetScene)), 500);
-      }
+  };
+
+  // Richiama sulla pedaliera il preset collegato al brano (D2: solo all'apertura e con ▶).
+  const sendNotePreset = (presetSlot?: string, presetScene?: string) => {
+    const commands = getPresetSendCommands({ presetSlot, presetScene });
+    if (!commands || status !== 'connected') return false;
+    sendProgramChange(commands.program);
+    if (commands.scene !== null) {
+      const scene = commands.scene;
+      setTimeout(() => sendSceneChange(scene), 500);
     }
+    return true;
   };
 
   const handleSaveNote = async () => {
+    if (savingRef.current) return;
+    if (!user) {
+      toast({ title: "Accedi per salvare", description: "Le note si salvano nel tuo account: accedi con Google dal menu laterale.", variant: "destructive" });
+      return;
+    }
     if (isNoteMissing) {
       toast({ title: "Nota non ancora caricata", description: "Attendi il caricamento delle note e riprova.", variant: "destructive" });
       return;
@@ -337,19 +327,28 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
       userId: user?.uid
     };
 
+    savingRef.current = true;
+    setIsSaving(true);
     try {
       if (noteId) {
         await updateDoc(doc(firestore, "notes", noteId), noteData);
         onUpdate({ ...noteData, id: noteId } as SavedNote);
       } else {
         const docRef = await addDoc(collection(firestore, "notes"), noteData);
+        // La nota appena creata è già nell'editor: non va ricaricata (né il preset reinviato).
+        loadedNoteIdRef.current = docRef.id;
         onUpdate({ ...noteData, id: docRef.id } as SavedNote);
       }
       savedDraftRef.current = currentDraft;
+      setSaveFailed(false);
       setEditMode(false);
       toast({ title: "Nota Salvata nel Cloud" });
     } catch (err) {
+      setSaveFailed(true);
       toast({ title: "Errore salvataggio cloud", variant: "destructive" });
+    } finally {
+      savingRef.current = false;
+      setIsSaving(false);
     }
   };
 
@@ -442,7 +441,7 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
             </button>
 
             <div className="min-w-0">
-              <span className="section-kicker block leading-none">Nota brano</span>
+              <span className="flex items-center gap-2 leading-none"><span className="section-kicker">Nota brano</span>{editMode && <SaveStatus state={saveState} />}</span>
               {editMode ? (
                 <Input
                   aria-label="Titolo brano"
@@ -467,6 +466,22 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
             </div>
 
             <div className="flex items-center gap-2">
+              {!editMode && noteId && !isNoteMissing && selectedPresetSlot && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (sendNotePreset(selectedPresetSlot, selectedPresetScene)) {
+                      toast({ title: 'Preset inviato', description: `Slot ${formatSlotLabel(Number(selectedPresetSlot))}${selectedPresetScene ? ` · Scena ${Number(selectedPresetScene) + 1}` : ''}` });
+                    }
+                  }}
+                  disabled={status !== 'connected'}
+                  className="flex h-11 w-11 items-center justify-center rounded-xl border border-border/80 bg-secondary/70 text-muted-foreground shadow-sm transition-[background-color,border-color,color,transform] duration-150 hover:border-primary/40 hover:bg-primary/10 hover:text-primary active:scale-95 disabled:pointer-events-none disabled:opacity-40"
+                  title={status === 'connected' ? 'Invia il preset alla pedaliera' : 'Collega la pedaliera per inviare il preset'}
+                  aria-label="Invia il preset alla pedaliera"
+                >
+                  <Play className="h-5 w-5" />
+                </button>
+              )}
               {!editMode && noteId && !isNoteMissing && (
                 <button
                   type="button"
@@ -503,7 +518,9 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
                   <button
                     type="button"
                     onClick={handleSaveNote}
-                    className="flex h-11 w-11 items-center justify-center rounded-xl border border-primary/30 bg-primary text-primary-foreground shadow-md shadow-primary/20 transition-[background-color,box-shadow,transform] duration-150 hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/25 active:scale-95"
+                    disabled={isSaving}
+                    aria-busy={isSaving}
+                    className="flex h-11 w-11 items-center justify-center rounded-xl border border-primary/30 bg-primary text-primary-foreground shadow-md shadow-primary/20 transition-[background-color,box-shadow,transform] duration-150 hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/25 active:scale-95 disabled:opacity-60"
                     title="Salva nota"
                     aria-label="Salva nota"
                   >
@@ -526,9 +543,9 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
             <div className="space-y-4 p-4 rounded-xl bg-secondary/20 border border-border/50">
               <div className="grid grid-cols-3 gap-3">
                 <div className="col-span-2 space-y-2">
-                  <label className="text-[11px] uppercase font-black text-muted-foreground tracking-tighter">Hardware Preset</label>
+                  <label className="text-caption uppercase font-black text-muted-foreground tracking-tighter">Hardware Preset</label>
                   <Select value={selectedPresetSlot} onValueChange={(val) => { setSelectedPresetSlot(val); if (status === 'connected') sendProgramChange(parseInt(val)-1); }} disabled={!editMode}>
-                    <SelectTrigger className="h-11 bg-background/50 border-border font-mono text-[13px]"><SelectValue placeholder="Collega a Slot MG-30" /></SelectTrigger>
+                    <SelectTrigger className="h-11 bg-background/50 border-border font-mono text-body-sm"><SelectValue placeholder="Collega a Slot MG-30" /></SelectTrigger>
                     <SelectContent className="max-h-[300px]">
                       <div className="px-2 pb-2 pt-1">
                         <Input 
@@ -542,9 +559,7 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
                       <div className="overflow-y-auto max-h-[240px]">
                         {filteredPresets.length > 0 ? (
                           filteredPresets.map((p) => {
-                            const bank = Math.floor((p.slot - 1) / 4) + 1;
-                            const sub = ['A', 'B', 'C', 'D'][(p.slot - 1) % 4];
-                            const label = `${String(bank).padStart(2, '0')}${sub}`;
+                            const label = formatSlotLabel(p.slot);
                             return (
                               <SelectItem key={`preset-opt-${p.slot}`} value={p.slot.toString()}>
                                 <span className="font-bold mr-2">{label}:</span> {p.name}
@@ -559,14 +574,14 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[11px] uppercase font-black text-muted-foreground tracking-tighter">Scena</label>
+                  <label className="text-caption uppercase font-black text-muted-foreground tracking-tighter">Scena</label>
                   <Select 
                     value={selectedPresetScene} 
                     onValueChange={(val) => { setSelectedPresetScene(val); if (status === 'connected') sendSceneChange(parseInt(val)); }} 
                     disabled={!editMode || !selectedPresetSlot}
                   >
                     <SelectTrigger className={cn(
-                      "h-11 bg-background/50 border-border font-mono text-[13px]",
+                      "h-11 bg-background/50 border-border font-mono text-body-sm",
                       (!selectedPresetSlot) && "opacity-50 cursor-not-allowed"
                     )}>
                       <SelectValue placeholder="S1" />
@@ -579,9 +594,13 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
                   </Select>
                 </div>
               </div>
+              <label className="flex min-h-11 items-center justify-between gap-3 text-body-sm text-muted-foreground">
+                <span>Invia il preset alla pedaliera quando apro un brano</span>
+                <Switch checked={autoSendPreset} onCheckedChange={setAutoSendPreset} aria-label="Invio automatico del preset all'apertura" />
+              </label>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
-                  <label className="text-[11px] uppercase font-black text-muted-foreground tracking-tighter">Band</label>
+                  <label className="text-caption uppercase font-black text-muted-foreground tracking-tighter">Band</label>
                   <Select value={band} onValueChange={setBand} disabled={!editMode}>
                     <SelectTrigger className="h-11 text-[14px] bg-background/50 border-border">
                       <SelectValue placeholder="Scegli Band" />
@@ -595,7 +614,7 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[11px] uppercase font-black text-muted-foreground tracking-tighter">Scaletta</label>
+                  <label className="text-caption uppercase font-black text-muted-foreground tracking-tighter">Scaletta</label>
                   <Select value={setlist} onValueChange={setSetlist} disabled={!editMode}>
                     <SelectTrigger className="h-11 text-[14px] bg-background/50 border-border">
                       <SelectValue placeholder="Scegli Scaletta" />
@@ -615,7 +634,7 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
           {editMode || (generalNotes && generalNotes.trim() !== '...') ? (
             <Collapsible open={isNotesOpen} onOpenChange={setIsNotesOpen} className="space-y-2">
               <CollapsibleTrigger asChild>
-                <button className="w-full justify-between h-10 text-[11px] font-black uppercase tracking-widest bg-secondary/30 rounded-xl px-4 border border-border/30 flex items-center">
+                <button className="w-full justify-between h-10 text-caption font-black uppercase tracking-widest bg-secondary/30 rounded-xl px-4 border border-border/30 flex items-center">
                   <span>Note Generali</span>
                   {isNotesOpen ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
                 </button>
@@ -636,7 +655,7 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
             {editMode && (
               <CardHeader className="py-3 bg-secondary/40 flex flex-row items-center justify-between px-5 border-b border-border/40">
                 <CardTitle className="text-[12px] uppercase tracking-widest font-black text-primary flex items-center gap-2"><Layers className="w-5 h-5" /> Struttura Brano</CardTitle>
-                <button onClick={() => handleAddSection(sections.length)} className="h-9 text-[11px] font-bold bg-background/50 border px-3 rounded flex items-center gap-2"><Plus className="w-4 h-4 mr-1" /> Sezione</button>
+                <button onClick={() => handleAddSection(sections.length)} className="h-9 text-caption font-bold bg-background/50 border px-3 rounded flex items-center gap-2"><Plus className="w-4 h-4 mr-1" /> Sezione</button>
               </CardHeader>
             )}
             <CardContent className="p-0">
@@ -645,7 +664,7 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
                   <React.Fragment key={section.id}>
                     {editMode && sIdx === 0 && (
                       <div className="flex items-center justify-center h-8 group/insert">
-                        <button onClick={() => handleAddSection(0)} className="opacity-0 group-hover/insert:opacity-100 flex items-center gap-2 text-[10px] font-bold uppercase text-primary transition-opacity">
+                        <button onClick={() => handleAddSection(0)} className="opacity-0 group-hover/insert:opacity-100 flex items-center gap-2 text-label font-bold uppercase text-primary transition-opacity">
                           <Plus className="w-4 h-4" /> Inserisci Sezione
                         </button>
                       </div>
@@ -667,7 +686,7 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
                             </SelectTrigger>
                             <SelectContent>
                               {["Intro", "Verse", "Chorus", "Bridge", "Strum", "Out", "Solo"].map(t => (
-                                <SelectItem key={t} value={t} className="text-[11px] font-bold uppercase">{t}</SelectItem>
+                                <SelectItem key={t} value={t} className="text-caption font-bold uppercase">{t}</SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
@@ -675,7 +694,7 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
                           <Badge
                             variant="secondary"
                             className={cn(
-                              "w-full justify-center h-9 text-[13px] font-black uppercase tracking-tighter border",
+                              "w-full justify-center h-9 text-body-sm font-black uppercase tracking-tighter border",
                               SECTION_COLORS[section.type as SectionType]?.bg,
                               SECTION_COLORS[section.type as SectionType]?.text,
                               SECTION_COLORS[section.type as SectionType]?.border
@@ -753,7 +772,7 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
                                 </TooltipTrigger>
                                 <TooltipContent className="p-3 bg-card border-primary/40">
                                   <div className="space-y-2">
-                                    <p className="text-[11px] font-bold uppercase text-primary border-b border-primary/20 pb-1">
+                                    <p className="text-caption font-bold uppercase text-primary border-b border-primary/20 pb-1">
                                       {chord.startsWith('x') ? 'Ripetizione' : 'Posizioni Chitarra'}
                                     </p>
                                     {chord.startsWith('x') ? (
@@ -765,7 +784,7 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
                                             <span className="text-muted-foreground w-4">{pIdx + 1}.</span>
                                             <span className="text-foreground font-bold">{pos}</span>
                                           </div>
-                                        )) || <p className="text-[11px] italic opacity-60">Posizioni non trovate</p>}
+                                        )) || <p className="text-caption italic opacity-60">Posizioni non trovate</p>}
                                       </div>
                                     )}
                                   </div>
@@ -831,7 +850,7 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
                     {editMode && (
                       <div className="flex items-center justify-center h-8 group/insert relative">
                         <div className="absolute left-0 right-0 top-1/2 h-[1px] bg-primary/5 -translate-y-1/2" />
-                        <button onClick={() => handleAddSection(sIdx + 1)} className="relative z-10 opacity-0 group-hover/insert:opacity-100 bg-background px-3 flex items-center gap-2 text-[10px] font-bold uppercase text-primary transition-opacity border border-primary/20 rounded-full py-1">
+                        <button onClick={() => handleAddSection(sIdx + 1)} className="relative z-10 opacity-0 group-hover/insert:opacity-100 bg-background px-3 flex items-center gap-2 text-label font-bold uppercase text-primary transition-opacity border border-primary/20 rounded-full py-1">
                           <Plus className="w-3.5 h-3.5" /> Inserisci Sezione Qui
                         </button>
                       </div>

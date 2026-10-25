@@ -6,7 +6,7 @@ import { AppShell } from '@/components/layout/app-shell';
 import { Card, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { NotebookPen, Plus, Trash2, GripVertical, Music2, Layers, Printer, Copy, ArrowRight, FileText, Search, X } from 'lucide-react';
+import { NotebookPen, Plus, Trash2, GripVertical, Music2, Layers, Printer, Copy, ArrowRight, FileText, Search, X, Loader2 } from 'lucide-react';
 import { useFirebase, useUser } from '@/firebase';
 import { collection, getDocs, query, where, doc, deleteDoc, writeBatch, addDoc, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
@@ -32,16 +32,11 @@ import {
 } from '@/components/notes/note-sheet-state';
 import type { NoteSection, SavedNote } from '@/types/note';
 import { getNextNoteInSetlist } from '@/components/notes/note-navigation';
+import { GUARD_HISTORY_RESTORED_EVENT } from '@/hooks/use-unsaved-changes-guard';
+import { formatSlotLabel } from '@/lib/slot';
+import { SECTION_COLORS } from '@/lib/section-colors';
+import { EmptyState, ErrorState } from '@/components/common/empty-state';
 
-const SECTION_COLORS: Record<string, { bg: string; text: string; border: string }> = {
-  Intro: { bg: "bg-cyan-500/15", text: "text-cyan-400", border: "border-cyan-500/40" },
-  Verse: { bg: "bg-green-500/15", text: "text-green-400", border: "border-green-500/40" },
-  Chorus: { bg: "bg-yellow-500/15", text: "text-yellow-400", border: "border-yellow-500/40" },
-  Bridge: { bg: "bg-pink-500/15", text: "text-pink-400", border: "border-pink-500/40" },
-  Strum: { bg: "bg-purple-500/15", text: "text-purple-400", border: "border-purple-500/40" },
-  Out: { bg: "bg-gray-500/15", text: "text-gray-300", border: "border-gray-500/40" },
-  Solo: { bg: "bg-orange-500/20", text: "text-orange-500", border: "border-orange-500/40" }
-};
 
 const FILTER_BAND_KEY = 'mg30_notes_filter_band';
 const FILTER_SETLIST_KEY = 'mg30_notes_filter_setlist';
@@ -119,9 +114,10 @@ function NotesLibraryContent() {
     };
     syncUrl();
     // L'editor in modifica aggiunge e rimuove una voce di cronologia per gestire
-    // il tasto Indietro: dopo ogni spostamento l'URL deve restare allineato al foglio.
-    window.addEventListener('popstate', syncUrl);
-    return () => window.removeEventListener('popstate', syncUrl);
+    // il tasto Indietro: quando la rimuove, l'URL deve restare allineato al foglio.
+    // Non si ascolta ogni popstate, per non riscrivere l'URL della pagina precedente.
+    window.addEventListener(GUARD_HISTORY_RESTORED_EVENT, syncUrl);
+    return () => window.removeEventListener(GUARD_HISTORY_RESTORED_EVENT, syncUrl);
   }, [noteSheet]);
 
   useEffect(() => {
@@ -145,6 +141,10 @@ function NotesLibraryContent() {
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
+  // Stato del caricamento da Firestore (NT21): distingue caricamento, errore e lista vuota.
+  const [loadState, setLoadState] = useState<'idle' | 'loading' | 'error'>('idle');
+  const [loadAttempt, setLoadAttempt] = useState(0);
+
   useEffect(() => {
     if (userLoading || !user) return;
 
@@ -160,20 +160,23 @@ function NotesLibraryContent() {
 
     // Load from Firestore
     const loadNotes = async () => {
+      setLoadState('loading');
       try {
         const q = query(collection(firestore, "notes"), where("userId", "==", user.uid));
         const snapshot = await getDocs(q);
         const notes = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() } as SavedNote));
         const sorted = notes.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
         setNotes(sorted);
+        setLoadState('idle');
       } catch (error) {
         console.error('Error loading notes:', error);
+        setLoadState('error');
         toast({ title: "Errore caricamento note", variant: "destructive" });
       }
     };
 
     loadNotes();
-  }, [user, userLoading, firestore, cachedNotes.length, setNotes]);
+  }, [user, userLoading, firestore, cachedNotes.length, setNotes, loadAttempt]);
 
   const filteredNotes = useMemo(() => {
     let notesToFilter = [...cachedNotes].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
@@ -264,7 +267,12 @@ function NotesLibraryContent() {
     } catch (err) { toast({ title: "Errore eliminazione", variant: "destructive" }); }
   };
 
+  // Il riordino ha senso solo dentro una scaletta e senza ricerca: in una vista
+  // filtrata gli indici non corrispondono all'ordine reale dei brani.
+  const canReorder = !!selectedSetlist && !searchQuery.trim();
+
   function handleDragEnd(event: DragEndEvent) {
+    if (!canReorder) return;
     const { active, over } = event;
     if (over && active.id !== over.id) {
         const activeIndex = filteredNotes.findIndex(n => n.id === active.id);
@@ -422,7 +430,18 @@ function NotesLibraryContent() {
                 <Printer className="w-5 h-5" />
               </Button>
             )}
-            <Button onClick={() => setIsSearchOpen(!isSearchOpen)} variant="outline" size="icon" className="h-11 w-11 border-primary/30 text-primary hover:bg-primary/10">
+            <Button
+              onClick={() => {
+                // Chiudere la ricerca azzera anche il filtro, che altrimenti resterebbe invisibile.
+                if (isSearchOpen) setSearchQuery('');
+                setIsSearchOpen(!isSearchOpen);
+              }}
+              variant="outline"
+              size="icon"
+              aria-label={isSearchOpen ? 'Chiudi ricerca' : 'Cerca brano'}
+              aria-expanded={isSearchOpen}
+              className="h-11 w-11 border-primary/30 text-primary hover:bg-primary/10"
+            >
               <Search className="w-5 h-5" />
             </Button>
             <Popover open={isAddMenuOpen} onOpenChange={setIsAddMenuOpen}>
@@ -510,13 +529,8 @@ function NotesLibraryContent() {
                       <div className="text-xs text-muted-foreground">{note.band} - {note.setlist}</div>
                     </div>
                     {note.presetSlot && (
-                      <Badge variant="outline" className="flex h-6 shrink-0 items-center gap-1.5 border-primary/20 bg-primary/10 px-2 text-[10px] font-black text-primary">
-                        <span>{(() => {
-                          const s = parseInt(note.presetSlot);
-                          const bank = Math.floor((s - 1) / 4) + 1;
-                          const sub = ['A', 'B', 'C', 'D'][(s - 1) % 4];
-                          return `${String(bank).padStart(2, '0')}${sub}`;
-                        })()}</span>
+                      <Badge variant="outline" className="flex h-6 shrink-0 items-center gap-1.5 border-primary/20 bg-primary/10 px-2 text-label font-black text-primary">
+                        <span>{formatSlotLabel(parseInt(note.presetSlot))}</span>
                         <>
                           <span className="opacity-30">•</span>
                           <span>S{note.presetScene ? parseInt(note.presetScene) + 1 : 1}</span>
@@ -549,10 +563,24 @@ function NotesLibraryContent() {
 
         <div className="space-y-2">
           {filteredNotes.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 text-center space-y-4 opacity-40">
-              <Music2 className="w-12 h-12" /><h3 className="text-lg font-bold uppercase">Nessun brano</h3><p className="text-xs">Usa i filtri o aggiungi un nuovo brano</p>
-            </div>
+            cachedNotes.length === 0 && loadState === 'loading' ? (
+              <EmptyState icon={<Loader2 className="h-10 w-10 animate-spin" />} title="Caricamento dei brani…" />
+            ) : cachedNotes.length === 0 && loadState === 'error' ? (
+              <ErrorState title="Brani non caricati" description="Controlla la connessione e riprova." onRetry={() => setLoadAttempt(n => n + 1)} />
+            ) : cachedNotes.length === 0 && !userLoading && !user ? (
+              <EmptyState icon={<Music2 className="h-10 w-10" />} title="Accedi per vedere i tuoi brani" description="Le note si salvano nel tuo account: accedi con Google dal menu laterale." />
+            ) : (
+              <EmptyState
+                icon={<Music2 className="h-10 w-10" />}
+                title="Nessun brano"
+                description={cachedNotes.length > 0 ? 'Nessun brano corrisponde ai filtri o alla ricerca.' : 'Aggiungi il primo brano con il pulsante +.'}
+              />
+            )
           ) : (
+            <>
+            {!canReorder && (
+              <p className="px-1 text-xs text-muted-foreground">Seleziona band e scaletta (senza ricerca attiva) per riordinare i brani.</p>
+            )}
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
               <SortableContext items={filteredNotes.map(n => n.id)} strategy={verticalListSortingStrategy}>
                 <div className="grid grid-cols-1 gap-2.5">
@@ -568,11 +596,13 @@ function NotesLibraryContent() {
                       }}
                       ref={(el) => { if(el) noteRefs.current[note.id] = el; }}
                       isHighlighted={note.id === (selectedNoteId ?? scrollToId)}
+                      canReorder={canReorder}
                     />
                   ))}
                 </div>
               </SortableContext>
             </DndContext>
+            </>
           )}
         </div>
       </div>
@@ -720,7 +750,7 @@ function NotesLibraryContent() {
         ))}
       </div>
 
-      <NoteSheet isOpen={isSheetOpen} onClose={() => dispatchNoteSheet({ type: 'close' })} disableGestures={isEditing}>
+      <NoteSheet isOpen={isSheetOpen} onClose={() => dispatchNoteSheet({ type: 'close' })} disableGestures={isEditing} contentKey={selectedNoteId}>
         {editorKind === 'block' ? (
           <BlockEditorContent
             noteId={selectedNoteId}
@@ -770,8 +800,9 @@ const SortableNoteCard = React.memo(React.forwardRef<HTMLDivElement, {
   onCopy: (e: React.MouseEvent, note: SavedNote) => void;
   onClick: () => void;
   isHighlighted?: boolean;
-}>(({ note, index, onDelete, onCopy, onClick, isHighlighted }, ref) => {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: note.id });
+  canReorder: boolean;
+}>(({ note, index, onDelete, onCopy, onClick, isHighlighted, canReorder }, ref) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: note.id, disabled: !canReorder });
   const style = { transform: CSS.Transform.toString(transform), transition, zIndex: isDragging ? 50 : 0, opacity: isDragging ? 0.6 : 1 };
 
   const combinedRef = (el: HTMLDivElement) => {
@@ -795,9 +826,13 @@ const SortableNoteCard = React.memo(React.forwardRef<HTMLDivElement, {
        )}
        style={{ animationDelay: `${index * 0.05}s` }}
        >
-        <div {...attributes} {...listeners} className="flex h-full cursor-grab touch-none items-center justify-center px-1 text-muted-foreground/30 hover:text-primary active:cursor-grabbing" onClick={(e) => e.stopPropagation()}>
-          <GripVertical className="w-5 h-5" />
-        </div>
+        {canReorder ? (
+          <div {...attributes} {...listeners} aria-label={`Trascina per riordinare ${note.title}`} className="flex h-full cursor-grab touch-none items-center justify-center px-1 text-muted-foreground/30 hover:text-primary active:cursor-grabbing" onClick={(e) => e.stopPropagation()}>
+            <GripVertical className="w-5 h-5" />
+          </div>
+        ) : (
+          <div className="w-2 shrink-0" aria-hidden="true" />
+        )}
         <div className="flex-1 min-w-0 pl-3">
           {note.type === 'block' ? (
             <div className="flex items-start justify-between gap-3">
@@ -821,19 +856,14 @@ const SortableNoteCard = React.memo(React.forwardRef<HTMLDivElement, {
                 </div>
               </div>
               <div className="flex items-center gap-2 mt-2">
-                <span className="text-[10px] text-muted-foreground uppercase font-bold">{note.band}</span>
-                <span className="text-[10px] text-muted-foreground opacity-30">•</span>
-                <span className="text-[10px] text-muted-foreground uppercase font-bold">{note.setlist}</span>
+                <span className="text-label text-muted-foreground uppercase font-bold">{note.band}</span>
+                <span className="text-label text-muted-foreground opacity-30">•</span>
+                <span className="text-label text-muted-foreground uppercase font-bold">{note.setlist}</span>
                 {note.presetSlot && (
                   <>
-                    <span className="text-[10px] text-muted-foreground opacity-30">•</span>
-                    <span className="text-[10px] uppercase font-bold text-primary">
-                      {(() => {
-                        const s = parseInt(note.presetSlot);
-                        const bank = Math.floor((s - 1) / 4) + 1;
-                        const sub = ['A', 'B', 'C', 'D'][(s - 1) % 4];
-                        return `${String(bank).padStart(2, '0')}${sub}`;
-                      })()}
+                    <span className="text-label text-muted-foreground opacity-30">•</span>
+                    <span className="text-label uppercase font-bold text-primary">
+                      {formatSlotLabel(parseInt(note.presetSlot))}
                       {note.presetScene && ` S${parseInt(note.presetScene) + 1}`}
                     </span>
                   </>

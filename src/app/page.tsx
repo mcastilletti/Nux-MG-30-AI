@@ -165,13 +165,13 @@ export default function HomePage() {
                   <h4 className="text-sm font-semibold">Porte MIDI Disponibili</h4>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="p-4 rounded-xl bg-card/50 border border-white/5 shadow-sm">
-                      <p className="text-[10px] text-muted-foreground uppercase font-bold mb-2">Input</p>
+                      <p className="text-label text-muted-foreground uppercase font-bold mb-2">Input</p>
                       {availableDevices.inputs.map(d => (
                         <div key={d.id} className="text-xs truncate">{d.name}</div>
                       ))}
                     </div>
                     <div className="p-4 rounded-xl bg-card/50 border border-white/5 shadow-sm">
-                      <p className="text-[10px] text-muted-foreground uppercase font-bold mb-2">Output</p>
+                      <p className="text-label text-muted-foreground uppercase font-bold mb-2">Output</p>
                       {availableDevices.outputs.map(d => (
                         <div key={d.id} className="text-xs truncate">{d.name}</div>
                       ))}

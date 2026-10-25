@@ -2,6 +2,9 @@
 
 import { useEffect, useRef } from 'react';
 
+/** Emesso dopo che la guardia ha rimosso la propria voce dalla cronologia. */
+export const GUARD_HISTORY_RESTORED_EVENT = 'mg30:guard-history-restored';
+
 /**
  * Protegge un editor aperto:
  * - con `editing` attivo aggiunge una voce nella cronologia, così il tasto Indietro
@@ -25,7 +28,13 @@ export function useUnsavedChangesGuard({ editing, dirty, onBack }: { editing: bo
     return () => {
       armed = false;
       window.removeEventListener('popstate', handlePopState);
-      // Rimuove la voce aggiunta all'ingresso in modifica.
+      // Rimuove la voce aggiunta all'ingresso in modifica e avvisa chi deve
+      // riallineare l'URL della voce su cui si torna.
+      const handleRestored = () => {
+        window.removeEventListener('popstate', handleRestored);
+        window.dispatchEvent(new Event(GUARD_HISTORY_RESTORED_EVENT));
+      };
+      window.addEventListener('popstate', handleRestored);
       window.history.back();
     };
   }, [editing]);

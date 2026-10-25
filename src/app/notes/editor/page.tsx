@@ -21,6 +21,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useFirebase, useUser } from '@/firebase';
 import { collection, addDoc, onSnapshot, query, where, doc, deleteDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { getChordPositions } from '@/lib/chord-data';
+import { formatSlotLabel, matchesSlotSearch } from '@/lib/slot';
+import { CHORD_ROOTS, CHORD_TABLE } from '@/lib/chord-data';
 
 type SectionType = "Intro" | "Verse" | "Chorus" | "Bridge" | "Strum" | "Out" | "Solo";
 
@@ -46,26 +48,6 @@ interface SavedNote {
   updatedAt?: any;
 }
 
-const CHORD_ROOTS = ["C", "C#", "Db", "D", "D#", "Eb", "E", "F", "F#", "Gb", "G", "G#", "Ab", "A", "A#", "Bb", "B"];
-const CHORD_TABLE: Record<string, string[]> = {
-  "C": ["C", "Cm", "C7", "Cmaj7", "Cm7", "C/B", "C/Bb", "C/G", "C/E", "C aum", "Cdim", "Csus4", "Csus2", "Cadd9"],
-  "C#": ["C#", "C#m", "C#m/B", "C#7", "C#maj7", "C#m7", "C# aum", "C#dim", "C#sus4", "C#sus2", "C#add9"],
-  "Db": ["Db", "Dbm", "Db7", "Dbmaj7", "Dbm7", "Db aum", "Dbdim", "Dbsus4", "Dbsus2", "Dbmadd9"],
-  "D": ["D", "D5", "Dm", "D7", "Dmaj7", "Dm7", "D/C", "D/B", "D/A", "D/F#", "Dm/C", "Dm/Bb", "D aum", "Ddim", "Dsus4", "Dsus2", "Dadd9"],
-  "D#": ["D#", "D#m", "D#7", "D#maj7", "D#m7", "D# aum", "D#dim", "D#sus4", "D#sus2", "D#add9"],
-  "Eb": ["Eb", "Ebm", "Eb7", "Ebmaj7", "Ebm7", "Eb aum", "Ebdim", "Ebsus4", "Ebsus2", "Ebadd9"],
-  "E": ["E", "Em", "E7", "Emaj7", "Em7", "E/D", "E/G#", "E/F#", "E aum", "Edim", "Esus4", "Esus2", "Eadd9"],
-  "F": ["F", "Fm", "F7", "Fmaj7", "Fm7", "F/E", "F/G", "F aum", "Fdim", "Fsus4", "Fsus2", "Fadd9"],
-  "F#": ["F#", "F#m", "F#m/E", "F#7", "F#maj7", "F#m7", "F# aum", "F#dim", "F#sus4", "F#sus2", "F#add9"],
-  "Gb": ["Gb", "Gbm", "Gb7", "Gbmaj7", "Gbm7", "Gb aum", "Gbdim", "Gbsus4", "Gbsus2", "Gbadd9"],
-  "G": ["G", "Gm", "G7", "Gmaj7", "Gm7", "G/F#", "G/F", "G/E", "G/D", "G/B", "G aum", "Gdim", "Gsus4", "Gsus2", "Gadd9"],
-  "G#": ["G#", "G#m", "G#7", "G#maj7", "G#m7", "G# aum", "G#dim", "G#sus4", "G#sus2", "G#add9"],
-  "Ab": ["Ab", "Abm", "Ab7", "Abmaj7", "Abm7", "Ab aum", "Abdim", "Absus4", "Absus2", "Abadd9"],
-  "A": ["A", "Am", "A7", "Amaj7", "Am7", "A/G", "A/F#", "A/E", "A/C#", "Am/G", "Am/F#", "Am/F", "A aum", "Adim", "Asus4", "Asus2", "Aadd9"],
-  "A#": ["A#", "A#m", "A#7", "A#maj7", "A#m7", "A# aum", "A#dim", "A#sus4", "A#sus2", "A#add9"],
-  "Bb": ["Bb", "Bbm", "Bb7", "Bbmaj7", "Bbm7", "Bb aum", "Bbdim", "Bbsus4", "Bbsus2", "Bbmadd9"],
-  "B": ["B", "Bm", "B7", "B7/A", "Bmaj7", "Bm7", "B/A", "B aum", "Bdim", "Bsus4", "Bsus2", "Badd9"],
-};
 
 function NoteEditorContent() {
   const searchParams = useSearchParams();
@@ -150,12 +132,7 @@ function NoteEditorContent() {
     if (!presetSearch) return devicePresets;
     const search = presetSearch.toLowerCase();
     return devicePresets.filter(p => {
-      const bank = Math.floor((p.slot - 1) / 4) + 1;
-      const sub = ['A', 'B', 'C', 'D'][(p.slot - 1) % 4];
-      const label = `${bank}${sub}`.toLowerCase();
-      const fullLabel = `${String(bank).padStart(2, '0')}${sub}`.toLowerCase();
-      
-      return label.includes(search) || fullLabel.includes(search) || p.name.toLowerCase().includes(search);
+      return matchesSlotSearch(p, search);
     });
   }, [devicePresets, presetSearch]);
 
@@ -319,7 +296,7 @@ function NoteEditorContent() {
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader><DialogTitle>Importa Nota da JSON</DialogTitle><DialogDescription>Incolla qui il codice JSON.</DialogDescription></DialogHeader>
-                  <Textarea value={jsonToPaste} onChange={(e) => setJsonToPaste(e.target.value)} placeholder='{"title": "...", "sections": [...]}' className="min-h-[200px] font-mono text-[13px]" />
+                  <Textarea value={jsonToPaste} onChange={(e) => setJsonToPaste(e.target.value)} placeholder='{"title": "...", "sections": [...]}' className="min-h-[200px] font-mono text-body-sm" />
                   <DialogFooter><Button onClick={() => {
                     try {
                       const data = JSON.parse(jsonToPaste);
@@ -365,9 +342,9 @@ function NoteEditorContent() {
               <div className="space-y-4 p-4 rounded-xl bg-secondary/20 border border-border/50">
                 <div className="grid grid-cols-3 gap-3">
                   <div className="col-span-2 space-y-2">
-                    <label className="text-[11px] uppercase font-black text-muted-foreground tracking-tighter">Hardware Preset</label>
+                    <label className="text-caption uppercase font-black text-muted-foreground tracking-tighter">Hardware Preset</label>
                     <Select value={selectedPresetSlot} onValueChange={(val) => { setSelectedPresetSlot(val); if (status === 'connected') sendProgramChange(parseInt(val)-1); }} disabled={!editMode}>
-                      <SelectTrigger className="h-11 bg-background/50 border-border font-mono text-[13px]"><SelectValue placeholder="Collega a Slot MG-30" /></SelectTrigger>
+                      <SelectTrigger className="h-11 bg-background/50 border-border font-mono text-body-sm"><SelectValue placeholder="Collega a Slot MG-30" /></SelectTrigger>
                       <SelectContent className="max-h-[300px]">
                         <div className="px-2 pb-2 pt-1">
                           <Input 
@@ -381,9 +358,7 @@ function NoteEditorContent() {
                         <div className="overflow-y-auto max-h-[240px]">
                           {filteredPresets.length > 0 ? (
                             filteredPresets.map((p) => {
-                              const bank = Math.floor((p.slot - 1) / 4) + 1;
-                              const sub = ['A', 'B', 'C', 'D'][(p.slot - 1) % 4];
-                              const label = `${String(bank).padStart(2, '0')}${sub}`;
+                              const label = formatSlotLabel(p.slot);
                               return (
                                 <SelectItem key={`preset-opt-${p.slot}`} value={p.slot.toString()}>
                                   <span className="font-bold mr-2">{label}:</span> {p.name}
@@ -398,14 +373,14 @@ function NoteEditorContent() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[11px] uppercase font-black text-muted-foreground tracking-tighter">Scena</label>
+                    <label className="text-caption uppercase font-black text-muted-foreground tracking-tighter">Scena</label>
                     <Select 
                       value={selectedPresetScene} 
                       onValueChange={(val) => { setSelectedPresetScene(val); if (status === 'connected') sendSceneChange(parseInt(val)); }} 
                       disabled={!editMode || !selectedPresetSlot}
                     >
                       <SelectTrigger className={cn(
-                        "h-11 bg-background/50 border-border font-mono text-[13px]",
+                        "h-11 bg-background/50 border-border font-mono text-body-sm",
                         (!selectedPresetSlot) && "opacity-50 cursor-not-allowed"
                       )}>
                         <SelectValue placeholder="S1" />
@@ -420,7 +395,7 @@ function NoteEditorContent() {
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-2">
-                    <label className="text-[11px] uppercase font-black text-muted-foreground tracking-tighter">Band</label>
+                    <label className="text-caption uppercase font-black text-muted-foreground tracking-tighter">Band</label>
                     <div className="flex items-end gap-2">
                       <div className="flex-1">
                         <Select value={band} onValueChange={setBand} disabled={!editMode}>
@@ -443,7 +418,7 @@ function NoteEditorContent() {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[11px] uppercase font-black text-muted-foreground tracking-tighter">Scaletta</label>
+                    <label className="text-caption uppercase font-black text-muted-foreground tracking-tighter">Scaletta</label>
                     <div className="flex items-end gap-2">
                       <div className="flex-1">
                         <Select value={setlist} onValueChange={setSetlist} disabled={!editMode}>
@@ -471,7 +446,7 @@ function NoteEditorContent() {
 
             <Collapsible open={isNotesOpen} onOpenChange={setIsNotesOpen} className="space-y-2">
               <CollapsibleTrigger asChild>
-                <Button variant="ghost" size="sm" className="w-full justify-between h-10 text-[11px] font-black uppercase tracking-widest bg-secondary/30 rounded-xl px-4 border border-border/30">
+                <Button variant="ghost" size="sm" className="w-full justify-between h-10 text-caption font-black uppercase tracking-widest bg-secondary/30 rounded-xl px-4 border border-border/30">
                   <span>Note Generali</span>
                   {isNotesOpen ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
                 </Button>
@@ -491,7 +466,7 @@ function NoteEditorContent() {
               <CardHeader className="py-3 bg-secondary/40 flex flex-row items-center justify-between px-5 border-b border-border/40">
                 <CardTitle className="text-[12px] uppercase tracking-widest font-black text-primary flex items-center gap-2"><Layers className="w-5 h-5" /> Struttura Brano</CardTitle>
                 {editMode && (
-                  <Button variant="outline" size="sm" onClick={() => handleAddSection(sections.length)} className="h-9 text-[11px] font-bold bg-background/50"><Plus className="w-4 h-4 mr-1" /> Sezione</Button>
+                  <Button variant="outline" size="sm" onClick={() => handleAddSection(sections.length)} className="h-9 text-caption font-bold bg-background/50"><Plus className="w-4 h-4 mr-1" /> Sezione</Button>
                 )}
               </CardHeader>
               <CardContent className="p-0">
@@ -500,7 +475,7 @@ function NoteEditorContent() {
                     <React.Fragment key={section.id}>
                       {editMode && sIdx === 0 && (
                         <div className="flex items-center justify-center h-8 group/insert">
-                          <button onClick={() => handleAddSection(0)} className="opacity-0 group-hover/insert:opacity-100 flex items-center gap-2 text-[10px] font-bold uppercase text-primary transition-opacity">
+                          <button onClick={() => handleAddSection(0)} className="opacity-0 group-hover/insert:opacity-100 flex items-center gap-2 text-label font-bold uppercase text-primary transition-opacity">
                             <PlusCircle className="w-4 h-4" /> Inserisci Sezione
                           </button>
                         </div>
@@ -512,17 +487,17 @@ function NoteEditorContent() {
                               value={section.type} 
                               onValueChange={(val: SectionType) => setSections(sections.map(s => s.id === section.id ? { ...s, type: val } : s))}
                             >
-                              <SelectTrigger className="w-full h-9 text-[10px] font-black uppercase bg-primary/5 border-primary/20 text-primary p-1">
+                              <SelectTrigger className="w-full h-9 text-label font-black uppercase bg-primary/5 border-primary/20 text-primary p-1">
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
                                 {["Intro", "Verse", "Chorus", "Bridge", "Strum", "Out", "Solo"].map(t => (
-                                  <SelectItem key={t} value={t} className="text-[11px] font-bold uppercase">{t}</SelectItem>
+                                  <SelectItem key={t} value={t} className="text-caption font-bold uppercase">{t}</SelectItem>
                                 ))}
                               </SelectContent>
                             </Select>
                           ) : (
-                            <Badge variant="secondary" className="w-full justify-center h-9 text-[11px] font-black uppercase tracking-tighter bg-primary/10 text-primary border-primary/20">{section.type}</Badge>
+                            <Badge variant="secondary" className="w-full justify-center h-9 text-caption font-black uppercase tracking-tighter bg-primary/10 text-primary border-primary/20">{section.type}</Badge>
                           )}
                         </div>
                         <div className="p-3 flex-1 flex flex-col gap-3">
@@ -587,7 +562,7 @@ function NoteEditorContent() {
                                   </TooltipTrigger>
                                   <TooltipContent className="p-3 bg-card border-primary/40">
                                     <div className="space-y-2">
-                                      <p className="text-[11px] font-bold uppercase text-primary border-b border-primary/20 pb-1">
+                                      <p className="text-caption font-bold uppercase text-primary border-b border-primary/20 pb-1">
                                         {chord.startsWith('x') ? 'Ripetizione' : 'Posizioni Chitarra'}
                                       </p>
                                       {chord.startsWith('x') ? (
@@ -599,7 +574,7 @@ function NoteEditorContent() {
                                               <span className="text-muted-foreground w-4">{pIdx + 1}.</span>
                                               <span className="text-foreground font-bold">{pos}</span>
                                             </div>
-                                          )) || <p className="text-[11px] italic opacity-60">Posizioni non trovate</p>}
+                                          )) || <p className="text-caption italic opacity-60">Posizioni non trovate</p>}
                                         </div>
                                       )}
                                     </div>
@@ -643,7 +618,7 @@ function NoteEditorContent() {
                       {editMode && (
                         <div className="flex items-center justify-center h-8 group/insert relative">
                           <div className="absolute left-0 right-0 top-1/2 h-[1px] bg-primary/5 -translate-y-1/2" />
-                          <button onClick={() => handleAddSection(sIdx + 1)} className="relative z-10 opacity-0 group-hover/insert:opacity-100 bg-background px-3 flex items-center gap-2 text-[10px] font-bold uppercase text-primary transition-opacity border border-primary/20 rounded-full py-1">
+                          <button onClick={() => handleAddSection(sIdx + 1)} className="relative z-10 opacity-0 group-hover/insert:opacity-100 bg-background px-3 flex items-center gap-2 text-label font-bold uppercase text-primary transition-opacity border border-primary/20 rounded-full py-1">
                             <PlusCircle className="w-3.5 h-3.5" /> Inserisci Sezione Qui
                           </button>
                         </div>
@@ -709,7 +684,7 @@ function ChordPicker({ onSelect, step, setStep, selectedLetter, setSelectedLette
     return (
       <div className="flex flex-col gap-4">
         <div className="space-y-2">
-          <label className="text-[10px] font-bold uppercase text-muted-foreground">Accordi (Radice)</label>
+          <label className="text-label font-bold uppercase text-muted-foreground">Accordi (Radice)</label>
           <div className="grid grid-cols-4 gap-2">
             {["A", "B", "C", "D", "E", "F", "G"].map(l => (
               <Button key={`root-${l}`} variant="outline" onClick={() => { setSelectedLetter(l); setStep('accidental'); }} className="font-bold">{l}</Button>
@@ -718,7 +693,7 @@ function ChordPicker({ onSelect, step, setStep, selectedLetter, setSelectedLette
         </div>
 
         <div className="space-y-2">
-          <label className="text-[10px] font-bold uppercase text-muted-foreground">Ripetizioni</label>
+          <label className="text-label font-bold uppercase text-muted-foreground">Ripetizioni</label>
           <div className="grid grid-cols-4 gap-2">
             {["x2", "x3", "x4", "x5", "x6", "x7", "x8"].map(mult => (
               <Button key={`mult-${mult}`} variant="secondary" onClick={() => onSelect(mult)} className="font-black text-primary">{mult}</Button>
@@ -726,7 +701,7 @@ function ChordPicker({ onSelect, step, setStep, selectedLetter, setSelectedLette
           </div>
         </div>
 
-        <Button variant="ghost" className="w-full gap-2 font-bold uppercase text-[11px] border border-dashed border-border" onClick={() => onSelect("NEWLINE")}>
+        <Button variant="ghost" className="w-full gap-2 font-bold uppercase text-caption border border-dashed border-border" onClick={() => onSelect("NEWLINE")}>
           <CornerDownLeft className="w-4 h-4" /> A capo (Nuova riga)
         </Button>
       </div>
@@ -735,25 +710,25 @@ function ChordPicker({ onSelect, step, setStep, selectedLetter, setSelectedLette
   if (step === 'accidental') {
     return (
       <div className="flex flex-col gap-3">
-        <label className="text-[10px] font-bold uppercase text-muted-foreground">Alterazione per {selectedLetter}</label>
+        <label className="text-label font-bold uppercase text-muted-foreground">Alterazione per {selectedLetter}</label>
         <div className="grid grid-cols-3 gap-2">
           {CHORD_ROOTS.filter(r => r.startsWith(selectedLetter!)).map(r => (
             <Button key={`acc-${r}`} variant="outline" onClick={() => { setSelectedRoot(r); setStep('quality'); }} className="font-bold">{r}</Button>
           ))}
         </div>
-        <Button variant="ghost" size="sm" onClick={() => setStep('letter')} className="text-[10px] uppercase font-bold">Indietro</Button>
+        <Button variant="ghost" size="sm" onClick={() => setStep('letter')} className="text-label uppercase font-bold">Indietro</Button>
       </div>
     );
   }
   return (
     <div className="flex flex-col gap-3">
-      <label className="text-[10px] font-bold uppercase text-muted-foreground">Qualità per {selectedRoot}</label>
+      <label className="text-label font-bold uppercase text-muted-foreground">Qualità per {selectedRoot}</label>
       <div className="grid grid-cols-2 gap-2 max-h-[200px] overflow-y-auto pr-2">
         {CHORD_TABLE[selectedRoot!]?.map((chord, i) => (
           <Button key={`quality-${chord}-${i}`} variant="outline" onClick={() => { onSelect(chord); setStep('letter'); }} className="text-xs font-bold truncate">{chord}</Button>
         ))}
       </div>
-      <Button variant="ghost" size="sm" onClick={() => setStep('accidental')} className="text-[10px] uppercase font-bold">Indietro</Button>
+      <Button variant="ghost" size="sm" onClick={() => setStep('accidental')} className="text-label uppercase font-bold">Indietro</Button>
     </div>
   );
 }

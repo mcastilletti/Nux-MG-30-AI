@@ -11,7 +11,7 @@
     --popover: 240 10% 5%;
     --popover-foreground: 0 0% 99%;
     --primary: 261 43% 65%;
-    --primary-foreground: 0 0% 100%;
+    --primary-foreground: 240 10% 6%; /* scuro: 6:1 sul viola (Fase 1, contrasti) */
     --secondary: 240 10% 10%;
     --secondary-foreground: 0 0% 99%;
     --muted: 240 10% 8%;
@@ -25,10 +25,32 @@
     --ring: 261 43% 65%;
     --radius: 0.75rem;
 
+    /* Stati (stessi valori di green-500, amber-500, blue-500 usati finora). */
+    --success: 142.1 70.6% 45.3%;
+    --success-foreground: 240 10% 4%;
+    --warning: 37.7 92.1% 50.2%;
+    --warning-foreground: 240 10% 4%;
+    --info: 217.2 91.2% 59.8%;
+    --info-foreground: 0 0% 100%;
+
+    /* Colori dei blocchi della catena effetti (prima in getBlockColorVar). */
+    --block-wah: 300 100% 75%;
+    --block-noise-gate: 70 100% 50%;
+    --block-compressor: 60 100% 50%;
+    --block-efx: 32 100% 50%;
+    --block-amp: 0 100% 50%;
+    --block-ir: 192 100% 50%;
+    --block-sr: 120 100% 50%;
+    --block-modulation: 220 100% 50%;
+    --block-delay: 180 100% 50%;
+    --block-reverb: 288 100% 50%;
+    --block-vol: 0 0% 80%;
+    --block-eq: 0 0% 100%;
+
     --sidebar-background: 240 10% 2%;
     --sidebar-foreground: 0 0% 94%;
     --sidebar-primary: 261 43% 65%;
-    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-primary-foreground: 240 10% 6%;
     --sidebar-accent: 282 65% 55%;
     --sidebar-accent-foreground: 0 0% 100%;
     --sidebar-border: 240 10% 8%;
@@ -90,7 +112,7 @@
   }
 
   .section-kicker {
-    @apply text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground;
+    @apply text-caption font-semibold uppercase tracking-[0.16em] text-muted-foreground;
   }
 }
 

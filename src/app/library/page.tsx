@@ -229,7 +229,8 @@ export default function LibraryPage() {
               onClick={() => syncPresets()}
               variant={isSyncing ? 'secondary' : 'outline'}
               className="touch-target gap-2"
-              disabled={isSyncing}
+              disabled={isSyncing || status !== 'connected'}
+              title={status === 'connected' ? undefined : 'Collega la pedaliera per sincronizzare'}
             >
               {isSyncing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
               Sync Hardware

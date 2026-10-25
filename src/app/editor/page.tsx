@@ -808,7 +808,7 @@ export default function EditorPage() {
 
             <Dialog open={isCopySceneOpen} onOpenChange={(open) => { if (open) handleOpenCopyDialog(); else setIsCopySceneOpen(false); }}>
               <DialogTrigger asChild>
-                <Button variant="outline" size="sm" className="h-10 gap-2" onClick={handleOpenCopyDialog}>
+                <Button variant="outline" size="sm" className="h-10 gap-2" onClick={handleOpenCopyDialog} aria-label="Copia scena">
                   <Copy className="h-4 w-4" />
                   <span className="hidden sm:inline">Copia scena</span>
                 </Button>
@@ -969,14 +969,25 @@ Es. per JSON: { "amp": { "gain": 60, "master": 80 }, "delay": { "enabled": true 
                 size="icon"
                 className="touch-target"
                 onClick={handleSyncFromHardware}
-                title="Sincronizza dalla pedaliera"
+                title="Leggi il nome del preset dalla pedaliera"
+                aria-label="Leggi il nome del preset dalla pedaliera"
               >
                 <Download className="h-4 w-4" />
               </Button>
               <div className="hidden sm:block w-[1px] h-8 bg-border mx-1" />
-              <Button variant="outline" size="icon" className="touch-target" onClick={() => syncFullPreset(activePreset)} title="Sincronizza hardware"><RefreshCw className={cn("h-4 w-4", isEditorSyncing && "animate-spin")} /></Button>
-              <Button variant="outline" size="icon" className="touch-target" onClick={undo} title="Annulla"><Undo2 className="h-4 w-4" /></Button>
-              <Button variant="outline" size="icon" className="touch-target" onClick={redo} title="Ripristina"><Redo2 className="h-4 w-4" /></Button>
+              <Button
+                variant="outline"
+                size="icon"
+                className="touch-target"
+                onClick={() => syncFullPreset(activePreset)}
+                disabled={status !== 'connected' || isEditorSyncing}
+                title={status === 'connected' ? "Invia il preset alla pedaliera" : "Invia il preset alla pedaliera (pedaliera non collegata)"}
+                aria-label="Invia il preset alla pedaliera"
+              >
+                <RefreshCw className={cn("h-4 w-4", isEditorSyncing && "animate-spin")} />
+              </Button>
+              <Button variant="outline" size="icon" className="touch-target" onClick={undo} title="Annulla" aria-label="Annulla ultima modifica"><Undo2 className="h-4 w-4" /></Button>
+              <Button variant="outline" size="icon" className="touch-target" onClick={redo} title="Ripristina" aria-label="Ripristina modifica"><Redo2 className="h-4 w-4" /></Button>
               <Button className="touch-target shrink-0 gap-2 px-4 sm:px-5" onClick={handleSave}><Save className="h-4 w-4" /> <span className="hidden sm:inline">SALVA</span><span className="sm:hidden">SAVE</span></Button>
             </div>
           </div>

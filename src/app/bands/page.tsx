@@ -427,6 +427,18 @@ function BandsContent() {
     setIsSetlistDialogOpen(true);
   };
 
+  if (!userLoading && !user) {
+    return (
+      <AppShell>
+        <div className="mx-auto max-w-md py-16 text-center space-y-3">
+          <Users className="w-10 h-10 mx-auto text-muted-foreground" aria-hidden="true" />
+          <h2 className="text-xl font-bold">Accedi per gestire band e scalette</h2>
+          <p className="text-sm text-muted-foreground">Band e scalette sono salvate nel tuo account. Accedi con Google dal menu laterale.</p>
+        </div>
+      </AppShell>
+    );
+  }
+
   if (isLoading) {
     return (
       <AppShell>

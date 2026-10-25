@@ -88,6 +88,10 @@ export function BlockEditorContent({ noteId, initialBand, initialSetlist, onClos
   }, [noteId, existingId, cachedNote]);
 
   const handleSaveBlock = async () => {
+    if (!user) {
+      toast({ title: "Accedi per salvare", description: "Le note si salvano nel tuo account: accedi con Google dal menu laterale.", variant: "destructive" });
+      return;
+    }
     if (!title.trim()) {
       toast({ title: "Titolo mancante", variant: "destructive" });
       return;
@@ -159,13 +163,8 @@ export function BlockEditorContent({ noteId, initialBand, initialSetlist, onClos
           </div>
         </div>
         <div className="flex items-center gap-2">
-          {!editMode && onNext && (
-            <button onClick={onNext} className="h-9 w-9 lg:h-11 lg:w-11 text-muted-foreground rounded-full hover:bg-primary/10 hover:text-primary flex items-center justify-center" title="Nota successiva" aria-label="Apri la nota successiva">
-              <ChevronRight className="w-5 h-5 lg:w-7 lg:h-7" />
-            </button>
-          )}
           {!editMode && existingId && !isNoteMissing && (
-            <button onClick={() => setEditMode(true)} className="h-9 w-9 lg:h-11 lg:w-11 text-muted-foreground rounded-full hover:bg-primary/10 hover:text-primary flex items-center justify-center" title="Modifica">
+            <button onClick={() => setEditMode(true)} className="h-11 w-11 text-muted-foreground rounded-full hover:bg-primary/10 hover:text-primary flex items-center justify-center" title="Modifica" aria-label="Modifica blocco">
               <Pencil className="w-5 h-5 lg:w-7 lg:h-7" />
             </button>
           )}

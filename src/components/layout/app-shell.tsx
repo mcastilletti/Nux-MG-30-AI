@@ -4,6 +4,7 @@
 import React, { useEffect } from 'react';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { useMidiStore } from '@/stores/use-midi-store';
+import { useNotesCache } from '@/stores/use-notes-cache';
 import { LayoutDashboard, Library, Sliders, Settings, Zap, Wifi, WifiOff, NotebookPen, LogIn, LogOut, User as UserIcon, AlertCircle, Users } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -69,6 +70,8 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
 
   const handleLogout = async () => {
     await signOut(auth);
+    // Le note in cache appartengono all'account appena disconnesso.
+    useNotesCache.getState().clearCache();
     toast({
       title: "Logout effettuato",
       description: "Dati cloud disconnessi. L'app continuerà a funzionare in locale.",

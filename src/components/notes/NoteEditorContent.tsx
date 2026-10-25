@@ -308,6 +308,10 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
   };
 
   const handleSaveNote = async () => {
+    if (!user) {
+      toast({ title: "Accedi per salvare", description: "Le note si salvano nel tuo account: accedi con Google dal menu laterale.", variant: "destructive" });
+      return;
+    }
     if (isNoteMissing) {
       toast({ title: "Nota non ancora caricata", description: "Attendi il caricamento delle note e riprova.", variant: "destructive" });
       return;

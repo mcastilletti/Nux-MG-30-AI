@@ -9,7 +9,7 @@ import { useNotesCache } from '@/stores/use-notes-cache';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { ChevronRight, X, Save, Pencil } from 'lucide-react';
+import { X, Save, Pencil } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { buildBlockNoteData } from './block-note-data';
 import { getNoteLoadAction } from './note-load-action';
@@ -18,6 +18,7 @@ import { useUnsavedChangesGuard } from '@/hooks/use-unsaved-changes-guard';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { SaveStatus } from '@/components/common/save-status';
 import { awaitWrite, isOnline } from '@/lib/firestore-write';
+import { NoteReadMenu } from './note-read-menu';
 
 interface BlockEditorContentProps {
   noteId: string | null;
@@ -26,10 +27,9 @@ interface BlockEditorContentProps {
   onClose: () => void;
   onUpdate: (note: SavedNote) => void;
   onEditModeChange?: (isEditing: boolean) => void;
-  onNext?: () => void;
 }
 
-export function BlockEditorContent({ noteId, initialBand, initialSetlist, onClose, onUpdate, onEditModeChange, onNext }: BlockEditorContentProps) {
+export function BlockEditorContent({ noteId, initialBand, initialSetlist, onClose, onUpdate, onEditModeChange }: BlockEditorContentProps) {
   const { toast } = useToast();
   const { firestore } = useFirebase();
   const { user } = useUser();
@@ -173,7 +173,7 @@ export function BlockEditorContent({ noteId, initialBand, initialSetlist, onClos
                 autoFocus
               />
             ) : (
-              <h2 className="text-2xl font-black text-primary lg:text-3xl">
+              <h2 className="line-clamp-2 break-words text-2xl font-black text-primary lg:text-3xl" title={title || undefined}>
                 {isNoteMissing ? "Blocco non trovato" : (title || "Blocco senza titolo")}
               </h2>
             )}
@@ -185,16 +185,7 @@ export function BlockEditorContent({ noteId, initialBand, initialSetlist, onClos
               <Pencil className="w-5 h-5 lg:w-7 lg:h-7" />
             </button>
           )}
-          {!editMode && onNext && (
-            <button
-              onClick={onNext}
-              className="flex h-12 w-12 shrink-0 touch-manipulation select-none items-center justify-center rounded-xl border-2 border-primary bg-primary text-primary-foreground shadow-lg shadow-primary/25 transition-colors hover:bg-primary/90 active:bg-primary/75 lg:h-14 lg:w-14"
-              title="Nota successiva"
-              aria-label="Apri la nota successiva"
-            >
-              <ChevronRight className="h-8 w-8 lg:h-9 lg:w-9" strokeWidth={3} />
-            </button>
-          )}
+          {!editMode && !isNoteMissing && noteId && noteId !== 'new-block' && <NoteReadMenu />}
           {editMode && (
             <div className="flex items-center gap-2">
               <SaveStatus state={saveState} className="hidden sm:inline-flex" />
@@ -219,8 +210,8 @@ export function BlockEditorContent({ noteId, initialBand, initialSetlist, onClos
         <Textarea
           placeholder="Scrivi qui il contenuto del blocco..." 
           className={cn(
-            "w-full min-h-[400px] text-[16px] bg-card/30 border-border/50 resize-none leading-relaxed p-4",
-            !editMode && "bg-transparent border-none"
+            "w-full min-h-[400px] bg-card/30 border-border/50 resize-none leading-relaxed p-4",
+            editMode ? "text-[16px]" : "bg-transparent border-none text-[length:calc(16px*var(--note-scale,1))]"
           )}
           value={blockContent}
           onChange={(e) => setBlockContent(e.target.value)}

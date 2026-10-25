@@ -31,7 +31,8 @@ import {
   noteSheetReducer,
 } from '@/components/notes/note-sheet-state';
 import type { NoteSection, SavedNote } from '@/types/note';
-import { getNextNoteInSetlist } from '@/components/notes/note-navigation';
+import { getSetlistPosition } from '@/components/notes/note-navigation';
+import { SetlistNavBar } from '@/components/notes/setlist-nav-bar';
 import { GUARD_HISTORY_RESTORED_EVENT } from '@/hooks/use-unsaved-changes-guard';
 import { formatSlotLabel } from '@/lib/slot';
 import { SECTION_COLORS } from '@/lib/section-colors';
@@ -186,17 +187,11 @@ function NotesLibraryContent() {
     return notesToFilter;
   }, [cachedNotes, selectedBand, selectedSetlist, searchQuery]);
 
-  const nextNote = useMemo(() => {
-    return getNextNoteInSetlist(cachedNotes, selectedNoteId);
-  }, [cachedNotes, selectedNoteId]);
+  const setlistPosition = useMemo(() => getSetlistPosition(cachedNotes, selectedNoteId), [cachedNotes, selectedNoteId]);
 
-  const openNextNote = () => {
-    if (!nextNote) return;
-    dispatchNoteSheet({
-      type: 'open',
-      noteId: nextNote.id,
-      editorKind: nextNote.type === 'block' ? 'block' : 'song',
-    });
+  const openNoteInSheet = (note: SavedNote | null) => {
+    if (!note) return;
+    dispatchNoteSheet({ type: 'open', noteId: note.id, editorKind: note.type === 'block' ? 'block' : 'song' });
   };
 
   useEffect(() => {
@@ -750,7 +745,20 @@ function NotesLibraryContent() {
         ))}
       </div>
 
-      <NoteSheet isOpen={isSheetOpen} onClose={() => dispatchNoteSheet({ type: 'close' })} disableGestures={isEditing} contentKey={selectedNoteId}>
+      <NoteSheet
+        isOpen={isSheetOpen}
+        onClose={() => dispatchNoteSheet({ type: 'close' })}
+        disableGestures={isEditing}
+        contentKey={selectedNoteId}
+        footer={!isEditing && setlistPosition && setlistPosition.total > 1 ? (
+          <SetlistNavBar
+            index={setlistPosition.index}
+            total={setlistPosition.total}
+            onPrevious={setlistPosition.previous ? () => openNoteInSheet(setlistPosition.previous) : undefined}
+            onNext={setlistPosition.next ? () => openNoteInSheet(setlistPosition.next) : undefined}
+          />
+        ) : null}
+      >
         {editorKind === 'block' ? (
           <BlockEditorContent
             noteId={selectedNoteId}
@@ -762,7 +770,6 @@ function NotesLibraryContent() {
               setNewBlockInitialSetlist(null);
             }}
             onEditModeChange={setIsEditing}
-            onNext={nextNote ? openNextNote : undefined}
             onUpdate={(note: SavedNote) => {
               if (selectedNoteId && selectedNoteId !== 'new-block') {
                 updateNote(note);
@@ -777,7 +784,6 @@ function NotesLibraryContent() {
             noteId={selectedNoteId}
             onClose={() => dispatchNoteSheet({ type: 'close' })}
             onEditModeChange={setIsEditing}
-            onNext={nextNote ? openNextNote : undefined}
             onUpdate={(note: SavedNote) => {
               if (selectedNoteId) {
                 updateNote(note);

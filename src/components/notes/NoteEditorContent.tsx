@@ -10,15 +10,13 @@ import { useNotesCache } from '@/stores/use-notes-cache';
 import { getNoteLoadAction } from './note-load-action';
 import { serializeDraft } from './note-draft';
 import { useUnsavedChangesGuard } from '@/hooks/use-unsaved-changes-guard';
-import { getPresetSendCommands, readAutoSendSetting } from './preset-send';
-import { useNotesAutoSend } from '@/hooks/use-notes-auto-send';
-import { Switch } from '@/components/ui/switch';
+import { formatPresetLabel, getPresetChipState, getPresetSendCommands, readAutoSendSetting } from './preset-send';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Plus, Trash2, ChevronDown, ChevronUp, ChevronRight, Save, Layers, Pencil, X, Copy, ArrowUp, ArrowDown, MoreVertical, Play } from 'lucide-react';
+import { Plus, Trash2, ChevronDown, ChevronUp, Save, Layers, Pencil, X, Copy, ArrowUp, ArrowDown, MoreVertical } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
@@ -31,6 +29,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { formatSlotLabel, matchesSlotSearch } from '@/lib/slot';
 import { SaveStatus } from '@/components/common/save-status';
 import { awaitWrite, isOnline } from '@/lib/firestore-write';
+import { NoteReadMenu } from './note-read-menu';
 
 
 
@@ -41,7 +40,6 @@ interface NoteEditorContentProps {
   onClose: () => void;
   onUpdate: (note: SavedNote) => void;
   onEditModeChange?: (isEditing: boolean) => void;
-  onNext?: () => void;
 }
 
 function ChordPicker({ onSelect, step, setStep, selectedLetter, setSelectedLetter, selectedRoot, setSelectedRoot }: any) {
@@ -152,9 +150,8 @@ function ChordPicker({ onSelect, step, setStep, selectedLetter, setSelectedLette
   return null;
 }
 
-export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange, onNext }: NoteEditorContentProps) {
+export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange }: NoteEditorContentProps) {
   const { devicePresets, status, sendProgramChange, sendSceneChange } = useMidiStore();
-  const [autoSendPreset, setAutoSendPreset] = useNotesAutoSend();
   const { toast } = useToast();
   const { firestore } = useFirebase();
   const { user } = useUser();
@@ -192,6 +189,8 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
   const isDirty = editMode && currentDraft !== savedDraftRef.current;
   // NT17: un solo salvataggio alla volta e stato visibile.
   const [isSaving, setIsSaving] = useState(false);
+  // Stato dell'etichetta del preset (L4): inviato alla pedaliera per la nota aperta.
+  const [presetSent, setPresetSent] = useState(false);
   const savingRef = useRef(false);
   const [saveFailed, setSaveFailed] = useState(false);
   const saveState = isSaving ? 'saving' : saveFailed ? 'error' : isDirty ? 'dirty' : 'idle';
@@ -279,6 +278,7 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
     });
     setEditMode(false);
     setIsNotesOpen(true);
+    setPresetSent(false);
   };
 
   // Richiama sulla pedaliera il preset collegato al brano (D2: solo all'apertura e con ▶).
@@ -290,6 +290,7 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
       const scene = commands.scene;
       setTimeout(() => sendSceneChange(scene), 500);
     }
+    setPresetSent(true);
     return true;
   };
 
@@ -460,29 +461,32 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
                   aria-expanded={isDetailsOpen}
                   title="Mostra dettagli brano"
                 >
-                  <span className="truncate">{isNoteMissing ? "Nota non trovata" : (title || "Scegli un brano...")}</span>
+                  <span className="line-clamp-2 break-words" title={title || undefined}>{isNoteMissing ? "Nota non trovata" : (title || "Scegli un brano...")}</span>
                   {noteId && (isDetailsOpen ? <ChevronUp className="h-4 w-4 shrink-0 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />)}
                 </button>
               )}
+              {!editMode && noteId && !isNoteMissing && selectedPresetSlot && (() => {
+                const chip = getPresetChipState({ connected: status === 'connected', sent: presetSent });
+                const label = formatPresetLabel(formatSlotLabel(Number(selectedPresetSlot)), selectedPresetScene);
+                return (
+                  <button
+                    type="button"
+                    onClick={() => sendNotePreset(selectedPresetSlot, selectedPresetScene)}
+                    disabled={status !== 'connected'}
+                    aria-label={`Preset ${label}: ${status === 'connected' ? chip.text : 'pedaliera non collegata'}. Tocca per inviarlo alla pedaliera`}
+                    className={cn(
+                      'mt-2 inline-flex min-h-8 max-w-full items-center gap-1.5 whitespace-nowrap rounded-full border px-3 text-caption font-semibold transition-colors disabled:cursor-not-allowed',
+                      chip.tone === 'success' ? 'border-success/50 text-success' : 'border-border text-muted-foreground hover:border-primary/40 hover:text-primary',
+                    )}
+                  >
+                    <span aria-hidden="true" className={cn('h-2 w-2 rounded-full', chip.tone === 'success' ? 'bg-success' : 'bg-muted-foreground')} />
+                    <span className="font-bold">{label}</span> · {chip.text}
+                  </button>
+                );
+              })()}
             </div>
 
             <div className="flex items-center gap-2">
-              {!editMode && noteId && !isNoteMissing && selectedPresetSlot && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (sendNotePreset(selectedPresetSlot, selectedPresetScene)) {
-                      toast({ title: 'Preset inviato', description: `Slot ${formatSlotLabel(Number(selectedPresetSlot))}${selectedPresetScene ? ` · Scena ${Number(selectedPresetScene) + 1}` : ''}` });
-                    }
-                  }}
-                  disabled={status !== 'connected'}
-                  className="flex h-11 w-11 items-center justify-center rounded-xl border border-border/80 bg-secondary/70 text-muted-foreground shadow-sm transition-[background-color,border-color,color,transform] duration-150 hover:border-primary/40 hover:bg-primary/10 hover:text-primary active:scale-95 disabled:pointer-events-none disabled:opacity-40"
-                  title={status === 'connected' ? 'Invia il preset alla pedaliera' : 'Collega la pedaliera per inviare il preset'}
-                  aria-label="Invia il preset alla pedaliera"
-                >
-                  <Play className="h-5 w-5" />
-                </button>
-              )}
               {!editMode && noteId && !isNoteMissing && (
                 <button
                   type="button"
@@ -494,17 +498,7 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
                   <Pencil className="h-5 w-5" />
                 </button>
               )}
-              {!editMode && onNext && (
-                <button
-                  type="button"
-                  onClick={onNext}
-                  className="flex h-11 w-11 items-center justify-center rounded-xl border border-primary/30 bg-primary text-primary-foreground shadow-md shadow-primary/20 transition-[background-color,box-shadow,transform] duration-150 hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/25 active:scale-95"
-                  title="Nota successiva"
-                  aria-label="Apri la nota successiva"
-                >
-                  <ChevronRight className="h-5 w-5" strokeWidth={2.5} />
-                </button>
-              )}
+              {!editMode && noteId && !isNoteMissing && <NoteReadMenu showAutoSend />}
               {editMode && (
                 <>
                   <button
@@ -595,10 +589,6 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
                   </Select>
                 </div>
               </div>
-              <label className="flex min-h-11 items-center justify-between gap-3 text-body-sm text-muted-foreground">
-                <span>Invia il preset alla pedaliera quando apro un brano</span>
-                <Switch checked={autoSendPreset} onCheckedChange={setAutoSendPreset} aria-label="Invio automatico del preset all'apertura" />
-              </label>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
                   <label className="text-caption uppercase font-black text-muted-foreground tracking-tighter">Band</label>
@@ -643,7 +633,7 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
               <CollapsibleContent>
                 <Textarea 
                   placeholder="..." 
-                  className="min-h-[140px] text-[16px] bg-card/30 border-border/50 resize-none leading-relaxed p-4" 
+                  className={cn("min-h-[140px] bg-card/30 border-border/50 resize-none leading-relaxed p-4", editMode ? "text-[16px]" : "text-[length:calc(16px*var(--note-scale,1))]")}
                   value={generalNotes} 
                   onChange={(e) => setGeneralNotes(e.target.value)} 
                   readOnly={!editMode} 
@@ -745,7 +735,7 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
                                   <Badge
                                     variant="outline"
                                     className={cn(
-                                      "h-9 px-3 text-[20px] font-black shadow-sm cursor-help relative group/badge",
+                                      "min-h-9 h-auto px-3 text-[length:calc(20px*var(--note-scale,1))] font-black shadow-sm cursor-help relative group/badge",
                                       chord.startsWith('x') && chord.length <= 3
                                         ? "bg-primary/10 border-primary/30 text-primary"
                                         : SECTION_COLORS[section.type as SectionType]?.bg,
@@ -815,7 +805,7 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
                             className="h-9 text-[16px] font-semibold border-none bg-transparent p-0 italic text-muted-foreground focus-visible:ring-0 shadow-none" 
                           />
                         ) : (
-                          <p className="text-[16px] font-semibold leading-tight whitespace-pre-wrap">{section.text}</p>
+                          <p className="text-[length:calc(16px*var(--note-scale,1))] font-semibold leading-snug whitespace-pre-wrap">{section.text}</p>
                         )}
                       </div>
                       {editMode && (

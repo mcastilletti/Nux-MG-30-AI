@@ -20,3 +20,14 @@ test('returns the next ordered note only from the current setlist', () => {
 test('does not wrap after the final note in a setlist', () => {
   assert.equal(getNextNoteInSetlist(notes, 'third'), null);
 });
+
+test('posizione, precedente e successivo nella scaletta', async () => {
+  const { getSetlistPosition, getPreviousNoteInSetlist } = await import('./note-navigation');
+  const pos = getSetlistPosition(notes, 'second');
+  assert.deepEqual({ index: pos?.index, total: pos?.total, prev: pos?.previous?.id, next: pos?.next?.id }, { index: 2, total: 3, prev: 'first', next: 'third' });
+  assert.equal(getPreviousNoteInSetlist(notes, 'first'), null);
+  assert.equal(getPreviousNoteInSetlist(notes, 'third')?.id, 'second');
+  assert.equal(getSetlistPosition(notes, 'other-set')?.total, 1);
+  assert.equal(getSetlistPosition(notes, 'new-block'), null);
+  assert.equal(getSetlistPosition(notes, 'missing'), null);
+});

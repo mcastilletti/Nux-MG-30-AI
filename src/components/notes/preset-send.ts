@@ -25,3 +25,17 @@ export function readAutoSendSetting(storage: Pick<Storage, 'getItem'> | null): b
 }
 
 
+
+export type PresetChipTone = 'success' | 'muted';
+
+/** Testo dell'etichetta del preset sotto il titolo (spec L4): l'invio MIDI non è mai silenzioso. */
+export function getPresetChipState({ connected, sent }: { connected: boolean; sent: boolean }): { text: string; tone: PresetChipTone } {
+  if (!connected) return { text: 'non collegata', tone: 'muted' };
+  return sent ? { text: 'inviato', tone: 'success' } : { text: 'tocca per inviare', tone: 'muted' };
+}
+
+/** Etichetta breve del preset collegato: "03B · S2" (scena facoltativa). */
+export function formatPresetLabel(slotLabel: string, presetScene?: string | null): string {
+  const scene = presetScene === undefined || presetScene === null || presetScene === '' ? NaN : Number(presetScene);
+  return Number.isInteger(scene) && scene >= 0 && scene <= 2 ? `${slotLabel} · S${scene + 1}` : slotLabel;
+}

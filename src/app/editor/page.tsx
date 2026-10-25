@@ -577,18 +577,28 @@ export default function EditorPage() {
     // Garantisce che il "Local Save" sia reale anche se il commit continuo
     // (vedi useEffect su activePreset) venisse rimosso in futuro.
     useMidiStore.getState().commitPreset(activePreset);
-    if (status === 'connected') {
-      syncFullPreset(activePreset);
+    // I preset vivono solo in memoria finché non c'è una persistenza (audit D1):
+    // i messaggi non devono promettere un salvataggio che non avviene.
+    if (status !== 'connected') {
       toast({
-        title: "Hardware Save",
-        description: `Salvataggio di '${activePreset.name}' in corso...`
+        title: "Modifiche tenute in memoria",
+        description: "La pedaliera non è collegata: le modifiche restano finché l'app è aperta e si perdono ricaricando la pagina."
       });
-    } else {
-      toast({
-        title: "Local Save",
-        description: "Pedaliera non connessa. Preset aggiornato localmente."
-      });
+      return;
     }
+    if (useMidiStore.getState().isEditorSyncing) {
+      toast({
+        title: "Sincronizzazione già in corso",
+        description: "Attendi che finisca e premi di nuovo Salva.",
+        variant: "destructive"
+      });
+      return;
+    }
+    syncFullPreset(activePreset);
+    toast({
+      title: "Invio alla pedaliera in corso",
+      description: `Invio dei parametri di '${activePreset.name}' (scena attiva) alla MG-30.`
+    });
   };
 
   const handleSyncFromHardware = () => {

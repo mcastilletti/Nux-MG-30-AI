@@ -14,6 +14,7 @@ import { addDoc, collection, deleteDoc, doc, getDocs, query, serverTimestamp, up
 import { useFirebase, useUser } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { useInstrumentationStore } from '@/stores/use-instrumentation-store';
+import { resolveAmplifier, resolveGuitar } from '@/lib/instrumentation-context';
 import { Amplifier, Guitar, GuitarPickup, PickupType, PickupPosition, AmpInputPosition } from '@/types/instrumentation';
 
 const newPickup = (): GuitarPickup => ({ id: crypto.randomUUID(), position: 'bridge', type: 'humbucker', model: '' });
@@ -31,6 +32,8 @@ export default function InstrumentationPage() {
   const { user, isUserLoading } = useUser();
   const { toast } = useToast();
   const { guitars, amplifiers, selectedGuitarId, selectedAmplifierId, setGuitars, setAmplifiers, selectGuitar, selectAmplifier } = useInstrumentationStore();
+  const activeGuitarId = resolveGuitar(guitars, selectedGuitarId)?.id;
+  const activeAmplifierId = resolveAmplifier(amplifiers, selectedAmplifierId)?.id;
   const [loading, setLoading] = useState(false);
   const [guitarDialog, setGuitarDialog] = useState(false);
   const [ampDialog, setAmpDialog] = useState(false);
@@ -122,11 +125,11 @@ export default function InstrumentationPage() {
     <div className="grid gap-5 lg:grid-cols-2">
       <Card><CardHeader className="flex flex-row items-center justify-between"><CardTitle className="flex items-center gap-2"><ElectricGuitarIcon className="h-5 w-5 text-primary" /> Chitarre</CardTitle><Button onClick={() => openGuitar()} size="sm"><Plus className="mr-2 h-4 w-4" /> Aggiungi</Button></CardHeader><CardContent className="space-y-3">
         {guitars.length === 0 && <p className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">Nessuna chitarra inserita.</p>}
-        {guitars.map(g => <div key={g.id} className="flex items-center gap-3 rounded-xl border border-border/70 bg-secondary/10 p-3"><button onClick={() => selectGuitar(selectedGuitarId === g.id ? undefined : g.id)} className="text-primary" aria-label="Seleziona chitarra">{selectedGuitarId === g.id ? <Star className="h-5 w-5 fill-current" /> : <Star className="h-5 w-5" />}</button><div className="min-w-0 flex-1"><p className="font-semibold">{g.model}</p><p className="text-xs text-muted-foreground">{g.pickups.length} pickup · {g.pickups.map(p => `${p.position === 'neck' ? 'Manico' : p.position === 'middle' ? 'Centrale' : 'Ponte'} ${p.type === 'single-coil' ? 'Single' : 'Humbucker'}`).join(' / ')}</p></div><Button variant="ghost" size="icon" onClick={() => openGuitar(g)}><Pencil className="h-4 w-4" /></Button><Button variant="ghost" size="icon" onClick={() => remove('guitar', g.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button></div>)}
+        {guitars.map(g => <div key={g.id} className="flex items-center gap-3 rounded-xl border border-border/70 bg-secondary/10 p-3"><button onClick={() => selectGuitar(selectedGuitarId === g.id ? undefined : g.id)} className="text-primary" aria-label="Seleziona chitarra">{activeGuitarId === g.id ? <Star className="h-5 w-5 fill-current" /> : <Star className="h-5 w-5" />}</button><div className="min-w-0 flex-1"><p className="font-semibold">{g.model}</p><p className="text-xs text-muted-foreground">{g.pickups.length} pickup · {g.pickups.map(p => `${p.position === 'neck' ? 'Manico' : p.position === 'middle' ? 'Centrale' : 'Ponte'} ${p.type === 'single-coil' ? 'Single' : 'Humbucker'}`).join(' / ')}</p></div><Button variant="ghost" size="icon" onClick={() => openGuitar(g)}><Pencil className="h-4 w-4" /></Button><Button variant="ghost" size="icon" onClick={() => remove('guitar', g.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button></div>)}
       </CardContent></Card>
       <Card><CardHeader className="flex flex-row items-center justify-between"><CardTitle className="flex items-center gap-2"><Speaker className="h-5 w-5 text-primary" /> Amplificatori</CardTitle><Button onClick={() => openAmp()} size="sm"><Plus className="mr-2 h-4 w-4" /> Aggiungi</Button></CardHeader><CardContent className="space-y-3">
         {amplifiers.length === 0 && <p className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">Nessun amplificatore inserito.</p>}
-        {amplifiers.map(a => <div key={a.id} className="flex items-center gap-3 rounded-xl border border-border/70 bg-secondary/10 p-3"><button onClick={() => selectAmplifier(selectedAmplifierId === a.id ? undefined : a.id)} className="text-primary" aria-label="Seleziona amplificatore">{selectedAmplifierId === a.id ? <Star className="h-5 w-5 fill-current" /> : <Star className="h-5 w-5" />}</button><div className="min-w-0 flex-1"><p className="font-semibold">{a.model}</p><p className="text-xs text-muted-foreground">{ampInputLabels[a.inputPosition] || 'Ingresso non specificato'}</p></div><Button variant="ghost" size="icon" onClick={() => openAmp(a)}><Pencil className="h-4 w-4" /></Button><Button variant="ghost" size="icon" onClick={() => remove('amp', a.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button></div>)}
+        {amplifiers.map(a => <div key={a.id} className="flex items-center gap-3 rounded-xl border border-border/70 bg-secondary/10 p-3"><button onClick={() => selectAmplifier(selectedAmplifierId === a.id ? undefined : a.id)} className="text-primary" aria-label="Seleziona amplificatore">{activeAmplifierId === a.id ? <Star className="h-5 w-5 fill-current" /> : <Star className="h-5 w-5" />}</button><div className="min-w-0 flex-1"><p className="font-semibold">{a.model}</p><p className="text-xs text-muted-foreground">{ampInputLabels[a.inputPosition] || 'Ingresso non specificato'}</p></div><Button variant="ghost" size="icon" onClick={() => openAmp(a)}><Pencil className="h-4 w-4" /></Button><Button variant="ghost" size="icon" onClick={() => remove('amp', a.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button></div>)}
       </CardContent></Card>
     </div>
     {!user && <p className="text-xs text-muted-foreground">Accesso locale attivo: accedi con Google per sincronizzare la strumentazione nel cloud.</p>}

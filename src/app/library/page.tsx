@@ -143,8 +143,8 @@ export default function LibraryPage() {
     useMidiStore.setState({ devicePresets: updatedPresets });
 
     toast({
-      title: 'Volume aggiornato',
-      description: `Modificato volume su ${selectedSlots.size} preset (MIN: ${bulkVolumeMin}, MAX: ${bulkVolumeMax}).`,
+      title: 'Volume impostato in memoria',
+      description: `MIN ${bulkVolumeMin} / MAX ${bulkVolumeMax} su ${selectedSlots.size} preset. Non viene inviato alla pedaliera e si perde ricaricando la pagina.`,
     });
 
     clearSelection();
@@ -163,7 +163,9 @@ export default function LibraryPage() {
     setActivePreset({ ...preset, name: getDisplayName(preset) });
     toast({
       title: 'Preset Attivato',
-      description: `Slot ${formatSlotLabel(preset.slot)}: ${getDisplayName(preset)} selezionato sull'hardware.`,
+      description: status === 'connected'
+        ? `Slot ${formatSlotLabel(preset.slot)}: ${getDisplayName(preset)} selezionato sulla pedaliera.`
+        : `Slot ${formatSlotLabel(preset.slot)}: ${getDisplayName(preset)} aperto nell'editor (pedaliera non collegata).`,
     });
   };
 

@@ -104,15 +104,24 @@ function NotesLibraryContent() {
       return;
     }
 
-    const url = new URL(window.location.href);
-    if (noteSheet.isOpen) {
-      url.searchParams.set(NOTE_SHEET_OPEN_PARAM, noteSheet.noteId ?? '');
-      url.searchParams.set(NOTE_SHEET_KIND_PARAM, noteSheet.editorKind);
-    } else {
-      url.searchParams.delete(NOTE_SHEET_OPEN_PARAM);
-      url.searchParams.delete(NOTE_SHEET_KIND_PARAM);
-    }
-    window.history.replaceState(window.history.state, '', url);
+    const syncUrl = () => {
+      const url = new URL(window.location.href);
+      if (noteSheet.isOpen) {
+        url.searchParams.set(NOTE_SHEET_OPEN_PARAM, noteSheet.noteId ?? '');
+        url.searchParams.set(NOTE_SHEET_KIND_PARAM, noteSheet.editorKind);
+      } else {
+        url.searchParams.delete(NOTE_SHEET_OPEN_PARAM);
+        url.searchParams.delete(NOTE_SHEET_KIND_PARAM);
+      }
+      if (url.href !== window.location.href) {
+        window.history.replaceState(window.history.state, '', url);
+      }
+    };
+    syncUrl();
+    // L'editor in modifica aggiunge e rimuove una voce di cronologia per gestire
+    // il tasto Indietro: dopo ogni spostamento l'URL deve restare allineato al foglio.
+    window.addEventListener('popstate', syncUrl);
+    return () => window.removeEventListener('popstate', syncUrl);
   }, [noteSheet]);
 
   useEffect(() => {

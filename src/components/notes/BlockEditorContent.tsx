@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useFirebase, useUser } from '@/firebase';
 import { collection, doc, updateDoc, addDoc, serverTimestamp } from 'firebase/firestore';
@@ -11,6 +11,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { ChevronRight, X, Save, Pencil } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { buildBlockNoteData } from './block-note-data';
+import { getNoteLoadAction } from './note-load-action';
+import { serializeDraft } from './note-draft';
+import { useUnsavedChangesGuard } from '@/hooks/use-unsaved-changes-guard';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
 interface BlockEditorContentProps {
   noteId: string | null;
@@ -36,22 +41,51 @@ export function BlockEditorContent({ noteId, initialBand, initialSetlist, onClos
     onEditModeChange?.(editMode);
   }, [editMode, onEditModeChange]);
 
+  // Modifiche non salvate: confronto con l'ultima versione caricata o salvata.
+  const savedDraftRef = useRef<string>('');
+  const currentDraft = serializeDraft({ title, blockContent });
+  const isDirty = editMode && currentDraft !== savedDraftRef.current;
+  const [pendingExit, setPendingExit] = useState<'close' | 'cancel' | null>(null);
+
   const loadNote = (note: SavedNote) => {
     setTitle(note.title);
     setBlockContent(note.blockContent || '');
+    savedDraftRef.current = serializeDraft({ title: note.title, blockContent: note.blockContent || '' });
     setEditMode(false);
   };
 
-  useEffect(() => {
+  const discardChanges = () => {
     if (noteId && noteId !== 'new-block') {
       const note = getNoteById(noteId);
-      if (note) {
-        loadNote(note);
-      }
-    } else if (noteId === 'new-block') {
-      handleNewBlock();
+      if (note) loadNote(note);
+      setEditMode(false);
+    } else {
+      onClose();
     }
-  }, [noteId, getNoteById]);
+  };
+
+  const requestClose = () => (isDirty ? setPendingExit('close') : onClose());
+
+  // In modifica il tasto Indietro di sistema chiude passando dalla stessa conferma.
+  useUnsavedChangesGuard({ editing: editMode, dirty: isDirty, onBack: requestClose });
+
+  const existingId = noteId && noteId !== 'new-block' ? noteId : null;
+  const cachedNote = useNotesCache(state => (existingId ? state.notes.find(note => note.id === existingId) : undefined));
+  const loadedNoteIdRef = useRef<string | null>(null);
+  const isNoteMissing = !!existingId && !cachedNote;
+
+  useEffect(() => {
+    if (noteId === 'new-block') {
+      loadedNoteIdRef.current = null;
+      handleNewBlock();
+      return;
+    }
+    const action = getNoteLoadAction({ noteId: existingId, note: cachedNote, loadedNoteId: loadedNoteIdRef.current });
+    if (action === 'load' && cachedNote) {
+      loadedNoteIdRef.current = cachedNote.id;
+      loadNote(cachedNote);
+    }
+  }, [noteId, existingId, cachedNote]);
 
   const handleSaveBlock = async () => {
     if (!title.trim()) {
@@ -59,22 +93,15 @@ export function BlockEditorContent({ noteId, initialBand, initialSetlist, onClos
       return;
     }
 
-    // Calculate order for new blocks based on band and setlist
-    let orderToSave = 0;
-    if (!noteId || noteId === 'new-block') {
-      const bandToUse = initialBand || 'Senza Band';
-      const setlistToUse = initialSetlist || 'Senza Scaletta';
-      const sameSetNotes = notes.filter(n => n.band === bandToUse && n.setlist === setlistToUse);
-      orderToSave = sameSetNotes.length > 0 ? Math.max(...sameSetNotes.map(n => n.order ?? 0)) + 1 : 0;
+    const isExisting = !!noteId && noteId !== 'new-block';
+    const existing = isExisting ? getNoteById(noteId) : undefined;
+    if (isExisting && !existing) {
+      toast({ title: "Blocco non ancora caricato", description: "Attendi il caricamento delle note e riprova.", variant: "destructive" });
+      return;
     }
 
     const noteData = {
-      title,
-      band: initialBand || 'Senza Band',
-      setlist: initialSetlist || 'Senza Scaletta',
-      type: 'block' as const,
-      blockContent,
-      order: orderToSave,
+      ...buildBlockNoteData({ title, blockContent, existing, initialBand, initialSetlist, notes }),
       updatedAt: serverTimestamp(),
       userId: user?.uid
     };
@@ -87,6 +114,7 @@ export function BlockEditorContent({ noteId, initialBand, initialSetlist, onClos
         const docRef = await addDoc(collection(firestore, "notes"), noteData);
         onUpdate({ ...noteData, id: docRef.id } as SavedNote);
       }
+      savedDraftRef.current = currentDraft;
       setEditMode(false);
       toast({ title: "Blocco Salvato nel Cloud" });
     } catch (err) {
@@ -98,6 +126,7 @@ export function BlockEditorContent({ noteId, initialBand, initialSetlist, onClos
   const handleNewBlock = () => {
     setTitle('');
     setBlockContent('');
+    savedDraftRef.current = serializeDraft({ title: '', blockContent: '' });
     setEditMode(true);
   };
 
@@ -106,7 +135,7 @@ export function BlockEditorContent({ noteId, initialBand, initialSetlist, onClos
       <div className="sticky top-0 z-20 flex items-center justify-between gap-4 border-b border-border/50 bg-background py-2 lg:py-4">
         <div className="flex items-center gap-2 lg:gap-3 flex-1 min-w-0">
            <button
-             onClick={onClose}
+             onClick={requestClose}
              className="flex h-12 w-12 shrink-0 touch-manipulation select-none items-center justify-center rounded-xl border-2 border-destructive/70 bg-destructive/15 text-destructive shadow-md transition-colors hover:bg-destructive/25 active:bg-destructive/35 lg:h-14 lg:w-14"
              title="Chiudi nota"
              aria-label="Chiudi nota"
@@ -124,7 +153,7 @@ export function BlockEditorContent({ noteId, initialBand, initialSetlist, onClos
               />
             ) : (
               <h2 className="text-2xl font-black text-primary lg:text-3xl">
-                {title || "Blocco senza titolo"}
+                {isNoteMissing ? "Blocco non trovato" : (title || "Blocco senza titolo")}
               </h2>
             )}
           </div>
@@ -135,7 +164,7 @@ export function BlockEditorContent({ noteId, initialBand, initialSetlist, onClos
               <ChevronRight className="w-5 h-5 lg:w-7 lg:h-7" />
             </button>
           )}
-          {!editMode && noteId && noteId !== 'new-block' && (
+          {!editMode && existingId && !isNoteMissing && (
             <button onClick={() => setEditMode(true)} className="h-9 w-9 lg:h-11 lg:w-11 text-muted-foreground rounded-full hover:bg-primary/10 hover:text-primary flex items-center justify-center" title="Modifica">
               <Pencil className="w-5 h-5 lg:w-7 lg:h-7" />
             </button>
@@ -152,15 +181,7 @@ export function BlockEditorContent({ noteId, initialBand, initialSetlist, onClos
           )}
           {editMode && (
             <div className="flex items-center gap-2">
-              <button onClick={() => {
-                 if (noteId && noteId !== 'new-block') {
-                    const note = getNoteById(noteId);
-                    if (note) loadNote(note);
-                    setEditMode(false);
-                 } else {
-                    onClose();
-                 }
-              }} className="h-9 w-9 lg:h-11 lg:w-11 text-muted-foreground rounded-full hover:bg-destructive/10 hover:text-destructive flex items-center justify-center" title="Annulla">
+              <button onClick={() => (isDirty ? setPendingExit('cancel') : discardChanges())} aria-label="Annulla modifiche" className="h-9 w-9 lg:h-11 lg:w-11 text-muted-foreground rounded-full hover:bg-destructive/10 hover:text-destructive flex items-center justify-center" title="Annulla">
                 <X className="w-5 h-5 lg:w-7 lg:h-7" />
               </button>
               <button onClick={handleSaveBlock} className="h-9 w-9 lg:h-11 lg:w-11 bg-primary shadow-lg rounded-full flex items-center justify-center" title="Salva">
@@ -172,7 +193,13 @@ export function BlockEditorContent({ noteId, initialBand, initialSetlist, onClos
       </div>
 
       <div className="flex-1 overflow-auto">
-        <Textarea 
+        {isNoteMissing ? (
+          <div role="status" className="rounded-xl border border-border bg-secondary/30 p-5 text-sm text-muted-foreground">
+            <p className="font-semibold text-foreground">Blocco non disponibile su questo dispositivo</p>
+            <p className="mt-1">Attendi il caricamento delle note oppure chiudi e riaprilo dall'elenco.</p>
+          </div>
+        ) : (
+        <Textarea
           placeholder="Scrivi qui il contenuto del blocco..." 
           className={cn(
             "w-full min-h-[400px] text-[16px] bg-card/30 border-border/50 resize-none leading-relaxed p-4",
@@ -182,7 +209,33 @@ export function BlockEditorContent({ noteId, initialBand, initialSetlist, onClos
           onChange={(e) => setBlockContent(e.target.value)}
           readOnly={!editMode}
         />
+        )}
       </div>
+
+      <AlertDialog open={pendingExit !== null} onOpenChange={(open) => { if (!open) setPendingExit(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Uscire senza salvare?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Le modifiche a questo blocco non sono state salvate e andranno perse.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Continua a modificare</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                const action = pendingExit;
+                setPendingExit(null);
+                if (action === 'cancel') discardChanges();
+                else onClose();
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Esci senza salvare
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

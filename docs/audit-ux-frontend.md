@@ -17,6 +17,27 @@ Questo documento è il risultato della prima attività del refactoring: **audit 
 
 ---
 
+## 0. Stato di avanzamento
+
+**Fase 0 completata** il 2026-10-25 (branch `claude/loving-ride-r0jfma`). Typecheck pulito, 26/26 test verdi (12 nuovi).
+
+| Voce | Esito | Commit | Verifica eseguita |
+|---|---|---|---|
+| NT1 — blocco spostato fuori dalla scaletta | ✅ Risolto | `2b58d38` | Test unitari sul payload (`block-note-data.test.ts`) |
+| K1 — manopole di Gate/Comp/Mod senza MIDI | ✅ Risolto | `e8f6ab5` | Test sullo store MIDI (`use-midi-store.test.ts`). **Da provare con la MG-30 reale** |
+| NT3 — nota non in cache sovrascrivibile vuota | ✅ Risolto | `5361261` | Test unitari + Playwright (nota/blocco presenti e assenti) |
+| NT2 — modifiche perse con X, Annulla, Indietro | ✅ Risolto (versione minima) | `9b1fc98` | Test unitari + Playwright, 15 controlli e cronologia. Restano da progettare in Fase 3 lo stato di salvataggio visibile e la modifica sicura completa |
+| E6, L3, L5 — messaggi di salvataggio ingannevoli | ✅ Testi corretti | `4e77d9b` | Playwright (toast offline di editor e Library) |
+| S1 / P0-4 — preset solo in memoria | ⏳ Aperto | — | In attesa della decisione D1 |
+
+**Baseline visiva** (Playwright, 10 pagine × 4 viewport, da non loggati e con note iniettate in cache):
+- nessuno scroll orizzontale a livello di pagina;
+- nessun errore JavaScript;
+- dopo le correzioni, confronto identico sulle 40 combinazioni (overflow, errori, numero di target sotto i 44px);
+- confermata l'ipotesi E1 e trovata la nuova voce E10 (vedi §5.4).
+
+**Non verificato:** test su dispositivi reali (iOS/Android), con la pedaliera MG-30 collegata, e misure di contrasto. Sono previsti nella Fase 1.
+
 ## 1. Sintesi
 
 - **Lo stato tecnico è sano.** Typecheck pulito, 14 test unitari verdi, build di produzione riuscita. Però la build **non** controlla i tipi né il lint (`next.config.ts`), e non esistono test di interfaccia.
@@ -185,21 +206,22 @@ Colonne: **ID** · **Problema** · **Evidenza** · **Impatto** · **P** · **Sol
 |---|---|---|---|---|---|---|---|---|
 | L1 [V] | "Nuovo" non ha `onClick` | `library/page.tsx:235-237` | Pulsante morto | P1 | Rimuoverlo o definirne la funzione | — | Basso | Nessun pulsante senza azione |
 | L2 [V] | "Sync Hardware": 128 PC × 500ms ≈ 64s, senza conferma né annullamento, senza controllo della connessione, nessun effetto visibile, lascia la pedaliera sullo slot 128 | `library/page.tsx:226-234`; `use-midi-store.ts:544-565` | Attesa inutile e preset cambiato a sorpresa | P1 | Disabilitarlo offline, conferma, annullamento, ripristino dello slot iniziale; rivalutarne l'utilità | D8 | Medio (MIDI) | Test con e senza pedaliera |
-| L3 [V] | Il volume di massa modifica solo la memoria (non invia, non persiste) e il toast dice "aggiornato" | `library/page.tsx:84-152` | Modifica che si perde | P0 (legato a P0-4) | Testo veritiero subito; soluzione con D1 | D1 | Basso | Toast coerente con l'effetto reale |
+| L3 [V] ✅ `4e77d9b` (testo) | Il volume di massa modifica solo la memoria (non invia, non persiste) e il toast dice "aggiornato" | `library/page.tsx:84-152` | Modifica che si perde | P0 (legato a P0-4) | Testo veritiero subito; soluzione con D1 | D1 | Basso | Toast coerente con l'effetto reale |
 | L4 [V] | Card e righe cliccabili sono `div`/`tr` senza ruolo né tastiera; checkbox finte | `library/page.tsx:357-377,477-496` | Inaccessibile da tastiera e lettore di schermo | P1 | `button`/link reali, `ui/checkbox` | F2 | Basso | Navigazione completa da tastiera |
-| L5 [V] | Il toast "selezionato sull'hardware" compare anche offline | `library/page.tsx:160-167` | Feedback falso | P2 | Messaggio condizionato alla connessione | — | Basso | Verifica offline |
+| L5 [V] ✅ `4e77d9b` | Il toast "selezionato sull'hardware" compare anche offline | `library/page.tsx:160-167` | Feedback falso | P2 | Messaggio condizionato alla connessione | — | Basso | Verifica offline |
 | L6 [V] | 128 card alte in colonna singola su mobile, senza virtualizzazione | `library/page.tsx:351` | Scorrimento lungo | P2 | Vista compatta a righe su mobile; ricerca per slot in evidenza | F5 | Basso | Playwright 360px |
 
 ### 5.4 Editor della catena effetti
 
 | ID | Problema | Evidenza | Impatto | P | Soluzione | Dip. | Rischio | Verifica |
 |---|---|---|---|---|---|---|---|---|
-| E1 [H] | Header con 14 comandi; il gruppo azioni non va a capo (circa 400px su 300 disponibili a 360px) | `editor/page.tsx:867` (manca `flex-wrap`) | Comandi fuori schermo o scroll orizzontale | P1 | Header mobile essenziale (slot, scene, salva) + menu "Altro" con etichette | F1 | Medio | Playwright 360×740: nessun overflow |
+| E1 [V] | Header con 14 comandi; il gruppo azioni non va a capo: **confermato dalla baseline**, a 360px il pulsante SALVA è tagliato sul bordo destro | `editor/page.tsx:867` (manca `flex-wrap`) | Comandi fuori schermo o scroll orizzontale | P1 | Header mobile essenziale (slot, scene, salva) + menu "Altro" con etichette | F1 | Medio | Playwright 360×740: nessun overflow |
 | E2 [V] | Chip ON/OFF di circa 24×16px annidato dentro il `button` del blocco | `editor/page.tsx:988-1041` | HTML non valido, tocchi sbagliati (seleziona invece di spegnere), lettori di schermo confusi | P1 | Due controlli fratelli: blocco (seleziona) e switch ON/OFF ≥44px con `aria-pressed` | F2 | Medio | Test da tastiera e touch |
 | E3 [V] | Selezione del blocco indicata solo con colore e bordo; nessun `aria-pressed`/`aria-current` | `editor/page.tsx:995-1004` | Stato non percepibile | P2 | Indicatore testuale + attributo ARIA | F2 | Basso | Ispezione accessibilità |
 | E4 [V] | Catena di circa 1640px senza snap né suggerimento di scroll; nessuno scroll automatico al blocco selezionato | `editor/page.tsx:980` | Su mobile si vedono circa 3 blocchi su 12 | P2 | Scroll-snap, sfumatura ai bordi, scroll al blocco selezionato; valutare una vista a griglia compatta | F5 | Basso | Playwright |
 | E5 [V] | Due pulsanti "sync" quasi uguali: Download (chiede solo il nome) e RefreshCw (invia tutto, overlay di 18,5s anche offline) | `editor/page.tsx:593-610,966`; `use-midi-store.ts:516-541` | Confusione; editor bloccato senza motivo | P1 | Etichette chiare ("Leggi nome dalla pedaliera", "Invia preset alla pedaliera"), disabilitati offline, avanzamento visibile | D8 | Medio | Test offline e collegato |
-| E6 [V] | "SALVA": toast "Salvataggio in corso" anche quando `syncFullPreset` esce subito; offline "Local Save" non persistente | `editor/page.tsx:575-591`; `use-midi-store.ts:518` | Falsa sicurezza (vedi P0-4) | P0/P1 | Testo veritiero subito; persistenza con D1 | D1 | Basso | Toast coerenti |
+| E10 [V] | Nome del preset e titolo della nota troncati su una riga ("Activ…", "Wonderwall (I…"), anche a 1280px | baseline Playwright; `editor/page.tsx` (SelectTrigger), `NoteEditorContent.tsx` (`truncate` sul titolo) | Brano o preset non riconoscibili a colpo d'occhio | P2 | Titolo su 2 righe (`line-clamp-2`), nome completo nel selettore | F5 | Basso | Screenshot a 360px e 1280px |
+| E6 [V] ✅ `4e77d9b` (testi) | "SALVA": toast "Salvataggio in corso" anche quando `syncFullPreset` esce subito; offline "Local Save" non persistente | `editor/page.tsx:575-591`; `use-midi-store.ts:518` | Falsa sicurezza (vedi P0-4) | P0/P1 | Testo veritiero subito; persistenza con D1 | D1 | Basso | Toast coerenti |
 | E7 [V] | Pulsante "Chiudi" della catena invia solo un CC all'hardware, anche offline | `editor/page.tsx:977`; `use-midi-store.ts:493` | Etichetta ingannevole | P2 | Rinominarlo o rimuoverlo dalla UI principale | — | Basso | — |
 | E8 [V] | `lastError` MIDI e stati `connecting`/`error` mai mostrati | grep `lastError` | Errori di connessione invisibili | P1 | `ConnectionStatus` (vedi H2) | F2 | Basso | Simulazione errore |
 | E9 [V] | Dialoghi AI Mode e Copia scena senza altezza massima né scroll | `ui/dialog.tsx:41` | [H] Su mobile con tastiera aperta il contenuto non è raggiungibile | P1 | `max-h-[85dvh] overflow-y-auto` nel `DialogContent` | F2 | Basso | Dispositivo con tastiera |
@@ -208,7 +230,7 @@ Colonne: **ID** · **Problema** · **Evidenza** · **Impatto** · **P** · **Sol
 
 | ID | Problema | Evidenza | Impatto | P | Soluzione | Dip. | Rischio | Verifica |
 |---|---|---|---|---|---|---|---|---|
-| K1 [V] | **Manopole di Gate, Compressore e Modulazione non inviano MIDI** (passato l'id del blocco invece del tipo) | `editor/page.tsx:455-458`, `use-midi-store.ts:432-433`; id `ng`/`cmp`/`mod` | Regolazione impossibile su 3 blocchi su 12 | **P0** | Passare `effect.type` (il parametro `effectType` esiste già ed è inutilizzato) | — | Basso | Test unitario della mappatura + prova con pedaliera |
+| K1 [V] ✅ `e8f6ab5` | **Manopole di Gate, Compressore e Modulazione non inviano MIDI** (passato l'id del blocco invece del tipo) | `editor/page.tsx:455-458`, `use-midi-store.ts:432-433`; id `ng`/`cmp`/`mod` | Regolazione impossibile su 3 blocchi su 12 | **P0** | Passare `effect.type` (il parametro `effectType` esiste già ed è inutilizzato) | — | Basso | Test unitario della mappatura + prova con pedaliera |
 | K2 [V] | `touch-none` + `preventDefault`: un gesto iniziato sulla manopola non fa scorrere la pagina | `rotary-knob.tsx:67,125` | Scroll "bloccato" su mobile con griglia a 2 colonne | P1 | Attivare il trascinamento solo dopo una soglia verticale o con pressione prolungata; area di scroll tra le manopole | F5 | Medio | Test su dispositivo |
 | K3 [V] | Precisione touch: 200px per l'intera escursione; Hi Cut (5000-20000 Hz) ≈ 75 Hz per pixel; regolazione fine solo con Shift | `rotary-knob.tsx:57-64` | Regolazioni fini impossibili su touch | P2 | Pulsanti −/+ di un passo, campo numerico in evidenza, modalità fine | F5 | Basso | Test su dispositivo |
 | K4 [V] | Il campo numerico invia a ogni carattere (1, 10, 100) | `rotary-knob.tsx:195-201` | Valori intermedi inviati alla pedaliera | P2 | Invio su conferma o con debounce | F6 | Basso | Test unitario |
@@ -222,9 +244,9 @@ Le voci Note sono **[V]** salvo dove indicato. Requisiti di dettaglio e scenari 
 
 | ID | Problema | Evidenza | Impatto | P | Soluzione | Dip. | Rischio | Verifica |
 |---|---|---|---|---|---|---|---|---|
-| NT1 | **Salvare un blocco esistente lo sposta** in "Senza Band / Senza Scaletta" con `order: 0` | `BlockEditorContent.tsx:63-84`; `notes/page.tsx:718-722` | Corruzione dati: il blocco sparisce dalla scaletta | **P0** | Per i blocchi esistenti conservare `band`/`setlist`/`order` della nota caricata | — | Basso | Test unitario sul payload; modifica di un blocco in una scaletta |
-| NT2 | **Modifiche perse senza avviso**: X, "Annulla" e Indietro di sistema | `NoteEditorContent.tsx:390,448-458`; `BlockEditorContent.tsx:109`; `notes/page.tsx:115` (`replaceState`) | Perdita di appunti durante le prove | **P0** | Rilevamento delle modifiche non salvate e conferma all'uscita; Indietro che chiude il foglio | F3 | Medio | Scenario 5 |
-| NT3 | **Nota aperta con cache vuota** (URL `?openNote=`, altro dispositivo): editor vuoto, la matita resta attiva, il salvataggio sovrascrive | `NoteEditorContent.tsx:206-215,424,299-302` | [H sulla frequenza] Perdita del contenuto di una nota | **P0** | Ricaricare la nota quando arriva la cache; stato "nota non trovata"; salvataggio bloccato se non caricata | — | Basso | Test con cache vuota e URL diretto |
+| NT1 ✅ `2b58d38` | **Salvare un blocco esistente lo sposta** in "Senza Band / Senza Scaletta" con `order: 0` | `BlockEditorContent.tsx:63-84`; `notes/page.tsx:718-722` | Corruzione dati: il blocco sparisce dalla scaletta | **P0** | Per i blocchi esistenti conservare `band`/`setlist`/`order` della nota caricata | — | Basso | Test unitario sul payload; modifica di un blocco in una scaletta |
+| NT2 ✅ `9b1fc98` (minima) | **Modifiche perse senza avviso**: X, "Annulla" e Indietro di sistema | `NoteEditorContent.tsx:390,448-458`; `BlockEditorContent.tsx:109`; `notes/page.tsx:115` (`replaceState`) | Perdita di appunti durante le prove | **P0** | Rilevamento delle modifiche non salvate e conferma all'uscita; Indietro che chiude il foglio | F3 | Medio | Scenario 5 |
+| NT3 ✅ `5361261` | **Nota aperta con cache vuota** (URL `?openNote=`, altro dispositivo): editor vuoto, la matita resta attiva, il salvataggio sovrascrive | `NoteEditorContent.tsx:206-215,424,299-302` | [H sulla frequenza] Perdita del contenuto di una nota | **P0** | Ricaricare la nota quando arriva la cache; stato "nota non trovata"; salvataggio bloccato se non caricata | — | Basso | Test con cache vuota e URL diretto |
 | NT4 | Il preset viene inviato aprendo un brano, con ▶, su "Annulla" e al primo salvataggio; scena vuota → `parseInt('')` = NaN | `NoteEditorContent.tsx:206-215,264-270,453` | Cambio di suono imprevisto dal vivo | P1 | Decisione D2; invio visibile tramite chip; nessun invio su Annulla e salvataggio | D2 | Medio (comportamento) | Log MIDI durante la navigazione |
 | NT5 | Dopo il logout restano visibili le note del precedente utente | `clearCache` mai chiamato; `app-shell.tsx:70-76` | Privacy, dati mescolati | P1 | Svuotare la cache al logout e al cambio utente | — | Basso | Login, logout, login con un altro account |
 | NT6 | Salvataggio da non loggati con `userId: undefined` | `NoteEditorContent.tsx:296`; `BlockEditorContent.tsx:79` | [H] Errore generico senza invito ad accedere | P1 | Bloccare il salvataggio con messaggio "Accedi per salvare" | — | Basso | Test da non loggati |
@@ -377,7 +399,7 @@ F0 Baseline ──┬─► F0b Correzioni P0 ───────────�
                                                                    F6 Prestazioni/a11y ┘ (in parallelo a F5)
 ```
 
-### Fase 0 — Baseline e messa in sicurezza (S/M)
+### Fase 0 — Baseline e messa in sicurezza (S/M) — ✅ completata (vedi §0)
 - **Deliverable:**
   - baseline typecheck/test/build (già eseguita, §2.5);
   - script Playwright di screenshot per tutte le route ai 4 viewport (360×740, 390×844, 768×1024, 1280×800), da non loggati e con note iniettate in `mg30-notes-cache`;
@@ -660,14 +682,12 @@ Solo quelle che non si possono prendere in sicurezza dal codice.
 
 ---
 
-## 11. Primo intervento consigliato
+## 11. Prossimo intervento consigliato
 
-**Fase 0, nell'ordine:**
-1. script di baseline Playwright (screenshot ai 4 viewport);
-2. **NT1**: il blocco non deve più uscire dalla scaletta;
-3. **K1**: manopole di Gate, Compressore e Modulazione.
-
-Sono correzioni di poche righe, isolate, verificabili con test unitari, e fermano una corruzione dati e un controllo muto. Subito dopo vengono NT3 e la versione minima di NT2.
+La Fase 0 è completata (§0). Prossimi passi:
+1. **Prova sul campo delle correzioni:** manopole di Gate, Compressore e Modulazione con la MG-30 collegata (K1); modifica e chiusura delle note su un telefono reale (NT2).
+2. **Decisioni D1–D4** (§10): sbloccano la persistenza dei preset (ultimo P0 aperto) e la progettazione delle Note (Fase 3).
+3. **Fase 1:** contrasto, verifica su dispositivo delle ipotesi residue (safe area iOS, foglio `100vh`, tastiera) e proposta di architettura informativa. Include l'header mobile dell'editor (E1, ora verificato).
 
 ---
 

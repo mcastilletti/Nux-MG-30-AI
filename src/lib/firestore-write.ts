@@ -6,10 +6,17 @@
  */
 export type WriteOutcome = 'synced' | 'queued';
 
-export async function awaitWrite(write: Promise<unknown>, { online, timeoutMs = 8000 }: { online: boolean; timeoutMs?: number }): Promise<WriteOutcome> {
+export async function awaitWrite(
+  write: Promise<unknown>,
+  { online, timeoutMs = 8000, onLateError = (err: unknown) => console.warn('[firestore] scrittura in coda rifiutata:', err) }:
+    { online: boolean; timeoutMs?: number; onLateError?: (err: unknown) => void },
+): Promise<WriteOutcome> {
+  // Un rifiuto che arriva dopo aver risposto 'queued' (es. permessi, sessione
+  // scaduta) non deve sparire: finisce nel log.
+  let settled = false;
+  write.catch((err) => { if (settled) onLateError(err); });
   if (!online) {
-    // Errori successivi (es. permessi) arrivano quando torna la rete: solo log.
-    write.catch((err) => console.warn('[firestore] scrittura in coda rifiutata:', err));
+    settled = true;
     return 'queued';
   }
   let timer: ReturnType<typeof setTimeout> | undefined;
@@ -17,6 +24,7 @@ export async function awaitWrite(write: Promise<unknown>, { online, timeoutMs = 
   try {
     return await Promise.race([write.then(() => 'synced' as const), timeout]);
   } finally {
+    settled = true;
     clearTimeout(timer);
   }
 }

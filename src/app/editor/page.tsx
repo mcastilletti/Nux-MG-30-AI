@@ -455,7 +455,8 @@ export default function EditorPage() {
   const handleParamChange = (effectType: string, paramId: string, value: number, index: number) => {
     updateParameter(selectedBlockId, paramId, value);
     if (status === 'connected') {
-      sendKnobParameter(selectedBlockId, index, value);
+      // Le CC sono indicizzate per tipo di blocco: l'id ('ng', 'cmp', 'mod') non le trova.
+      sendKnobParameter(effectType, index, value);
     }
   };
 

@@ -62,7 +62,7 @@ export function NoteSheet({ isOpen, onClose, children, disableGestures = false, 
           </DialogPrimitive.Description>
 
           {/* Sheet Content */}
-          <div className="relative w-full max-w-2xl h-[100dvh] lg:h-[85dvh] bg-background rounded-t-2xl lg:rounded-2xl shadow-2xl flex flex-col">
+          <div className="relative w-full max-w-2xl h-[100dvh] pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] lg:h-[85dvh] lg:pt-0 lg:pb-0 bg-background rounded-t-2xl lg:rounded-2xl shadow-2xl flex flex-col">
             <div ref={scrollRef} className="flex-1 overflow-auto">
               {children}
             </div>

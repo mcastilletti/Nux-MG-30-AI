@@ -8,6 +8,9 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
+  // Con statusBarStyle black-translucent il contenuto va sotto la barra di stato:
+  // header, barra in basso e foglio nota usano env(safe-area-inset-*) (N4).
+  viewportFit: 'cover',
 };
 
 export const metadata: Metadata = {

@@ -8,6 +8,8 @@ import { collection, addDoc, doc, updateDoc, serverTimestamp } from 'firebase/fi
 import type { NoteSection, SavedNote } from '@/types/note';
 import { useNotesCache } from '@/stores/use-notes-cache';
 import { getNoteLoadAction } from './note-load-action';
+import { serializeDraft } from './note-draft';
+import { useUnsavedChangesGuard } from '@/hooks/use-unsaved-changes-guard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -203,6 +205,29 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
   const [isDeleteSectionDialogOpen, setIsDeleteSectionDialogOpen] = useState(false);
   const [sectionToDelete, setSectionToDelete] = useState<string | null>(null);
 
+  // Modifiche non salvate: confronto con l'ultima versione caricata o salvata.
+  const savedDraftRef = useRef<string>('');
+  const currentDraft = serializeDraft({
+    title, band, setlist, presetSlot: selectedPresetSlot, presetScene: selectedPresetScene, generalNotes, sections,
+  });
+  const isDirty = editMode && currentDraft !== savedDraftRef.current;
+  const [pendingExit, setPendingExit] = useState<'close' | 'cancel' | null>(null);
+
+  const discardChanges = () => {
+    if (noteId) {
+      const note = getNoteById(noteId);
+      if (note) loadNote(note);
+      setEditMode(false);
+    } else {
+      onClose();
+    }
+  };
+
+  const requestClose = () => (isDirty ? setPendingExit('close') : onClose());
+
+  // In modifica il tasto Indietro di sistema chiude passando dalla stessa conferma.
+  useUnsavedChangesGuard({ editing: editMode, dirty: isDirty, onBack: requestClose });
+
   // La nota viene letta dalla cache in modo reattivo: se arriva dopo l'apertura
   // (link diretto, cache vuota) viene caricata appena disponibile.
   const cachedNote = useNotesCache(state => (noteId ? state.notes.find(note => note.id === noteId) : undefined));
@@ -260,11 +285,17 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
     setSelectedPresetScene(note.presetScene || '');
     setGeneralNotes(note.generalNotes || '');
     setCurrentOrder(note.order ?? 0);
-    setSections((note.sections || []).map((s, idx) => ({ 
-      ...s, 
+    const loadedSections = (note.sections || []).map((s, idx) => ({
+      ...s,
       id: s.id || `loaded-${idx}-${Date.now()}-${Math.random()}`,
-      chords: s.chords || [] 
-    })));
+      chords: s.chords || []
+    }));
+    setSections(loadedSections);
+    savedDraftRef.current = serializeDraft({
+      title: note.title, band: note.band, setlist: note.setlist,
+      presetSlot: note.presetSlot || '', presetScene: note.presetScene || '',
+      generalNotes: note.generalNotes || '', sections: loadedSections,
+    });
     setEditMode(false);
     setIsNotesOpen(true);
     if (note.presetSlot && status === 'connected') {
@@ -314,6 +345,7 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
         const docRef = await addDoc(collection(firestore, "notes"), noteData);
         onUpdate({ ...noteData, id: docRef.id } as SavedNote);
       }
+      savedDraftRef.current = currentDraft;
       setEditMode(false);
       toast({ title: "Nota Salvata nel Cloud" });
     } catch (err) {
@@ -328,7 +360,11 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
     setSelectedPresetSlot('');
     setSelectedPresetScene('');
     setGeneralNotes('');
-    setSections([{ id: `new-${Date.now()}-${Math.random()}`, type: 'Verse', text: '', chords: [] }]);
+    const emptySections = [{ id: `new-${Date.now()}-${Math.random()}`, type: 'Verse', text: '', chords: [] }];
+    setSections(emptySections);
+    savedDraftRef.current = serializeDraft({
+      title: '', band: '', setlist: '', presetSlot: '', presetScene: '', generalNotes: '', sections: emptySections,
+    });
     setEditMode(true);
     setIsDetailsOpen(true);
     setCurrentOrder(0);
@@ -397,7 +433,7 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
           <div className="grid min-h-11 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3">
             <button
               type="button"
-              onClick={onClose}
+              onClick={requestClose}
               className="flex h-11 w-11 shrink-0 touch-manipulation items-center justify-center rounded-xl border border-border/80 bg-secondary/70 text-muted-foreground shadow-sm transition-[background-color,border-color,color,transform] duration-150 hover:border-destructive/40 hover:bg-destructive/10 hover:text-destructive active:scale-95"
               title="Chiudi nota"
               aria-label="Chiudi nota"
@@ -457,15 +493,7 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
                 <>
                   <button
                     type="button"
-                    onClick={() => {
-                      if (noteId) {
-                        const note = getNoteById(noteId);
-                        if (note) loadNote(note);
-                        setEditMode(false);
-                      } else {
-                        onClose();
-                      }
-                    }}
+                    onClick={() => (isDirty ? setPendingExit('cancel') : discardChanges())}
                     className="flex h-11 w-11 items-center justify-center rounded-xl border border-border/80 bg-secondary/70 text-muted-foreground shadow-sm transition-[background-color,border-color,color,transform] duration-150 hover:border-destructive/40 hover:bg-destructive/10 hover:text-destructive active:scale-95"
                     title="Annulla modifiche"
                     aria-label="Annulla modifiche"
@@ -815,6 +843,31 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
           </Card>
         </div>
         )}
+
+        <AlertDialog open={pendingExit !== null} onOpenChange={(open) => { if (!open) setPendingExit(null); }}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Uscire senza salvare?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Le modifiche a questa nota non sono state salvate e andranno perse.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Continua a modificare</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => {
+                  const action = pendingExit;
+                  setPendingExit(null);
+                  if (action === 'cancel') discardChanges();
+                  else onClose();
+                }}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Esci senza salvare
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
         {/* Delete Section Confirmation Dialog */}
         <AlertDialog open={isDeleteSectionDialogOpen} onOpenChange={setIsDeleteSectionDialogOpen}>

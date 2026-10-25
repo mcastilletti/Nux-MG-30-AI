@@ -95,7 +95,6 @@ interface PresetStore {
   toggleEffect: (effectId: string) => void;
   updateBlockStateLocally: (blockType: string, enabled: boolean) => void;
   copyScene: (sourceSceneIndex: number, targetPreset: Preset, targetSceneIndex: number) => Preset;
-  copyActiveSceneTo: (target: Preset, targetScene: number) => Preset;
   undo: () => void;
   redo: () => void;
   saveToHistory: () => void;
@@ -108,6 +107,13 @@ export const usePresetStore = create<PresetStore>((set, get) => ({
 
   setActivePreset: (preset) => {
     const norm = ensurePresetScenes(preset);
+    const { activePreset } = get();
+    if (activePreset.slot !== norm.slot) {
+      // Cambio di preset: la cronologia undo/redo non deve attraversare slot diversi,
+      // altrimenti "Annulla" potrebbe riportare dati di un altro preset.
+      set({ activePreset: norm, history: [norm], historyIndex: 0 });
+      return;
+    }
     set({ activePreset: norm });
     get().saveToHistory();
   },
@@ -217,19 +223,25 @@ export const usePresetStore = create<PresetStore>((set, get) => ({
   copyScene: (sourceSceneIndex, targetPreset, targetSceneIndex) => {
     const { activePreset } = get();
 
-    // Source preset is activePreset if copying from activePreset slot
-    const sourcePreset = activePreset.slot === targetPreset.slot ? activePreset : targetPreset;
-    const normSource = ensurePresetScenes(sourcePreset);
+    // La scena di origine è sempre quella del preset attualmente aperto in editor:
+    // la UI non permette di scegliere un'altra origine, quindi non deve mai essere
+    // letta dal preset di destinazione (altrimenti la copia cross-preset è un no-op).
+    const normSource = ensurePresetScenes(activePreset);
 
-    // If sourceSceneIndex is current active scene, use live normSource.effects to capture latest ON/OFF states
+    // Se sourceSceneIndex è la scena attiva, usa normSource.effects (stato live)
+    // per catturare gli ultimi ON/OFF non ancora salvati in normSource.scenes.
     const rawSourceEffects = sourceSceneIndex === normSource.activeScene
       ? normSource.effects
       : (normSource.scenes?.[sourceSceneIndex] || normSource.effects);
 
     const sourceEffects = cloneEffects(rawSourceEffects);
 
-    // Ensure target preset has scenes initialized
-    const normTarget = ensurePresetScenes(targetPreset);
+    // Se la destinazione è lo stesso preset attivo, usa lo stato live (normSource)
+    // invece di un eventuale snapshot stantio passato come targetPreset: altrimenti
+    // le scene non coinvolte nella copia verrebbero sovrascritte con dati vecchi.
+    const normTarget = targetPreset.slot === activePreset.slot
+      ? normSource
+      : ensurePresetScenes(targetPreset);
 
     // Replace target scene with exact deep copy of source scene (including ON/OFF enabled status)
     const updatedScenes = {
@@ -247,10 +259,6 @@ export const usePresetStore = create<PresetStore>((set, get) => ({
     };
 
     return resultPreset;
-  },
-
-  copyActiveSceneTo: (target, targetScene) => {
-    return get().copyScene(get().activePreset.activeScene, target, targetScene);
   },
 
   undo: () => {

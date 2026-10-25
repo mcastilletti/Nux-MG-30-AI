@@ -42,6 +42,61 @@ Questo documento è il risultato della prima attività del refactoring: **audit 
 
 **Non verificato:** test su dispositivi reali (iOS/Android), con la pedaliera MG-30 collegata, e misure di contrasto. Sono previsti nella Fase 1.
 
+## 0.1 Esito della Fase 1 (2026-10-25)
+
+Verifiche con Playwright sulla build di produzione, da non loggati, con note iniettate in cache. Script nello scratchpad della sessione, non nel repository (D10).
+
+### Ipotesi [H]
+
+| Voce | Esito | Come |
+|---|---|---|
+| Toast mobile sopra l'header | ✅ **Confermato e peggiore del previsto**: toast fuori schermo sotto i 640px. Corretto in `e17f847` | Posizione misurata a 360/390/768/1280px |
+| NT11 — accordi in ordine inverso | ✅ Confermato | Picker: G poi Gm → "Gm, G" |
+| NT12 — posizioni accordi solo in tooltip | ✅ Confermato | Tocco su un accordo in lettura: nessun tooltip né popover |
+| NT17 — doppio salvataggio | ✅ Confermato dal codice | Il test richiede un account |
+| Tastiera aperta nell'editor delle note | ❌ Smentito | Viewport 390×420: il pulsante Salva resta visibile |
+| E1 — header dell'editor a 360px | ✅ Già confermato in Fase 0. In più: toccando SAVE il contenitore principale scorre di 55px in orizzontale (contenuto largo 445px) | Misura di `scrollLeft` |
+| N4 — safe area iOS | ⏳ Non verificabile in Chromium | Serve un iPhone in modalità PWA |
+
+### Contrasti (soglia WCAG AA 4,5:1, 3:1 per testo grande)
+
+Rapporto calcolato su ogni testo visibile, componendo colore, trasparenze e opacità degli antenati. Pagine: Home, Library, Editor, Note, foglio nota, Band, Settings, Strumentazione.
+
+| Elemento | Rapporto | Dove | Proposta (F2) |
+|---|---|---|---|
+| Testo bianco sul pulsante primario (`--primary` 261 43% 65%) | **3,34:1** | Tutti i pulsanti primari: SAVE, Nuovo, Aggiungi, scena attiva | `--primary-foreground` scuro (circa 240 10% 6%): circa 6:1 senza toccare il viola, che resta leggibile come accento su fondo scuro |
+| Nomi dei blocchi nella catena (`zinc-500`, 10px) | 4,14:1 | Editor | `zinc-400` e almeno 11–12px |
+| Etichette slot `muted-foreground/60` | 4,39:1 | Library, 128 card | Opacità almeno 80% |
+| Separatori "•" con `opacity-30` | 1,91:1 | Note | Decorativi: `aria-hidden`, nessun obbligo di contrasto |
+
+Home, Band, Settings e il foglio nota non hanno testi sotto soglia.
+
+### Proposta di architettura informativa (da approvare)
+
+**Barra mobile (5 voci, target ≥44px):** Editor · Library · Note · Band · **Altro**.
+- "Altro" apre un pannello con Home, Strumentazione (AI), Impostazioni, Avanzate (SysEx Analyzer, se resta dopo D5), account (accedi/esci) e stato MIDI.
+- Ogni sezione raggiungibile in al massimo 2 tocchi; scompare il trigger della sidebar da 28px (N1).
+
+**Sidebar desktop**, stesse voci raggruppate:
+- *Suono*: Editor, Library, Strumentazione;
+- *Palco*: Note, Band;
+- *Sistema*: Impostazioni, Avanzate.
+
+**Header essenziale dell'editor** (risolve E1, E10 e lo scroll orizzontale):
+- riga 1: ‹ slot › · nome del preset (intero su due righe o con tocco per leggerlo) · pallino di stato MIDI;
+- riga 2: Scene 1 · 2 · 3 · **SALVA**;
+- le azioni secondarie (AI Mode, leggi nome, invia preset, annulla/ripeti, copia scena) vanno in un menu ⋮.
+
+**Titoli:** una mappa route → titolo, così ogni pagina mostra il suo nome (N2).
+
+### Direzione visiva: "strumento da palco"
+
+- **Scuro e ad alto contrasto:** fondo quasi nero, testo principale ≥7:1, secondario ≥4,5:1; niente testo sotto 12px tranne badge di stato.
+- **Un solo accento** (viola) per azioni e selezione. Colori di stato fissi: verde = attivo/collegato, ambra = offline/attenzione, rosso = errore/elimina.
+- **Denso ma leggibile:** card compatte, numeri e accordi grandi, target sempre ≥44px.
+- **Poche animazioni,** brevi e disattivate da `prefers-reduced-motion` (già gestito).
+- **Modalità Live** (D4): testo regolabile, schermo intero, blocco anti-tocco, avanzamento a tocco.
+
 ## 1. Sintesi
 
 - **Lo stato tecnico è sano.** Typecheck pulito, 14 test unitari verdi, build di produzione riuscita. Però la build **non** controlla i tipi né il lint (`next.config.ts`), e non esistono test di interfaccia.
@@ -193,7 +248,7 @@ Colonne: **ID** · **Problema** · **Evidenza** · **Impatto** · **P** · **Sol
 | N1 [V] | Strumentazione, SysEx e Settings sono raggiungibili su mobile solo da un pulsante di 28px | `app-shell.tsx:201-210`, `sidebar.tsx:275` | Configurazione dell'AI difficile da trovare su telefono | P2 | Barra mobile: Editor, Library, Note, Band, "Altro" (pannello con le sezioni restanti); trigger ≥44px | F1 (IA) | Basso | Playwright 360px: tutte le sezioni in ≤2 tocchi |
 | N2 [V] | Su Settings l'header mostra "App" | `app-shell.tsx:187` | Orientamento confuso | P3 | Titolo da una mappa delle route completa | — | Basso | Titolo corretto su ogni route |
 | N3 [V] | La shell si rimonta a ogni pagina | ogni `page.tsx` contiene `<AppShell>` | Wake lock, `initialize()` e sync MIDI rieseguiti a ogni navigazione; sidebar che "lampeggia" | P2 | Spostare `AppShell` in un layout condiviso (route group) | F4 | Medio (effetti MIDI) | Una sola inizializzazione MIDI per sessione (log) |
-| N4 [V] | Nessuna safe area con `black-translucent` e barra fissa in basso | `layout.tsx:18`, `app-shell.tsx:201`; nessun `env(safe-area-inset-*)` | [H] Header sotto la barra di stato e barra nav sotto l'indicatore home nella PWA iOS | P1 | `viewport-fit=cover` + padding con `env(safe-area-inset-*)` | F2 | Basso | Dispositivo iOS in modalità standalone |
+| N4 [V] | Nessuna safe area con `black-translucent` e barra fissa in basso | `layout.tsx:18`, `app-shell.tsx:201`; nessun `env(safe-area-inset-*)` | [H] (resta da provare su iPhone: non riproducibile in Chromium) Header sotto la barra di stato e barra nav sotto l'indicatore home nella PWA iOS | P1 | `viewport-fit=cover` + padding con `env(safe-area-inset-*)` | F2 | Basso | Dispositivo iOS in modalità standalone |
 | N5 [V] | Lingua mista: "Navigation", "Hardware Status", "Settings", pagina SysEx in inglese | `app-shell.tsx:110,153,172`; `tools/sysex-analyzer` | Incoerenza | P3 | Testi in italiano, termini tecnici del dispositivo invariati | F5 | Basso | Revisione dei testi |
 | N6 [V] | `/notes/editor` è orfana e duplica `NoteEditorContent` | nessun link (grep); `notes/editor/page.tsx:27-68,707` | Manutenzione doppia, divergenze | P2 | Decisione D5, poi rimozione dopo verifica | D5 | Basso | Nessun riferimento residuo; test verdi |
 
@@ -258,13 +313,13 @@ Le voci Note sono **[V]** salvo dove indicato. Requisiti di dettaglio e scenari 
 | NT8 ✅ `637a7b6` | Al cambio brano lo scroll e i pannelli restano com'erano | nessuna `key` per nota (`notes/page.tsx:737`; `NoteSheet.tsx:58`) | [H] Il nuovo brano si apre a metà | P1 | `key` per nota o reset dello scroll | — | Basso | Scenario 3 |
 | NT9 | Rimozione accordo con un tap su una X di 14px, senza annullamento | `NoteEditorContent.tsx:698-706` | Cancellazioni accidentali | P1 | Target ≥44px, modalità modifica accordi esplicita, annullamento | F3 | Basso | Test touch |
 | NT10 | Controlli visibili solo al passaggio del mouse: inserisci accordo, inserisci sezione, rimuovi a capo, cestino al 30% | `NoteEditorContent.tsx:604,666,733,790`; `notes/page.tsx:799-811` | Invisibili ma toccabili su touch | P1 | Controlli sempre visibili in modalità modifica; azioni della card in un menu ⋮ | F3 | Basso | Ispezione su touch |
-| NT11 | Il picker inserisce più accordi in ordine inverso | `NoteEditorContent.tsx:654,738` | [H] Sequenze sbagliate | P2 | Indice di inserimento che avanza o chiusura dopo la scelta | — | Basso | Test unitario |
-| NT12 | Posizioni degli accordi solo in tooltip | `NoteEditorContent.tsx:679-729` | [H] Non consultabili su touch | P2 | Popover al tocco | F3 | Basso | Test su touch |
+| NT11 [V] | Il picker inserisce più accordi in ordine inverso | `NoteEditorContent.tsx:654,738` | **Confermato** (Fase 1): scegliendo G e poi Gm si ottiene "Gm, G" | P2 | Indice di inserimento che avanza o chiusura dopo la scelta | — | Basso | Test unitario |
+| NT12 [V] | Posizioni degli accordi solo in tooltip | `NoteEditorContent.tsx:679-729` | **Confermato** (Fase 1): al tocco non compare né tooltip né popover | P2 | Popover al tocco | F3 | Basso | Test su touch |
 | NT13 ✅ `637a7b6` | La ricerca nascosta continua a filtrare la lista | `notes/page.tsx:173,416` | Lista "vuota" inspiegabile | P1 | Chiudere la ricerca azzera il filtro, oppure filtro attivo visibile | — | Basso | Test |
 | NT14 ◐ `637a7b6` | Il trascinamento in vista filtrata o con ricerca rinumera `order` di un sottoinsieme | `notes/page.tsx:258-279` | Ordine delle scalette alterato | P1 | Riordino solo in modalità "Riordina" con una scaletta selezionata | F3 | Medio | Test sull'ordine |
 | NT15 ✅ `637a7b6` | Foglio alto `h-[100vh]` | `NoteSheet.tsx:57` | [H] Fondo coperto dalla barra del browser | P1 | `h-[100dvh]` | — | Basso | Dispositivo |
 | NT16 | Testo non regolabile, zoom disabilitato, nessuna modalità di lettura live | `layout.tsx:9-10`; grep | Leggibilità sul palco | P1 | Modalità Live [P] e decisione D3 | D3, D4 | Medio | Scenari 2 e 7 |
-| NT17 | Nessuno stato di salvataggio e nessuna protezione dal doppio invio | `NoteEditorContent.tsx:465-473` | [H] Documenti doppi, incertezza | P1 | Componente `SaveStatus`, pulsante disabilitato durante il salvataggio | F2 | Basso | Scenario 4 |
+| NT17 [V] | Nessuno stato di salvataggio e nessuna protezione dal doppio invio | `handleSaveNote` senza stato di invio; pulsante mai disabilitato | **Confermato dal codice** (il test richiede login): due tocchi su una nota nuova creano due documenti | P1 | Componente `SaveStatus`, pulsante disabilitato durante il salvataggio | F2 | Basso | Scenario 4 |
 | NT18 | La stampa taglia i brani lunghi (pagina A4 fissa, `overflow: hidden`) e stampa lo slot grezzo | `globals.css:118-133`; `notes/page.tsx:673` | Scalette stampate incomplete | P2 | Più pagine per brano lungo; etichetta `01A` | F5 | Basso | Stampa di un brano lungo |
 | NT19 | Doppio modello band/scalette: le band create in Band non compaiono nell'editor note, e nel foglio non si può creare una nuova band o scaletta | `bands/page.tsx:74-98`; `NoteEditorContent.tsx:217-234,546-563` | Flusso di organizzazione spezzato | P2 | Decisione D7 | D7 | Alto (dati) | — |
 | NT20 ✅ `0cd1f5a` | Il blocco ha due pulsanti "successivo" | `BlockEditorContent.tsx:133-152` | Incoerenza (corretta solo per i brani) | P3 | Tenere solo il primario | — | Basso | Ispezione |
@@ -304,8 +359,8 @@ Le voci Note sono **[V]** salvo dove indicato. Requisiti di dettaglio e scenari 
   - scene e "Copia" 40px;
   - pulsanti `h-8`/`h-9` in Library, Band e Note.
 - [V] `.touch-target` è usato solo in Editor, Library e SysEx.
-- [H] Il toast mobile è `fixed top-0` e può coprire l'header (`ui/toast.tsx:19`).
-- Le verifiche visive ai 4 viewport sono in Fase 0/1: **non ancora eseguite**.
+- [V] **Toast su mobile** (Fase 1): erano **fuori schermo** sotto i 640px, non solo sopra l'header. Il contenitore `fixed` non aveva posizione orizzontale e finiva a x = larghezza dello schermo, quindi nessun messaggio era visibile su telefono, errori compresi. Corretto in `e17f847`. Ora compare in alto e copre l'header per la sua durata: posizionamento definitivo in F2 (sopra la barra di navigazione o con safe area).
+- Verifiche visive ai 4 viewport eseguite in Fase 0 (baseline) e Fase 1.
 
 ### 5.11 Accessibilità
 
@@ -332,7 +387,7 @@ Le voci Note sono **[V]** salvo dove indicato. Requisiti di dettaglio e scenari 
   - `role="slider"` con valori ARIA sulle manopole;
   - overlay di sync con `role="status" aria-live`;
   - titolo e descrizione `sr-only` nel `NoteSheet`.
-- [H] Contrasti da misurare: etichetta OFF `zinc-500` 10px su `zinc-950` (circa 4:1); nomi preset `muted-foreground/60` in Library.
+- [V] **Contrasti misurati** (Fase 1, vedi §0.1): pulsante primario 3,34:1; nomi dei blocchi nella catena `zinc-500` 10px 4,14:1; etichette slot in Library `muted-foreground/60` 4,39:1. Tutti sotto la soglia AA di 4,5:1.
 
 ### 5.12 Prestazioni e manutenibilità
 
@@ -422,7 +477,7 @@ F0 Baseline ──┬─► F0b Correzioni P0 ───────────�
   - typecheck e test verdi;
   - screenshot di baseline archiviati.
 
-### Fase 1 — Audit e direzione UX/UI (S)
+### Fase 1 — Audit e direzione UX/UI (S) — ✅ verifiche completate, IA da approvare (vedi §0.1)
 - **Deliverable:**
   - conferma o smentita delle ipotesi [H] con Playwright: header a 360px, foglio `100vh`, toast, tastiera;
   - misure di contrasto;

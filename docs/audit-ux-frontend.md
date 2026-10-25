@@ -42,6 +42,36 @@ Questo documento è il risultato della prima attività del refactoring: **audit 
 
 **Non verificato:** test su dispositivi reali (iOS/Android), con la pedaliera MG-30 collegata, e misure di contrasto. Sono previsti nella Fase 1.
 
+## 0.2 Fase 2 — design system (2026-10-25)
+
+| Voce | Esito | Commit |
+|---|---|---|
+| Token di stato (`success`, `warning`, `info`) e dei blocchi (`--block-*`) | ✅ Stessi valori di prima | `5dfea77` |
+| Scala dei testi piccoli (`text-label`, `text-caption`, `text-body-sm`, `text-micro`) al posto di `text-[Npx]` | ✅ Stessi valori; tailwind-merge configurato | `5dfea77` |
+| Moduli condivisi `slot.ts`, `section-colors.ts`, accordi in `chord-data.ts` (M3) | ✅ 10 copie dell'etichetta slot sostituite | `5dfea77` |
+| Bordo del blocco selezionato e sfondo della modulazione | ✅ Corretto: `hsla(H S L, a)` era CSS non valido e veniva ignorato | `5dfea77` |
+| Contrasti (pulsanti primari, slot, blocchi) | ✅ Nessun testo sotto soglia, esclusi i separatori decorativi | `697555a` |
+| `IconButton`, `ConnectionStatus`, `SaveStatus`, `ConfirmDialog`, `EmptyState`/`ErrorState` | ✅ Con test di base | `bf5a724` |
+| E8/H2 — errori MIDI invisibili | ✅ L'header mostra "Errore MIDI" con spiegazione | `bf5a724` |
+| NT17 — doppio salvataggio | ✅ Guardia sincrona e indicatore. **Da provare con un account reale** | `bf5a724` |
+| NT21 — stati della lista note | ✅ Caricamento, errore con Riprova, accesso, nessun risultato | `bf5a724` |
+| C2 — eliminazione strumentazione senza conferma | ✅ | `bf5a724` |
+| N4 — safe area | ✅ Implementata. **Da provare su iPhone in modalità PWA** | `bf5a724`, `bd2a5e2` |
+| Toast su mobile | ✅ Sotto l'header | `bd2a5e2` |
+| `DialogContent` con altezza massima | ✅ Già in `637a7b6` | — |
+
+**Verifica:**
+- confronto pixel a 4 viewport dopo i token: identico alla baseline, salvo il bordo corretto;
+- 15 controlli Playwright sui componenti;
+- regressioni NT2, NT3, cronologia, D1/D2 e P1 tutte verdi;
+- 43 test unitari, nessuno scroll orizzontale e nessun errore JavaScript sulle 40 combinazioni pagina × viewport.
+
+**Restano per la Fase 5:**
+- migrazione pagina per pagina dei colori `zinc-*`/`green-*` ai token;
+- testo minimo a 12px;
+- nuova barra mobile con "Altro" e header dell'editor su due righe (approvati);
+- `IconButton` sugli altri pulsanti icona.
+
 ## 0.1 Esito della Fase 1 (2026-10-25)
 
 Verifiche con Playwright sulla build di produzione, da non loggati, con note iniettate in cache. Script nello scratchpad della sessione, non nel repository (D10).
@@ -488,7 +518,7 @@ F0 Baseline ──┬─► F0b Correzioni P0 ───────────�
 - **Rischi:** nessuno sul codice.
 - **Accettazione:** ogni [H] della sezione 5 marcata come confermata o smentita; IA approvata.
 
-### Fase 2 — Skill MG30 Studio UX e design system (M)
+### Fase 2 — Skill MG30 Studio UX e design system (M) — ✅ completata (vedi §0.2)
 - **Deliverable:**
   - skill `mg30-studio-ux` (✅ creata in questa attività);
   - token semantici: successo, avviso, info; colori dei blocchi spostati da `getBlockColorVar` a variabili CSS;

@@ -1,12 +1,13 @@
 "use client"
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useMidiStore } from '@/stores/use-midi-store';
 import { useToast } from '@/hooks/use-toast';
 import { useFirebase, useUser } from '@/firebase';
 import { collection, addDoc, doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import type { NoteSection, SavedNote } from '@/types/note';
 import { useNotesCache } from '@/stores/use-notes-cache';
+import { getNoteLoadAction } from './note-load-action';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -202,17 +203,22 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
   const [isDeleteSectionDialogOpen, setIsDeleteSectionDialogOpen] = useState(false);
   const [sectionToDelete, setSectionToDelete] = useState<string | null>(null);
 
-  // Load note from cache when noteId changes
+  // La nota viene letta dalla cache in modo reattivo: se arriva dopo l'apertura
+  // (link diretto, cache vuota) viene caricata appena disponibile.
+  const cachedNote = useNotesCache(state => (noteId ? state.notes.find(note => note.id === noteId) : undefined));
+  const loadedNoteIdRef = useRef<string | null>(null);
+  const isNoteMissing = !!noteId && !cachedNote;
+
   useEffect(() => {
-    if (noteId) {
-      const note = getNoteById(noteId);
-      if (note) {
-        loadNote(note);
-      }
-    } else {
+    const action = getNoteLoadAction({ noteId, note: cachedNote, loadedNoteId: loadedNoteIdRef.current });
+    if (action === 'new') {
+      loadedNoteIdRef.current = null;
       handleNewNote();
+    } else if (action === 'load' && cachedNote) {
+      loadedNoteIdRef.current = cachedNote.id;
+      loadNote(cachedNote);
     }
-  }, [noteId, getNoteById]);
+  }, [noteId, cachedNote]);
 
   const uniqueBands = useMemo(() => {
     const allNotes = useNotesCache.getState().notes;
@@ -271,6 +277,10 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
   };
 
   const handleSaveNote = async () => {
+    if (isNoteMissing) {
+      toast({ title: "Nota non ancora caricata", description: "Attendi il caricamento delle note e riprova.", variant: "destructive" });
+      return;
+    }
     if (!title.trim()) {
       toast({ title: "Titolo mancante", variant: "destructive" });
       return;
@@ -414,14 +424,14 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
                   aria-expanded={isDetailsOpen}
                   title="Mostra dettagli brano"
                 >
-                  <span className="truncate">{title || "Scegli un brano..."}</span>
+                  <span className="truncate">{isNoteMissing ? "Nota non trovata" : (title || "Scegli un brano...")}</span>
                   {noteId && (isDetailsOpen ? <ChevronUp className="h-4 w-4 shrink-0 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />)}
                 </button>
               )}
             </div>
 
             <div className="flex items-center gap-2">
-              {!editMode && noteId && (
+              {!editMode && noteId && !isNoteMissing && (
                 <button
                   type="button"
                   onClick={() => setEditMode(true)}
@@ -477,6 +487,12 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
           </div>
         </div>
 
+        {isNoteMissing ? (
+          <div role="status" className="mx-4 rounded-xl border border-border bg-secondary/30 p-5 text-sm text-muted-foreground">
+            <p className="font-semibold text-foreground">Nota non disponibile su questo dispositivo</p>
+            <p className="mt-1">Attendi il caricamento delle note oppure chiudi e riaprila dall'elenco.</p>
+          </div>
+        ) : (
         <div className="space-y-6">
           {(editMode || isDetailsOpen) && (
             <div className="space-y-4 p-4 rounded-xl bg-secondary/20 border border-border/50">
@@ -798,7 +814,8 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
             </CardContent>
           </Card>
         </div>
-        
+        )}
+
         {/* Delete Section Confirmation Dialog */}
         <AlertDialog open={isDeleteSectionDialogOpen} onOpenChange={setIsDeleteSectionDialogOpen}>
           <AlertDialogContent>

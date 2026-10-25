@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useFirebase, useUser } from '@/firebase';
 import { collection, doc, updateDoc, addDoc, serverTimestamp } from 'firebase/firestore';
@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { ChevronRight, X, Save, Pencil } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { buildBlockNoteData } from './block-note-data';
+import { getNoteLoadAction } from './note-load-action';
 
 interface BlockEditorContentProps {
   noteId: string | null;
@@ -43,16 +44,23 @@ export function BlockEditorContent({ noteId, initialBand, initialSetlist, onClos
     setEditMode(false);
   };
 
+  const existingId = noteId && noteId !== 'new-block' ? noteId : null;
+  const cachedNote = useNotesCache(state => (existingId ? state.notes.find(note => note.id === existingId) : undefined));
+  const loadedNoteIdRef = useRef<string | null>(null);
+  const isNoteMissing = !!existingId && !cachedNote;
+
   useEffect(() => {
-    if (noteId && noteId !== 'new-block') {
-      const note = getNoteById(noteId);
-      if (note) {
-        loadNote(note);
-      }
-    } else if (noteId === 'new-block') {
+    if (noteId === 'new-block') {
+      loadedNoteIdRef.current = null;
       handleNewBlock();
+      return;
     }
-  }, [noteId, getNoteById]);
+    const action = getNoteLoadAction({ noteId: existingId, note: cachedNote, loadedNoteId: loadedNoteIdRef.current });
+    if (action === 'load' && cachedNote) {
+      loadedNoteIdRef.current = cachedNote.id;
+      loadNote(cachedNote);
+    }
+  }, [noteId, existingId, cachedNote]);
 
   const handleSaveBlock = async () => {
     if (!title.trim()) {
@@ -118,7 +126,7 @@ export function BlockEditorContent({ noteId, initialBand, initialSetlist, onClos
               />
             ) : (
               <h2 className="text-2xl font-black text-primary lg:text-3xl">
-                {title || "Blocco senza titolo"}
+                {isNoteMissing ? "Blocco non trovato" : (title || "Blocco senza titolo")}
               </h2>
             )}
           </div>
@@ -129,7 +137,7 @@ export function BlockEditorContent({ noteId, initialBand, initialSetlist, onClos
               <ChevronRight className="w-5 h-5 lg:w-7 lg:h-7" />
             </button>
           )}
-          {!editMode && noteId && noteId !== 'new-block' && (
+          {!editMode && existingId && !isNoteMissing && (
             <button onClick={() => setEditMode(true)} className="h-9 w-9 lg:h-11 lg:w-11 text-muted-foreground rounded-full hover:bg-primary/10 hover:text-primary flex items-center justify-center" title="Modifica">
               <Pencil className="w-5 h-5 lg:w-7 lg:h-7" />
             </button>
@@ -166,7 +174,13 @@ export function BlockEditorContent({ noteId, initialBand, initialSetlist, onClos
       </div>
 
       <div className="flex-1 overflow-auto">
-        <Textarea 
+        {isNoteMissing ? (
+          <div role="status" className="rounded-xl border border-border bg-secondary/30 p-5 text-sm text-muted-foreground">
+            <p className="font-semibold text-foreground">Blocco non disponibile su questo dispositivo</p>
+            <p className="mt-1">Attendi il caricamento delle note oppure chiudi e riaprilo dall'elenco.</p>
+          </div>
+        ) : (
+        <Textarea
           placeholder="Scrivi qui il contenuto del blocco..." 
           className={cn(
             "w-full min-h-[400px] text-[16px] bg-card/30 border-border/50 resize-none leading-relaxed p-4",
@@ -176,6 +190,7 @@ export function BlockEditorContent({ noteId, initialBand, initialSetlist, onClos
           onChange={(e) => setBlockContent(e.target.value)}
           readOnly={!editMode}
         />
+        )}
       </div>
     </div>
   );

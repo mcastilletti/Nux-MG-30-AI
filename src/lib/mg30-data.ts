@@ -8,6 +8,8 @@ export interface MG30Parameter {
   step: number;
   default: number;
   unit?: string;
+  /** Etichette dei valori discreti, nell'ordine documentato (indice = valore). */
+  options?: string[];
 }
 
 export interface MG30Model {
@@ -18,19 +20,20 @@ export interface MG30Model {
 }
 
 const P1 = (id: string, name: string, def = 50) => ({ id, name, min: 0, max: 100, step: 1, default: def });
-const SUBDIV = { 
-  id: 'subdiv', 
-  name: 'Sub Div', 
-  min: 0, 
-  max: 6, 
-  step: 1, 
+const SUBDIV_OPTIONS = ['1/4', '1/8D', '1/8', '1/4T', '1/16', '1/8T', '1/32'];
+const SUBDIV: MG30Parameter = {
+  id: 'subdiv',
+  name: 'Sub Div',
+  min: 0,
+  max: 6,
+  step: 1,
   default: 2,
-  description: '1/4, 1/8D, 1/8, 1/4T, 1/16, 1/8T, 1/32'
-}; 
+  options: SUBDIV_OPTIONS,
+};
 
-const IR_GUITAR_PARAMS = [
-  { id: 'mic', name: 'Mic', min: 0, max: 7, step: 1, default: 1 }, 
-  { id: 'axis', name: 'Axis', min: 0, max: 2, step: 1, default: 0 },
+const IR_GUITAR_PARAMS: MG30Parameter[] = [
+  { id: 'mic', name: 'Mic', min: 0, max: 7, step: 1, default: 1 },
+  { id: 'axis', name: 'Axis', min: 0, max: 2, step: 1, default: 0, options: ['CENTER', 'MIDDLE', 'EDGE'] },
   { id: 'level', name: 'Level', min: -12, max: 12, step: 1, default: 0, unit: 'dB' },
   { id: 'lowcut', name: 'Lo Cut', min: 20, max: 1000, step: 1, default: 20, unit: 'Hz' },
   { id: 'highcut', name: 'Hi Cut', min: 5000, max: 20000, step: 1, default: 20000, unit: 'Hz' }
@@ -60,9 +63,9 @@ export const MG30_MODELS: Record<EffectType, MG30Model[]> = {
     }
   ],
   'compressor': [
-    { id: 'rose', name: 'Rose Comp', fullName: 'Keeley Compressor', parameters: [P1('sustain', 'Sustain'), P1('level', 'Level')] },
-    { id: 'kcomp', name: 'K Comp', fullName: 'Korg Compressor', parameters: [P1('sustain', 'Sustain'), P1('clipping', 'Clipping'), P1('level', 'Level')] },
-    { id: 'studiocomp', name: 'Studio Comp', fullName: 'Urei 1176 Compressor', parameters: [P1('threshold', 'Threshold'), P1('ratio', 'Ratio'), P1('attack', 'Attack'), P1('level', 'Level')] }
+    { id: 'rose', name: 'Rose Comp', fullName: 'Ross Compressor', parameters: [P1('sustain', 'Sustain'), P1('level', 'Level')] },
+    { id: 'kcomp', name: 'K Comp', fullName: 'Keeley Compressor', parameters: [P1('sustain', 'Sustain'), P1('clipping', 'Clipping'), P1('level', 'Level')] },
+    { id: 'studiocomp', name: 'Studio Comp', fullName: 'Studio Compressor', parameters: [P1('threshold', 'Threshold'), P1('ratio', 'Ratio'), P1('gain', 'Gain'), P1('release', 'Release')] }
   ],
   'efx': [
     { id: 'distplus', name: 'DIST PLUS', fullName: 'MXR DISTORTION+', parameters: [P1('output', 'Output'), P1('sensitivity', 'Sensitivity')] },
@@ -152,11 +155,11 @@ export const MG30_MODELS: Record<EffectType, MG30Model[]> = {
     { id: 'mod-flanger', name: 'FLANGER', fullName: 'BOSS BF-2 Flanger', parameters: [P1('level', 'Level'), P1('rate', 'Rate'), P1('width', 'Width'), P1('fback', 'F.BACK'), SUBDIV] },
     { id: 'mod-ph90', name: 'PH 90', fullName: 'MXR PHASE 90', parameters: [P1('speed', 'SPEED'), SUBDIV] },
     { id: 'mod-ph100', name: 'PHASE 100', fullName: 'MXR PHASE 100', parameters: [P1('intensity', 'INTENSITY'), P1('speed', 'SPEED'), SUBDIV] },
-    { id: 'mod-scf', name: 'S.C.F.', fullName: 'TC CHORUS', parameters: [P1('speed', 'SPEED'), P1('width', 'WIDTH'), { id: 'mode', name: 'MODE', min: 0, max: 2, step: 1, default: 0 }, P1('intensity', 'INTENSITY'), SUBDIV] },
-    { id: 'mod-uvibe', name: 'U-VIBE', fullName: 'DUNLOP UNIVIBE', parameters: [P1('speed', 'SPEED'), P1('volume', 'VOLUME'), P1('intensity', 'INTENSITY'), { id: 'mode', name: 'MODE', min: 0, max: 1, step: 1, default: 0 }, SUBDIV] },
+    { id: 'mod-scf', name: 'S.C.F.', fullName: 'TC CHORUS', parameters: [P1('speed', 'SPEED'), P1('width', 'WIDTH'), { id: 'mode', name: 'MODE', min: 0, max: 2, step: 1, default: 0, options: ['CHORUS', 'PITCH MODULATOR', 'FLANGER'] }, P1('intensity', 'INTENSITY'), SUBDIV] },
+    { id: 'mod-uvibe', name: 'U-VIBE', fullName: 'DUNLOP UNIVIBE', parameters: [P1('speed', 'SPEED'), P1('volume', 'VOLUME'), P1('intensity', 'INTENSITY'), { id: 'mode', name: 'MODE', min: 0, max: 1, step: 1, default: 0, options: ['CHORUS', 'VIBRATO'] }, SUBDIV] },
     { id: 'mod-tremolo', name: 'TREMOLO', fullName: 'BOSS TR-3 TREMOLO', parameters: [P1('rate', 'RATE'), P1('depth', 'DEPTH'), SUBDIV] },
     { id: 'mod-rty', name: 'RTY SPK', fullName: 'ROTARY SPEAKER', parameters: [P1('balance', 'BALANCE'), P1('speed', 'SPEED'), SUBDIV] },
-    { id: 'mod-harmony', name: 'HARMONY', fullName: 'MXR HARMONIZER', parameters: [{ id: 'key', name: 'KEY', min: 0, max: 11, step: 1, default: 0 }, { id: 'scale', name: 'SCALE', min: 0, max: 1, step: 1, default: 0 }, { id: 'harm', name: 'HARM', min: 0, max: 9, step: 1, default: 5 }, P1('blend', 'BLEND')] }
+    { id: 'mod-harmony', name: 'HARMONY', fullName: 'MXR HARMONIZER', parameters: [{ id: 'key', name: 'KEY', min: 0, max: 11, step: 1, default: 0, options: ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'] }, { id: 'scale', name: 'SCALE', min: 0, max: 1, step: 1, default: 0, options: ['MINOR', 'MAJOR'] }, { id: 'harm', name: 'HARM', min: 0, max: 9, step: 1, default: 5, options: ['-8', '-6', '-5', '-4', '-3', '+3', '+4', '+5', '+6', '+8'] }, P1('blend', 'BLEND')] }
   ],
   'delay': [
     { id: 'dly-analog', name: 'ANALOG DELAY', fullName: 'Boss DM-2 Analog Delay', parameters: [P1('repeat', 'REPEAT'), P1('echo', 'ECHO'), P1('intensity', 'INTENSITY'), SUBDIV] },
@@ -165,7 +168,7 @@ export const MG30_MODELS: Record<EffectType, MG30Model[]> = {
     { id: 'dly-tape', name: 'TAPE ECHO', fullName: 'Maestro EchoPlex EP-4', parameters: [P1('time', 'TIME'), P1('level', 'LEVEL'), P1('repeat', 'REPEAT'), SUBDIV] },
     { id: 'dly-reverse', name: 'REVERSE DELAY', fullName: 'Boss DD8 Reverse Delay', parameters: [P1('time', 'TIME'), P1('mix', 'MIX'), P1('feedback', 'FEEDBACK'), SUBDIV] },
     { id: 'dly-pan', name: 'PAN DELAY', fullName: 'Ibanez DPL10 Stereo Pan Delay', parameters: [P1('time', 'TIME'), P1('repeat', 'REPEAT'), P1('level', 'DELAY LEVEL'), SUBDIV] },
-    { id: 'dly-duo', name: 'DUOTIME', fullName: 'NUX DUOTIME', parameters: [P1('level', 'LEVEL'), P1('time1', 'TIME1'), { id: 'subdiv1', name: 'SUB DIV1', min: 0, max: 6, step: 1, default: 2 }, P1('repeat1', 'REPEAT1'), P1('time2', 'TIME2'), { id: 'subdiv2', name: 'SUB DIV2', min: 0, max: 6, step: 1, default: 2 }, P1('repeat2', 'REPEAT2'), P1('para', 'PARA')] }
+    { id: 'dly-duo', name: 'DUOTIME', fullName: 'NUX DUOTIME', parameters: [P1('level', 'LEVEL'), P1('time1', 'TIME1'), { id: 'subdiv1', name: 'SUB DIV1', min: 0, max: 6, step: 1, default: 2, options: SUBDIV_OPTIONS }, P1('repeat1', 'REPEAT1'), P1('time2', 'TIME2'), { id: 'subdiv2', name: 'SUB DIV2', min: 0, max: 6, step: 1, default: 2, options: SUBDIV_OPTIONS }, P1('repeat2', 'REPEAT2'), P1('para', 'PARA')] }
   ],
   'reverb': [
     { id: 'room', name: 'ROOM', fullName: 'T-Rex Room Mate Reverb', parameters: [P1('decay', 'DECAY'), P1('tone', 'TONE'), P1('level', 'LEVEL')] },
@@ -187,7 +190,7 @@ export const MG30_MODELS: Record<EffectType, MG30Model[]> = {
   ],
   'eq': [
     { id: 'eq-ge6', name: '6-BAND EQ', fullName: 'BOSS GE-6', parameters: [P1('100hz', '100Hz'), P1('220hz', '220Hz'), P1('500hz', '500Hz'), P1('1.2khz', '1.2kHz'), P1('2.6khz', '2.6kHz'), P1('6.4khz', '6.4kHz'), P1('level', 'Level')] },
-    { id: 'eq-align', name: 'ALIGN EQ', fullName: 'ALIGN EQ', parameters: [{ id: 'hpf', name: 'HPF', min: 0, max: 2, step: 1, default: 0 }, P1('110hz', '110Hz'), P1('340hz', '340Hz'), P1('660hz', '660Hz'), P1('1300hz', '1300Hz'), P1('2600hz', '2600Hz'), P1('5000hz', '5000Hz'), P1('volume', 'Volume')] },
+    { id: 'eq-align', name: 'ALIGN EQ', fullName: 'ALIGN EQ', parameters: [{ id: 'hpf', name: 'HPF', min: 0, max: 2, step: 1, default: 0, options: ['50Hz', '80Hz', '160Hz'] }, P1('110hz', '110Hz'), P1('340hz', '340Hz'), P1('660hz', '660Hz'), P1('1300hz', '1300Hz'), P1('2600hz', '2600Hz'), P1('5000hz', '5000Hz'), P1('volume', 'Volume')] },
     { id: 'eq-10band', name: '10-BAND EQ', fullName: 'MXR 10 BAND', parameters: [{ id: 'vol', name: 'VOL', min: -10, max: 10, step: 1, default: 0 }, P1('31.25hz', '31.25Hz'), P1('62.5hz', '62.5Hz'), P1('125hz', '125Hz'), P1('250hz', '250Hz'), P1('500hz', '500Hz'), P1('1khz', '1KHz'), P1('2khz', '2KHz'), P1('4khz', '4KHz'), P1('8khz', '8KHz'), P1('16khz', '16KHz'), { id: 'gain', name: 'GAIN', min: -10, max: 10, step: 1, default: 0 }] },
     { id: 'eq-para', name: 'PARA EQ', fullName: 'ALIGN EQ', parameters: [P1('b1freq', 'Band1 Freq'), P1('b1gain', 'Band1 Gain'), P1('b1q', 'Band1 Q'), P1('b2freq', 'Band2 Freq'), P1('b2gain', 'Band2 Gain'), P1('b2q', 'Band2 Q'), P1('b3freq', 'Band3 Freq'), P1('b3gain', 'Band3 Gain'), P1('b3q', 'Band3 Q')] }
   ]

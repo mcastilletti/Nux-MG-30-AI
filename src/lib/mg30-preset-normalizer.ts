@@ -90,7 +90,11 @@ export function normalizePresetSuggestion(preset: Preset, suggestion: PresetSugg
       continue;
     }
 
-    const model = findModel(proposedEffect.type, proposedEffect.model);
+    // Modello vuoto = mantieni quello corrente: l'AI lo usa per spegnere un blocco
+    // senza cambiarne modello né azzerarne i parametri.
+    const model = proposedEffect.model?.trim()
+      ? findModel(proposedEffect.type, proposedEffect.model)
+      : findModel(proposedEffect.type, effect.model);
     if (!model) {
       warnings.push(`Modello non riconosciuto per ${proposedEffect.type}: ${proposedEffect.model || 'vuoto'}.`);
     } else {

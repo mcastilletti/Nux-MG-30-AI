@@ -21,6 +21,7 @@ import { useToast } from '@/hooks/use-toast';
 import { EffectType, Preset } from '@/types/preset';
 import { formatValue, normalizePresetState, normalizePresetSuggestion, PresetNormalizationResult } from '@/lib/mg30-preset-normalizer';
 import { useInstrumentationStore } from '@/stores/use-instrumentation-store';
+import { buildInstrumentationContext, resolveAmplifier, resolveGuitar } from '@/lib/instrumentation-context';
 import { usePresetNames } from '@/hooks/use-preset-names';
 import { BlockIcon } from '@/components/icons/block-icons';
 
@@ -418,8 +419,8 @@ export default function EditorPage() {
   const [isEditingPresetName, setIsEditingPresetName] = useState(false);
   const [presetNameDraft, setPresetNameDraft] = useState('');
   const { guitars, amplifiers, selectedGuitarId, selectedAmplifierId, selectGuitar, selectAmplifier } = useInstrumentationStore();
-  const selectedGuitar = guitars.find(guitar => guitar.id === selectedGuitarId);
-  const selectedAmplifier = amplifiers.find(amplifier => amplifier.id === selectedAmplifierId);
+  const selectedGuitar = resolveGuitar(guitars, selectedGuitarId);
+  const selectedAmplifier = resolveAmplifier(amplifiers, selectedAmplifierId);
 
   const handleOpenCopyDialog = () => {
     setCopySourceScene(String(activePreset.activeScene));
@@ -661,10 +662,7 @@ export default function EditorPage() {
     setProposedPreset(null);
     setProposedNormalization(null);
     try {
-      const instrumentation = [
-        selectedGuitar ? `Chitarra: ${selectedGuitar.model}; pickup: ${selectedGuitar.pickups.map(pickup => `${(pickup.position || 'bridge') === 'neck' ? 'manico' : (pickup.position || 'bridge') === 'middle' ? 'centrale' : 'ponte'} ${pickup.type}${pickup.model ? ` (${pickup.model})` : ''}`).join(', ')}` : 'Chitarra: non selezionata',
-        selectedAmplifier ? `Amplificatore: ${selectedAmplifier.model}; collegamento: ${selectedAmplifier.inputPosition === 'before-preamp' ? 'prima del preamplificatore' : selectedAmplifier.inputPosition === 'after-preamp' ? 'dopo il preamplificatore' : selectedAmplifier.inputPosition === 'active-cab' ? 'cassa attiva' : selectedAmplifier.inputPosition === 'passive-cab' ? 'cassa passiva' : 'cassa FRFR'}` : 'Amplificatore: non selezionato',
-      ].join('\n');
+      const instrumentation = buildInstrumentationContext(selectedGuitar, selectedAmplifier);
       const result = await generateMG30Preset({ description: aiPrompt, instrumentation });
       setProposedPreset(result);
       setProposedNormalization(normalizePresetSuggestion(activePreset, result));
@@ -884,16 +882,16 @@ export default function EditorPage() {
                         <div className="grid gap-3 rounded-lg border border-primary/20 bg-primary/5 p-3 sm:grid-cols-2">
                           <div className="space-y-2">
                             <p className="text-xs font-semibold uppercase tracking-wide text-primary">Chitarra</p>
-                            <Select value={selectedGuitarId || 'none'} onValueChange={(value) => selectGuitar(value === 'none' ? undefined : value)}>
-                              <SelectTrigger className="bg-background/60"><SelectValue placeholder="Nessuna selezionata" /></SelectTrigger>
-                              <SelectContent><SelectItem value="none">Nessuna selezionata</SelectItem>{guitars.map(guitar => <SelectItem key={guitar.id} value={guitar.id}>{guitar.model}</SelectItem>)}</SelectContent>
+                            <Select value={selectedGuitar?.id ?? 'none'} onValueChange={(value) => selectGuitar(value === 'none' ? undefined : value)}>
+                              <SelectTrigger className="bg-background/60"><SelectValue placeholder="Predefinita (Epiphone ES-335)" /></SelectTrigger>
+                              <SelectContent><SelectItem value="none">Predefinita (Epiphone ES-335)</SelectItem>{guitars.map(guitar => <SelectItem key={guitar.id} value={guitar.id}>{guitar.model}</SelectItem>)}</SelectContent>
                             </Select>
                           </div>
                           <div className="space-y-2">
                             <p className="text-xs font-semibold uppercase tracking-wide text-primary">Amplificatore</p>
-                            <Select value={selectedAmplifierId || 'none'} onValueChange={(value) => selectAmplifier(value === 'none' ? undefined : value)}>
-                              <SelectTrigger className="bg-background/60"><SelectValue placeholder="Nessuno selezionato" /></SelectTrigger>
-                              <SelectContent><SelectItem value="none">Nessuno selezionato</SelectItem>{amplifiers.map(amplifier => <SelectItem key={amplifier.id} value={amplifier.id}>{amplifier.model}</SelectItem>)}</SelectContent>
+                            <Select value={selectedAmplifier?.id ?? 'none'} onValueChange={(value) => selectAmplifier(value === 'none' ? undefined : value)}>
+                              <SelectTrigger className="bg-background/60"><SelectValue placeholder="Predefinito (Headrush FRFR-112)" /></SelectTrigger>
+                              <SelectContent><SelectItem value="none">Predefinito (Headrush FRFR-112)</SelectItem>{amplifiers.map(amplifier => <SelectItem key={amplifier.id} value={amplifier.id}>{amplifier.model}</SelectItem>)}</SelectContent>
                             </Select>
                           </div>
                           <p className="text-[11px] text-muted-foreground sm:col-span-2">La selezione viene applicata automaticamente a ogni nuova generazione AI.</p>

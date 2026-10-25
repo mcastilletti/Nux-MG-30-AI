@@ -16,6 +16,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useWakeLock } from '@/hooks/use-wake-lock';
+import { clearSavedPresets, usePresetPersistence } from '@/hooks/use-preset-persistence';
 import { cn } from '@/lib/utils';
 import { ElectricGuitarIcon } from '@/components/icons/electric-guitar-icon';
 
@@ -26,6 +27,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
   const { user } = useUser();
   const { toast } = useToast();
   useWakeLock();
+  usePresetPersistence();
 
   useEffect(() => {
     initialize();
@@ -72,6 +74,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
     await signOut(auth);
     // Le note in cache appartengono all'account appena disconnesso.
     useNotesCache.getState().clearCache();
+    clearSavedPresets();
     toast({
       title: "Logout effettuato",
       description: "Dati cloud disconnessi. L'app continuerà a funzionare in locale.",

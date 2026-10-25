@@ -126,7 +126,7 @@ const createDefaultEffects = (): EffectState[] => [
   { id: 'vol', type: 'vol', model: 'patch-vol', enabled: true, parameters: { min: 30, max: 60 } }
 ];
 
-const INITIAL_PRESETS: Preset[] = Array.from({ length: 128 }, (_, i) => ({
+export const INITIAL_PRESETS: Preset[] = Array.from({ length: 128 }, (_, i) => ({
   slot: i + 1,
   activeScene: 0,
   name: `Preset ${formatSlotLabel(i + 1)}`,

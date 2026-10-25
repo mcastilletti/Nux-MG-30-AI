@@ -129,11 +129,27 @@ function applyJsonToPreset(preset: Preset, json: any): { updatedPreset: Preset; 
     );
 
     if (targetKey === undefined) {
-      const synonyms = PARAM_SYNONYMS[paramName.toLowerCase()] || PARAM_SYNONYMS[normalizedParamName];
+      // 🔧 Fix 2: Reverse lookup per PARAM_SYNONYMS
+      // Prima prova la ricerca diretta (chiave JSON → lista alias)
+      let synonyms = PARAM_SYNONYMS[paramName.toLowerCase()] || PARAM_SYNONYMS[normalizedParamName];
       if (synonyms) {
         targetKey = Object.keys(effect.parameters || {}).find(
           pk => synonyms.some(synonym => synonym.replace(/[\s_-]/g, '') === pk.toLowerCase().replace(/[\s_-]/g, ''))
         );
+      }
+
+      // Se non trovato, prova reverse lookup (parametro JSON è un alias)
+      if (targetKey === undefined) {
+        const normalizedParamForReverse = paramName.toLowerCase().replace(/[\s_-]/g, '');
+        for (const [canonicalKey, aliasList] of Object.entries(PARAM_SYNONYMS)) {
+          const canonicalNormalized = canonicalKey.replace(/[\s_-]/g, '');
+          if (aliasList.some(alias => alias.replace(/[\s_-]/g, '') === normalizedParamForReverse)) {
+            targetKey = Object.keys(effect.parameters || {}).find(
+              pk => pk.toLowerCase().replace(/[\s_-]/g, '') === canonicalNormalized
+            );
+            if (targetKey) break;
+          }
+        }
       }
     }
 
@@ -258,11 +274,26 @@ function applyJsonToPreset(preset: Preset, json: any): { updatedPreset: Preset; 
             );
 
             if (targetKey === undefined) {
-              const synonyms = PARAM_SYNONYMS[paramPart.toLowerCase()];
+              // 🔧 Fix 2: Reverse lookup per PARAM_SYNONYMS
+              let synonyms = PARAM_SYNONYMS[paramPart.toLowerCase()];
               if (synonyms) {
                 targetKey = Object.keys(e.parameters || {}).find(
                   pk => synonyms.includes(pk.toLowerCase())
                 );
+              }
+
+              // Se non trovato, prova reverse lookup
+              if (targetKey === undefined) {
+                const normalizedParamForReverse = paramPart.toLowerCase().replace(/[\s_-]/g, '');
+                for (const [canonicalKey, aliasList] of Object.entries(PARAM_SYNONYMS)) {
+                  const canonicalNormalized = canonicalKey.replace(/[\s_-]/g, '');
+                  if (aliasList.some(alias => alias.replace(/[\s_-]/g, '') === normalizedParamForReverse)) {
+                    targetKey = Object.keys(e.parameters || {}).find(
+                      pk => pk.toLowerCase().replace(/[\s_-]/g, '') === canonicalNormalized
+                    );
+                    if (targetKey) break;
+                  }
+                }
               }
             }
 
@@ -337,11 +368,26 @@ function applyJsonToPreset(preset: Preset, json: any): { updatedPreset: Preset; 
                 );
 
                 if (targetKey === undefined) {
-                  const synonyms = PARAM_SYNONYMS[paramPart.toLowerCase()];
+                  // 🔧 Fix 2: Reverse lookup per PARAM_SYNONYMS
+                  let synonyms = PARAM_SYNONYMS[paramPart.toLowerCase()];
                   if (synonyms) {
                     targetKey = Object.keys(e.parameters || {}).find(
                       pk => synonyms.includes(pk.toLowerCase())
                     );
+                  }
+
+                  // Se non trovato, prova reverse lookup
+                  if (targetKey === undefined) {
+                    const normalizedParamForReverse = paramPart.toLowerCase().replace(/[\s_-]/g, '');
+                    for (const [canonicalKey, aliasList] of Object.entries(PARAM_SYNONYMS)) {
+                      const canonicalNormalized = canonicalKey.replace(/[\s_-]/g, '');
+                      if (aliasList.some(alias => alias.replace(/[\s_-]/g, '') === normalizedParamForReverse)) {
+                        targetKey = Object.keys(e.parameters || {}).find(
+                          pk => pk.toLowerCase().replace(/[\s_-]/g, '') === canonicalNormalized
+                        );
+                        if (targetKey) break;
+                      }
+                    }
                   }
                 }
 

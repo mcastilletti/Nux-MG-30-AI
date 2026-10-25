@@ -156,13 +156,43 @@ export function normalizePresetState(preset: Preset): PresetStateNormalizationRe
       const parameter = model.parameters.find(candidate => normalizeKey(candidate.id) === normalizeKey(key));
       if (!parameter || typeof value !== 'number' || !Number.isFinite(value)) continue;
 
-      const clamped = Math.min(parameter.max, Math.max(parameter.min, value));
-      const normalized = Math.round(clamped / parameter.step) * parameter.step;
-      if (normalized !== value) {
-        effect.parameters[key] = normalized;
-        correctedCount++;
-        warnings.push(`${effect.type}.${parameter.id}: ${value} corretto in ${normalized}.`);
+      let processedValue = value;
+
+      // 🔧 Fix 1: Scalatura proporzionale per valori fuori range ma dentro 0-100
+      // Se il valore è tra 0 e 100 ma fuori dal range del parametro, scala proporzionalmente
+      if (value >= 0 && value <= 100 && (value < parameter.min || value > parameter.max)) {
+        const percent = value / 100;
+        processedValue = parameter.min + percent * (parameter.max - parameter.min);
+        processedValue = Math.round(processedValue / parameter.step) * parameter.step;
+        if (processedValue !== value) {
+          effect.parameters[key] = processedValue;
+          correctedCount++;
+          warnings.push(`${effect.type}.${parameter.id}: ${value} scalato a ${processedValue} (0-100 → ${parameter.min}-${parameter.max}).`);
+        }
+      } else {
+        const clamped = Math.min(parameter.max, Math.max(parameter.min, value));
+        const normalized = Math.round(clamped / parameter.step) * parameter.step;
+        if (normalized !== value) {
+          effect.parameters[key] = normalized;
+          correctedCount++;
+          warnings.push(`${effect.type}.${parameter.id}: ${value} corretto in ${normalized}.`);
+        }
       }
+    }
+  }
+
+  // 🔧 Fix 3: Post-processing vol.min/max sempre ≥ 50
+  const volEffect = normalizedPreset.effects.find(e => e.type === 'vol');
+  if (volEffect && volEffect.parameters) {
+    if (volEffect.parameters.min !== undefined && volEffect.parameters.min < 50) {
+      volEffect.parameters.min = 50;
+      correctedCount++;
+      warnings.push(`vol.min forzato a 50 (valore minimo consentito).`);
+    }
+    if (volEffect.parameters.max !== undefined && volEffect.parameters.max < 50) {
+      volEffect.parameters.max = 100;
+      correctedCount++;
+      warnings.push(`vol.max forzato a 100 (valore < 50 non consentito).`);
     }
   }
 

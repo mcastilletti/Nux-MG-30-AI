@@ -32,6 +32,7 @@ import {
 } from '@/components/notes/note-sheet-state';
 import type { NoteSection, SavedNote } from '@/types/note';
 import { getNextNoteInSetlist } from '@/components/notes/note-navigation';
+import { GUARD_HISTORY_RESTORED_EVENT } from '@/hooks/use-unsaved-changes-guard';
 
 const SECTION_COLORS: Record<string, { bg: string; text: string; border: string }> = {
   Intro: { bg: "bg-cyan-500/15", text: "text-cyan-400", border: "border-cyan-500/40" },
@@ -119,9 +120,10 @@ function NotesLibraryContent() {
     };
     syncUrl();
     // L'editor in modifica aggiunge e rimuove una voce di cronologia per gestire
-    // il tasto Indietro: dopo ogni spostamento l'URL deve restare allineato al foglio.
-    window.addEventListener('popstate', syncUrl);
-    return () => window.removeEventListener('popstate', syncUrl);
+    // il tasto Indietro: quando la rimuove, l'URL deve restare allineato al foglio.
+    // Non si ascolta ogni popstate, per non riscrivere l'URL della pagina precedente.
+    window.addEventListener(GUARD_HISTORY_RESTORED_EVENT, syncUrl);
+    return () => window.removeEventListener(GUARD_HISTORY_RESTORED_EVENT, syncUrl);
   }, [noteSheet]);
 
   useEffect(() => {

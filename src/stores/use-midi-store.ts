@@ -160,7 +160,7 @@ interface MidiStore {
 
   initialize: () => Promise<void>;
   sendControlChange: (cc: number, value: number) => void;
-  sendProgramChange: (pc: number) => void;
+  sendProgramChange: (pc: number, skipAutoSync?: boolean) => void;
   sendSceneChange: (sceneIndex: number) => void;
   sendKnobParameter: (blockType: string, knobIndex: number, value: number) => void;
   sendModelChange: (blockType: string, modelId: string) => void;
@@ -176,6 +176,7 @@ interface MidiStore {
   syncActivePreset: () => void;
   requestPresetName: () => void;
   updatePresetName: (slot: number, newName: string) => void;
+  commitPreset: (preset: Preset) => void;
   handleIncomingMidi: (message: MIDIMessageEvent) => void;
 }
 
@@ -393,14 +394,17 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     }
   },
 
-  sendProgramChange: (pc) => {
+  sendProgramChange: (pc, skipAutoSync) => {
     const { output, isSyncing } = get();
     if (output) {
       const message = [0xC0, pc];
       output.send(message);
       const hex = message.map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
       get().addMidiOutLog(`[OUT] ${hex}`);
-      if (!isSyncing) {
+      // skipAutoSync evita di impostare isEditorSyncing (per 2s) quando il chiamante
+      // deve subito dopo eseguire un syncFullPreset verso lo stesso slot (es. copia scena):
+      // altrimenti syncFullPreset troverebbe isEditorSyncing=true e non invierebbe nulla.
+      if (!isSyncing && !skipAutoSync) {
         setTimeout(() => get().syncActivePreset(), 200);
       }
     }
@@ -563,6 +567,13 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
 
   updatePresetName: (slot, newName) => {
     set(state => ({ devicePresets: state.devicePresets.map(p => p.slot === slot ? { ...p, name: newName } : p) }));
+  },
+
+  // Rispecchia lo stato live dell'editor (usePresetStore.activePreset) nella libreria
+  // devicePresets, che altrimenti resterebbe uno snapshot stantio: senza questo,
+  // cambiare slot o copiare una scena perde tutte le modifiche non ancora "salvate".
+  commitPreset: (preset) => {
+    set(state => ({ devicePresets: state.devicePresets.map(p => p.slot === preset.slot ? { ...preset } : p) }));
   },
 
   requestPresetName: () => {

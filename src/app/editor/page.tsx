@@ -444,6 +444,13 @@ export default function EditorPage() {
     }
   }, [status, syncActivePreset]);
 
+  // Rispecchia continuamente il preset in editing nella libreria devicePresets:
+  // senza questo, cambiare slot (o copiare una scena) scarta ogni modifica non
+  // ancora sincronizzata con l'hardware.
+  useEffect(() => {
+    useMidiStore.getState().commitPreset(activePreset);
+  }, [activePreset]);
+
   const handleParamChange = (effectType: string, paramId: string, value: number, index: number) => {
     updateParameter(selectedBlockId, paramId, value);
     if (status === 'connected') {
@@ -543,7 +550,10 @@ export default function EditorPage() {
 
     if (status === 'connected') {
       if (activePreset.slot !== targetSlot) {
-        sendProgramChange(targetSlot - 1);
+        // skipAutoSync=true: evita che syncActivePreset() imposti isEditorSyncing
+        // per 2s, che altrimenti farebbe fallire silenziosamente la syncFullPreset
+        // qui sotto (race condition: la copia verso un altro slot non arriverebbe mai all'hardware).
+        sendProgramChange(targetSlot - 1, true);
         setTimeout(() => {
           sendSceneChange(targetScene);
           syncFullPreset(destination);
@@ -562,6 +572,9 @@ export default function EditorPage() {
   };
 
   const handleSave = () => {
+    // Garantisce che il "Local Save" sia reale anche se il commit continuo
+    // (vedi useEffect su activePreset) venisse rimosso in futuro.
+    useMidiStore.getState().commitPreset(activePreset);
     if (status === 'connected') {
       syncFullPreset(activePreset);
       toast({

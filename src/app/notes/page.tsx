@@ -264,7 +264,12 @@ function NotesLibraryContent() {
     } catch (err) { toast({ title: "Errore eliminazione", variant: "destructive" }); }
   };
 
+  // Il riordino ha senso solo dentro una scaletta e senza ricerca: in una vista
+  // filtrata gli indici non corrispondono all'ordine reale dei brani.
+  const canReorder = !!selectedSetlist && !searchQuery.trim();
+
   function handleDragEnd(event: DragEndEvent) {
+    if (!canReorder) return;
     const { active, over } = event;
     if (over && active.id !== over.id) {
         const activeIndex = filteredNotes.findIndex(n => n.id === active.id);
@@ -422,7 +427,18 @@ function NotesLibraryContent() {
                 <Printer className="w-5 h-5" />
               </Button>
             )}
-            <Button onClick={() => setIsSearchOpen(!isSearchOpen)} variant="outline" size="icon" className="h-11 w-11 border-primary/30 text-primary hover:bg-primary/10">
+            <Button
+              onClick={() => {
+                // Chiudere la ricerca azzera anche il filtro, che altrimenti resterebbe invisibile.
+                if (isSearchOpen) setSearchQuery('');
+                setIsSearchOpen(!isSearchOpen);
+              }}
+              variant="outline"
+              size="icon"
+              aria-label={isSearchOpen ? 'Chiudi ricerca' : 'Cerca brano'}
+              aria-expanded={isSearchOpen}
+              className="h-11 w-11 border-primary/30 text-primary hover:bg-primary/10"
+            >
               <Search className="w-5 h-5" />
             </Button>
             <Popover open={isAddMenuOpen} onOpenChange={setIsAddMenuOpen}>
@@ -553,6 +569,10 @@ function NotesLibraryContent() {
               <Music2 className="w-12 h-12" /><h3 className="text-lg font-bold uppercase">Nessun brano</h3><p className="text-xs">Usa i filtri o aggiungi un nuovo brano</p>
             </div>
           ) : (
+            <>
+            {!canReorder && (
+              <p className="px-1 text-xs text-muted-foreground">Seleziona band e scaletta (senza ricerca attiva) per riordinare i brani.</p>
+            )}
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
               <SortableContext items={filteredNotes.map(n => n.id)} strategy={verticalListSortingStrategy}>
                 <div className="grid grid-cols-1 gap-2.5">
@@ -568,11 +588,13 @@ function NotesLibraryContent() {
                       }}
                       ref={(el) => { if(el) noteRefs.current[note.id] = el; }}
                       isHighlighted={note.id === (selectedNoteId ?? scrollToId)}
+                      canReorder={canReorder}
                     />
                   ))}
                 </div>
               </SortableContext>
             </DndContext>
+            </>
           )}
         </div>
       </div>
@@ -720,7 +742,7 @@ function NotesLibraryContent() {
         ))}
       </div>
 
-      <NoteSheet isOpen={isSheetOpen} onClose={() => dispatchNoteSheet({ type: 'close' })} disableGestures={isEditing}>
+      <NoteSheet isOpen={isSheetOpen} onClose={() => dispatchNoteSheet({ type: 'close' })} disableGestures={isEditing} contentKey={selectedNoteId}>
         {editorKind === 'block' ? (
           <BlockEditorContent
             noteId={selectedNoteId}
@@ -770,8 +792,9 @@ const SortableNoteCard = React.memo(React.forwardRef<HTMLDivElement, {
   onCopy: (e: React.MouseEvent, note: SavedNote) => void;
   onClick: () => void;
   isHighlighted?: boolean;
-}>(({ note, index, onDelete, onCopy, onClick, isHighlighted }, ref) => {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: note.id });
+  canReorder: boolean;
+}>(({ note, index, onDelete, onCopy, onClick, isHighlighted, canReorder }, ref) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: note.id, disabled: !canReorder });
   const style = { transform: CSS.Transform.toString(transform), transition, zIndex: isDragging ? 50 : 0, opacity: isDragging ? 0.6 : 1 };
 
   const combinedRef = (el: HTMLDivElement) => {
@@ -795,9 +818,13 @@ const SortableNoteCard = React.memo(React.forwardRef<HTMLDivElement, {
        )}
        style={{ animationDelay: `${index * 0.05}s` }}
        >
-        <div {...attributes} {...listeners} className="flex h-full cursor-grab touch-none items-center justify-center px-1 text-muted-foreground/30 hover:text-primary active:cursor-grabbing" onClick={(e) => e.stopPropagation()}>
-          <GripVertical className="w-5 h-5" />
-        </div>
+        {canReorder ? (
+          <div {...attributes} {...listeners} aria-label={`Trascina per riordinare ${note.title}`} className="flex h-full cursor-grab touch-none items-center justify-center px-1 text-muted-foreground/30 hover:text-primary active:cursor-grabbing" onClick={(e) => e.stopPropagation()}>
+            <GripVertical className="w-5 h-5" />
+          </div>
+        ) : (
+          <div className="w-2 shrink-0" aria-hidden="true" />
+        )}
         <div className="flex-1 min-w-0 pl-3">
           {note.type === 'block' ? (
             <div className="flex items-start justify-between gap-3">

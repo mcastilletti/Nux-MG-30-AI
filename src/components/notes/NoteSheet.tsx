@@ -1,6 +1,6 @@
 "use client"
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 
 interface NoteSheetProps {
@@ -8,6 +8,8 @@ interface NoteSheetProps {
   onClose: () => void;
   children: React.ReactNode;
   disableGestures?: boolean;
+  /** Identifica il contenuto mostrato: quando cambia la lettura riparte dall'inizio. */
+  contentKey?: string | null;
 }
 
 /**
@@ -20,7 +22,13 @@ interface NoteSheetProps {
  * intercetta l'Escape anche quando è già stato "consumato" da un popup
  * interno, causando chiusure impreviste del foglio (bug osservato in produzione).
  */
-export function NoteSheet({ isOpen, onClose, children, disableGestures = false }: NoteSheetProps) {
+export function NoteSheet({ isOpen, onClose, children, disableGestures = false, contentKey }: NoteSheetProps) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: 0 });
+  }, [contentKey]);
+
   return (
     <DialogPrimitive.Root
       open={isOpen}
@@ -54,8 +62,8 @@ export function NoteSheet({ isOpen, onClose, children, disableGestures = false }
           </DialogPrimitive.Description>
 
           {/* Sheet Content */}
-          <div className="relative w-full max-w-2xl h-[100vh] lg:h-[85vh] bg-background rounded-t-2xl lg:rounded-2xl shadow-2xl flex flex-col">
-            <div className="flex-1 overflow-auto">
+          <div className="relative w-full max-w-2xl h-[100dvh] lg:h-[85dvh] bg-background rounded-t-2xl lg:rounded-2xl shadow-2xl flex flex-col">
+            <div ref={scrollRef} className="flex-1 overflow-auto">
               {children}
             </div>
           </div>

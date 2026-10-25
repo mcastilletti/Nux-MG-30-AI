@@ -497,7 +497,7 @@ export default function LibraryPage() {
                       </div>
                     ) : (
                       <CardTitle
-                        className={`text-lg mt-2 truncate font-bold ${!hasCustomName ? 'text-muted-foreground/60 font-mono text-base' : ''}`}
+                        className={`text-lg mt-2 truncate font-bold ${!hasCustomName ? 'text-muted-foreground/80 font-mono text-base' : ''}`}
                         title={hasCustomName ? displayName : 'Clicca ⋮ → Rinomina per aggiungere un nome'}
                       >
                         {displayName}
@@ -596,7 +596,7 @@ export default function LibraryPage() {
                               </Button>
                             </div>
                           ) : (
-                            <span className={`font-semibold ${!hasCustomName ? 'text-muted-foreground/60 font-mono text-xs' : ''}`}>
+                            <span className={`font-semibold ${!hasCustomName ? 'text-muted-foreground/80 font-mono text-xs' : ''}`}>
                               {displayName}
                             </span>
                           )}

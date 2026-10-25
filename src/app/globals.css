@@ -11,7 +11,7 @@
     --popover: 240 10% 5%;
     --popover-foreground: 0 0% 99%;
     --primary: 261 43% 65%;
-    --primary-foreground: 0 0% 100%;
+    --primary-foreground: 240 10% 6%; /* scuro: 6:1 sul viola (Fase 1, contrasti) */
     --secondary: 240 10% 10%;
     --secondary-foreground: 0 0% 99%;
     --muted: 240 10% 8%;
@@ -50,7 +50,7 @@
     --sidebar-background: 240 10% 2%;
     --sidebar-foreground: 0 0% 94%;
     --sidebar-primary: 261 43% 65%;
-    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-primary-foreground: 240 10% 6%;
     --sidebar-accent: 282 65% 55%;
     --sidebar-accent-foreground: 0 0% 100%;
     --sidebar-border: 240 10% 8%;

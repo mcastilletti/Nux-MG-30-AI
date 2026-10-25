@@ -1056,7 +1056,7 @@ Es. per JSON: { "amp": { "gain": 60, "master": 80 }, "delay": { "enabled": true 
                           "truncate border-t px-2 py-2 text-label font-semibold uppercase tracking-wide transition-colors",
                           isEnabled
                             ? "border-border/50 text-foreground"
-                            : "border-zinc-800/80 text-zinc-500"
+                            : "border-zinc-800/80 text-zinc-400"
                         )}
                       >
                         {effect.type === 'noise-gate' ? 'Gate' : effect.type === 'modulation' ? 'Mod' : effect.type}

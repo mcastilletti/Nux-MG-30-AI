@@ -8,7 +8,6 @@ import { useNotesCache } from '@/stores/use-notes-cache';
 import { LayoutDashboard, Library, Sliders, Settings, Zap, Wifi, WifiOff, NotebookPen, LogIn, LogOut, User as UserIcon, AlertCircle, Users } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Badge } from '@/components/ui/badge';
 import { Toaster } from '@/components/ui/toaster';
 import { useFirebase, useUser } from '@/firebase';
 import { signInWithPopup, signOut } from 'firebase/auth';
@@ -18,10 +17,11 @@ import { useToast } from '@/hooks/use-toast';
 import { useWakeLock } from '@/hooks/use-wake-lock';
 import { clearSavedPresets, usePresetPersistence } from '@/hooks/use-preset-persistence';
 import { cn } from '@/lib/utils';
+import { ConnectionStatus } from '@/components/common/connection-status';
 import { ElectricGuitarIcon } from '@/components/icons/electric-guitar-icon';
 
 export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { status, initialize, syncActivePreset } = useMidiStore();
+  const { status, lastError, initialize, syncActivePreset } = useMidiStore();
   const pathname = usePathname();
   const { auth, googleProvider } = useFirebase();
   const { user } = useUser();
@@ -184,7 +184,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
         </Sidebar>
 
         <main className="flex-1 flex flex-col min-w-0 bg-background min-h-[100dvh]">
-          <header className="h-14 md:h-16 border-b border-border/70 flex items-center justify-between px-4 md:px-6 bg-background/90 backdrop-blur-md sticky top-0 z-20">
+          <header className="h-[calc(3.5rem+env(safe-area-inset-top))] pt-[env(safe-area-inset-top)] md:h-16 md:pt-0 border-b border-border/70 flex items-center justify-between px-4 md:px-6 bg-background/90 backdrop-blur-md sticky top-0 z-20">
             <div className="flex items-center gap-4">
               <SidebarTrigger />
               <div className="h-4 w-[1px] bg-white/10 mx-2" />
@@ -192,19 +192,17 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
                 <span className="text-base font-semibold">
                   {navItems.find(i => i.href === pathname)?.label || 'App'}
                 </span>
-                <Badge variant="outline" className={cn("h-5 text-caption", status === 'connected' ? "border-green-500/50 text-green-500" : "border-border text-muted-foreground")}>
-                  {status === 'connected' ? 'USB MIDI ACTIVE' : 'USB MIDI OFFLINE'}
-                </Badge>
+                <ConnectionStatus status={status} lastError={lastError} />
               </div>
             </div>
           </header>
 
-          <div className="flex-1 overflow-auto px-4 py-5 pb-24 md:p-8 md:pb-8">
+          <div className="flex-1 overflow-auto px-4 py-5 pb-[calc(6rem+env(safe-area-inset-bottom))] md:p-8 md:pb-8">
             {children}
           </div>
         </main>
 
-        <nav aria-label="Navigazione rapida" className="fixed inset-x-3 bottom-3 z-30 grid grid-cols-5 gap-1 rounded-2xl border border-border bg-sidebar/95 p-1.5 shadow-2xl backdrop-blur-xl md:hidden">
+        <nav aria-label="Navigazione rapida" className="fixed inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-30 grid grid-cols-5 gap-1 rounded-2xl border border-border bg-sidebar/95 p-1.5 shadow-2xl backdrop-blur-xl md:hidden">
           {navItems.slice(0, 5).map((item) => {
             const active = pathname === item.href;
             return (

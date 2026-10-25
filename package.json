@@ -10,7 +10,7 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "test": "tsx --test 'src/**/*.test.ts'"
+    "test": "tsx --test 'src/**/*.test.ts' 'src/**/*.test.tsx'"
   },
   "dependencies": {
     "@ai-sdk/google": "^3.0.22",

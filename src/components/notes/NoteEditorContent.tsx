@@ -29,6 +29,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { formatSlotLabel, matchesSlotSearch } from '@/lib/slot';
+import { SaveStatus } from '@/components/common/save-status';
 
 
 
@@ -188,6 +189,11 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
     title, band, setlist, presetSlot: selectedPresetSlot, presetScene: selectedPresetScene, generalNotes, sections,
   });
   const isDirty = editMode && currentDraft !== savedDraftRef.current;
+  // NT17: un solo salvataggio alla volta e stato visibile.
+  const [isSaving, setIsSaving] = useState(false);
+  const savingRef = useRef(false);
+  const [saveFailed, setSaveFailed] = useState(false);
+  const saveState = isSaving ? 'saving' : saveFailed ? 'error' : isDirty ? 'dirty' : 'idle';
   const [pendingExit, setPendingExit] = useState<'close' | 'cancel' | null>(null);
 
   const discardChanges = () => {
@@ -287,6 +293,7 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
   };
 
   const handleSaveNote = async () => {
+    if (savingRef.current) return;
     if (!user) {
       toast({ title: "Accedi per salvare", description: "Le note si salvano nel tuo account: accedi con Google dal menu laterale.", variant: "destructive" });
       return;
@@ -320,6 +327,8 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
       userId: user?.uid
     };
 
+    savingRef.current = true;
+    setIsSaving(true);
     try {
       if (noteId) {
         await updateDoc(doc(firestore, "notes", noteId), noteData);
@@ -331,10 +340,15 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
         onUpdate({ ...noteData, id: docRef.id } as SavedNote);
       }
       savedDraftRef.current = currentDraft;
+      setSaveFailed(false);
       setEditMode(false);
       toast({ title: "Nota Salvata nel Cloud" });
     } catch (err) {
+      setSaveFailed(true);
       toast({ title: "Errore salvataggio cloud", variant: "destructive" });
+    } finally {
+      savingRef.current = false;
+      setIsSaving(false);
     }
   };
 
@@ -427,7 +441,7 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
             </button>
 
             <div className="min-w-0">
-              <span className="section-kicker block leading-none">Nota brano</span>
+              <span className="flex items-center gap-2 leading-none"><span className="section-kicker">Nota brano</span>{editMode && <SaveStatus state={saveState} />}</span>
               {editMode ? (
                 <Input
                   aria-label="Titolo brano"
@@ -504,7 +518,9 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
                   <button
                     type="button"
                     onClick={handleSaveNote}
-                    className="flex h-11 w-11 items-center justify-center rounded-xl border border-primary/30 bg-primary text-primary-foreground shadow-md shadow-primary/20 transition-[background-color,box-shadow,transform] duration-150 hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/25 active:scale-95"
+                    disabled={isSaving}
+                    aria-busy={isSaving}
+                    className="flex h-11 w-11 items-center justify-center rounded-xl border border-primary/30 bg-primary text-primary-foreground shadow-md shadow-primary/20 transition-[background-color,box-shadow,transform] duration-150 hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/25 active:scale-95 disabled:opacity-60"
                     title="Salva nota"
                     aria-label="Salva nota"
                   >

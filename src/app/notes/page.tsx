@@ -6,7 +6,7 @@ import { AppShell } from '@/components/layout/app-shell';
 import { Card, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { NotebookPen, Plus, Trash2, GripVertical, Music2, Layers, Printer, Copy, ArrowRight, FileText, Search, X } from 'lucide-react';
+import { NotebookPen, Plus, Trash2, GripVertical, Music2, Layers, Printer, Copy, ArrowRight, FileText, Search, X, Loader2 } from 'lucide-react';
 import { useFirebase, useUser } from '@/firebase';
 import { collection, getDocs, query, where, doc, deleteDoc, writeBatch, addDoc, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
@@ -35,6 +35,7 @@ import { getNextNoteInSetlist } from '@/components/notes/note-navigation';
 import { GUARD_HISTORY_RESTORED_EVENT } from '@/hooks/use-unsaved-changes-guard';
 import { formatSlotLabel } from '@/lib/slot';
 import { SECTION_COLORS } from '@/lib/section-colors';
+import { EmptyState, ErrorState } from '@/components/common/empty-state';
 
 
 const FILTER_BAND_KEY = 'mg30_notes_filter_band';
@@ -140,6 +141,10 @@ function NotesLibraryContent() {
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
+  // Stato del caricamento da Firestore (NT21): distingue caricamento, errore e lista vuota.
+  const [loadState, setLoadState] = useState<'idle' | 'loading' | 'error'>('idle');
+  const [loadAttempt, setLoadAttempt] = useState(0);
+
   useEffect(() => {
     if (userLoading || !user) return;
 
@@ -155,20 +160,23 @@ function NotesLibraryContent() {
 
     // Load from Firestore
     const loadNotes = async () => {
+      setLoadState('loading');
       try {
         const q = query(collection(firestore, "notes"), where("userId", "==", user.uid));
         const snapshot = await getDocs(q);
         const notes = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() } as SavedNote));
         const sorted = notes.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
         setNotes(sorted);
+        setLoadState('idle');
       } catch (error) {
         console.error('Error loading notes:', error);
+        setLoadState('error');
         toast({ title: "Errore caricamento note", variant: "destructive" });
       }
     };
 
     loadNotes();
-  }, [user, userLoading, firestore, cachedNotes.length, setNotes]);
+  }, [user, userLoading, firestore, cachedNotes.length, setNotes, loadAttempt]);
 
   const filteredNotes = useMemo(() => {
     let notesToFilter = [...cachedNotes].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
@@ -555,9 +563,19 @@ function NotesLibraryContent() {
 
         <div className="space-y-2">
           {filteredNotes.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 text-center space-y-4 opacity-40">
-              <Music2 className="w-12 h-12" /><h3 className="text-lg font-bold uppercase">Nessun brano</h3><p className="text-xs">Usa i filtri o aggiungi un nuovo brano</p>
-            </div>
+            cachedNotes.length === 0 && loadState === 'loading' ? (
+              <EmptyState icon={<Loader2 className="h-10 w-10 animate-spin" />} title="Caricamento dei brani…" />
+            ) : cachedNotes.length === 0 && loadState === 'error' ? (
+              <ErrorState title="Brani non caricati" description="Controlla la connessione e riprova." onRetry={() => setLoadAttempt(n => n + 1)} />
+            ) : cachedNotes.length === 0 && !userLoading && !user ? (
+              <EmptyState icon={<Music2 className="h-10 w-10" />} title="Accedi per vedere i tuoi brani" description="Le note si salvano nel tuo account: accedi con Google dal menu laterale." />
+            ) : (
+              <EmptyState
+                icon={<Music2 className="h-10 w-10" />}
+                title="Nessun brano"
+                description={cachedNotes.length > 0 ? 'Nessun brano corrisponde ai filtri o alla ricerca.' : 'Aggiungi il primo brano con il pulsante +.'}
+              />
+            )
           ) : (
             <>
             {!canReorder && (

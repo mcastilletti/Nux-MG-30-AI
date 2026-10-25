@@ -10,12 +10,15 @@ import { useNotesCache } from '@/stores/use-notes-cache';
 import { getNoteLoadAction } from './note-load-action';
 import { serializeDraft } from './note-draft';
 import { useUnsavedChangesGuard } from '@/hooks/use-unsaved-changes-guard';
+import { formatSlotLabel, getPresetSendCommands, readAutoSendSetting } from './preset-send';
+import { useNotesAutoSend } from '@/hooks/use-notes-auto-send';
+import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Plus, Trash2, ChevronDown, ChevronUp, ChevronRight, Save, Layers, Pencil, X, Copy, ArrowUp, ArrowDown, MoreVertical } from 'lucide-react';
+import { Plus, Trash2, ChevronDown, ChevronUp, ChevronRight, Save, Layers, Pencil, X, Copy, ArrowUp, ArrowDown, MoreVertical, Play } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
@@ -176,6 +179,7 @@ function ChordPicker({ onSelect, step, setStep, selectedLetter, setSelectedLette
 
 export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange, onNext }: NoteEditorContentProps) {
   const { devicePresets, status, sendProgramChange, sendSceneChange } = useMidiStore();
+  const [autoSendPreset, setAutoSendPreset] = useNotesAutoSend();
   const { toast } = useToast();
   const { firestore } = useFirebase();
   const { user } = useUser();
@@ -242,6 +246,8 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
     } else if (action === 'load' && cachedNote) {
       loadedNoteIdRef.current = cachedNote.id;
       loadNote(cachedNote);
+      // Letta al momento: lo stato del hook potrebbe non essere ancora sincronizzato.
+      if (readAutoSendSetting(window.localStorage)) sendNotePreset(cachedNote.presetSlot, cachedNote.presetScene);
     }
   }, [noteId, cachedNote]);
 
@@ -298,13 +304,18 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
     });
     setEditMode(false);
     setIsNotesOpen(true);
-    if (note.presetSlot && status === 'connected') {
-      sendProgramChange(parseInt(note.presetSlot) - 1);
-      if (note.presetScene !== undefined) {
-        const presetScene = note.presetScene;
-        setTimeout(() => sendSceneChange(parseInt(presetScene)), 500);
-      }
+  };
+
+  // Richiama sulla pedaliera il preset collegato al brano (D2: solo all'apertura e con ▶).
+  const sendNotePreset = (presetSlot?: string, presetScene?: string) => {
+    const commands = getPresetSendCommands({ presetSlot, presetScene });
+    if (!commands || status !== 'connected') return false;
+    sendProgramChange(commands.program);
+    if (commands.scene !== null) {
+      const scene = commands.scene;
+      setTimeout(() => sendSceneChange(scene), 500);
     }
+    return true;
   };
 
   const handleSaveNote = async () => {
@@ -347,6 +358,8 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
         onUpdate({ ...noteData, id: noteId } as SavedNote);
       } else {
         const docRef = await addDoc(collection(firestore, "notes"), noteData);
+        // La nota appena creata è già nell'editor: non va ricaricata (né il preset reinviato).
+        loadedNoteIdRef.current = docRef.id;
         onUpdate({ ...noteData, id: docRef.id } as SavedNote);
       }
       savedDraftRef.current = currentDraft;
@@ -471,6 +484,22 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
             </div>
 
             <div className="flex items-center gap-2">
+              {!editMode && noteId && !isNoteMissing && selectedPresetSlot && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (sendNotePreset(selectedPresetSlot, selectedPresetScene)) {
+                      toast({ title: 'Preset inviato', description: `Slot ${formatSlotLabel(Number(selectedPresetSlot))}${selectedPresetScene ? ` · Scena ${Number(selectedPresetScene) + 1}` : ''}` });
+                    }
+                  }}
+                  disabled={status !== 'connected'}
+                  className="flex h-11 w-11 items-center justify-center rounded-xl border border-border/80 bg-secondary/70 text-muted-foreground shadow-sm transition-[background-color,border-color,color,transform] duration-150 hover:border-primary/40 hover:bg-primary/10 hover:text-primary active:scale-95 disabled:pointer-events-none disabled:opacity-40"
+                  title={status === 'connected' ? 'Invia il preset alla pedaliera' : 'Collega la pedaliera per inviare il preset'}
+                  aria-label="Invia il preset alla pedaliera"
+                >
+                  <Play className="h-5 w-5" />
+                </button>
+              )}
               {!editMode && noteId && !isNoteMissing && (
                 <button
                   type="button"
@@ -583,6 +612,10 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
                   </Select>
                 </div>
               </div>
+              <label className="flex min-h-11 items-center justify-between gap-3 text-[13px] text-muted-foreground">
+                <span>Invia il preset alla pedaliera quando apro un brano</span>
+                <Switch checked={autoSendPreset} onCheckedChange={setAutoSendPreset} aria-label="Invio automatico del preset all'apertura" />
+              </label>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
                   <label className="text-[11px] uppercase font-black text-muted-foreground tracking-tighter">Band</label>

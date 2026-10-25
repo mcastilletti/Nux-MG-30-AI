@@ -1,12 +1,12 @@
 
 "use client"
 
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AppShell } from '@/components/layout/app-shell';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, Plus, RefreshCw, Loader2, Check, MoreVertical, LayoutGrid, List, Settings2, CloudOff, Cloud, CheckSquare, Square, X } from 'lucide-react';
+import { Search, Plus, RefreshCw, Loader2, Check, MoreVertical, LayoutGrid, List, Settings2, CloudOff, Cloud, CheckSquare, Square, X, Download, Upload, HardDriveDownload } from 'lucide-react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -17,8 +17,11 @@ import { useMidiStore } from '@/stores/use-midi-store';
 import { usePresetStore } from '@/stores/use-preset-store';
 import { useToast } from '@/hooks/use-toast';
 import { usePresetNames } from '@/hooks/use-preset-names';
+import { useSavePreset } from '@/hooks/use-preset-persistence';
 import { useUser } from '@/firebase';
 import { Preset, EffectState } from '@/types/preset';
+import { buildPresetExport, parsePresetImport } from '@/lib/preset-storage';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
 const formatSlotLabel = (slot: number) => {
   const group = Math.floor((slot - 1) / 4) + 1;
@@ -44,6 +47,55 @@ export default function LibraryPage() {
 
   // Nomi salvati su Firestore (o localStorage se non loggato)
   const { savedNames, savePresetName, isLoading: namesLoading } = usePresetNames();
+  const savePreset = useSavePreset();
+  const importInputRef = useRef<HTMLInputElement>(null);
+  const [pendingImport, setPendingImport] = useState<{ presets: Preset[]; skipped: number; fileName: string } | null>(null);
+  const [isImporting, setIsImporting] = useState(false);
+
+  const handleExport = () => {
+    const file = buildPresetExport(useMidiStore.getState().devicePresets);
+    const blob = new Blob([JSON.stringify(file, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `mg30-preset-${file.exportedAt.slice(0, 10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    toast({ title: 'Preset esportati', description: `${file.presets.length} preset nel file ${a.download}.` });
+  };
+
+  const handleImportFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    const result = parsePresetImport(await file.text());
+    if (!result.ok) {
+      toast({ title: 'Importazione non riuscita', description: result.error, variant: 'destructive' });
+      return;
+    }
+    setPendingImport({ presets: result.presets, skipped: result.skipped, fileName: file.name });
+  };
+
+  const confirmImport = async () => {
+    if (!pendingImport) return;
+    setIsImporting(true);
+    const imported = pendingImport.presets;
+    const bySlot = new Map(imported.map(p => [p.slot, p]));
+    useMidiStore.setState(state => ({ devicePresets: state.devicePresets.map(p => bySlot.get(p.slot) ?? p) }));
+    const active = usePresetStore.getState().activePreset;
+    const importedActive = bySlot.get(active.slot);
+    if (importedActive) usePresetStore.setState({ activePreset: importedActive, history: [importedActive], historyIndex: 0 });
+    const results = await Promise.all(imported.map(p => savePreset(p)));
+    setIsImporting(false);
+    setPendingImport(null);
+    toast({
+      title: 'Preset importati',
+      description: `${imported.length} preset ${results.includes('local-error') ? 'salvati solo su questo dispositivo (salvataggio nel tuo account non riuscito)' : results.includes('local') ? 'salvati su questo dispositivo' : 'salvati'}. Nulla è stato inviato alla pedaliera.`,
+      variant: results.includes('local-error') ? 'destructive' : undefined,
+    });
+  };
 
   /**
    * Restituisce il nome da mostrare per un preset:
@@ -81,7 +133,7 @@ export default function LibraryPage() {
     setSelectedSlots(new Set());
   };
 
-  const applyBulkVolume = () => {
+  const applyBulkVolume = async () => {
     if (selectedSlots.size === 0) {
       toast({
         title: 'Nessun preset selezionato',
@@ -142,9 +194,25 @@ export default function LibraryPage() {
 
     useMidiStore.setState({ devicePresets: updatedPresets });
 
+    // Il preset aperto nell'editor deve ricevere lo stesso volume, altrimenti
+    // l'editor lo riscriverebbe con il valore precedente.
+    const active = usePresetStore.getState().activePreset;
+    const updatedActive = updatedPresets.find(p => p.slot === active.slot && selectedSlots.has(p.slot));
+    if (updatedActive) setActivePreset(updatedActive);
+
+    const count = selectedSlots.size;
+    const results = await Promise.all(updatedPresets.filter(p => selectedSlots.has(p.slot)).map(p => savePreset(p)));
+    const where = results.includes('local-error')
+      ? 'Salvato solo su questo dispositivo: il salvataggio nel tuo account non è riuscito.'
+      : results.includes('local')
+        ? 'Salvato su questo dispositivo. Accedi per sincronizzarlo con il tuo account.'
+        : results.includes('queued')
+          ? 'Salvato; verrà sincronizzato con il tuo account appena torni online.'
+          : 'Salvato nel tuo account.';
     toast({
-      title: 'Volume impostato in memoria',
-      description: `MIN ${bulkVolumeMin} / MAX ${bulkVolumeMax} su ${selectedSlots.size} preset. Non viene inviato alla pedaliera e si perde ricaricando la pagina.`,
+      title: 'Volume salvato',
+      description: `MIN ${bulkVolumeMin} / MAX ${bulkVolumeMax} su ${count} preset. ${where} Non viene inviato alla pedaliera: apri il preset nell'editor e premi Salva per inviarlo.`,
+      variant: results.includes('local-error') ? 'destructive' : undefined,
     });
 
     clearSelection();
@@ -235,6 +303,22 @@ export default function LibraryPage() {
               {isSyncing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
               Sync Hardware
             </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="touch-target gap-2">
+                  <HardDriveDownload className="w-4 h-4" /> Backup
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onSelect={handleExport}>
+                  <Download className="mr-2 h-4 w-4" /> Esporta preset (JSON)
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => importInputRef.current?.click()}>
+                  <Upload className="mr-2 h-4 w-4" /> Importa preset…
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <input ref={importInputRef} type="file" accept="application/json,.json" className="hidden" onChange={handleImportFile} aria-label="File di preset da importare" />
             <Button className="touch-target gap-2">
               <Plus className="w-4 h-4" /> Nuovo
             </Button>
@@ -549,6 +633,23 @@ export default function LibraryPage() {
           </Card>
         )}
       </div>
+      <AlertDialog open={!!pendingImport} onOpenChange={(open) => { if (!open && !isImporting) setPendingImport(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Importare {pendingImport?.presets.length} preset?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Dal file {pendingImport?.fileName}. {pendingImport && pendingImport.presets.length > 16 ? `Verranno sovrascritti ${pendingImport.presets.length} slot.` : `Verranno sovrascritti questi slot: ${pendingImport?.presets.map(p => p.slot).join(', ')}.`}
+              {pendingImport && pendingImport.skipped > 0 ? ` ${pendingImport.skipped} preset non validi verranno ignorati.` : ''} Nulla viene inviato alla pedaliera.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isImporting}>Annulla</AlertDialogCancel>
+            <AlertDialogAction onClick={(e) => { e.preventDefault(); confirmImport(); }} disabled={isImporting}>
+              {isImporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null} Importa
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AppShell>
   );
 }

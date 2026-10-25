@@ -23,6 +23,7 @@ import { formatValue, normalizePresetState, normalizePresetSuggestion, PresetNor
 import { useInstrumentationStore } from '@/stores/use-instrumentation-store';
 import { buildInstrumentationContext, resolveAmplifier, resolveGuitar } from '@/lib/instrumentation-context';
 import { usePresetNames } from '@/hooks/use-preset-names';
+import { useSavePreset } from '@/hooks/use-preset-persistence';
 import { BlockIcon } from '@/components/icons/block-icons';
 
 function parseDirectJsonInput(value: string): { parsed: any | null; looksLikeJson: boolean; error?: string } {
@@ -405,6 +406,7 @@ export default function EditorPage() {
   const { status, devicePresets, sendProgramChange, sendKnobParameter, sendModelChange, sendSceneChange, toggleBlock, enterBlockEditor, exitBlockEditor, isEditorSyncing, syncActivePreset, syncFullPreset, updatePresetName: updateMidiPresetName } = useMidiStore();
   const { toast } = useToast();
   const { savedNames, savePresetName } = usePresetNames();
+  const savePreset = useSavePreset();
 
   const [selectedBlockId, setSelectedBlockId] = useState<string>('amp');
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
@@ -573,31 +575,35 @@ export default function EditorPage() {
     });
   };
 
-  const handleSave = () => {
-    // Garantisce che il "Local Save" sia reale anche se il commit continuo
+  const handleSave = async () => {
+    // Garantisce che la libreria rifletta il preset anche se il commit continuo
     // (vedi useEffect su activePreset) venisse rimosso in futuro.
     useMidiStore.getState().commitPreset(activePreset);
-    // I preset vivono solo in memoria finché non c'è una persistenza (audit D1):
-    // i messaggi non devono promettere un salvataggio che non avviene.
+    const result = await savePreset(activePreset);
+    const saved = {
+      cloud: { title: 'Preset salvato', description: `'${activePreset.name}' è salvato nel tuo account.` },
+      queued: { title: 'Preset salvato', description: `'${activePreset.name}' è salvato su questo dispositivo e verrà sincronizzato con il tuo account appena torni online.` },
+      local: { title: 'Preset salvato su questo dispositivo', description: 'Accedi con Google dal menu laterale per sincronizzarlo con il tuo account.' },
+      'local-error': { title: 'Salvato solo su questo dispositivo', description: 'Il salvataggio nel tuo account non è riuscito. Riprova più tardi.' },
+    }[result];
+
     if (status !== 'connected') {
-      toast({
-        title: "Modifiche tenute in memoria",
-        description: "La pedaliera non è collegata: le modifiche restano finché l'app è aperta e si perdono ricaricando la pagina."
-      });
+      toast({ ...saved, variant: result === 'local-error' ? 'destructive' : undefined });
       return;
     }
     if (useMidiStore.getState().isEditorSyncing) {
       toast({
-        title: "Sincronizzazione già in corso",
-        description: "Attendi che finisca e premi di nuovo Salva.",
-        variant: "destructive"
+        title: saved.title,
+        description: `${saved.description} Invio alla pedaliera non eseguito: sincronizzazione già in corso, premi di nuovo Salva tra poco.`,
+        variant: 'destructive',
       });
       return;
     }
     syncFullPreset(activePreset);
     toast({
-      title: "Invio alla pedaliera in corso",
-      description: `Invio dei parametri di '${activePreset.name}' (scena attiva) alla MG-30.`
+      title: saved.title,
+      description: `${saved.description} Invio dei parametri (scena attiva) alla MG-30 in corso.`,
+      variant: result === 'local-error' ? 'destructive' : undefined,
     });
   };
 

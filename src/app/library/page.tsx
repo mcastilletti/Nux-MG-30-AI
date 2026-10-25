@@ -22,12 +22,8 @@ import { useUser } from '@/firebase';
 import { Preset, EffectState } from '@/types/preset';
 import { buildPresetExport, parsePresetImport } from '@/lib/preset-storage';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { formatSlotLabel } from '@/lib/slot';
 
-const formatSlotLabel = (slot: number) => {
-  const group = Math.floor((slot - 1) / 4) + 1;
-  const letter = ['A', 'B', 'C', 'D'][(slot - 1) % 4];
-  return `${String(group).padStart(2, '0')}${letter}`;
-};
 
 export default function LibraryPage() {
   const router = useRouter();
@@ -283,7 +279,7 @@ export default function LibraryPage() {
           </div>
           <div className="flex w-full flex-wrap items-center gap-2 md:w-auto">
             {/* Indicatore stato cloud */}
-            <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+            <div className="flex items-center gap-1.5 text-caption text-muted-foreground">
               {namesLoading ? (
                 <Loader2 className="w-3 h-3 animate-spin" />
               ) : user ? (
@@ -466,7 +462,7 @@ export default function LibraryPage() {
                   )}
                   <CardHeader className="pb-2">
                     <div className="flex items-center justify-between">
-                      <Badge variant="outline" className="text-[10px] border-primary/20 text-primary bg-primary/5">
+                      <Badge variant="outline" className="text-label border-primary/20 text-primary bg-primary/5">
                         {formatSlotLabel(preset.slot)}
                       </Badge>
                       <div className="flex items-center gap-1">
@@ -510,16 +506,16 @@ export default function LibraryPage() {
                   </CardHeader>
                   <CardContent className="pb-4">
                     <div className="flex flex-col gap-1">
-                      <div className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Amplificatore</div>
+                      <div className="text-label text-muted-foreground uppercase font-bold tracking-wider">Amplificatore</div>
                       <div className="text-sm font-medium">{preset.ampModel}</div>
                     </div>
                   </CardContent>
                   <CardFooter className="flex items-center justify-between border-t border-border/30 bg-secondary/10 pt-2">
-                    <span className="text-[10px] text-muted-foreground font-mono">PC: {preset.slot - 1}</span>
+                    <span className="text-label text-muted-foreground font-mono">PC: {preset.slot - 1}</span>
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="h-7 text-[10px] font-bold uppercase tracking-widest hover:text-primary gap-1"
+                      className="h-7 text-label font-bold uppercase tracking-widest hover:text-primary gap-1"
                       onClick={(e) => handleConfigurePreset(e, preset)}
                     >
                       <Settings2 className="w-3 h-3" /> Configura
@@ -536,7 +532,7 @@ export default function LibraryPage() {
                 <thead className="bg-secondary/40 border-b border-border">
                   <tr className="text-left">
                     {isBulkMode && (
-                      <th className="p-4 font-bold uppercase text-[11px] w-12 text-center">
+                      <th className="p-4 font-bold uppercase text-caption w-12 text-center">
                         <div
                           className="w-5 h-5 mx-auto cursor-pointer"
                           onClick={() => selectedSlots.size === filteredPresets.length ? clearSelection() : selectAll()}
@@ -549,10 +545,10 @@ export default function LibraryPage() {
                         </div>
                       </th>
                     )}
-                    <th className="p-4 font-bold uppercase text-[11px] w-20 text-center">Slot</th>
-                    <th className="p-4 font-bold uppercase text-[11px]">Nome</th>
-                    <th className="p-4 font-bold uppercase text-[11px]">Amp</th>
-                    <th className="p-4 font-bold uppercase text-[11px] text-right">Azioni</th>
+                    <th className="p-4 font-bold uppercase text-caption w-20 text-center">Slot</th>
+                    <th className="p-4 font-bold uppercase text-caption">Nome</th>
+                    <th className="p-4 font-bold uppercase text-caption">Amp</th>
+                    <th className="p-4 font-bold uppercase text-caption text-right">Azioni</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/30">
@@ -606,7 +602,7 @@ export default function LibraryPage() {
                           )}
                         </td>
                         <td className="p-4">
-                          <Badge variant="secondary" className="text-[10px] bg-secondary/50">{preset.ampModel}</Badge>
+                          <Badge variant="secondary" className="text-label bg-secondary/50">{preset.ampModel}</Badge>
                         </td>
                         <td className="p-4 text-right">
                           <div className="flex items-center justify-end gap-2">

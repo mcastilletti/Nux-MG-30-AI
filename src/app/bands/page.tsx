@@ -583,7 +583,7 @@ function BandsContent() {
                                   </div>
                                   <span className="font-medium text-sm">{setlist.name}</span>
                                   {isSetlistFromNotes && (
-                                    <Badge variant="outline" className="text-[10px] font-semibold px-2 py-0.5 bg-muted/50 border-muted-foreground/30 text-muted-foreground">
+                                    <Badge variant="outline" className="text-label font-semibold px-2 py-0.5 bg-muted/50 border-muted-foreground/30 text-muted-foreground">
                                       Dalle note
                                     </Badge>
                                   )}

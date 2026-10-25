@@ -33,16 +33,9 @@ import {
 import type { NoteSection, SavedNote } from '@/types/note';
 import { getNextNoteInSetlist } from '@/components/notes/note-navigation';
 import { GUARD_HISTORY_RESTORED_EVENT } from '@/hooks/use-unsaved-changes-guard';
+import { formatSlotLabel } from '@/lib/slot';
+import { SECTION_COLORS } from '@/lib/section-colors';
 
-const SECTION_COLORS: Record<string, { bg: string; text: string; border: string }> = {
-  Intro: { bg: "bg-cyan-500/15", text: "text-cyan-400", border: "border-cyan-500/40" },
-  Verse: { bg: "bg-green-500/15", text: "text-green-400", border: "border-green-500/40" },
-  Chorus: { bg: "bg-yellow-500/15", text: "text-yellow-400", border: "border-yellow-500/40" },
-  Bridge: { bg: "bg-pink-500/15", text: "text-pink-400", border: "border-pink-500/40" },
-  Strum: { bg: "bg-purple-500/15", text: "text-purple-400", border: "border-purple-500/40" },
-  Out: { bg: "bg-gray-500/15", text: "text-gray-300", border: "border-gray-500/40" },
-  Solo: { bg: "bg-orange-500/20", text: "text-orange-500", border: "border-orange-500/40" }
-};
 
 const FILTER_BAND_KEY = 'mg30_notes_filter_band';
 const FILTER_SETLIST_KEY = 'mg30_notes_filter_setlist';
@@ -528,13 +521,8 @@ function NotesLibraryContent() {
                       <div className="text-xs text-muted-foreground">{note.band} - {note.setlist}</div>
                     </div>
                     {note.presetSlot && (
-                      <Badge variant="outline" className="flex h-6 shrink-0 items-center gap-1.5 border-primary/20 bg-primary/10 px-2 text-[10px] font-black text-primary">
-                        <span>{(() => {
-                          const s = parseInt(note.presetSlot);
-                          const bank = Math.floor((s - 1) / 4) + 1;
-                          const sub = ['A', 'B', 'C', 'D'][(s - 1) % 4];
-                          return `${String(bank).padStart(2, '0')}${sub}`;
-                        })()}</span>
+                      <Badge variant="outline" className="flex h-6 shrink-0 items-center gap-1.5 border-primary/20 bg-primary/10 px-2 text-label font-black text-primary">
+                        <span>{formatSlotLabel(parseInt(note.presetSlot))}</span>
                         <>
                           <span className="opacity-30">•</span>
                           <span>S{note.presetScene ? parseInt(note.presetScene) + 1 : 1}</span>
@@ -850,19 +838,14 @@ const SortableNoteCard = React.memo(React.forwardRef<HTMLDivElement, {
                 </div>
               </div>
               <div className="flex items-center gap-2 mt-2">
-                <span className="text-[10px] text-muted-foreground uppercase font-bold">{note.band}</span>
-                <span className="text-[10px] text-muted-foreground opacity-30">•</span>
-                <span className="text-[10px] text-muted-foreground uppercase font-bold">{note.setlist}</span>
+                <span className="text-label text-muted-foreground uppercase font-bold">{note.band}</span>
+                <span className="text-label text-muted-foreground opacity-30">•</span>
+                <span className="text-label text-muted-foreground uppercase font-bold">{note.setlist}</span>
                 {note.presetSlot && (
                   <>
-                    <span className="text-[10px] text-muted-foreground opacity-30">•</span>
-                    <span className="text-[10px] uppercase font-bold text-primary">
-                      {(() => {
-                        const s = parseInt(note.presetSlot);
-                        const bank = Math.floor((s - 1) / 4) + 1;
-                        const sub = ['A', 'B', 'C', 'D'][(s - 1) % 4];
-                        return `${String(bank).padStart(2, '0')}${sub}`;
-                      })()}
+                    <span className="text-label text-muted-foreground opacity-30">•</span>
+                    <span className="text-label uppercase font-bold text-primary">
+                      {formatSlotLabel(parseInt(note.presetSlot))}
                       {note.presetScene && ` S${parseInt(note.presetScene) + 1}`}
                     </span>
                   </>

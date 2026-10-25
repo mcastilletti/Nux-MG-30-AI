@@ -25,14 +25,14 @@ function MidiMonitorCard() {
             <Terminal className="w-4 h-4 text-primary" /> MIDI Monitor — Messaggi Grezzi
           </CardTitle>
           <div className="flex items-center gap-2">
-            <Badge variant="outline" className="text-[10px]">IN: {midiLog.length}</Badge>
-            <Badge variant="outline" className="text-[10px] text-green-500 border-green-500/30">OUT: {midiOutLog.length}</Badge>
+            <Badge variant="outline" className="text-label">IN: {midiLog.length}</Badge>
+            <Badge variant="outline" className="text-label text-green-500 border-green-500/30">OUT: {midiOutLog.length}</Badge>
             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { clearMidiLog(); clearMidiOutLog(); }} title="Cancella log">
               <Trash2 className="w-3.5 h-3.5" />
             </Button>
           </div>
         </div>
-        <CardDescription className="text-[11px]">
+        <CardDescription className="text-caption">
           Messaggi HEX MIDI in tempo reale. <span className="text-green-400 font-mono">[OUT]</span> = inviati alla pedaliera, <span className="text-amber-400 font-mono">[IN]</span> = ricevuti dalla pedaliera.
           I messaggi SysEx sono evidenziati in arancione.
         </CardDescription>
@@ -44,7 +44,7 @@ function MidiMonitorCard() {
           </div>
         ) : (
           <div className="bg-background rounded-md border border-border overflow-hidden">
-            <div className="max-h-72 overflow-y-auto p-3 space-y-0.5 font-mono text-[11px]">
+            <div className="max-h-72 overflow-y-auto p-3 space-y-0.5 font-mono text-caption">
               {[...midiOutLog, ...midiLog].map((msg, i) => (
                 <div key={i} className={`leading-5 ${msg.includes('F0') ? 'text-amber-400' : msg.includes('[OUT]') ? 'text-green-400' : 'text-muted-foreground'}`}>
                   {msg}
@@ -99,7 +99,7 @@ export default function SettingsPage() {
                 <span className="text-muted-foreground font-medium uppercase">Firestore Database</span>
                 <Badge variant="outline" className="text-green-500 border-green-500/30">ATTIVO</Badge>
               </div>
-              <div className="text-[10px] text-muted-foreground leading-relaxed italic">
+              <div className="text-label text-muted-foreground leading-relaxed italic">
                 Il piano Spark di Firebase offre 1GB di database gratuito, sufficiente per migliaia di preset e note.
               </div>
             </CardContent>
@@ -117,9 +117,9 @@ export default function SettingsPage() {
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 bg-secondary/50 p-2 rounded border border-border">
                     <div className="w-2 h-2 rounded-full bg-green-500" />
-                    <span className="font-mono text-[10px] truncate">{user.email}</span>
+                    <span className="font-mono text-label truncate">{user.email}</span>
                   </div>
-                  <div className="text-[10px] text-muted-foreground">
+                  <div className="text-label text-muted-foreground">
                     Sincronizzazione attiva. I tuoi dati sono protetti dalle regole di sicurezza di Firebase.
                   </div>
                 </div>
@@ -155,7 +155,7 @@ export default function SettingsPage() {
             </div>
 
             <div className="pt-2">
-              <Button variant="outline" size="sm" className="h-8 text-[10px] font-bold" asChild>
+              <Button variant="outline" size="sm" className="h-8 text-label font-bold" asChild>
                 <a href="https://console.firebase.google.com/" target="_blank" rel="noreferrer">
                   APRI CONSOLE FIREBASE <ExternalLink className="w-3 h-3 ml-2" />
                 </a>
@@ -173,11 +173,11 @@ export default function SettingsPage() {
           <CardContent className="space-y-4 text-sm">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
-                <div className="text-[10px] uppercase font-bold text-muted-foreground">App Version</div>
+                <div className="text-label uppercase font-bold text-muted-foreground">App Version</div>
                 <div className="font-mono text-xs">1.3.0-stable</div>
               </div>
               <div className="space-y-1">
-                <div className="text-[10px] uppercase font-bold text-muted-foreground">Hardware Target</div>
+                <div className="text-label uppercase font-bold text-muted-foreground">Hardware Target</div>
                 <div className="font-mono text-xs">NUX MG-30 (v3.x / v4.x)</div>
               </div>
             </div>

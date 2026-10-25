@@ -25,6 +25,7 @@ import { buildInstrumentationContext, resolveAmplifier, resolveGuitar } from '@/
 import { usePresetNames } from '@/hooks/use-preset-names';
 import { useSavePreset } from '@/hooks/use-preset-persistence';
 import { BlockIcon } from '@/components/icons/block-icons';
+import { formatSlotLabel } from '@/lib/slot';
 
 function parseDirectJsonInput(value: string): { parsed: any | null; looksLikeJson: boolean; error?: string } {
   const trimmed = value.trim();
@@ -377,29 +378,11 @@ function applyJsonToPreset(preset: Preset, json: any): { updatedPreset: Preset; 
   };
 }
 
-const getBlockColorVar = (type: string) => {
-  switch (type) {
-    case 'wah': return '300 100% 75%';
-    case 'noise-gate': return '70 100% 50%';
-    case 'compressor': return '60 100% 50%';
-    case 'efx': return '32 100% 50%';
-    case 'amp': return '0 100% 50%';
-    case 'ir': return '192 100% 50%';
-    case 'sr': return '120 100% 50%';
-    case 'modulation': return '220 100% 50%';
-    case 'delay': return '180 100% 50%';
-    case 'reverb': return '288 100% 50%';
-    case 'vol': return '0 0% 80%';
-    case 'eq': return '0 0% 100%';
-    default: return 'var(--primary)';
-  }
-};
+const BLOCK_TYPES_WITH_COLOR = ['wah', 'noise-gate', 'compressor', 'efx', 'amp', 'ir', 'sr', 'modulation', 'delay', 'reverb', 'vol', 'eq'];
+// I valori sono variabili CSS in globals.css (--block-*).
+const getBlockColorVar = (type: string) =>
+  BLOCK_TYPES_WITH_COLOR.includes(type) ? `var(--block-${type})` : 'var(--primary)';
 
-const formatSlotLabel = (slot: number) => {
-  const group = Math.floor((slot - 1) / 4) + 1;
-  const letter = ['A', 'B', 'C', 'D'][(slot - 1) % 4];
-  return `${String(group).padStart(2, '0')}${letter}`;
-};
 
 export default function EditorPage() {
   const { activePreset, updateParameter, updateModel, updateScene, toggleEffect, undo, redo, setActivePreset, updatePresetName, copyScene } = usePresetStore();
@@ -786,8 +769,8 @@ export default function EditorPage() {
                 )}
               </div>
               <div className="mt-1 flex flex-wrap items-center gap-2">
-                <Badge variant="outline" className="text-[10px]">{status === 'connected' ? 'MG-30 CONNECTED' : 'MG-30 OFFLINE'}</Badge>
-                <Badge variant="secondary" className="border-primary/30 bg-primary/15 text-[10px] text-primary">SCENE {activePreset.activeScene + 1}</Badge>
+                <Badge variant="outline" className="text-label">{status === 'connected' ? 'MG-30 CONNECTED' : 'MG-30 OFFLINE'}</Badge>
+                <Badge variant="secondary" className="border-primary/30 bg-primary/15 text-label text-primary">SCENE {activePreset.activeScene + 1}</Badge>
               </div>
             </div>
           </div>
@@ -795,7 +778,7 @@ export default function EditorPage() {
           <div className="flex min-w-0 w-full flex-wrap items-center gap-2 md:gap-3 lg:w-auto lg:justify-end">
             {/* Scene Selector */}
             <div className="flex items-center gap-1 rounded-xl border border-border bg-secondary/30 p-1">
-              <div className="px-2 text-[10px] font-black uppercase text-muted-foreground flex items-center gap-1"><Layers className="w-3 h-3" /> Scenes</div>
+              <div className="px-2 text-label font-black uppercase text-muted-foreground flex items-center gap-1"><Layers className="w-3 h-3" /> Scenes</div>
               {[0, 1, 2].map((idx) => (
                 <Button
                   key={`scene-btn-${idx}`}
@@ -911,7 +894,7 @@ export default function EditorPage() {
                               <SelectContent><SelectItem value="none">Predefinito (Headrush FRFR-112)</SelectItem>{amplifiers.map(amplifier => <SelectItem key={amplifier.id} value={amplifier.id}>{amplifier.model}</SelectItem>)}</SelectContent>
                             </Select>
                           </div>
-                          <p className="text-[11px] text-muted-foreground sm:col-span-2">La selezione viene applicata automaticamente a ogni nuova generazione AI.</p>
+                          <p className="text-caption text-muted-foreground sm:col-span-2">La selezione viene applicata automaticamente a ogni nuova generazione AI.</p>
                         </div>
                         <Textarea
                           placeholder={`Es. per prompt AI: Suono grosso in stile Oasis, chitarra humbucker, ritmica anni '90, medi presenti e ambiente contenuto...
@@ -1002,7 +985,7 @@ Es. per JSON: { "amp": { "gain": 60, "master": 80 }, "delay": { "enabled": true 
         <Card className="app-surface overflow-hidden rounded-2xl bg-background/40 shadow-none">
           <CardHeader className="flex flex-row items-center justify-between border-b border-border/80 bg-secondary/20 py-3">
             <CardTitle className="section-kicker flex items-center gap-2"><LayoutGrid className="h-4 w-4 text-primary" /> Signal Chain</CardTitle>
-            <Button variant="ghost" size="sm" className="h-9 gap-2 text-[10px] font-bold uppercase" onClick={exitBlockEditor}><X className="h-3.5 w-3.5" /> Chiudi</Button>
+            <Button variant="ghost" size="sm" className="h-9 gap-2 text-label font-bold uppercase" onClick={exitBlockEditor}><X className="h-3.5 w-3.5" /> Chiudi</Button>
           </CardHeader>
           <CardContent className="py-4">
             <div className="mx-auto flex max-w-6xl items-center gap-3 overflow-x-auto px-4 py-5 md:gap-4 md:px-8 md:py-6">
@@ -1030,7 +1013,7 @@ Es. per JSON: { "amp": { "gain": 60, "master": 80 }, "delay": { "enabled": true 
                       style={{
                         '--block-glow': blockColor,
                         ...(isEnabled && isSelected ? { borderColor: `hsl(${blockColor})` } : {}),
-                        ...(isEnabled && effect.type === 'modulation' ? { backgroundColor: `hsla(${blockColor}, 0.12)` } : {})
+                        ...(isEnabled && effect.type === 'modulation' ? { backgroundColor: `hsl(${blockColor} / 0.12)` } : {})
                       } as React.CSSProperties}
                     >
                       <div className="relative min-h-0 flex-1">
@@ -1059,7 +1042,7 @@ Es. per JSON: { "amp": { "gain": 60, "master": 80 }, "delay": { "enabled": true 
                           }}
                           title={effect.enabled ? "Disattiva blocco" : "Attiva blocco"}
                           className={cn(
-                            "absolute left-1.5 top-1.5 rounded-md px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide border transition-all hover:scale-105 cursor-pointer select-none",
+                            "absolute left-1.5 top-1.5 rounded-md px-1.5 py-0.5 text-micro font-bold uppercase tracking-wide border transition-all hover:scale-105 cursor-pointer select-none",
                             isEnabled
                               ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/40 hover:bg-emerald-500/30"
                               : "bg-zinc-800/90 text-zinc-400 border-zinc-700/60 hover:bg-zinc-700/80 hover:text-zinc-200"
@@ -1070,7 +1053,7 @@ Es. per JSON: { "amp": { "gain": 60, "master": 80 }, "delay": { "enabled": true 
                       </div>
                       <span
                         className={cn(
-                          "truncate border-t px-2 py-2 text-[10px] font-semibold uppercase tracking-wide transition-colors",
+                          "truncate border-t px-2 py-2 text-label font-semibold uppercase tracking-wide transition-colors",
                           isEnabled
                             ? "border-border/50 text-foreground"
                             : "border-zinc-800/80 text-zinc-500"
@@ -1099,7 +1082,7 @@ Es. per JSON: { "amp": { "gain": 60, "master": 80 }, "delay": { "enabled": true 
             className="rounded-2xl shadow-none transition-colors"
             style={{
               borderColor: selectedEffect.enabled
-                ? `hsla(${getBlockColorVar(selectedEffect.type)}, 0.4)`
+                ? `hsl(${getBlockColorVar(selectedEffect.type)} / 0.4)`
                 : 'rgba(255, 255, 255, 0.1)'
             }}
           >
@@ -1121,7 +1104,7 @@ Es. per JSON: { "amp": { "gain": 60, "master": 80 }, "delay": { "enabled": true 
                       : 'hsl(0, 0%, 65%)'
                   }}
                 >
-                  {selectedEffect?.type} <Badge variant="outline" className={cn("text-[10px] ml-2", !selectedEffect.enabled && "text-muted-foreground border-zinc-700")}>{selectedEffect?.model}</Badge>
+                  {selectedEffect?.type} <Badge variant="outline" className={cn("text-label ml-2", !selectedEffect.enabled && "text-muted-foreground border-zinc-700")}>{selectedEffect?.model}</Badge>
                 </CardTitle>
               </div>
               <div className="flex w-full items-center gap-3 sm:w-auto sm:gap-4">

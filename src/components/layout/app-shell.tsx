@@ -139,7 +139,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
                         <AvatarFallback><UserIcon className="w-4 h-4" /></AvatarFallback>
                       </Avatar>
                       <div className="flex-1 min-w-0">
-                        <p className="text-[13px] font-bold truncate">{user.displayName}</p>
+                        <p className="text-body-sm font-bold truncate">{user.displayName}</p>
                         <p className="text-[12px] text-muted-foreground truncate font-medium">Cloud Active</p>
                       </div>
                     </div>
@@ -148,7 +148,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
                     </Button>
                   </div>
                 ) : (
-                  <Button variant="outline" size="sm" className="w-full gap-2 text-[13px] font-bold h-10 border-primary/20 bg-primary/5 hover:bg-primary/10" onClick={handleLogin}>
+                  <Button variant="outline" size="sm" className="w-full gap-2 text-body-sm font-bold h-10 border-primary/20 bg-primary/5 hover:bg-primary/10" onClick={handleLogin}>
                     <LogIn className="w-4 h-4 text-primary" /> Login con Google
                   </Button>
                 )}
@@ -161,7 +161,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
                 <div className="flex items-center justify-between p-2.5 rounded-md bg-secondary/50 border border-border">
                   <div className="flex items-center gap-2">
                     <div className={`w-2 h-2 rounded-full ${status === 'connected' ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
-                    <span className="text-[13px] font-bold uppercase tracking-tight">{status}</span>
+                    <span className="text-body-sm font-bold uppercase tracking-tight">{status}</span>
                   </div>
                   {status === 'connected' ? <Wifi className="w-4 h-4 text-green-500" /> : <WifiOff className="w-4 h-4 text-red-500" />}
                 </div>
@@ -192,7 +192,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
                 <span className="text-base font-semibold">
                   {navItems.find(i => i.href === pathname)?.label || 'App'}
                 </span>
-                <Badge variant="outline" className={cn("h-5 text-[11px]", status === 'connected' ? "border-green-500/50 text-green-500" : "border-border text-muted-foreground")}>
+                <Badge variant="outline" className={cn("h-5 text-caption", status === 'connected' ? "border-green-500/50 text-green-500" : "border-border text-muted-foreground")}>
                   {status === 'connected' ? 'USB MIDI ACTIVE' : 'USB MIDI OFFLINE'}
                 </Badge>
               </div>
@@ -208,7 +208,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
           {navItems.slice(0, 5).map((item) => {
             const active = pathname === item.href;
             return (
-              <Link key={item.href} href={item.href} aria-current={active ? 'page' : undefined} className={cn("flex min-h-12 flex-col items-center justify-center gap-1 rounded-xl text-[10px] font-semibold text-muted-foreground transition-colors", active && "bg-primary/15 text-primary")}>
+              <Link key={item.href} href={item.href} aria-current={active ? 'page' : undefined} className={cn("flex min-h-12 flex-col items-center justify-center gap-1 rounded-xl text-label font-semibold text-muted-foreground transition-colors", active && "bg-primary/15 text-primary")}>
                 <item.icon className="h-4 w-4" />
                 <span>{item.label === 'Dashboard' ? 'Home' : item.label}</span>
               </Link>

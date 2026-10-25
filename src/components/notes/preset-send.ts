@@ -24,9 +24,4 @@ export function readAutoSendSetting(storage: Pick<Storage, 'getItem'> | null): b
   }
 }
 
-/** Etichetta dello slot come sulla pedaliera: 1 → "01A", 6 → "02B". */
-export function formatSlotLabel(slot: number): string {
-  const bank = Math.floor((slot - 1) / 4) + 1;
-  const sub = ['A', 'B', 'C', 'D'][(slot - 1) % 4];
-  return `${String(bank).padStart(2, '0')}${sub}`;
-}
+

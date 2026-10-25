@@ -31,7 +31,8 @@ Questo documento è il risultato della prima attività del refactoring: **audit 
 | NT5, NT6, NT20, C1 — cache al logout, salvataggio da non loggati, doppio "successivo", Band da non loggati | ✅ Risolto | `0cd1f5a` | Playwright (messaggio Band, toast "Accedi per salvare", un solo pulsante nel blocco). NT5 **da provare con due account reali** |
 | NT8, NT13, NT14, NT15, E9 — scroll al cambio brano, ricerca nascosta, riordino in vista filtrata, altezza pannello e dialoghi | ✅ Risolto (NT14 in versione minima) | `637a7b6` | Playwright (scroll a 0 dopo "successiva", filtro azzerato, maniglie solo con scaletta). La modalità "Riordina" esplicita resta per la Fase 3 (F3) |
 | E5, L2 — pulsanti hardware attivi offline | ✅ Parziale | `338e6be` | Playwright (disattivati offline). Restano conferma, annullamento e avanzamento: decisione D8 |
-| S1 / P0-4 — preset solo in memoria | ⏳ Aperto | — | In attesa della decisione D1 |
+| S1 / P0-4, E6, L3 — preset solo in memoria | ✅ Risolto (D1) | `43c0105`, `d7dc107` | Test unitari (`preset-storage.test.ts`) + Playwright: SALVA, ricarica, esportazione, importazione valida e non valida. **Da provare con un account Google reale** (sincronizzazione Firestore) |
+| NT4 — preset inviato su Annulla e salvataggio, scena NaN | ✅ Risolto (D2) | `2b97066` | Test unitari (`preset-send.test.ts`) + Playwright con MIDI simulato: apertura, ▶, Annulla, interruttore spento/acceso, scena vuota. **Da provare con la MG-30 reale** |
 
 **Baseline visiva** (Playwright, 10 pagine × 4 viewport, da non loggati e con note iniettate in cache):
 - nessuno scroll orizzontale a livello di pagina;
@@ -250,7 +251,7 @@ Le voci Note sono **[V]** salvo dove indicato. Requisiti di dettaglio e scenari 
 | NT1 ✅ `2b58d38` | **Salvare un blocco esistente lo sposta** in "Senza Band / Senza Scaletta" con `order: 0` | `BlockEditorContent.tsx:63-84`; `notes/page.tsx:718-722` | Corruzione dati: il blocco sparisce dalla scaletta | **P0** | Per i blocchi esistenti conservare `band`/`setlist`/`order` della nota caricata | — | Basso | Test unitario sul payload; modifica di un blocco in una scaletta |
 | NT2 ✅ `9b1fc98` (minima) | **Modifiche perse senza avviso**: X, "Annulla" e Indietro di sistema | `NoteEditorContent.tsx:390,448-458`; `BlockEditorContent.tsx:109`; `notes/page.tsx:115` (`replaceState`) | Perdita di appunti durante le prove | **P0** | Rilevamento delle modifiche non salvate e conferma all'uscita; Indietro che chiude il foglio | F3 | Medio | Scenario 5 |
 | NT3 ✅ `5361261` | **Nota aperta con cache vuota** (URL `?openNote=`, altro dispositivo): editor vuoto, la matita resta attiva, il salvataggio sovrascrive | `NoteEditorContent.tsx:206-215,424,299-302` | [H sulla frequenza] Perdita del contenuto di una nota | **P0** | Ricaricare la nota quando arriva la cache; stato "nota non trovata"; salvataggio bloccato se non caricata | — | Basso | Test con cache vuota e URL diretto |
-| NT4 | Il preset viene inviato aprendo un brano, con ▶, su "Annulla" e al primo salvataggio; scena vuota → `parseInt('')` = NaN | `NoteEditorContent.tsx:206-215,264-270,453` | Cambio di suono imprevisto dal vivo | P1 | Decisione D2; invio visibile tramite chip; nessun invio su Annulla e salvataggio | D2 | Medio (comportamento) | Log MIDI durante la navigazione |
+| NT4 ✅ `2b97066` | Il preset viene inviato aprendo un brano, con ▶, su "Annulla" e al primo salvataggio; scena vuota → `parseInt('')` = NaN | `NoteEditorContent.tsx:206-215,264-270,453` | Cambio di suono imprevisto dal vivo | P1 | Decisione D2; invio visibile tramite chip; nessun invio su Annulla e salvataggio | D2 | Medio (comportamento) | Log MIDI durante la navigazione |
 | NT5 ✅ `0cd1f5a` | Dopo il logout restano visibili le note del precedente utente | `clearCache` mai chiamato; `app-shell.tsx:70-76` | Privacy, dati mescolati | P1 | Svuotare la cache al logout e al cambio utente | — | Basso | Login, logout, login con un altro account |
 | NT6 ✅ `0cd1f5a` | Salvataggio da non loggati con `userId: undefined` | `NoteEditorContent.tsx:296`; `BlockEditorContent.tsx:79` | [H] Errore generico senza invito ad accedere | P1 | Bloccare il salvataggio con messaggio "Accedi per salvare" | — | Basso | Test da non loggati |
 | NT7 | Nessun "precedente", nessuna posizione "3/12"; ▶ in alto a destra | `note-navigation.ts`; `NoteEditorContent.tsx:435-445` | Navigazione dal vivo lenta e scomoda a una mano | P1 | Barra inferiore Prec/posizione/Succ ≥48px | F3 | Basso | Scenario 3 |
@@ -273,7 +274,7 @@ Le voci Note sono **[V]** salvo dove indicato. Requisiti di dettaglio e scenari 
 
 | ID | Problema | Evidenza | Impatto | P | Soluzione | Dip. | Rischio | Verifica |
 |---|---|---|---|---|---|---|---|---|
-| S1 [V] | **Preset solo in memoria**: modifiche, volume di massa e "Local Save" persi al ricaricamento; nessun backup su file | `use-preset-store.ts`, `use-midi-store.ts` senza `persist`; grep `Blob`/`download` | Perdita del lavoro di programmazione | **P0** | Decisione D1; nel frattempo testi veritieri | D1 | Alto (dati) | — |
+| S1 [V] ✅ `43c0105` | **Preset solo in memoria**: modifiche, volume di massa e "Local Save" persi al ricaricamento; nessun backup su file | `use-preset-store.ts`, `use-midi-store.ts` senza `persist`; grep `Blob`/`download` | Perdita del lavoro di programmazione | **P0** | Decisione D1; nel frattempo testi veritieri | D1 | Alto (dati) | — |
 | S2 [V] | Import JSON delle note: guida incompleta (`presetSlot`/`presetScene` accettati ma non documentati); incollare JSON su mobile è scomodo | `notes/page.tsx:631-663,373-374` | Errori di import | P3 | Testo d'aiuto completo; valutare un selettore di file | — | Basso | Import di prova |
 | S3 [V] | Ordine dell'import calcolato su tutte le note invece che sulla scaletta | `notes/page.tsx:365-366` | Brano importato in fondo con ordine incoerente | P2 | Calcolo per band+scaletta come negli altri flussi | — | Basso | Test unitario |
 
@@ -669,6 +670,14 @@ Lista (scaletta filtrata)               Lettura in prova                  Modali
 ## 10. Decisioni richieste
 
 Solo quelle che non si possono prendere in sicurezza dal codice.
+
+**Decise il 2026-10-25:**
+- **D1** → Firestore per utente (`users/{uid}/presets/slot_{n}`) con cache locale ed esportazione/importazione JSON. Implementato (`43c0105`, `d7dc107`).
+- **D2** → invio solo all'apertura del brano e con ▶, disattivabile per dispositivo, mai su Annulla e salvataggio. Implementato (`2b97066`). Scegliere slot o scena in modifica invia ancora il comando, come anteprima voluta dall'utente.
+- **D3** → pinch-zoom resta bloccato; in Fase 3 si aggiunge il testo regolabile nelle Note.
+- **D4** → modalità Live approvata **senza pedale Bluetooth**: schermo intero, avanzamento a tocco, blocco anti-tocco (Fase 3/5).
+
+Restano aperte D5–D10.
 
 | ID | Decisione | Perché serve |
 |---|---|---|

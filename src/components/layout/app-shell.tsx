@@ -1,6 +1,7 @@
 
 'use client';
 
+import { useShallow } from 'zustand/react/shallow';
 import React, { useEffect, useRef, useState } from 'react';
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { useMidiStore } from '@/stores/use-midi-store';
@@ -23,7 +24,7 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTr
 import { MOBILE_BAR, MOBILE_MORE, NAV_ENTRIES, SIDEBAR_GROUPS, getActiveNavKey, getRouteTitle, isMoreActive, type NavKey } from './nav-config';
 
 export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { status, lastError, initialize, syncActivePreset } = useMidiStore();
+  const { status, lastError, initialize, syncActivePreset } = useMidiStore(useShallow((s) => ({ status: s.status, lastError: s.lastError, initialize: s.initialize, syncActivePreset: s.syncActivePreset })));
   const pathname = usePathname();
   const { auth, googleProvider } = useFirebase();
   const { user } = useUser();

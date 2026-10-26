@@ -1,5 +1,6 @@
 "use client";
 
+import { useShallow } from 'zustand/react/shallow';
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -33,7 +34,16 @@ export default function InstrumentationPage() {
   const { firestore } = useFirebase();
   const { user, isUserLoading } = useUser();
   const { toast } = useToast();
-  const { guitars, amplifiers, selectedGuitarId, selectedAmplifierId, setGuitars, setAmplifiers, selectGuitar, selectAmplifier } = useInstrumentationStore();
+  const { guitars, amplifiers, selectedGuitarId, selectedAmplifierId, setGuitars, setAmplifiers, selectGuitar, selectAmplifier } = useInstrumentationStore(useShallow((s) => ({
+    guitars: s.guitars,
+    amplifiers: s.amplifiers,
+    selectedGuitarId: s.selectedGuitarId,
+    selectedAmplifierId: s.selectedAmplifierId,
+    setGuitars: s.setGuitars,
+    setAmplifiers: s.setAmplifiers,
+    selectGuitar: s.selectGuitar,
+    selectAmplifier: s.selectAmplifier,
+  })));
   const activeGuitarId = resolveGuitar(guitars, selectedGuitarId)?.id;
   const activeAmplifierId = resolveAmplifier(amplifiers, selectedAmplifierId)?.id;
   const [loading, setLoading] = useState(false);

@@ -36,7 +36,7 @@ export const RotaryKnob: React.FC<RotaryKnobProps> = ({
   const startY = useRef(0);
   const startValue = useRef(0);
   const rafRef = useRef<number | null>(null);
-  const { saveToHistory } = usePresetStore();
+  const saveToHistory = usePresetStore((s) => s.saveToHistory);
 
   useEffect(() => {
     if (!isInputFocused) setInputValue(String(value));

@@ -1,5 +1,6 @@
 "use client"
 
+import { useShallow } from 'zustand/react/shallow';
 import React, { useState, useMemo, useEffect } from 'react';
 import { usePresetStore, cloneEffects } from '@/stores/use-preset-store';
 import { useMidiStore } from '@/stores/use-midi-store';
@@ -15,8 +16,32 @@ import { SignalChain } from '@/components/editor/SignalChain';
 import { BlockParamsPanel } from '@/components/editor/BlockParamsPanel';
 
 export default function EditorPage() {
-  const { activePreset, updateParameter, updateModel, updateScene, toggleEffect, undo, redo, setActivePreset, updatePresetName, copyScene } = usePresetStore();
-  const { status, devicePresets, sendProgramChange, sendKnobParameter, sendModelChange, sendSceneChange, toggleBlock, enterBlockEditor, exitBlockEditor, isEditorSyncing, syncActivePreset, syncFullPreset } = useMidiStore();
+  const { activePreset, updateParameter, updateModel, updateScene, toggleEffect, undo, redo, setActivePreset, updatePresetName, copyScene } = usePresetStore(useShallow((s) => ({
+    activePreset: s.activePreset,
+    updateParameter: s.updateParameter,
+    updateModel: s.updateModel,
+    updateScene: s.updateScene,
+    toggleEffect: s.toggleEffect,
+    undo: s.undo,
+    redo: s.redo,
+    setActivePreset: s.setActivePreset,
+    updatePresetName: s.updatePresetName,
+    copyScene: s.copyScene,
+  })));
+  const { status, devicePresets, sendProgramChange, sendKnobParameter, sendModelChange, sendSceneChange, toggleBlock, enterBlockEditor, exitBlockEditor, isEditorSyncing, syncActivePreset, syncFullPreset } = useMidiStore(useShallow((s) => ({
+    status: s.status,
+    devicePresets: s.devicePresets,
+    sendProgramChange: s.sendProgramChange,
+    sendKnobParameter: s.sendKnobParameter,
+    sendModelChange: s.sendModelChange,
+    sendSceneChange: s.sendSceneChange,
+    toggleBlock: s.toggleBlock,
+    enterBlockEditor: s.enterBlockEditor,
+    exitBlockEditor: s.exitBlockEditor,
+    isEditorSyncing: s.isEditorSyncing,
+    syncActivePreset: s.syncActivePreset,
+    syncFullPreset: s.syncFullPreset,
+  })));
   const { toast } = useToast();
   const { savedNames, savePresetName } = usePresetNames();
   const savePreset = useSavePreset();

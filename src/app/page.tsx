@@ -1,6 +1,7 @@
 
 "use client"
 
+import { useShallow } from 'zustand/react/shallow';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useMidiStore } from '@/stores/use-midi-store';
 import { Button } from '@/components/ui/button';
@@ -9,7 +10,7 @@ import { ElectricGuitarIcon } from '@/components/icons/electric-guitar-icon';
 import Link from 'next/link';
 
 export default function HomePage() {
-  const { status, refreshDevices, availableDevices } = useMidiStore();
+  const { status, refreshDevices, availableDevices } = useMidiStore(useShallow((s) => ({ status: s.status, refreshDevices: s.refreshDevices, availableDevices: s.availableDevices })));
 
   return (
     <>

@@ -1,6 +1,7 @@
 
 "use client"
 
+import { useShallow } from 'zustand/react/shallow';
 import React, { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Input } from '@/components/ui/input';
@@ -35,8 +36,19 @@ export default function LibraryPage() {
   const [bulkVolumeMin, setBulkVolumeMin] = useState(30);
   const [bulkVolumeMax, setBulkVolumeMax] = useState(60);
 
-  const { sendProgramChange, status, devicePresets, syncPresets, isSyncing, syncProgress, updatePresetName } = useMidiStore();
-  const { setActivePreset, updatePresetName: updateActivePresetName } = usePresetStore();
+  const { sendProgramChange, status, devicePresets, syncPresets, isSyncing, syncProgress, updatePresetName } = useMidiStore(useShallow((s) => ({
+    sendProgramChange: s.sendProgramChange,
+    status: s.status,
+    devicePresets: s.devicePresets,
+    syncPresets: s.syncPresets,
+    isSyncing: s.isSyncing,
+    syncProgress: s.syncProgress,
+    updatePresetName: s.updatePresetName,
+  })));
+  const { setActivePreset, updatePresetName: updateActivePresetName } = usePresetStore(useShallow((s) => ({
+    setActivePreset: s.setActivePreset,
+    updatePresetName: s.updatePresetName,
+  })));
   const { toast } = useToast();
   const { user } = useUser();
 

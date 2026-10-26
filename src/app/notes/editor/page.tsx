@@ -1,6 +1,7 @@
 
 "use client"
 
+import { useShallow } from 'zustand/react/shallow';
 import React, { useState, useMemo, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -53,7 +54,7 @@ function NoteEditorContent() {
   const router = useRouter();
   const noteIdFromUrl = searchParams.get('id');
   
-  const { devicePresets, status, sendProgramChange, sendSceneChange } = useMidiStore();
+  const { devicePresets, status, sendProgramChange, sendSceneChange } = useMidiStore(useShallow((s) => ({ devicePresets: s.devicePresets, status: s.status, sendProgramChange: s.sendProgramChange, sendSceneChange: s.sendSceneChange })));
   const { toast } = useToast();
   const { firestore } = useFirebase();
   const { user, isUserLoading: userLoading } = useUser();

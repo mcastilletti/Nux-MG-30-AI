@@ -1,11 +1,11 @@
 
 'use client';
 
-import React, { useEffect, useRef } from 'react';
-import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
+import React, { useEffect, useRef, useState } from 'react';
+import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { useMidiStore } from '@/stores/use-midi-store';
 import { useNotesCache } from '@/stores/use-notes-cache';
-import { LayoutDashboard, Library, Sliders, Settings, Zap, Wifi, WifiOff, NotebookPen, LogIn, LogOut, User as UserIcon, AlertCircle, Users } from 'lucide-react';
+import { LayoutDashboard, Library, Sliders, Settings, Zap, NotebookPen, LogIn, LogOut, User as UserIcon, Users, MoreHorizontal } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Toaster } from '@/components/ui/toaster';
@@ -19,6 +19,8 @@ import { clearSavedPresets, usePresetPersistence } from '@/hooks/use-preset-pers
 import { cn } from '@/lib/utils';
 import { ConnectionStatus } from '@/components/common/connection-status';
 import { ElectricGuitarIcon } from '@/components/icons/electric-guitar-icon';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { MOBILE_BAR, MOBILE_MORE, NAV_ENTRIES, SIDEBAR_GROUPS, getActiveNavKey, getRouteTitle, isMoreActive, type NavKey } from './nav-config';
 
 export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { status, lastError, initialize, syncActivePreset } = useMidiStore();
@@ -87,15 +89,41 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
     });
   };
 
-  const navItems = [
-    { label: 'Dashboard', href: '/', icon: LayoutDashboard },
-    { label: 'Library', href: '/library', icon: Library },
-    { label: 'Editor', href: '/editor', icon: Sliders },
-    { label: 'Note', href: '/notes', icon: NotebookPen },
-    { label: 'Band', href: '/bands', icon: Users },
-    { label: 'Strumentazione', href: '/instrumentation', icon: ElectricGuitarIcon },
-    { label: 'SysEx Analyzer', href: '/tools/sysex-analyzer', icon: Zap },
-  ];
+  const NAV_ICONS: Record<NavKey, React.ComponentType<{ className?: string }>> = {
+    home: LayoutDashboard,
+    editor: Sliders,
+    library: Library,
+    notes: NotebookPen,
+    bands: Users,
+    instrumentation: ElectricGuitarIcon,
+    settings: Settings,
+    sysex: Zap,
+  };
+  const activeKey = getActiveNavKey(pathname);
+  const [moreOpen, setMoreOpen] = useState(false);
+  useEffect(() => { setMoreOpen(false); }, [pathname]);
+
+  const accountBlock = user ? (
+    <div className="flex flex-col gap-3 rounded-lg border border-border bg-secondary/30 p-3">
+      <div className="flex items-center gap-2">
+        <Avatar className="h-7 w-7">
+          <AvatarImage src={user.photoURL || ''} />
+          <AvatarFallback><UserIcon className="h-4 w-4" /></AvatarFallback>
+        </Avatar>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-body-sm font-bold">{user.displayName}</p>
+          <p className="truncate text-caption font-medium text-muted-foreground">Sincronizzazione cloud attiva</p>
+        </div>
+      </div>
+      <Button variant="ghost" size="sm" className="min-h-11 w-full gap-2 text-caption font-bold uppercase hover:bg-destructive/10 hover:text-destructive" onClick={handleLogout}>
+        <LogOut className="h-3.5 w-3.5" /> Esci
+      </Button>
+    </div>
+  ) : (
+    <Button variant="outline" size="sm" className="min-h-11 w-full gap-2 border-primary/20 bg-primary/5 text-body-sm font-bold hover:bg-primary/10" onClick={handleLogin}>
+      <LogIn className="h-4 w-4 text-primary" /> Accedi con Google
+    </Button>
+  );
 
   return (
     <SidebarProvider>
@@ -104,9 +132,9 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
           <SidebarHeader className="p-4 border-b border-white/5">
             <div className="flex items-center gap-3">
               <div className="w-[70px] h-[70px] flex items-center justify-center overflow-hidden">
-                <img 
-                  src="/icon.png" 
-                  alt="MG30 Studio Logo" 
+                <img
+                  src="/icon.png"
+                  alt="MG30 Studio Logo"
                   className="w-full h-full object-cover"
                 />
               </div>
@@ -118,85 +146,51 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
           </SidebarHeader>
 
           <SidebarContent>
-            <SidebarGroup>
-              <SidebarGroupLabel className="text-sm font-bold uppercase tracking-wider opacity-70">Navigation</SidebarGroupLabel>
-              <SidebarMenu>
-                {navItems.map((item) => (
-                  <SidebarMenuItem key={item.href}>
-                    <SidebarMenuButton asChild isActive={pathname === item.href}>
-                      <Link href={item.href} aria-current={pathname === item.href ? 'page' : undefined}>
-                        <item.icon className="w-4 h-4" />
-                        <span className="text-base">{item.label}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroup>
+            {SIDEBAR_GROUPS.map((group) => (
+              <SidebarGroup key={group.label}>
+                <SidebarGroupLabel className="text-sm font-bold uppercase tracking-wider opacity-70">{group.label}</SidebarGroupLabel>
+                <SidebarMenu>
+                  {group.keys.map((key) => {
+                    const entry = NAV_ENTRIES[key];
+                    const Icon = NAV_ICONS[key];
+                    return (
+                      <SidebarMenuItem key={key}>
+                        <SidebarMenuButton asChild isActive={activeKey === key}>
+                          <Link href={entry.href} aria-current={activeKey === key ? 'page' : undefined}>
+                            <Icon className="w-4 h-4" />
+                            <span className="text-base">{entry.label}</span>
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    );
+                  })}
+                </SidebarMenu>
+              </SidebarGroup>
+            ))}
 
             <SidebarGroup className="mt-auto">
               <SidebarGroupLabel className="text-sm font-bold uppercase tracking-wider opacity-70">Account Google</SidebarGroupLabel>
-              <SidebarGroupContent className="px-3 py-2">
-                {user ? (
-                  <div className="flex flex-col gap-3 p-3 rounded-lg bg-secondary/30 border border-border">
-                    <div className="flex items-center gap-2">
-                      <Avatar className="w-7 h-7">
-                        <AvatarImage src={user.photoURL || ''} />
-                        <AvatarFallback><UserIcon className="w-4 h-4" /></AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-body-sm font-bold truncate">{user.displayName}</p>
-                        <p className="text-[12px] text-muted-foreground truncate font-medium">Cloud Active</p>
-                      </div>
-                    </div>
-                    <Button variant="ghost" size="sm" className="h-7 text-[12px] font-bold uppercase gap-2 w-full hover:bg-destructive/10 hover:text-destructive" onClick={handleLogout}>
-                      <LogOut className="w-3.5 h-3.5" /> Esci
-                    </Button>
-                  </div>
-                ) : (
-                  <Button variant="outline" size="sm" className="w-full gap-2 text-body-sm font-bold h-10 border-primary/20 bg-primary/5 hover:bg-primary/10" onClick={handleLogin}>
-                    <LogIn className="w-4 h-4 text-primary" /> Login con Google
-                  </Button>
-                )}
-              </SidebarGroupContent>
+              <SidebarGroupContent className="px-3 py-2">{accountBlock}</SidebarGroupContent>
             </SidebarGroup>
 
             <SidebarGroup>
-              <SidebarGroupLabel className="text-sm font-bold uppercase tracking-wider opacity-70">Hardware Status</SidebarGroupLabel>
+              <SidebarGroupLabel className="text-sm font-bold uppercase tracking-wider opacity-70">Pedaliera</SidebarGroupLabel>
               <SidebarGroupContent className="px-3 py-2">
-                <div className="flex items-center justify-between p-2.5 rounded-md bg-secondary/50 border border-border">
-                  <div className="flex items-center gap-2">
-                    <div className={`w-2 h-2 rounded-full ${status === 'connected' ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
-                    <span className="text-body-sm font-bold uppercase tracking-tight">{status}</span>
-                  </div>
-                  {status === 'connected' ? <Wifi className="w-4 h-4 text-green-500" /> : <WifiOff className="w-4 h-4 text-red-500" />}
-                </div>
+                <ConnectionStatus status={status} lastError={lastError} />
               </SidebarGroupContent>
             </SidebarGroup>
           </SidebarContent>
-
-          <SidebarFooter className="p-4 border-t border-white/5">
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <Link href="/settings">
-                    <Settings className="w-4 h-4" />
-                    <span className="text-base">Settings</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarFooter>
         </Sidebar>
 
         <main className="flex-1 flex flex-col min-w-0 bg-background min-h-[100dvh]">
           <header className="h-[calc(3.5rem+env(safe-area-inset-top))] pt-[env(safe-area-inset-top)] md:h-16 md:pt-0 border-b border-border/70 flex items-center justify-between px-4 md:px-6 bg-background/90 backdrop-blur-md sticky top-0 z-20">
-            <div className="flex items-center gap-4">
-              <SidebarTrigger />
-              <div className="h-4 w-[1px] bg-white/10 mx-2" />
-              <div className="flex items-center gap-2">
-                <span className="text-base font-semibold">
-                  {navItems.find(i => i.href === pathname)?.label || 'App'}
+            <div className="flex min-w-0 items-center gap-4">
+              {/* Su mobile le sezioni secondarie sono in "Altro": la sidebar serve solo da md in su. */}
+              <SidebarTrigger className="hidden md:flex" />
+              <div className="mx-2 hidden h-4 w-[1px] bg-white/10 md:block" />
+              <div className="flex min-w-0 items-center gap-2">
+                <span className="truncate text-base font-semibold">
+                  {getRouteTitle(pathname)}
                 </span>
                 <ConnectionStatus status={status} lastError={lastError} />
               </div>
@@ -209,15 +203,54 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
         </main>
 
         <nav aria-label="Navigazione rapida" className="fixed inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-30 grid grid-cols-5 gap-1 rounded-2xl border border-border bg-sidebar/95 p-1.5 shadow-2xl backdrop-blur-xl md:hidden">
-          {navItems.slice(0, 5).map((item) => {
-            const active = pathname === item.href;
+          {MOBILE_BAR.map((key) => {
+            const entry = NAV_ENTRIES[key];
+            const Icon = NAV_ICONS[key];
+            const active = activeKey === key;
             return (
-              <Link key={item.href} href={item.href} aria-current={active ? 'page' : undefined} className={cn("flex min-h-12 flex-col items-center justify-center gap-1 rounded-xl text-label font-semibold text-muted-foreground transition-colors", active && "bg-primary/15 text-primary")}>
-                <item.icon className="h-4 w-4" />
-                <span>{item.label === 'Dashboard' ? 'Home' : item.label}</span>
+              <Link key={key} href={entry.href} aria-current={active ? 'page' : undefined} className={cn("flex min-h-12 flex-col items-center justify-center gap-1 rounded-xl text-label font-semibold text-muted-foreground transition-colors", active && "bg-primary/15 text-primary")}>
+                <Icon className="h-4 w-4" />
+                <span>{entry.label}</span>
               </Link>
             );
           })}
+          <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
+            <SheetTrigger asChild>
+              <button
+                type="button"
+                aria-current={isMoreActive(pathname) ? 'page' : undefined}
+                className={cn("flex min-h-12 flex-col items-center justify-center gap-1 rounded-xl text-label font-semibold text-muted-foreground transition-colors", isMoreActive(pathname) && "bg-primary/15 text-primary")}
+              >
+                <MoreHorizontal className="h-4 w-4" />
+                <span>Altro</span>
+              </button>
+            </SheetTrigger>
+            <SheetContent side="bottom" className="max-h-[85dvh] overflow-y-auto rounded-t-2xl pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
+              <SheetHeader className="text-left">
+                <SheetTitle>Altro</SheetTitle>
+                <SheetDescription>Sezioni, account e stato della pedaliera.</SheetDescription>
+              </SheetHeader>
+              <nav aria-label="Altre sezioni" className="mt-4 grid grid-cols-2 gap-2">
+                {MOBILE_MORE.map((key) => {
+                  const entry = NAV_ENTRIES[key];
+                  const Icon = NAV_ICONS[key];
+                  const active = activeKey === key;
+                  return (
+                    <Link key={key} href={entry.href} aria-current={active ? 'page' : undefined} className={cn("flex min-h-14 items-center gap-3 rounded-xl border border-border bg-card px-3 text-sm font-semibold", active && "border-primary bg-primary/15 text-primary")}>
+                      <Icon className="h-5 w-5 shrink-0" />
+                      <span>{entry.label}</span>
+                    </Link>
+                  );
+                })}
+              </nav>
+              <div className="mt-5 space-y-3">
+                <p className="text-caption font-bold uppercase tracking-wider text-muted-foreground">Pedaliera</p>
+                <ConnectionStatus status={status} lastError={lastError} />
+                <p className="text-caption font-bold uppercase tracking-wider text-muted-foreground">Account Google</p>
+                {accountBlock}
+              </div>
+            </SheetContent>
+          </Sheet>
         </nav>
       </div>
       <Toaster />

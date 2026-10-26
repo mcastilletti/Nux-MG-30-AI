@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { CheckCircle2, Loader2, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
@@ -15,12 +15,15 @@ import { buildInstrumentationContext, resolveAmplifier, resolveGuitar } from '@/
 import type { Preset } from '@/types/preset';
 
 /** AI Mode: genera un preset con l'AI o applica un JSON incollato. */
-export function AiModeDialog({ activePreset, setActivePreset }: {
+export function AiModeDialog({ open, onOpenChange, activePreset, setActivePreset }: {
+  /** Aperto dall'intestazione: pulsante su desktop, menu ⋮ su mobile. */
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   activePreset: Preset;
   setActivePreset: (preset: Preset) => void;
 }) {
   const { toast } = useToast();
-  const [isAiModalOpen, setIsAiModalOpen] = useState(false);
+  const setIsAiModalOpen = onOpenChange;
   const [aiPrompt, setAiPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [proposedPreset, setProposedPreset] = useState<MG30PresetOutput | null>(null);
@@ -117,12 +120,7 @@ export function AiModeDialog({ activePreset, setActivePreset }: {
   };
 
   return (
-    <Dialog open={isAiModalOpen} onOpenChange={setIsAiModalOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" className="gap-2 border-primary/50 text-primary">
-          <Sparkles className="w-4 h-4" /> AI Mode
-        </Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         {!proposedPreset ? (
           <>

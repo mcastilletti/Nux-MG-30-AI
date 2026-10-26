@@ -10,12 +10,12 @@ export default {
   ],
   theme: {
     extend: {
-      // Scala dei testi piccoli: stessi valori dei text-[Npx] che sostituisce (solo font-size).
-      // Direzione approvata in Fase 1: portare label e caption a 12px pagina per pagina (F5).
+      // Scala dei testi piccoli (solo font-size). Direzione approvata in Fase 1:
+      // nessun testo sotto 12px, salvo i badge di stato (micro, es. ON/OFF dei blocchi).
       fontSize: {
-        micro: '9px',
-        label: '10px',
-        caption: '11px',
+        micro: '10px',
+        label: '12px',
+        caption: '12px',
         'body-sm': '13px',
       },
       fontFamily: {

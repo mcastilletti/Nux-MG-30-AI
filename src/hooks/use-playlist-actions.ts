@@ -7,6 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { awaitWrite, isOnline } from '@/lib/firestore-write';
 import { loadAllNotes, loadPlaylistData } from '@/lib/firestore-playlists';
 import { removeNoteFromAll } from '@/lib/playlist-ops';
+import type { ContentMergePlan } from '@/lib/content-duplicates';
 import { useNotesCache } from '@/stores/use-notes-cache';
 import { usePlaylistsCache } from '@/stores/use-playlists-cache';
 import type { SavedNote } from '@/types/note';
@@ -124,6 +125,28 @@ export function usePlaylistActions() {
   }, [firestore, uid, savePlaylist, write]);
 
   /**
+   * Unisce le note con contenuto identico (piano di `planContentMerge`): prima
+   * le playlist, poi le copie nascoste, infine elimina le note. Se una playlist
+   * non si salva ci si ferma prima di eliminare: nessun riferimento rotto.
+   */
+  const mergeContentDuplicates = useCallback(async (plan: ContentMergePlan) => {
+    for (const playlist of plan.playlists) {
+      if (!(await savePlaylist(playlist))) return false;
+    }
+    const cache = useNotesCache.getState();
+    for (const { noteId, mergedInto } of plan.retarget) {
+      const note = cache.getNoteById(noteId);
+      if (note) cache.updateNote({ ...note, mergedInto });
+    }
+    for (const id of plan.deleteIds) cache.deleteNote(id);
+    if (!uid) return true;
+    const batch = writeBatch(firestore);
+    for (const { noteId, mergedInto } of plan.retarget) batch.set(doc(firestore, 'notes', noteId), { mergedInto, updatedAt: serverTimestamp() }, { merge: true });
+    for (const id of plan.deleteIds) batch.delete(doc(firestore, 'notes', id));
+    return write(batch.commit());
+  }, [firestore, uid, savePlaylist, write]);
+
+  /**
    * Ricarica band, playlist e marcatore dall'account. Se la conversione è stata
    * fatta da un altro dispositivo, ricarica anche le note: la copia locale non
    * ha ancora i duplicati marcati (`mergedInto`).
@@ -139,5 +162,5 @@ export function usePlaylistActions() {
     return data;
   }, [firestore, uid]);
 
-  return { savePlaylist, createBand, createPlaylist, renamePlaylist, deletePlaylist, updateBand, deleteBand, deleteNoteEverywhere, refresh, signedIn: !!uid };
+  return { savePlaylist, createBand, createPlaylist, renamePlaylist, deletePlaylist, updateBand, deleteBand, deleteNoteEverywhere, mergeContentDuplicates, refresh, signedIn: !!uid };
 }

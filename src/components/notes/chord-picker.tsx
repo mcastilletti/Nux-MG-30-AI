@@ -6,7 +6,7 @@ import { Plus, Trash2 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { CHORD_ROOTS, CHORD_TABLE, getChordPositions } from '@/lib/chord-data';
 import { cn } from '@/lib/utils';
-import { sequentialIndex } from './chord-edit';
+import { appendIndex, isNewline, sequentialIndex } from './chord-edit';
 
 type PickerStep = 'type' | 'letter' | 'quality' | 'multiplier';
 
@@ -135,11 +135,17 @@ function useSequentialPicker(onInsert: (chord: string, index: number) => void, s
   const [, setSelectedLetter] = useState<string | null>(null);
   const [selectedRoot, setSelectedRoot] = useState<string | null>(null);
   const picks = useRef(0);
-  const reset = () => { setStep('type'); setSelectedLetter(null); setSelectedRoot(null); picks.current = 0; };
+  const firstNewlinePick = useRef<number | null>(null);
+  const reset = () => { setStep('type'); setSelectedLetter(null); setSelectedRoot(null); picks.current = 0; firstNewlinePick.current = null; };
+  const select = (chord: string) => {
+    const index = append ? appendIndex(startIndex, picks.current, firstNewlinePick.current) : sequentialIndex(startIndex, picks.current);
+    onInsert(chord, index);
+    if (append && firstNewlinePick.current === null && isNewline(chord)) firstNewlinePick.current = picks.current;
+    picks.current += 1;
+  };
   const picker = (
     <ChordPicker
-      // In coda (`append`) il punto di inserimento si sposta già da solo: nessun conteggio.
-      onSelect={(chord) => { onInsert(chord, append ? startIndex : sequentialIndex(startIndex, picks.current)); picks.current += 1; }}
+      onSelect={select}
       step={step}
       setStep={setStep}
       setSelectedLetter={setSelectedLetter}

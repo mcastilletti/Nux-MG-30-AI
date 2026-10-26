@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { insertAt, insertionSlots, removeAt, sequentialIndex } from './chord-edit';
+import { appendIndex, insertAt, insertionSlots, removeAt, sequentialIndex } from './chord-edit';
 
 test('scelte in sequenza restano in ordine (NT11)', () => {
   let chords = ['Em7'];
@@ -32,4 +32,16 @@ test('un punto "+" alla fine di ogni riga, prima del suo a capo', () => {
   assert.deepEqual(short(['Em7', 'G', 'NEWLINE', 'D']), ['0@2', '1@4']);
   assert.deepEqual(short(['C', 'NEWLINE']), ['0@1', '1@2']);
   assert.deepEqual(short(['NEWLINE', 'NEWLINE', 'A']), ['0@0', '1@1', '2@3']);
+});
+
+test('"+" di fine riga: dopo un "A capo" le scelte vanno sulla riga nuova', () => {
+  // Simula il "+" di fine della riga 1 in [Em7, G | D]: le scelte A, A capo, G, C.
+  let chords = ['Em7', 'G', 'NEWLINE', 'D'];
+  let first: number | null = null;
+  ['A', 'NEWLINE', 'B', 'C'].forEach((pick, n) => {
+    const slot = insertionSlots(chords)[0].index;
+    chords = insertAt(chords, appendIndex(slot, n, first), pick);
+    if (first === null && pick === 'NEWLINE') first = n;
+  });
+  assert.deepEqual(chords, ['Em7', 'G', 'A', 'NEWLINE', 'B', 'C', 'NEWLINE', 'D']);
 });

@@ -20,6 +20,16 @@ export const sequentialIndex = (startIndex: number, picksSoFar: number) => start
 
 export const isNewline = (chord: string) => chord.trim().toUpperCase() === 'NEWLINE';
 
+/**
+ * Punto di inserimento per scelte in sequenza dal "+" di fine riga. Il "+" segue
+ * da solo gli inserimenti finché la riga non va a capo; dopo un "A capo" resta
+ * prima di quell'a capo, quindi le scelte successive avanzano a partire da lì.
+ * `firstNewlinePick` è il numero d'ordine della prima scelta "A capo" (null se nessuna).
+ */
+export function appendIndex(startIndex: number, picksSoFar: number, firstNewlinePick: number | null): number {
+  return firstNewlinePick === null ? startIndex : startIndex + picksSoFar - firstNewlinePick;
+}
+
 /** Punto "+" visibile in modifica: alla fine di ogni riga (prima del suo a capo). */
 export interface InsertSlot { index: number; line: number }
 

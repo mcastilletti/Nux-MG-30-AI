@@ -32,7 +32,7 @@ export default function HomePage() {
                   <Library className="w-8 h-8 text-accent" />
                 </div>
                 <div className="text-center md:text-left">
-                  <h4 className="font-bold md:text-xl">Libreria Preset</h4>
+                  <h3 className="font-bold md:text-xl">Libreria Preset</h3>
                   <p className="text-xs text-muted-foreground md:text-sm">Sfoglia e gestisci i 128 slot</p>
                 </div>
               </CardContent>
@@ -46,7 +46,7 @@ export default function HomePage() {
                   <Sliders className="w-7 h-7 text-primary" />
                 </div>
                 <div className="text-center">
-                  <h4 className="font-bold md:text-lg">Visual Editor</h4>
+                  <h3 className="font-bold md:text-lg">Visual Editor</h3>
                   <p className="text-xs text-muted-foreground">Regola i parametri</p>
                 </div>
               </CardContent>
@@ -60,7 +60,7 @@ export default function HomePage() {
                   <NotebookPen className="w-7 h-7" />
                 </div>
                 <div className="text-center">
-                  <h4 className="font-bold md:text-lg">Note Brani</h4>
+                  <h3 className="font-bold md:text-lg">Note Brani</h3>
                   <p className="text-xs text-muted-foreground">Scalette e accordi</p>
                 </div>
               </CardContent>
@@ -74,7 +74,7 @@ export default function HomePage() {
                   <Users className="h-7 w-7" />
                 </div>
                 <div className="text-center">
-                  <h4 className="font-bold md:text-lg">Gestione Band</h4>
+                  <h3 className="font-bold md:text-lg">Gestione Band</h3>
                   <p className="text-xs text-muted-foreground">Organizza i tuoi progetti</p>
                 </div>
               </CardContent>
@@ -88,7 +88,7 @@ export default function HomePage() {
                   <ElectricGuitarIcon className="h-7 w-7" />
                 </div>
                 <div className="text-center">
-                  <h4 className="font-bold md:text-lg">Strumentazione</h4>
+                  <h3 className="font-bold md:text-lg">Strumentazione</h3>
                   <p className="text-xs text-muted-foreground">Chitarre e amplificatori</p>
                 </div>
               </CardContent>
@@ -98,19 +98,19 @@ export default function HomePage() {
 
         {/* Secondary Features - Asymmetric Layout */}
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          <div className="group md:col-span-2">
+          <Link href="/library" className="group block rounded-xl md:col-span-2">
             <Card className="app-surface h-full cursor-pointer transition-colors hover:border-primary/50">
               <CardContent className="flex flex-col items-start gap-4 p-5 md:flex-row md:items-center md:p-6">
                 <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10 text-primary">
                   <Download className="h-8 w-8" />
                 </div>
                 <div className="text-center md:text-left">
-                  <h4 className="font-bold text-xl">Bulk Backup</h4>
-                  <p className="text-sm text-muted-foreground">Salva tutti i 128 slot in un singolo file sysex</p>
+                  <h3 className="font-bold text-xl">Backup dei preset</h3>
+                  <p className="text-sm text-muted-foreground">Esporta i 128 preset in un file JSON: Library → Backup</p>
                 </div>
               </CardContent>
             </Card>
-          </div>
+          </Link>
 
           <Link href="/tools/sysex-analyzer" className="group">
             <Card className="app-surface h-full transition-colors hover:border-primary/50">
@@ -119,7 +119,7 @@ export default function HomePage() {
                   <Zap className="h-7 w-7" />
                 </div>
                 <div className="text-center">
-                  <h4 className="font-bold text-lg">AI Analyzer</h4>
+                  <h3 className="font-bold text-lg">AI Analyzer</h3>
                   <p className="text-sm text-muted-foreground">Reverse engineering</p>
                 </div>
               </CardContent>
@@ -162,7 +162,7 @@ export default function HomePage() {
 
               {availableDevices.inputs.length > 0 && (
                 <div className="mt-6 space-y-4">
-                  <h4 className="text-sm font-semibold">Porte MIDI Disponibili</h4>
+                  <h3 className="text-sm font-semibold">Porte MIDI Disponibili</h3>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="p-4 rounded-xl bg-card/50 border border-white/5 shadow-sm">
                       <p className="text-label text-muted-foreground uppercase font-bold mb-2">Input</p>

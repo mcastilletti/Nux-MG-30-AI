@@ -326,9 +326,6 @@ export default function LibraryPage() {
               </DropdownMenuContent>
             </DropdownMenu>
             <input ref={importInputRef} type="file" accept="application/json,.json" className="hidden" onChange={handleImportFile} aria-label="File di preset da importare" />
-            <Button className="touch-target gap-2">
-              <Plus className="w-4 h-4" /> Nuovo
-            </Button>
           </div>
         </header>
 
@@ -399,6 +396,7 @@ export default function LibraryPage() {
                       <Label className="text-xs font-bold uppercase mb-2 block">Volume MIN</Label>
                       <div className="flex items-center gap-2">
                         <Slider
+                          aria-label="Volume minimo del preset"
                           value={[bulkVolumeMin]}
                           onValueChange={(v) => setBulkVolumeMin(v[0])}
                           min={0}
@@ -413,6 +411,7 @@ export default function LibraryPage() {
                       <Label className="text-xs font-bold uppercase mb-2 block">Volume MAX</Label>
                       <div className="flex items-center gap-2">
                         <Slider
+                          aria-label="Volume massimo del preset"
                           value={[bulkVolumeMax]}
                           onValueChange={(v) => setBulkVolumeMax(v[0])}
                           min={51}
@@ -450,14 +449,17 @@ export default function LibraryPage() {
               return (
                 <Card
                   key={preset.slot}
-                  className={`app-surface group relative cursor-pointer overflow-hidden rounded-2xl transition-colors hover:border-primary/60 ${isSelected ? 'border-primary bg-primary/10' : ''}`}
-                  onClick={() => handleSelectPreset(preset)}
+                  className={`app-surface group relative cursor-pointer overflow-hidden rounded-2xl transition-colors hover:border-primary/60 focus-within:border-primary/60 ${isSelected ? 'border-primary bg-primary/10' : ''}`}
                   style={{ animationDelay: `${index * 0.05}s` }}
                 >
                   {isBulkMode && (
                     <div className="absolute top-3 left-3 z-10">
-                      <div
-                        className={`w-6 h-6 rounded border-2 flex items-center justify-center cursor-pointer ${
+                      <button
+                        type="button"
+                        role="checkbox"
+                        aria-checked={isSelected}
+                        aria-label={`Seleziona ${displayName}`}
+                        className={`w-6 h-6 rounded border-2 flex items-center justify-center cursor-pointer after:absolute after:-inset-2.5 after:content-[''] ${
                           isSelected
                             ? 'bg-primary border-primary text-primary-foreground'
                             : 'border-border bg-background/50 hover:border-primary/60'
@@ -468,7 +470,7 @@ export default function LibraryPage() {
                         }}
                       >
                         {isSelected && <Check className="w-4 h-4" />}
-                      </div>
+                      </button>
                     </div>
                   )}
                   <CardHeader className="pb-2">
@@ -479,7 +481,7 @@ export default function LibraryPage() {
                       <div className="flex items-center gap-1">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                              <Button aria-label="Altre azioni" variant="ghost" size="icon" className="touch-target h-10 w-10" onClick={(e) => e.stopPropagation()}>
+                              <Button aria-label={`Altre azioni su ${displayName}`} variant="ghost" size="icon" className="touch-target relative z-10 h-10 w-10" onClick={(e) => e.stopPropagation()}>
                               <MoreVertical className="w-4 h-4" />
                             </Button>
                           </DropdownMenuTrigger>
@@ -511,7 +513,15 @@ export default function LibraryPage() {
                         className={`text-lg mt-2 truncate font-bold ${!hasCustomName ? 'text-muted-foreground/80 font-mono text-base' : ''}`}
                         title={hasCustomName ? displayName : 'Clicca ⋮ → Rinomina per aggiungere un nome'}
                       >
-                        {displayName}
+                        {/* L4: pulsante vero esteso a tutta la scheda (gli altri comandi stanno sopra, z-10). */}
+                        <button
+                          type="button"
+                          onClick={() => handleSelectPreset(preset)}
+                          aria-label={isBulkMode ? `${isSelected ? 'Deseleziona' : 'Seleziona'} ${formatSlotLabel(preset.slot)} ${displayName}` : `Apri ${formatSlotLabel(preset.slot)} ${displayName}`}
+                          className="max-w-full truncate text-left outline-none after:absolute after:inset-0 after:rounded-2xl after:content-[''] focus-visible:after:ring-2 focus-visible:after:ring-primary"
+                        >
+                          {displayName}
+                        </button>
                       </CardTitle>
                     )}
                   </CardHeader>
@@ -526,7 +536,7 @@ export default function LibraryPage() {
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="h-7 text-label font-bold uppercase tracking-widest hover:text-primary gap-1"
+                      className="relative z-10 h-7 text-label font-bold uppercase tracking-widest hover:text-primary gap-1"
                       onClick={(e) => handleConfigurePreset(e, preset)}
                     >
                       <Settings2 className="w-3 h-3" /> Configura
@@ -544,7 +554,11 @@ export default function LibraryPage() {
                   <tr className="text-left">
                     {isBulkMode && (
                       <th className="p-4 font-bold uppercase text-caption w-12 text-center">
-                        <div
+                        <button
+                          type="button"
+                          role="checkbox"
+                          aria-checked={selectedSlots.size === filteredPresets.length}
+                          aria-label="Seleziona tutti"
                           className="w-5 h-5 mx-auto cursor-pointer"
                           onClick={() => selectedSlots.size === filteredPresets.length ? clearSelection() : selectAll()}
                         >
@@ -553,7 +567,7 @@ export default function LibraryPage() {
                           ) : (
                             <Square className="w-4 h-4 text-muted-foreground" />
                           )}
-                        </div>
+                        </button>
                       </th>
                     )}
                     <th className="p-4 font-bold uppercase text-caption w-20 text-center">Slot</th>
@@ -575,7 +589,11 @@ export default function LibraryPage() {
                       >
                         {isBulkMode && (
                           <td className="p-4 text-center">
-                            <div
+                            <button
+                              type="button"
+                              role="checkbox"
+                              aria-checked={isSelected}
+                              aria-label={`Seleziona ${displayName}`}
                               className={`w-5 h-5 mx-auto rounded border-2 flex items-center justify-center cursor-pointer ${
                                 isSelected
                                   ? 'bg-primary border-primary text-primary-foreground'
@@ -587,7 +605,7 @@ export default function LibraryPage() {
                               }}
                             >
                               {isSelected && <Check className="w-3 h-3" />}
-                            </div>
+                            </button>
                           </td>
                         )}
                         <td className="p-4 font-mono font-bold text-primary text-center">{formatSlotLabel(preset.slot)}</td>
@@ -607,9 +625,14 @@ export default function LibraryPage() {
                               </Button>
                             </div>
                           ) : (
-                            <span className={`font-semibold ${!hasCustomName ? 'text-muted-foreground/80 font-mono text-xs' : ''}`}>
+                            <button
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); handleSelectPreset(preset); }}
+                              aria-label={isBulkMode ? `${isSelected ? 'Deseleziona' : 'Seleziona'} ${formatSlotLabel(preset.slot)} ${displayName}` : `Apri ${formatSlotLabel(preset.slot)} ${displayName}`}
+                              className={`text-left font-semibold hover:text-primary ${!hasCustomName ? 'text-muted-foreground/80 font-mono text-xs' : ''}`}
+                            >
                               {displayName}
-                            </span>
+                            </button>
                           )}
                         </td>
                         <td className="p-4">

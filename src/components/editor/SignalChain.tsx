@@ -108,7 +108,8 @@ const ChainBlock = memo(function ChainBlock({ effect, isSelected, isLast, handle
         <button
           type="button"
           onClick={(e) => handleToggleBlock(e, effect.id, effect.type, effect.enabled)}
-          aria-label={`Attiva ${effect.type}`}
+          // Nome stabile + aria-pressed: "Accensione wah, premuto" = acceso.
+          aria-label={`Accensione ${effect.type}`}
           aria-pressed={isEnabled}
           title={isEnabled ? 'Disattiva blocco' : 'Attiva blocco'}
           className={cn(

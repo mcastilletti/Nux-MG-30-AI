@@ -36,9 +36,16 @@ export function usePlaylistActions() {
 
   /** Salva l'ordine e i preset di una playlist (un solo documento). */
   const savePlaylist = useCallback(async (playlist: Playlist) => {
+    const previous = usePlaylistsCache.getState().playlists.find((p) => p.id === playlist.id);
     usePlaylistsCache.getState().upsertPlaylist(playlist);
     if (!uid) return true;
-    return write(setDoc(doc(firestore, 'setlists', playlist.id), { items: playlist.items, updatedAt: serverTimestamp() }, { merge: true }));
+    const ok = await write(setDoc(doc(firestore, 'setlists', playlist.id), { items: playlist.items, updatedAt: serverTimestamp() }, { merge: true }));
+    // Scrittura non riuscita: la copia locale torna com'era, così resta allineata all'account
+    // (salvo modifiche successive alla stessa playlist, che non si toccano).
+    if (!ok && previous && usePlaylistsCache.getState().playlists.find((p) => p.id === playlist.id) === playlist) {
+      usePlaylistsCache.getState().upsertPlaylist(previous);
+    }
+    return ok;
   }, [firestore, uid, write]);
 
   const createBand = useCallback(async (name: string, logoUrl: string | null = null): Promise<Band> => {
@@ -107,7 +114,10 @@ export function usePlaylistActions() {
   /** Elimina il brano dal serbatoio e lo toglie da tutte le playlist (PL5). */
   const deleteNoteEverywhere = useCallback(async (note: SavedNote) => {
     const changed = removeNoteFromAll(usePlaylistsCache.getState().playlists, note.id);
-    for (const playlist of changed) await savePlaylist(playlist);
+    // Se una playlist non si aggiorna, il brano non si elimina: niente riferimenti rotti.
+    for (const playlist of changed) {
+      if (!(await savePlaylist(playlist))) return false;
+    }
     useNotesCache.getState().deleteNote(note.id);
     if (!uid) return true;
     return write(deleteDoc(doc(firestore, 'notes', note.id)));

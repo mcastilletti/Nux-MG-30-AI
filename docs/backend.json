@@ -626,16 +626,282 @@
         "undoRedoHistoryLimit",
         "keyboardShortcuts"
       ]
+    },
+    "Note": {
+      "title": "Note",
+      "type": "object",
+      "description": "Brano o blocco di testo nel serbatoio unico (spec docs/spec-playlist.md). L'ordine e l'appartenenza alle playlist stanno nelle playlist, non nella nota.",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "Titolo del brano o del blocco."
+        },
+        "type": {
+          "type": "string",
+          "description": "'song' (predefinito) oppure 'block'.",
+          "enum": [
+            "song",
+            "block"
+          ]
+        },
+        "sections": {
+          "type": "array",
+          "description": "Sezioni del brano (Intro, Verse, Chorus…) con accordi e testo.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string"
+              },
+              "text": {
+                "type": "string"
+              },
+              "chords": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "generalNotes": {
+          "type": "string",
+          "description": "Note generali del brano."
+        },
+        "blockContent": {
+          "type": "string",
+          "description": "Testo del blocco (solo type = 'block')."
+        },
+        "presetSlot": {
+          "type": "string",
+          "description": "Preset predefinito: slot 1–128 come stringa; vuoto = nessuno."
+        },
+        "presetScene": {
+          "type": "string",
+          "description": "Scena predefinita 0–2 come stringa; vuota = nessuna."
+        },
+        "mergedInto": {
+          "type": "string",
+          "description": "Impostato dalla conversione su un duplicato: la nota è nascosta e sostituita da quella indicata."
+        },
+        "band": {
+          "type": "string",
+          "description": "Modello vecchio (prima delle playlist): conservato per poter tornare indietro, non più letto né scritto."
+        },
+        "setlist": {
+          "type": "string",
+          "description": "Modello vecchio: come band."
+        },
+        "order": {
+          "type": "number",
+          "description": "Modello vecchio: come band."
+        },
+        "userId": {
+          "type": "string",
+          "description": "UID del proprietario (le regole lo verificano)."
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Data dell'ultima modifica (serverTimestamp).",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "title",
+        "userId"
+      ]
+    },
+    "Band": {
+      "title": "Band",
+      "type": "object",
+      "description": "Band dell'utente: raggruppa le playlist.",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Nome della band."
+        },
+        "logoUrl": {
+          "type": "string",
+          "description": "URL del logo su Firebase Storage, oppure null."
+        },
+        "userId": {
+          "type": "string",
+          "description": "UID del proprietario."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Creazione.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Ultima modifica.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "name",
+        "userId"
+      ]
+    },
+    "Playlist": {
+      "title": "Playlist",
+      "type": "object",
+      "description": "Playlist (ex scaletta) di una band: elenco ordinato di note del serbatoio, con preset proprio facoltativo per ogni brano.",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Nome della playlist."
+        },
+        "bandId": {
+          "type": "string",
+          "description": "Id della band (collezione bands)."
+        },
+        "userId": {
+          "type": "string",
+          "description": "UID del proprietario."
+        },
+        "items": {
+          "type": "array",
+          "description": "Ordine della playlist; una nota compare al massimo una volta.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "noteId": {
+                "type": "string",
+                "description": "Id della nota."
+              },
+              "presetSlot": {
+                "type": "string",
+                "description": "Preset proprio della playlist: assente = predefinito del brano; stringa vuota = nessun preset."
+              },
+              "presetScene": {
+                "type": "string",
+                "description": "Scena del preset proprio."
+              }
+            },
+            "required": [
+              "noteId"
+            ]
+          }
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Creazione.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Ultima modifica.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "name",
+        "bandId",
+        "userId",
+        "items"
+      ]
+    },
+    "NotesModelMarker": {
+      "title": "NotesModelMarker",
+      "type": "object",
+      "description": "Marcatore della conversione al modello a playlist (users/{uid}/settings/notesModel). Senza marcatore la pagina Note usa il modello vecchio e propone la conversione.",
+      "properties": {
+        "version": {
+          "type": "number",
+          "description": "2 = modello a playlist."
+        },
+        "migratedAt": {
+          "type": "string",
+          "description": "Data della conversione.",
+          "format": "date-time"
+        },
+        "summary": {
+          "type": "object",
+          "description": "Riepilogo: playlist, duplicati uniti, band create."
+        }
+      },
+      "required": [
+        "version"
+      ]
     }
   },
   "auth": {
     "providers": [
-      "password",
-      "anonymous"
+      "google.com"
     ]
   },
   "firestore": {
     "structure": [
+      {
+        "path": "/notes/{noteId}",
+        "definition": {
+          "entityName": "Note",
+          "schema": {
+            "$ref": "#/backend/entities/Note"
+          },
+          "description": "Serbatoio dei brani e dei blocchi. Collezione di primo livello: le regole consentono lettura e scrittura solo se resource.data.userId è l'utente autenticato.",
+          "params": [
+            {
+              "name": "noteId",
+              "description": "Id generato da Firestore."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/bands/{bandId}",
+        "definition": {
+          "entityName": "Band",
+          "schema": {
+            "$ref": "#/backend/entities/Band"
+          },
+          "description": "Band dell'utente (pagina Band). Proprietà tramite il campo userId.",
+          "params": [
+            {
+              "name": "bandId",
+              "description": "Id generato da Firestore."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/setlists/{setlistId}",
+        "definition": {
+          "entityName": "Playlist",
+          "schema": {
+            "$ref": "#/backend/entities/Playlist"
+          },
+          "description": "Playlist delle band (modello a playlist, campo items). Proprietà tramite il campo userId. Il nome storico della collezione è 'setlists'.",
+          "params": [
+            {
+              "name": "setlistId",
+              "description": "Id generato da Firestore."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/settings/notesModel",
+        "definition": {
+          "entityName": "NotesModelMarker",
+          "schema": {
+            "$ref": "#/backend/entities/NotesModelMarker"
+          },
+          "description": "Marcatore della conversione al modello a playlist, scritto per ultimo dalla conversione.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "UID dell'utente."
+            }
+          ]
+        }
+      },
       {
         "path": "/users/{userId}",
         "definition": {
@@ -699,7 +965,7 @@
           "schema": {
             "$ref": "#/backend/entities/Setlist"
           },
-          "description": "Stores user-created setlists, which are ordered collections of preset references. Access is restricted to the owning user. Ownership is implicitly provided by the path. Includes denormalized 'creationDate' and 'lastModifiedDate'.",
+          "description": "Non usata dall'app: le playlist sono nella collezione di primo livello /setlists. Stores user-created setlists, which are ordered collections of preset references. Access is restricted to the owning user. Ownership is implicitly provided by the path. Includes denormalized 'creationDate' and 'lastModifiedDate'.",
           "params": [
             {
               "name": "userId",

@@ -1,21 +1,44 @@
-# **App Name**: MG30 Studio
+# MG30 Studio: blueprint
 
-## Core Features:
+Sintesi di cosa fa l'app e di come appare. Dettagli e decisioni sono in `docs/audit-ux-frontend.md`, nelle specifiche `docs/spec-*.md` e nella skill `mg30-studio-ux`.
 
-- Web MIDI Connection: Establish and maintain a robust Web MIDI connection with the NUX MG-30, including auto-detection, permission requests, and connection status monitoring.
-- Preset Import/Export: Import and export individual or full banks of presets to/from the MG-30, supporting JSON and SysEx formats, with progress tracking and error handling.
-- Local Preset Library: Store and manage presets in a local IndexedDB database, with grid and list views, search, filtering, tagging, categorization, and organization features.
-- Parameter Editor: A virtual pedalboard interface with a signal chain visualizer and editors for noise gate, compressor, amp, EQ, modulation, delay, and reverb sections, providing real-time MIDI control.
-- A/B Comparison: Quickly switch between two memory slots (A/B) to compare settings for making edits more effective.
-- SysEx analysis tool: This feature helps determine the content of a SysEx command from NUX by recording the SysEx messages that occur when a particular control is changed on the physical hardware. The AI tool attempts to reverse engineer the commands in order to map them to controls in the app.
+## Funzionalità principali
 
-## Style Guidelines:
+- **Connessione Web MIDI** con la NUX MG-30: rilevamento automatico, stato della connessione sempre visibile, errori MIDI mostrati nell'interfaccia.
+- **Editor dei preset:**
+  - catena effetti con chip ON/OFF;
+  - pannello del blocco con modello e manopole;
+  - 3 scene per preset;
+  - annulla/ripristina;
+  - invio e lettura dalla pedaliera.
+- **Library:**
+  - 128 slot;
+  - salvataggio nel proprio account o sul dispositivo;
+  - esportazione e importazione in JSON.
+- **AI Mode:** parametri generati da testo, tenendo conto della strumentazione configurata (chitarre e amplificatori).
+- **Note dei brani:**
+  - serbatoio unico di brani e blocchi;
+  - playlist per band, con preset proprio per brano;
+  - versioni dei brani;
+  - foglio di lettura con testo regolabile;
+  - modalità Live per il palco;
+  - backup in JSON.
+- **SysEx Analyzer:** strumento avanzato per analizzare i messaggi SysEx della pedaliera.
 
-- Primary color: Deep purple (#673AB7) to evoke a professional and sophisticated feel.
-- Background color: Dark grey (#212121) for a dark mode theme that reduces eye strain in low-light environments.
-- Accent color: Electric violet (#8E24AA) for highlighting active elements and interactive components.
-- Body and headline font: 'Inter' for a modern, neutral look, providing excellent readability in both headlines and body text.
-- Code font: 'Source Code Pro' for displaying numerical values and MIDI data in a clear, monospaced format.
-- Use minimalist icons from Lucide React to represent amp types, effects, and other parameters, ensuring clarity and visual consistency.
-- Implement a responsive layout with collapsable sections, a sidebar for navigation, and a top bar for preset management, optimized for desktop and tablet devices.
-- Use smooth, subtle animations (60fps) for transitions, loading states, and interactive feedback, enhancing the user experience without being distracting.
+## Linee guida di stile
+
+- **Tema:** scuro, tema "strumento da palco"; colori come token in `src/app/globals.css` (`primary`, `success`, `warning`, `destructive`, colori dei blocchi `--block-*`).
+- **Font:** Outfit per testo e titoli, Source Code Pro per valori e dati MIDI; inclusi nel progetto (`next/font/local`).
+- **Lingua:** l'interfaccia è in italiano (`lang="it"`).
+- **Mobile prima di tutto:**
+  - comandi di almeno 44px (64px in Live);
+  - nessun testo sotto 12px salvo i badge;
+  - barra di navigazione in basso su smartphone e barra laterale da tablet in su;
+  - safe area rispettate.
+- **Accessibilità:**
+  - un titolo principale per pagina;
+  - pulsanti con nome;
+  - stati comunicati anche con `aria-pressed`;
+  - contrasto almeno 4,5:1;
+  - lo zoom resta bloccato per scelta (decisione D3), compensato dal testo regolabile.
+- **Icone:** Lucide React.

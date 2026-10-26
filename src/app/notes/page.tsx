@@ -113,7 +113,7 @@ function NotesLibraryContent() {
   const [plBandId, setPlBandId] = useState<string | null>(null);
   const [plPlaylistId, setPlPlaylistId] = useState<string | null>(null);
   const [addToNote, setAddToNote] = useState<SavedNote | null>(null);
-  const [versionPrompt, setVersionPromptState] = useState<{ original: SavedNote; created: SavedNote; playlist: Playlist } | null>(null);
+  const [versionPrompt, setVersionPromptState] = useState<{ original: SavedNote; created: SavedNote; playlist: Playlist; fromDraft?: boolean } | null>(null);
   // Il dialogo chiama sia la conferma sia la chiusura: il ref garantisce una sola risoluzione.
   const versionPromptRef = useRef<typeof versionPrompt>(null);
   const setVersionPrompt = (value: typeof versionPrompt) => { versionPromptRef.current = value; setVersionPromptState(value); };
@@ -432,7 +432,7 @@ function NotesLibraryContent() {
   };
 
   /** PL7: duplica il brano; se aperto da una playlist che lo contiene, chiede se sostituirlo lì. */
-  const handleCreateVersion = async (note: SavedNote) => {
+  const handleCreateVersion = async (note: SavedNote, options?: { fromDraft?: boolean }) => {
     const title = nextVersionTitle(note.title, useNotesCache.getState().notes.map((n) => n.title));
     const data = buildVersionNote(note, title);
     const ref = doc(collection(firestore, 'notes'));
@@ -448,10 +448,10 @@ function NotesLibraryContent() {
     addNote(created);
     const playlist = sheetPlaylist && sheetPlaylist.items.some((i) => i.noteId === note.id) ? sheetPlaylist : null;
     if (playlist) {
-      setVersionPrompt({ original: note, created, playlist });
+      setVersionPrompt({ original: note, created, playlist, fromDraft: options?.fromDraft });
     } else {
       dispatchNoteSheet({ type: 'open', noteId: created.id, editorKind: created.type === 'block' ? 'block' : 'song' });
-      toast({ title: `Creata «${title}»`, description: 'È nel serbatoio: aggiungila alle playlist dal menu ⋮.' });
+      toast({ title: `Creata «${title}»`, description: options?.fromDraft ? 'Contiene le modifiche in corso; l\'originale resta com\'era. È nel serbatoio.' : 'È nel serbatoio: aggiungila alle playlist dal menu ⋮.' });
     }
   };
 
@@ -465,7 +465,7 @@ function NotesLibraryContent() {
       await playlistActions.savePlaylist(replaceNote(latest, original.id, created.id));
     }
     dispatchNoteSheet({ type: 'open', noteId: created.id, editorKind: created.type === 'block' ? 'block' : 'song', playlistId: replace ? playlist.id : undefined });
-    toast({ title: `Creata «${created.title}»`, description: replace ? `Ha preso il posto dell'originale in «${playlist.name}».` : 'È nel serbatoio.' });
+    toast({ title: `Creata «${created.title}»`, description: `${replace ? `Ha preso il posto dell'originale in «${playlist.name}».` : 'È nel serbatoio.'}${pending.fromDraft ? ' Le modifiche in corso sono nella nuova versione; l\'originale resta com\'era.' : ''}` });
   };
 
   /** PL11: il brano importato va nella playlist aperta, oppure in quella indicata nel JSON (creata se manca). */

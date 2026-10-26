@@ -182,3 +182,20 @@ export function presetSlotForMode(mode: ItemPresetMode, slot: string): string | 
   if (mode === 'none') return '';
   return slot || null;
 }
+
+export type PresetFields = { mode: ItemPresetMode; slot: string; scene: string };
+
+/**
+ * Campi preset mostrati nel foglio: dalla playlist il preset proprio
+ * dell'elemento, altrimenti il predefinito del brano.
+ */
+export function presetFieldsFor(
+  note: Pick<SavedNote, 'presetSlot' | 'presetScene'>,
+  item: PlaylistItem | null | undefined,
+): PresetFields {
+  if (!item) return { mode: 'default', slot: note.presetSlot || '', scene: note.presetScene || '' };
+  const mode = itemPresetMode(item);
+  return mode === 'custom'
+    ? { mode, slot: item.presetSlot ?? '', scene: item.presetScene ?? '' }
+    : { mode, slot: '', scene: '' };
+}

@@ -36,7 +36,7 @@ import { ToastAction } from '@/components/ui/toast';
 import { DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { usePlaylistsCache } from '@/stores/use-playlists-cache';
 import { usePlaylistActions } from '@/hooks/use-playlist-actions';
-import { addNotes, effectivePreset, findItem, itemPresetMode, presetSlotForMode, setItemPreset, type ItemPresetMode } from '@/lib/playlist-ops';
+import { addNotes, effectivePreset, findItem, presetFieldsFor, presetSlotForMode, setItemPreset, type ItemPresetMode, type PresetFields } from '@/lib/playlist-ops';
 import { playlistLabelsFor } from '@/lib/playlist-view';
 import { CopyPlus, ListPlus, Trash2 as TrashIcon } from 'lucide-react';
 
@@ -59,7 +59,8 @@ interface NoteEditorContentProps {
   /** Playlist da cui è aperto il brano (assente = dal serbatoio). */
   playlistId?: string | null;
   onAddToPlaylists?: (note: SavedNote) => void;
-  onCreateVersion?: (note: SavedNote) => void;
+  /** `fromDraft`: la versione nasce dalle modifiche in corso, che restano solo nella versione. */
+  onCreateVersion?: (note: SavedNote, options?: { fromDraft?: boolean }) => void;
   onDeleteNote?: (note: SavedNote) => void;
 }
 
@@ -135,6 +136,13 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
   const cachedNote = useNotesCache(state => (noteId ? state.notes.find(note => note.id === noteId) : undefined));
   const loadedNoteIdRef = useRef<string | null>(null);
   const isNoteMissing = !!noteId && !cachedNote;
+  // Elemento della playlist con cui è stata caricata la nota e ultimo preset inviato:
+  // se la playlist arriva dopo (cache vuota, link diretto) il foglio si riallinea.
+  const playlistItemKey = playlistItem ? JSON.stringify(playlistItem) : '';
+  const loadedItemKeyRef = useRef('');
+  const sentPresetRef = useRef('');
+  // Campi del preset come caricati: servono a capire se l'utente li ha cambiati.
+  const loadedPresetFieldsRef = useRef<PresetFields>({ mode: 'default', slot: '', scene: '' });
 
   useEffect(() => {
     const action = getNoteLoadAction({ noteId, note: cachedNote, loadedNoteId: loadedNoteIdRef.current });
@@ -143,14 +151,47 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
       handleNewNote();
     } else if (action === 'load' && cachedNote) {
       loadedNoteIdRef.current = cachedNote.id;
+      loadedItemKeyRef.current = playlistItemKey;
+      sentPresetRef.current = '';
       loadNote(cachedNote);
       // Letta al momento: lo stato del hook potrebbe non essere ancora sincronizzato.
       if (readAutoSendSetting(window.localStorage)) {
         const preset = effectivePreset(cachedNote, playlistItem);
         sendNotePreset(preset.presetSlot, preset.presetScene);
+        sentPresetRef.current = `${preset.presetSlot}|${preset.presetScene}`;
       }
     }
   }, [noteId, cachedNote]);
+
+  // La playlist è arrivata (o è cambiata) dopo il caricamento della nota: in lettura
+  // si ricarica il foglio e, se il preset effettivo è diverso, lo si reinvia; in
+  // modifica si aggiornano solo i campi del preset, per non salvare il preset sbagliato.
+  useEffect(() => {
+    if (!cachedNote || loadedNoteIdRef.current !== cachedNote.id || loadedItemKeyRef.current === playlistItemKey) return;
+    loadedItemKeyRef.current = playlistItemKey;
+    if (editMode) {
+      // Se l'utente ha già cambiato il preset, la sua scelta resta.
+      const loaded = loadedPresetFieldsRef.current;
+      const untouched = presetMode === loaded.mode && selectedPresetSlot === loaded.slot && selectedPresetScene === loaded.scene;
+      if (!untouched) return;
+      const next = presetFieldsFor(cachedNote, playlistItem);
+      loadedPresetFieldsRef.current = next;
+      setPresetMode(next.mode);
+      setSelectedPresetSlot(next.slot);
+      setSelectedPresetScene(next.scene);
+      return;
+    }
+    loadNote(cachedNote);
+    if (readAutoSendSetting(window.localStorage)) {
+      const preset = effectivePreset(cachedNote, playlistItem);
+      const key = `${preset.presetSlot}|${preset.presetScene}`;
+      if (key !== sentPresetRef.current) {
+        sendNotePreset(preset.presetSlot, preset.presetScene);
+        sentPresetRef.current = key;
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [playlistItemKey]);
 
   const uniqueBands = useMemo(() => {
     const allNotes = useNotesCache.getState().notes;
@@ -184,10 +225,8 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
     setBand(note.band);
     setSetlist(note.setlist);
     // Dalla playlist i campi preset mostrano il preset proprio della playlist; altrimenti il predefinito del brano.
-    const item = findItem(playlist, note.id);
-    const mode = item ? itemPresetMode(item) : 'default';
-    const slot = item ? (mode === 'custom' ? item.presetSlot ?? '' : '') : note.presetSlot || '';
-    const scene = item ? (mode === 'custom' ? item.presetScene ?? '' : '') : note.presetScene || '';
+    const { mode, slot, scene } = presetFieldsFor(note, findItem(playlist, note.id));
+    loadedPresetFieldsRef.current = { mode, slot, scene };
     setPresetMode(mode);
     setSelectedPresetSlot(slot);
     setSelectedPresetScene(scene);
@@ -421,6 +460,15 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
     });
   };
 
+  // Bozza attuale come nota: "Crea versione" in modifica parte da qui, non dall'ultimo salvataggio.
+  const draftNote = (): SavedNote => ({
+    ...(cachedNote as SavedNote),
+    title,
+    generalNotes,
+    sections,
+    ...(editsPlaylistPreset ? {} : { presetSlot: selectedPresetSlot, presetScene: selectedPresetScene }),
+  });
+
   // Preset mostrato nel chip: nel modello a playlist è quello effettivo (playlist o brano).
   const chipPreset = isPlaylistModel && cachedNote
     ? effectivePreset(cachedNote, playlistItem)
@@ -564,7 +612,7 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
             <div role="note" className="mx-0 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl border border-warning/40 bg-warning/10 px-4 py-3 text-sm">
               <span className="font-semibold text-warning">Questo brano è in {sharedIn.length} playlist: le modifiche valgono per tutte.</span>
               {onCreateVersion && (
-                <button type="button" onClick={() => onCreateVersion(cachedNote)} className="min-h-11 font-bold text-primary underline-offset-4 hover:underline">
+                <button type="button" onClick={() => onCreateVersion(draftNote(), { fromDraft: isDirty })} className="min-h-11 font-bold text-primary underline-offset-4 hover:underline">
                   Crea versione
                 </button>
               )}

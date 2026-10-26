@@ -1,13 +1,15 @@
 import type {Metadata, Viewport} from 'next';
-import { Outfit, Source_Code_Pro } from 'next/font/google';
+import localFont from 'next/font/local';
 import './globals.css';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { AppShell } from '@/components/layout/app-shell';
 
-// Font serviti dall'app stessa (M9): niente richieste a Google all'avvio e
-// disponibili offline grazie alla cache della PWA su /_next/static.
-const outfit = Outfit({ subsets: ['latin'], weight: ['300', '400', '500', '600', '700', '800'], display: 'swap', variable: '--font-outfit' });
-const sourceCodePro = Source_Code_Pro({ subsets: ['latin'], weight: ['400', '500', '600'], display: 'swap', variable: '--font-source-code' });
+// Font serviti dall'app stessa (M9): niente richieste a Google, né all'avvio né
+// durante la build (su Firebase App Hosting `next/font/google` non riusciva a
+// scaricarli), e disponibili offline grazie alla cache della PWA su /_next/static.
+// File variabili latin di Fontsource, licenza OFL (src/fonts/OFL-*.txt).
+const outfit = localFont({ src: '../fonts/outfit-latin-wght-normal.woff2', weight: '100 900', display: 'swap', variable: '--font-outfit' });
+const sourceCodePro = localFont({ src: '../fonts/source-code-pro-latin-wght-normal.woff2', weight: '200 900', display: 'swap', variable: '--font-source-code' });
 
 export const viewport: Viewport = {
   themeColor: '#0a0a0b',

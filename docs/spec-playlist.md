@@ -96,7 +96,7 @@ Funzione pura `migrateToPlaylists(notes, bands, setlists)`, coperta da test, che
 
 | ID | Requisito | Note |
 |---|---|---|
-| PL1 | **Vista serbatoio** ("Tutti i brani"): brani e blocchi in ordine alfabetico, ricerca, filtro Brani/Blocchi; ogni riga mostra le playlist in cui il brano compare (chip, al massimo 2 più "+N") | È la vista predefinita senza band |
+| PL1 | **Vista serbatoio** ("Tutti i brani"): brani e blocchi in ordine alfabetico, ricerca, filtro Brani/Blocchi; ogni riga mostra le playlist in cui il brano compare (chip, al massimo 2 più "+N") | È la vista predefinita senza band. Con una band scelta diventa **"Tutti i brani della band"**: solo i brani presenti in almeno una sua playlist |
 | PL2 | **Vista playlist:** ordine della playlist, riordino con le maniglie (scrive `items`), numero di posizione | Come la lista di scaletta di oggi |
 | PL3 | **"Aggiungi brani"** nella vista playlist: foglio con ricerca e selezione multipla dal serbatoio; i brani già presenti risultano spuntati e disattivati; i nuovi vanno in coda | Pulsante principale della vista playlist |
 | PL4 | **"Togli dalla playlist"** nel menu della riga (vista playlist): non elimina il brano; toast con **Annulla** | Nessuna conferma modale |

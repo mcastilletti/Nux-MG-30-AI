@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { EmptyState } from '@/components/common/empty-state';
 import { cn } from '@/lib/utils';
 import { effectivePreset, indexNotes, playlistEntries, type PlaylistEntry } from '@/lib/playlist-ops';
-import { chipSummary, matchesQuery, playlistLabelsFor, poolNotes, type PoolTypeFilter } from '@/lib/playlist-view';
+import { bandNoteIds, chipSummary, matchesQuery, playlistLabelsFor, poolNotes, type PoolTypeFilter } from '@/lib/playlist-view';
 import type { SavedNote } from '@/types/note';
 import type { Band, Playlist } from '@/types/playlist';
 import { AddSongsDialog } from './AddSongsDialog';
@@ -64,7 +64,9 @@ export function PlaylistLibrary({
 
   const allEntries = useMemo(() => (playlist ? playlistEntries(playlist, notesById) : []), [playlist, notesById]);
   const entries = useMemo(() => allEntries.filter((e) => matchesQuery(e.note, searchQuery)), [allEntries, searchQuery]);
-  const pool = useMemo(() => (playlist ? [] : poolNotes(notes, { query: searchQuery, type: poolType })), [playlist, notes, searchQuery, poolType]);
+  // Con una band scelta, "Tutti i brani" mostra solo i brani delle sue playlist.
+  const onlyIds = useMemo(() => (bandId ? bandNoteIds(notes, playlists, bandId) : null), [bandId, notes, playlists]);
+  const pool = useMemo(() => (playlist ? [] : poolNotes(notes, { query: searchQuery, type: poolType, onlyIds })), [playlist, notes, searchQuery, poolType, onlyIds]);
   const canReorder = !!playlist && !searchQuery.trim();
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -109,7 +111,7 @@ export function PlaylistLibrary({
         <Select value={playlist?.id ?? POOL_VALUE} onValueChange={(v) => onPlaylistChange(v === POOL_VALUE ? null : v)}>
           <SelectTrigger aria-label="Scegli playlist" className="h-11 border-border bg-background/50 text-[14px] font-bold"><SelectValue placeholder="Tutti i brani" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value={POOL_VALUE}>Tutti i brani</SelectItem>
+            <SelectItem value={POOL_VALUE}>{bandId ? 'Tutti i brani della band' : 'Tutti i brani'}</SelectItem>
             {visiblePlaylists.map((p) => (
               <SelectItem key={p.id} value={p.id}>{bandId ? p.name : `${bandName.get(p.bandId) ?? 'Senza band'} · ${p.name}`}</SelectItem>
             ))}
@@ -168,13 +170,17 @@ export function PlaylistLibrary({
           <EmptyState
             icon={<Music2 className="h-10 w-10" />}
             title="Nessun brano"
-            description={notes.length > 0 ? 'Nessun brano corrisponde ai filtri o alla ricerca.' : 'Aggiungi il primo brano con il pulsante +.'}
+            description={notes.length === 0
+              ? 'Aggiungi il primo brano con il pulsante +.'
+              : onlyIds && onlyIds.size === 0
+                ? 'Le playlist di questa band non hanno ancora brani.'
+                : 'Nessun brano corrisponde ai filtri o alla ricerca.'}
           />
         )
       ) : (
         <DndContext sensors={sensors}>
           <SortableContext items={pool.map((n) => n.id)} strategy={verticalListSortingStrategy}>
-            <ul className="grid grid-cols-1 gap-2.5" aria-label="Tutti i brani">
+            <ul className="grid grid-cols-1 gap-2.5" aria-label={bandId ? 'Tutti i brani della band' : 'Tutti i brani'}>
               {pool.map((note) => <li key={note.id}>{rowFor(note)}</li>)}
             </ul>
           </SortableContext>

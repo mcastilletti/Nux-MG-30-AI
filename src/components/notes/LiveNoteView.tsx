@@ -57,15 +57,17 @@ export function LiveNoteView({ noteId, position, onExit, preset }: {
   // V4 + D2: passare a un brano equivale ad aprirlo. Se la nota arriva dopo
   // (link Live senza copia in cache) l'invio parte quando diventa disponibile,
   // una sola volta per brano.
+  // La chiave comprende il preset effettivo: se la playlist arriva dopo, si reinvia quello giusto.
   const autoSentFor = useRef<string | null>(null);
   const noteAvailable = !!note;
+  const sendKey = `${noteId}|${presetSlot ?? ''}|${presetScene ?? ''}`;
   useEffect(() => {
-    if (autoSentFor.current !== noteId) resetSent();
-    if (!note || autoSentFor.current === noteId) return;
-    autoSentFor.current = noteId;
+    if (!autoSentFor.current?.startsWith(`${noteId}|`)) resetSent();
+    if (!note || autoSentFor.current === sendKey) return;
+    autoSentFor.current = sendKey;
     if (note.type !== 'block' && readAutoSendSetting(window.localStorage)) send(presetSlot, presetScene);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [noteId, noteAvailable]);
+  }, [sendKey, noteAvailable]);
 
   // V9: Indietro esce dalla Live senza chiudere il foglio.
   useEffect(() => {

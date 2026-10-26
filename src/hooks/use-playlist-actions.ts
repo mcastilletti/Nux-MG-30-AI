@@ -107,7 +107,10 @@ export function usePlaylistActions() {
   /** Elimina il brano dal serbatoio e lo toglie da tutte le playlist (PL5). */
   const deleteNoteEverywhere = useCallback(async (note: SavedNote) => {
     const changed = removeNoteFromAll(usePlaylistsCache.getState().playlists, note.id);
-    for (const playlist of changed) await savePlaylist(playlist);
+    // Se una playlist non si aggiorna, il brano non si elimina: niente riferimenti rotti.
+    for (const playlist of changed) {
+      if (!(await savePlaylist(playlist))) return false;
+    }
     useNotesCache.getState().deleteNote(note.id);
     if (!uid) return true;
     return write(deleteDoc(doc(firestore, 'notes', note.id)));

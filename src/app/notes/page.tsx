@@ -5,7 +5,9 @@ import { useSearchParams } from 'next/navigation';
 import { Card, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { NotebookPen, Plus, Trash2, GripVertical, Music2, Layers, Printer, Copy, ArrowRight, FileText, Search, X, Loader2, Play } from 'lucide-react';
+import { NotebookPen, Plus, Trash2, GripVertical, Music2, Layers, Printer, Copy, ArrowRight, FileText, Search, X, Loader2, Play, MoreVertical, Download } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { buildNotesBackup, notesBackupFileName } from '@/lib/notes-backup';
 import { useFirebase, useUser } from '@/firebase';
 import { collection, getDocs, query, where, doc, deleteDoc, writeBatch, addDoc, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
@@ -314,6 +316,50 @@ function NotesLibraryContent() {
     window.print();
   };
 
+  const [isExportingBackup, setIsExportingBackup] = useState(false);
+
+  /** Backup JSON di tutte le note, band e scalette (prima della conversione a playlist). */
+  const handleExportBackup = async () => {
+    if (isExportingBackup) return;
+    setIsExportingBackup(true);
+    try {
+      let file;
+      try {
+        if (!user || (typeof navigator !== 'undefined' && navigator.onLine === false)) throw new Error('offline');
+        const byUser = (name: string) => getDocs(query(collection(firestore, name), where('userId', '==', user.uid)));
+        const timeout = new Promise<never>((_, reject) => setTimeout(() => reject(new Error('timeout')), 10000));
+        const [notesSnap, bandsSnap, setlistsSnap] = await Promise.race([Promise.all([byUser('notes'), byUser('bands'), byUser('setlists')]), timeout]);
+        file = buildNotesBackup({
+          notes: notesSnap.docs.map((d) => ({ id: d.id, ...d.data() } as SavedNote)),
+          bands: bandsSnap.docs.map((d) => ({ id: d.id, ...d.data() })),
+          setlists: setlistsSnap.docs.map((d) => ({ id: d.id, ...d.data() })),
+          source: 'cloud',
+        });
+      } catch {
+        // Senza rete (o senza account): copia sul dispositivo, senza band e scalette della pagina Band.
+        file = buildNotesBackup({ notes: useNotesCache.getState().notes, source: 'device' });
+      }
+      const blob = new Blob([JSON.stringify(file, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = notesBackupFileName(file);
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      const { songs, blocks, setlists } = file.counts;
+      toast({
+        title: 'Backup delle note scaricato',
+        description: file.source === 'cloud'
+          ? `${songs} brani e ${blocks} blocchi, ${setlists} scalette della pagina Band, nel file ${a.download}.`
+          : `${songs} brani e ${blocks} blocchi dalla copia sul dispositivo, senza band e scalette della pagina Band (account non raggiungibile), nel file ${a.download}.`,
+      });
+    } finally {
+      setIsExportingBackup(false);
+    }
+  };
+
   const openCopyDialog = (e: React.MouseEvent, note: SavedNote) => {
     e.stopPropagation();
     setNoteToCopy(note);
@@ -439,11 +485,6 @@ function NotesLibraryContent() {
             <h2 className="text-xl font-black tracking-tight uppercase">Archivio Note</h2>
           </div>
           <div className="flex items-center gap-2">
-            {selectedSetlist && filteredNotes.length > 0 && (
-                <Button onClick={handleExportPdf} variant="outline" size="icon" className="h-11 w-11 border-primary/30 text-primary hover:bg-primary/10">
-                <Printer className="w-5 h-5" />
-              </Button>
-            )}
             <Button
               onClick={() => {
                 // Chiudere la ricerca azzera anche il filtro, che altrimenti resterebbe invisibile.
@@ -458,6 +499,21 @@ function NotesLibraryContent() {
             >
               <Search className="w-5 h-5" />
             </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon" aria-label="Altre azioni sulle note" className="h-11 w-11 border-primary/30 text-primary hover:bg-primary/10">
+                  <MoreVertical className="w-5 h-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-64">
+                <DropdownMenuItem className="min-h-11 gap-2" disabled={!selectedSetlist || filteredNotes.length === 0} onSelect={() => setTimeout(handleExportPdf, 150)}>
+                  <Printer className="h-4 w-4" /> Stampa la scaletta (PDF)
+                </DropdownMenuItem>
+                <DropdownMenuItem className="min-h-11 gap-2" disabled={isExportingBackup || (!user && cachedNotes.length === 0)} onSelect={handleExportBackup}>
+                  <Download className="h-4 w-4" /> Esporta backup (JSON)
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <Popover open={isAddMenuOpen} onOpenChange={setIsAddMenuOpen}>
               <PopoverTrigger asChild>
                 <Button size="icon" aria-label="Aggiungi nota" className="h-11 w-11 rounded-full font-bold">

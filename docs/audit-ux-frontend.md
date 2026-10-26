@@ -639,9 +639,37 @@ Ridisegni misurati con uno script Playwright che conta i componenti React ridise
   - nessuna regressione negli screenshot;
   - audit di accessibilità senza errori bloccanti.
 
+### Fase 6.2 — Serbatoio dei brani e playlist: modello dati e migrazione (M) — 📝 specifica da approvare
+Richiesta dell'utente del 2026-10-26: brani in un serbatoio unico, scalette trattate come playlist. Specifica in `docs/spec-playlist.md`; sostituisce D7.
+- **Deliverable:**
+  - tipi `Playlist` (documenti `setlists` con `noteIds`) e operazioni pure sulle playlist (aggiungi, togli, riordina, sostituisci, posizione);
+  - funzione pura di migrazione con unione dei soli duplicati identici;
+  - esecutore della migrazione con marcatore `users/{uid}/settings/notesModel`;
+  - cache locale delle playlist;
+  - nessun cambio visibile.
+- **Rischi:** alto, perché scrive dati reali. Nessuna cancellazione, piano testato, idempotenza.
+- **Accettazione:** test unitari della migrazione e delle operazioni; scenari della §8 della specifica.
+
+### Fase 6.3 — Pagina Note su serbatoio e playlist (L)
+- **Deliverable:**
+  - PL1–PL11: vista "Tutti i brani", vista playlist, "Aggiungi brani", "Togli dalla playlist", "Aggiungi a playlist…", "Crea versione", avviso di brano condiviso;
+  - navigazione, Live e V11 per playlist (`playlist=` nell'URL);
+  - import e PDF adeguati;
+  - foglio del brano senza i campi band e scaletta.
+- **Rischi:** medio-alto, perché tocca tutta la sezione Note.
+- **Accettazione:** Playwright PL1–PL11 e Live su due playlist con un brano comune; nessuna regressione negli scenari Note esistenti.
+
+### Fase 6.4 — Pagina Band, pulizia e documentazione (M)
+- **Deliverable:**
+  - pagina Band con band e playlist reali (crea, rinomina, elimina, conteggio brani), senza scalette "derivate dalle note";
+  - rimozione della pagina orfana `/notes/editor` (N6), che scriverebbe il modello vecchio;
+  - aggiornamento della skill `mg30-studio-ux` e dello stato dell'audit.
+- **Accettazione:** Playwright della pagina Band; typecheck e test verdi.
+
 ### Fase 7 — Verifica finale e regressioni (S)
 - **Deliverable:**
-  - regressione completa dei flussi essenziali;
+  - regressione completa dei flussi essenziali, comprese le Fasi 6–6.4;
+  - migrazione delle playlist provata su un account Google reale con backup;
   - viewport;
   - salvataggio e import/export;
   - scenari Note su dispositivo reale;
@@ -821,7 +849,7 @@ Restano aperte D5–D10.
 | D4 | **Modalità Live**: approvazione della specifica (schermo intero, pedale Bluetooth, blocco anti-tocco) | Nuova funzionalità |
 | D5 | **Pagine e strumenti secondari**: `/notes/editor` orfana, SysEx Analyzer, troubleshooting Firebase in Settings — rimuovere, nascondere o spostare in "Avanzate" | Riduzione di complessità e navigazione |
 | D6 | **Tema chiaro / alto contrasto** per l'uso all'aperto | Nuova funzionalità |
-| D7 | **Band e scalette**: unificare il doppio modello (collezioni contro stringhe nelle note) | Richiede migrazione dei dati |
+| D7 | **Band e scalette**: unificare il doppio modello (collezioni contro stringhe nelle note) | ✅ Decisa il 2026-10-26: serbatoio unico e playlist (Fasi 6.2–6.4, `docs/spec-playlist.md`) |
 | D8 | **Verifica su hardware** delle CC del blocco `vol` e di quelle mancanti (già segnalate), e dell'utilità di "Sync Hardware" | Rischio sul controllo reale della pedaliera |
 | D9 | **Rimozione di dipendenze e componenti inutilizzati** (Appendice B) | Modifica di `package.json` |
 | D10 | **Nuove devDependency**: ESLint con configurazione e Playwright/axe nel repository, per test e2e e CI | Nuove dipendenze |

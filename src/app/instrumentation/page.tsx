@@ -1,5 +1,6 @@
 "use client";
 
+import { useShallow } from 'zustand/react/shallow';
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -33,7 +34,16 @@ export default function InstrumentationPage() {
   const { firestore } = useFirebase();
   const { user, isUserLoading } = useUser();
   const { toast } = useToast();
-  const { guitars, amplifiers, selectedGuitarId, selectedAmplifierId, setGuitars, setAmplifiers, selectGuitar, selectAmplifier } = useInstrumentationStore();
+  const { guitars, amplifiers, selectedGuitarId, selectedAmplifierId, setGuitars, setAmplifiers, selectGuitar, selectAmplifier } = useInstrumentationStore(useShallow((s) => ({
+    guitars: s.guitars,
+    amplifiers: s.amplifiers,
+    selectedGuitarId: s.selectedGuitarId,
+    selectedAmplifierId: s.selectedAmplifierId,
+    setGuitars: s.setGuitars,
+    setAmplifiers: s.setAmplifiers,
+    selectGuitar: s.selectGuitar,
+    selectAmplifier: s.selectAmplifier,
+  })));
   const activeGuitarId = resolveGuitar(guitars, selectedGuitarId)?.id;
   const activeAmplifierId = resolveAmplifier(amplifiers, selectedAmplifierId)?.id;
   const [loading, setLoading] = useState(false);
@@ -124,7 +134,7 @@ export default function InstrumentationPage() {
     } catch (error) { console.error(error); toast({ title: 'Errore eliminazione', variant: 'destructive' }); }
   };
 
-  return <><main className="mx-auto max-w-[1200px] space-y-6 py-2">
+  return <><div className="mx-auto max-w-[1200px] space-y-6 py-2">
     <div><p className="section-kicker">Setup personale</p><h1 className="mt-2 text-3xl font-black tracking-tight">Strumentazione</h1><p className="mt-2 max-w-2xl text-sm text-muted-foreground">Configura chitarre e amplificatori. La strumentazione selezionata verrà usata automaticamente dall’AI Mode.</p></div>
     <div className="grid gap-5 lg:grid-cols-2">
       <Card><CardHeader className="flex flex-row items-center justify-between"><CardTitle className="flex items-center gap-2"><ElectricGuitarIcon className="h-5 w-5 text-primary" /> Chitarre</CardTitle><Button onClick={() => openGuitar()} size="sm"><Plus className="mr-2 h-4 w-4" /> Aggiungi</Button></CardHeader><CardContent className="space-y-3">
@@ -149,5 +159,5 @@ export default function InstrumentationPage() {
       destructive
       onConfirm={() => { if (pendingRemoval) remove(pendingRemoval.kind, pendingRemoval.id); setPendingRemoval(null); }}
     />
-  </main></>;
+  </div></>;
 }

@@ -1,5 +1,6 @@
 "use client"
 
+import { useShallow } from 'zustand/react/shallow';
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useMidiStore } from '@/stores/use-midi-store';
 import { useToast } from '@/hooks/use-toast';
@@ -48,7 +49,7 @@ interface NoteEditorContentProps {
 
 
 export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange, onStartLive }: NoteEditorContentProps) {
-  const { devicePresets, status, sendProgramChange, sendSceneChange } = useMidiStore();
+  const { devicePresets, status, sendProgramChange, sendSceneChange } = useMidiStore(useShallow((s) => ({ devicePresets: s.devicePresets, status: s.status, sendProgramChange: s.sendProgramChange, sendSceneChange: s.sendSceneChange })));
   const { toast } = useToast();
   const { firestore } = useFirebase();
   const { user } = useUser();

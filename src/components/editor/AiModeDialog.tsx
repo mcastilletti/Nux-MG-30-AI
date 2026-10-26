@@ -1,5 +1,6 @@
 'use client';
 
+import { useShallow } from 'zustand/react/shallow';
 import React, { useState } from 'react';
 import { CheckCircle2, Loader2, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -28,7 +29,14 @@ export function AiModeDialog({ open, onOpenChange, activePreset, setActivePreset
   const [isGenerating, setIsGenerating] = useState(false);
   const [proposedPreset, setProposedPreset] = useState<MG30PresetOutput | null>(null);
   const [proposedNormalization, setProposedNormalization] = useState<PresetNormalizationResult | null>(null);
-  const { guitars, amplifiers, selectedGuitarId, selectedAmplifierId, selectGuitar, selectAmplifier } = useInstrumentationStore();
+  const { guitars, amplifiers, selectedGuitarId, selectedAmplifierId, selectGuitar, selectAmplifier } = useInstrumentationStore(useShallow((s) => ({
+    guitars: s.guitars,
+    amplifiers: s.amplifiers,
+    selectedGuitarId: s.selectedGuitarId,
+    selectedAmplifierId: s.selectedAmplifierId,
+    selectGuitar: s.selectGuitar,
+    selectAmplifier: s.selectAmplifier,
+  })));
   const selectedGuitar = resolveGuitar(guitars, selectedGuitarId);
   const selectedAmplifier = resolveAmplifier(amplifiers, selectedAmplifierId);
 

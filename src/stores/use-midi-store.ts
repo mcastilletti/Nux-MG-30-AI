@@ -5,6 +5,7 @@ import { usePresetStore } from './use-preset-store';
 import { MG30_MODELS } from '@/lib/mg30-data';
 import { formatSlotLabel } from '@/lib/slot';
 import { createDefaultEffects } from '@/lib/default-effects';
+import { debugLog, useMidiLogStore } from './use-midi-log-store';
 
 // Tabella CC per Modelli e Bypass
 const BLOCK_MODEL_CC: Record<string, number> = {
@@ -132,13 +133,10 @@ interface MidiStore {
   isInitializing: boolean;
   syncProgress: number;
   lastError: string | null;
-  
-  midiLog: string[];
-  midiOutLog: string[];
+
+  /** Scrivono nel registro separato (`useMidiLogStore`): non aggiornano questo store. */
   addMidiLog: (msg: string) => void;
   addMidiOutLog: (msg: string) => void;
-  clearMidiLog: () => void;
-  clearMidiOutLog: () => void;
 
   initialize: () => Promise<void>;
   sendControlChange: (cc: number, value: number) => void;
@@ -173,13 +171,9 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
   isInitializing: false,
   syncProgress: 0,
   lastError: null,
-  midiLog: [],
-  midiOutLog: [],
 
-  addMidiLog: (msg) => set(state => ({ midiLog: [msg, ...state.midiLog].slice(0, 200) })),
-  addMidiOutLog: (msg) => set(state => ({ midiOutLog: [msg, ...state.midiOutLog].slice(0, 200) })),
-  clearMidiLog: () => set({ midiLog: [] }),
-  clearMidiOutLog: () => set({ midiOutLog: [] }),
+  addMidiLog: (msg) => useMidiLogStore.getState().addMidiLog(msg),
+  addMidiOutLog: (msg) => useMidiLogStore.getState().addMidiOutLog(msg),
 
   initialize: async () => {
     const state = get();
@@ -240,7 +234,7 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     if (statusByte === 0xB0) {
       const cc = data[1];
       const value = data[2];
-      console.log('[MIDI] CC received:', cc, 'value:', value);
+      debugLog('[MIDI] CC received:', cc, 'value:', value);
       
       // Mappa inversa dei CC per trovare il tipo di blocco e parametro
       const findBlockAndParam = (ccNumber: number) => {
@@ -287,7 +281,7 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
               convertedValue = Math.round((value / 100) * 49 + 51);
             }
             
-            console.log(`[MIDI] Syncing ${blockType}.${param.id}: ${value} -> ${convertedValue}`);
+            debugLog(`[MIDI] Syncing ${blockType}.${param.id}: ${value} -> ${convertedValue}`);
             
             // Aggiorna il preset nello store
             usePresetStore.getState().updateParameter(effect.id, param.id, convertedValue);
@@ -299,7 +293,7 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     // Gestione SysEx messages
     if (data[0] === 0xF0 && data[data.length - 1] === 0xF7) {
       const sysexData = Array.from(data);
-      console.log('[MIDI SysEx IN]', hex);
+      debugLog('[MIDI SysEx IN]', hex);
 
       // Riconosce qualsiasi risposta NUX con header F0 00 20 6B
       const isNuxMessage = sysexData.length >= 6 &&
@@ -308,7 +302,7 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
         sysexData[3] === 0x6B;
 
       if (isNuxMessage) {
-        console.log('[MIDI] NUX SysEx - comando:', sysexData[5]?.toString(16).toUpperCase(), '- lunghezza:', sysexData.length);
+        debugLog('[MIDI] NUX SysEx - comando:', sysexData[5]?.toString(16).toUpperCase(), '- lunghezza:', sysexData.length);
 
         // Prova a estrarre un nome leggibile da qualsiasi offset a partire da byte 6
         // Il nome del preset NUX è tipicamente 16 byte ASCII (0x20-0x7E)
@@ -327,7 +321,7 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
           }
           candidate = candidate.trim();
           if (candidate.length >= 3) {
-            console.log(`[MIDI] Possibile nome preset (offset ${startOffset}): "${candidate}"`);
+            debugLog(`[MIDI] Possibile nome preset (offset ${startOffset}): "${candidate}"`);
             const activePreset = usePresetStore.getState().activePreset;
             if (activePreset) {
               get().updatePresetName(activePreset.slot, candidate);
@@ -342,7 +336,7 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     if (statusByte === 0xC0) {
       const pc = data[1];
       const slot = pc + 1;
-      console.log('[MIDI] Program Change -> slot', slot);
+      debugLog('[MIDI] Program Change -> slot', slot);
       const activePreset = usePresetStore.getState().activePreset;
       const existingPreset = get().devicePresets.find(p => p.slot === slot);
       

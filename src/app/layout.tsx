@@ -1,7 +1,13 @@
 import type {Metadata, Viewport} from 'next';
+import { Outfit, Source_Code_Pro } from 'next/font/google';
 import './globals.css';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { AppShell } from '@/components/layout/app-shell';
+
+// Font serviti dall'app stessa (M9): niente richieste a Google all'avvio e
+// disponibili offline grazie alla cache della PWA su /_next/static.
+const outfit = Outfit({ subsets: ['latin'], weight: ['300', '400', '500', '600', '700', '800'], display: 'swap', variable: '--font-outfit' });
+const sourceCodePro = Source_Code_Pro({ subsets: ['latin'], weight: ['400', '500', '600'], display: 'swap', variable: '--font-source-code' });
 
 export const viewport: Viewport = {
   themeColor: '#0a0a0b',
@@ -15,8 +21,8 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: 'MG30 Studio | NUX MG-30 Professional Editor',
-  description: 'A professional web-based editor for the NUX MG-30 multi-effects pedal.',
+  title: 'MG30 Studio',
+  description: 'Editor web per la pedaliera multieffetto NUX MG-30, con note dei brani per prove e live.',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
@@ -42,12 +48,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Source+Code+Pro:wght@400;500;600&display=swap" rel="stylesheet" />
-      </head>
+    <html lang="it" className={`dark ${outfit.variable} ${sourceCodePro.variable}`}>
       <body className="font-body antialiased selection:bg-primary/30">
         <FirebaseClientProvider>
           {/* Shell condivisa (N3): MIDI, wake lock e salvataggio dei preset non ripartono a ogni pagina. */}

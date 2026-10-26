@@ -19,9 +19,9 @@ export default {
         'body-sm': '13px',
       },
       fontFamily: {
-        body: ['Outfit', 'sans-serif'],
-        headline: ['Outfit', 'sans-serif'],
-        code: ['Source Code Pro', 'monospace'],
+        body: ['var(--font-outfit)', 'sans-serif'],
+        headline: ['var(--font-outfit)', 'sans-serif'],
+        code: ['var(--font-source-code)', 'monospace'],
       },
       colors: {
         background: 'hsl(var(--background))',

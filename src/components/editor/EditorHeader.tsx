@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { memo, useState } from 'react';
 import { ChevronLeft, ChevronRight, Copy, Download, Layers, MoreVertical, Pencil, Redo2, RefreshCw, Save, Sparkles, Undo2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,7 +18,7 @@ import { CopySceneDialog } from './CopySceneDialog';
  * - riga 1: ‹ slot › · nome del preset (fino a 2 righe) · menu ⋮ (sotto lg);
  * - riga 2: scene 1-2-3 · azioni (solo da lg) · SALVA, sempre visibile.
  */
-export function EditorHeader({
+export const EditorHeader = memo(function EditorHeader({
   activePreset, devicePresets, status, isEditorSyncing, getPresetDisplayName,
   handleSlotChange, handlePresetSelect, onRenamePreset, handleSceneChange, onCopyScene,
   setActivePreset, handleSyncFromHardware, syncFullPreset, undo, redo, handleSave,
@@ -83,23 +83,13 @@ export function EditorHeader({
               aria-label="Modifica nome preset"
             />
           ) : (
-            <Select value={String(activePreset.slot)} onValueChange={handlePresetSelect}>
-              <SelectTrigger
-                className="h-auto min-h-11 w-full min-w-0 justify-start border-0 bg-transparent px-0 py-0 text-left text-lg font-bold leading-tight shadow-none hover:text-primary focus:ring-0 md:text-xl [&>span]:line-clamp-2 [&>span]:whitespace-normal [&>span]:break-words"
-                aria-label="Seleziona preset"
-                title={getPresetDisplayName(activePreset)}
-              >
-                <SelectValue placeholder="Seleziona preset">{getPresetDisplayName(activePreset)}</SelectValue>
-              </SelectTrigger>
-              <SelectContent className="max-h-[min(24rem,60vh)]">
-                {devicePresets.map((preset) => (
-                  <SelectItem key={preset.slot} value={String(preset.slot)}>
-                    <span className="font-mono text-primary">{formatSlotLabel(preset.slot)}</span>
-                    <span className="ml-2">{getPresetDisplayName(preset)}</span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <PresetPicker
+              slot={activePreset.slot}
+              displayName={getPresetDisplayName(activePreset)}
+              devicePresets={devicePresets}
+              getPresetDisplayName={getPresetDisplayName}
+              onSelect={handlePresetSelect}
+            />
           )}
           {!isEditingPresetName && (
             <IconButton
@@ -201,4 +191,36 @@ export function EditorHeader({
       <AiModeDialog open={aiOpen} onOpenChange={setAiOpen} activePreset={activePreset} setActivePreset={setActivePreset} />
     </div>
   );
-}
+});
+
+/**
+ * Menu dei 128 preset, separato dall'intestazione (M6): si ridisegna solo se
+ * cambiano slot, nome, libreria o nomi salvati, non a ogni giro di manopola.
+ */
+const PresetPicker = memo(function PresetPicker({ slot, displayName, devicePresets, getPresetDisplayName, onSelect }: {
+  slot: number;
+  displayName: string;
+  devicePresets: Preset[];
+  getPresetDisplayName: (preset: Preset) => string;
+  onSelect: (value: string) => void;
+}) {
+  return (
+    <Select value={String(slot)} onValueChange={onSelect}>
+      <SelectTrigger
+        className="h-auto min-h-11 w-full min-w-0 justify-start border-0 bg-transparent px-0 py-0 text-left text-lg font-bold leading-tight shadow-none hover:text-primary focus:ring-0 md:text-xl [&>span]:line-clamp-2 [&>span]:whitespace-normal [&>span]:break-words"
+        aria-label="Seleziona preset"
+        title={displayName}
+      >
+        <SelectValue placeholder="Seleziona preset">{displayName}</SelectValue>
+      </SelectTrigger>
+      <SelectContent className="max-h-[min(24rem,60vh)]">
+        {devicePresets.map((preset) => (
+          <SelectItem key={preset.slot} value={String(preset.slot)}>
+            <span className="font-mono text-primary">{formatSlotLabel(preset.slot)}</span>
+            <span className="ml-2">{getPresetDisplayName(preset)}</span>
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+});

@@ -305,8 +305,8 @@ Colonne: **ID** · **Problema** · **Evidenza** · **Impatto** · **P** · **Sol
 | ID | Problema | Evidenza | Impatto | P | Soluzione | Dip. | Rischio | Verifica |
 |---|---|---|---|---|---|---|---|---|
 | E1 [V] | Header con 14 comandi; il gruppo azioni non va a capo: **confermato dalla baseline**, a 360px il pulsante SALVA è tagliato sul bordo destro | `editor/page.tsx:867` (manca `flex-wrap`) | Comandi fuori schermo o scroll orizzontale | P1 | Header mobile essenziale (slot, scene, salva) + menu "Altro" con etichette | F1 | Medio | Playwright 360×740: nessun overflow |
-| E2 [V] | Chip ON/OFF di circa 24×16px annidato dentro il `button` del blocco | `editor/page.tsx:988-1041` | HTML non valido, tocchi sbagliati (seleziona invece di spegnere), lettori di schermo confusi | P1 | Due controlli fratelli: blocco (seleziona) e switch ON/OFF ≥44px con `aria-pressed` | F2 | Medio | Test da tastiera e touch |
-| E3 [V] | Selezione del blocco indicata solo con colore e bordo; nessun `aria-pressed`/`aria-current` | `editor/page.tsx:995-1004` | Stato non percepibile | P2 | Indicatore testuale + attributo ARIA | F2 | Basso | Ispezione accessibilità |
+| E2 [V] ✅ `59242a3` | Chip ON/OFF di circa 24×16px annidato dentro il `button` del blocco | `editor/page.tsx:988-1041` | HTML non valido, tocchi sbagliati (seleziona invece di spegnere), lettori di schermo confusi | P1 | Due controlli fratelli: blocco (seleziona) e switch ON/OFF ≥44px con `aria-pressed` | F2 | Medio | Test da tastiera e touch |
+| E3 [V] ✅ `59242a3` | Selezione del blocco indicata solo con colore e bordo; nessun `aria-pressed`/`aria-current` | `editor/page.tsx:995-1004` | Stato non percepibile | P2 | Indicatore testuale + attributo ARIA | F2 | Basso | Ispezione accessibilità |
 | E4 [V] | Catena di circa 1640px senza snap né suggerimento di scroll; nessuno scroll automatico al blocco selezionato | `editor/page.tsx:980` | Su mobile si vedono circa 3 blocchi su 12 | P2 | Scroll-snap, sfumatura ai bordi, scroll al blocco selezionato; valutare una vista a griglia compatta | F5 | Basso | Playwright |
 | E5 [V] ◐ `338e6be` | Due pulsanti "sync" quasi uguali: Download (chiede solo il nome) e RefreshCw (invia tutto, overlay di 18,5s anche offline) | `editor/page.tsx:593-610,966`; `use-midi-store.ts:516-541` | Confusione; editor bloccato senza motivo | P1 | Etichette chiare ("Leggi nome dalla pedaliera", "Invia preset alla pedaliera"), disabilitati offline, avanzamento visibile | D8 | Medio | Test offline e collegato |
 | E10 [V] | Nome del preset e titolo della nota troncati su una riga ("Activ…", "Wonderwall (I…"), anche a 1280px | baseline Playwright; `editor/page.tsx` (SelectTrigger), `NoteEditorContent.tsx` (`truncate` sul titolo) | Brano o preset non riconoscibili a colpo d'occhio | P2 | Titolo su 2 righe (`line-clamp-2`), nome completo nel selettore | F5 | Basso | Screenshot a 360px e 1280px |
@@ -321,11 +321,11 @@ Colonne: **ID** · **Problema** · **Evidenza** · **Impatto** · **P** · **Sol
 |---|---|---|---|---|---|---|---|---|
 | K1 [V] ✅ `e8f6ab5` | **Manopole di Gate, Compressore e Modulazione non inviano MIDI** (passato l'id del blocco invece del tipo) | `editor/page.tsx:455-458`, `use-midi-store.ts:432-433`; id `ng`/`cmp`/`mod` | Regolazione impossibile su 3 blocchi su 12 | **P0** | Passare `effect.type` (il parametro `effectType` esiste già ed è inutilizzato) | — | Basso | Test unitario della mappatura + prova con pedaliera |
 | K2 [V] | `touch-none` + `preventDefault`: un gesto iniziato sulla manopola non fa scorrere la pagina | `rotary-knob.tsx:67,125` | Scroll "bloccato" su mobile con griglia a 2 colonne | P1 | Attivare il trascinamento solo dopo una soglia verticale o con pressione prolungata; area di scroll tra le manopole | F5 | Medio | Test su dispositivo |
-| K3 [V] | Precisione touch: 200px per l'intera escursione; Hi Cut (5000-20000 Hz) ≈ 75 Hz per pixel; regolazione fine solo con Shift | `rotary-knob.tsx:57-64` | Regolazioni fini impossibili su touch | P2 | Pulsanti −/+ di un passo, campo numerico in evidenza, modalità fine | F5 | Basso | Test su dispositivo |
-| K4 [V] | Il campo numerico invia a ogni carattere (1, 10, 100) | `rotary-knob.tsx:195-201` | Valori intermedi inviati alla pedaliera | P2 | Invio su conferma o con debounce | F6 | Basso | Test unitario |
+| K3 [V] ✅ `d56b250` | Precisione touch: 200px per l'intera escursione; Hi Cut (5000-20000 Hz) ≈ 75 Hz per pixel; regolazione fine solo con Shift | `rotary-knob.tsx:57-64` | Regolazioni fini impossibili su touch | P2 | Pulsanti −/+ di un passo, campo numerico in evidenza, modalità fine | F5 | Basso | Test su dispositivo |
+| K4 [V] ✅ `d56b250` | Il campo numerico invia a ogni carattere (1, 10, 100) | `rotary-knob.tsx:195-201` | Valori intermedi inviati alla pedaliera | P2 | Invio su conferma o con debounce | F6 | Basso | Test unitario |
 | K5 [V] | Le unità (Hz, dB) non vengono mai passate alla manopola | `editor/page.tsx:1121` | Valori ambigui | P2 | Passare `unit` dal catalogo | — | Basso | Ispezione visiva |
 | K6 [V] | Il doppio clic riporta a metà range invece che al default; su touch non esiste | `rotary-knob.tsx:138-141` | Reset errato | P2 | Reset al `default` del catalogo, con comando visibile | — | Basso | Test unitario |
-| K7 [V] | Le modifiche da tastiera o da campo numerico non entrano nella cronologia undo | `rotary-knob.tsx:95,140` | Undo incoerente | P2 | Salvare la cronologia anche su commit da tastiera o input | F6 | Medio | Test sullo store |
+| K7 [V] ✅ `d56b250` | Le modifiche da tastiera o da campo numerico non entrano nella cronologia undo | `rotary-knob.tsx:95,140` | Undo incoerente | P2 | Salvare la cronologia anche su commit da tastiera o input | F6 | Medio | Test sullo store |
 
 ### 5.6 Note
 
@@ -395,8 +395,8 @@ Le voci Note sono **[V]** salvo dove indicato. Requisiti di dettaglio e scenari 
 ### 5.11 Accessibilità
 
 - [V] Zoom disabilitato (`layout.tsx:9-10`, WCAG 1.4.4): decisione D3.
-- [V] `lang="en"` su un'interfaccia italiana (`layout.tsx:41`).
-- [V] Controlli interattivi annidati: ON/OFF nella catena; pulsante dentro un badge dentro un `TooltipTrigger` (`NoteEditorContent.tsx:681-708`).
+- [V] ✅ `lang="en"` su un'interfaccia italiana: ora `lang="it"` (Fase 6).
+- [V] Controlli interattivi annidati: ON/OFF nella catena (✅ Fase 6, E2); pulsante dentro un badge dentro un `TooltipTrigger` (`NoteEditorContent.tsx:681-708`).
 - [V] **Pulsanti icona senza nome:**
   - Copia scena su mobile, Download, Sync, Undo e Redo (solo `title`);
   - Stampa e Cerca nelle Note;
@@ -426,12 +426,12 @@ Le voci Note sono **[V]** salvo dove indicato. Requisiti di dettaglio e scenari 
 | M1 [V] | `editor/page.tsx` di 1132 righe; `applyJsonToPreset` di circa 335 righe nella pagina; logica di prefisso copiata due volte | `editor/page.tsx:42-377,233-285,312-364` | P2 | Estrazione in `src/lib` e componenti (F4) |
 | M2 [V] | Due sistemi di alias in disaccordo (`PARAM_SYNONYMS` contro `PARAMETER_ALIASES`) | `editor/page.tsx:49-62`; `mg30-preset-normalizer.ts:38-47` | P2 | Un solo modulo di mappatura (F4) |
 | M3 [V] | Etichetta slot copiata 10 volte; `SECTION_COLORS` 2 volte più la stampa; `CHORD_TABLE` 2 volte; `createDefaultEffects` 2 volte con ordine diverso | §Appendice A | P2 | `src/lib/slot.ts`, `section-colors.ts`, `chords.ts`; un solo default (F2/F4) |
-| M4 [V] | Sottoscrizione all'intero store (`usePresetStore()`, `useMidiStore()`) nell'editor, nella shell e in ogni manopola; ogni messaggio MIDI aggiorna il log e ri-renderizza editor e shell | `editor/page.tsx:404-421`; `use-midi-store.ts:197-198` | P2 | Selettori con `useShallow`, log MIDI in uno store separato, `memo` su blocchi e manopole (F6) |
-| M5 [V] | Per ogni frame di trascinamento: clonazione delle scene, `commitPreset` su 128 preset, log, circa 3 re-render | `use-preset-store.ts:72-83`; `editor/page.tsx:451-453` | P2 | Come M4; commit a fine gesto (F6) |
-| M6 [V] | 128 `SelectItem` ricostruiti due volte a ogni render; `console.log` per ogni CC in ingresso | `editor/page.tsx:748-753,836-841`; `use-midi-store.ts:261,308` | P3 | Memoizzazione; log solo in sviluppo |
+| M4 [V] ✅ `d0d135d`, `c12b9cb`, `82ff0a9` | Sottoscrizione all'intero store (`usePresetStore()`, `useMidiStore()`) nell'editor, nella shell e in ogni manopola; ogni messaggio MIDI aggiorna il log e ri-renderizza editor e shell | `editor/page.tsx:404-421`; `use-midi-store.ts:197-198` | P2 | Selettori con `useShallow`, log MIDI in uno store separato, `memo` su blocchi e manopole (F6) |
+| M5 [V] ✅ `a9ccd8b` | Per ogni frame di trascinamento: clonazione delle scene, `commitPreset` su 128 preset, log, circa 3 re-render | `use-preset-store.ts:72-83`; `editor/page.tsx:451-453` | P2 | Come M4; commit a fine gesto (F6) |
+| M6 [V] ✅ `d0d135d`, `82ff0a9` | 128 `SelectItem` ricostruiti due volte a ogni render; `console.log` per ogni CC in ingresso | `editor/page.tsx:748-753,836-841`; `use-midi-store.ts:261,308` | P3 | Memoizzazione; log solo in sviluppo |
 | M7 [V] | Colori hardcoded (`zinc-*`, `emerald-*`, `white/5`, HSL inline) in 9 file; nessun token successo/avviso | §5.10 | P2 | Token semantici (F2) |
 | M8 [V] | `button.tsx` applica `[&_svg]:size-4`, che annulla le classi di dimensione delle icone | `ui/button.tsx:8` | P3 | Variante per icone grandi (F2) |
-| M9 [V] | Font da `<link>` Google invece di `next/font` | `layout.tsx:43-45` | P3 | `next/font` (F6), da valutare con l'offline della PWA |
+| M9 [V] ✅ `b58cf1e` | Font da `<link>` Google invece di `next/font` | `layout.tsx:43-45` | P3 | `next/font` (F6), da valutare con l'offline della PWA |
 
 ---
 
@@ -591,7 +591,37 @@ F0 Baseline ──┬─► F0b Correzioni P0 ───────────�
 - **Rischi:** medio per pagina, contenuto da PR piccole.
 - **Accettazione:** checklist della skill superata per ogni pagina; scenari Note verdi.
 
-### Fase 6 — Ottimizzazione e accessibilità (M, in parallelo a F5)
+### Fase 6 — Ottimizzazione e accessibilità (M, in parallelo a F5) — ✅ completata (2026-10-26)
+
+**Esito.**
+
+Ridisegni misurati con uno script Playwright che conta i componenti React ridisegnati a ogni commit, sullo stesso build di produzione e con la pedaliera simulata:
+
+| Scenario (editor, blocco Amp) | Prima (`main`) | Dopo | Riduzione |
+|---|---|---|---|
+| 30 CC in entrata (gain) | 117.000 | 4.741 | circa 25× |
+| 30 CC in entrata non mappati | 58.500 | 0 | — |
+| Trascinamento di 40px | 79.824 | 3.713 | circa 21× |
+| 10 tasti freccia | 39.000 | 2.481 | circa 16× |
+| Campo numerico "37" + Invio | 11.702 (4 CC inviati) | 1.529 (1 CC) | circa 8× |
+
+- Il menu dei 128 preset si aggiorna una volta a fine gesto, non a ogni frame.
+- Log MIDI dell'editor (12 azioni) identico a prima.
+- Confronto pixel: 40 schermate su 40 identiche, compresi font e chip ON/OFF spostato.
+- Regressioni Playwright tutte verdi.
+- Nuovo controllo `check-f6`, 26/26:
+  - campo numerico, Esc, undo, regolazione fine;
+  - preset conservato al cambio slot e pagina;
+  - chip ON/OFF, titoli, font.
+- **axe-core** (9 pagine × 390/1280px): nessuna violazione critica o seria, tranne `meta-viewport` (zoom bloccato, **voluto per D3**).
+  - Restano violazioni moderate:
+    - `page-has-heading-one`;
+    - `heading-order`;
+    - `region` della sidebar.
+  - Rimandate alla Fase 7.
+- **Font offline:** dopo una prima visita, con la rete spenta Outfit viene caricato dalla cache della PWA.
+- **Da provare su dispositivo reale:** regolazione fine con il dito, area di tocco del chip ON/OFF.
+
 - **Deliverable:**
   - selettori Zustand con `useShallow`;
   - `memo` su blocchi e manopole;

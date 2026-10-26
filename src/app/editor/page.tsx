@@ -1,6 +1,7 @@
 "use client"
 
-import React, { useState, useMemo, useEffect } from 'react';
+import { useShallow } from 'zustand/react/shallow';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { usePresetStore, cloneEffects } from '@/stores/use-preset-store';
 import { useMidiStore } from '@/stores/use-midi-store';
 import { Card } from '@/components/ui/card';
@@ -9,14 +10,40 @@ import { useToast } from '@/hooks/use-toast';
 import { Preset } from '@/types/preset';
 import { usePresetNames } from '@/hooks/use-preset-names';
 import { useSavePreset } from '@/hooks/use-preset-persistence';
+import { useDeferredPresetCommit } from '@/hooks/use-deferred-preset-commit';
+import { useStableCallback } from '@/hooks/use-stable-callback';
 import { formatSlotLabel } from '@/lib/slot';
 import { EditorHeader } from '@/components/editor/EditorHeader';
 import { SignalChain } from '@/components/editor/SignalChain';
 import { BlockParamsPanel } from '@/components/editor/BlockParamsPanel';
 
 export default function EditorPage() {
-  const { activePreset, updateParameter, updateModel, updateScene, toggleEffect, undo, redo, setActivePreset, updatePresetName, copyScene } = usePresetStore();
-  const { status, devicePresets, sendProgramChange, sendKnobParameter, sendModelChange, sendSceneChange, toggleBlock, enterBlockEditor, exitBlockEditor, isEditorSyncing, syncActivePreset, syncFullPreset } = useMidiStore();
+  const { activePreset, updateParameter, updateModel, updateScene, toggleEffect, undo, redo, setActivePreset, updatePresetName, copyScene } = usePresetStore(useShallow((s) => ({
+    activePreset: s.activePreset,
+    updateParameter: s.updateParameter,
+    updateModel: s.updateModel,
+    updateScene: s.updateScene,
+    toggleEffect: s.toggleEffect,
+    undo: s.undo,
+    redo: s.redo,
+    setActivePreset: s.setActivePreset,
+    updatePresetName: s.updatePresetName,
+    copyScene: s.copyScene,
+  })));
+  const { status, devicePresets, sendProgramChange, sendKnobParameter, sendModelChange, sendSceneChange, toggleBlock, enterBlockEditor, exitBlockEditor, isEditorSyncing, syncActivePreset, syncFullPreset } = useMidiStore(useShallow((s) => ({
+    status: s.status,
+    devicePresets: s.devicePresets,
+    sendProgramChange: s.sendProgramChange,
+    sendKnobParameter: s.sendKnobParameter,
+    sendModelChange: s.sendModelChange,
+    sendSceneChange: s.sendSceneChange,
+    toggleBlock: s.toggleBlock,
+    enterBlockEditor: s.enterBlockEditor,
+    exitBlockEditor: s.exitBlockEditor,
+    isEditorSyncing: s.isEditorSyncing,
+    syncActivePreset: s.syncActivePreset,
+    syncFullPreset: s.syncFullPreset,
+  })));
   const { toast } = useToast();
   const { savedNames, savePresetName } = usePresetNames();
   const savePreset = useSavePreset();
@@ -34,51 +61,47 @@ export default function EditorPage() {
     }
   }, [status, syncActivePreset]);
 
-  // Rispecchia continuamente il preset in editing nella libreria devicePresets:
-  // senza questo, cambiare slot (o copiare una scena) scarta ogni modifica non
-  // ancora sincronizzata con l'hardware.
-  useEffect(() => {
-    useMidiStore.getState().commitPreset(activePreset);
-  }, [activePreset]);
+  // Rispecchia il preset in editing nella libreria devicePresets, a fine gesto (M5).
+  useDeferredPresetCommit(activePreset);
 
-  const handleParamChange = (effectType: string, paramId: string, value: number, index: number) => {
+  const handleParamChange = useStableCallback((effectType: string, paramId: string, value: number, index: number) => {
     updateParameter(selectedBlockId, paramId, value);
     if (status === 'connected') {
       // Le CC sono indicizzate per tipo di blocco: l'id ('ng', 'cmp', 'mod') non le trova.
       sendKnobParameter(effectType, index, value);
     }
-  };
+  });
 
-  const handleModelChange = (effectId: string, type: string, modelId: string) => {
+  const handleModelChange = useStableCallback((effectId: string, type: string, modelId: string) => {
     updateModel(effectId, modelId);
     if (status === 'connected') {
       sendModelChange(type, modelId);
     }
-  };
+  });
 
-  const handleSceneChange = (index: number) => {
+  const handleSceneChange = useStableCallback((index: number) => {
     updateScene(index);
     if (status === 'connected') {
       sendSceneChange(index);
     }
-  };
+  });
 
-  const handleSelectBlock = (effectId: string, type: string) => {
+  const handleSelectBlock = useStableCallback((effectId: string, type: string) => {
     setSelectedBlockId(effectId);
     if (status === 'connected') {
       enterBlockEditor(type);
     }
-  };
+  });
 
-  const handleToggleBlock = (e: React.MouseEvent, effectId: string, type: string, currentEnabled: boolean) => {
+  const handleToggleBlock = useStableCallback((e: React.MouseEvent, effectId: string, type: string, currentEnabled: boolean) => {
     e.stopPropagation();
     toggleEffect(effectId);
     if (status === 'connected') {
       toggleBlock(type, !currentEnabled);
     }
-  };
+  });
 
-  const handleSlotChange = (direction: 'next' | 'prev') => {
+  const handleSlotChange = useStableCallback((direction: 'next' | 'prev') => {
     let nextSlot = activePreset.slot + (direction === 'next' ? 1 : -1);
     if (nextSlot < 1) nextSlot = 128;
     if (nextSlot > 128) nextSlot = 1;
@@ -89,18 +112,18 @@ export default function EditorPage() {
     } else {
       setActivePreset({ ...activePreset, slot: nextSlot });
     }
-  };
+  });
 
-  const getPresetDisplayName = (preset: Preset) =>
-    savedNames[preset.slot] || preset.name || formatSlotLabel(preset.slot);
+  const getPresetDisplayName = useCallback((preset: Preset) =>
+    savedNames[preset.slot] || preset.name || formatSlotLabel(preset.slot), [savedNames]);
 
-  const handleRenamePreset = (nextName: string) => {
+  const handleRenamePreset = useStableCallback((nextName: string) => {
     updatePresetName(nextName);
     savePresetName(activePreset.slot, nextName);
     useMidiStore.getState().updatePresetName(activePreset.slot, nextName);
-  };
+  });
 
-  const handlePresetSelect = (value: string) => {
+  const handlePresetSelect = useStableCallback((value: string) => {
     const slot = Number(value);
     const preset = devicePresets.find((item) => item.slot === slot);
     if (!preset || preset.slot === activePreset.slot) return;
@@ -110,9 +133,9 @@ export default function EditorPage() {
     }
 
     setActivePreset({ ...preset, name: getPresetDisplayName(preset) });
-  };
+  });
 
-  const handleCopyScene = (sourceScene: number, targetSlot: number, targetScene: number) => {
+  const handleCopyScene = useStableCallback((sourceScene: number, targetSlot: number, targetScene: number) => {
     const targetPresetRaw = devicePresets.find((preset) => preset.slot === targetSlot) || activePreset;
 
     const updatedTarget = copyScene(sourceScene, targetPresetRaw, targetScene);
@@ -153,11 +176,10 @@ export default function EditorPage() {
       title: 'Scena copiata e attivata',
       description: `Posizionato su ${formatSlotLabel(targetSlot)} / Scena ${targetScene + 1}. Duplicata da Scena ${sourceScene + 1}.`,
     });
-  };
+  });
 
-  const handleSave = async () => {
-    // Garantisce che la libreria rifletta il preset anche se il commit continuo
-    // (vedi useEffect su activePreset) venisse rimosso in futuro.
+  const handleSave = useStableCallback(async () => {
+    // Il commit in libreria è differito (useDeferredPresetCommit): qui serve subito.
     useMidiStore.getState().commitPreset(activePreset);
     const result = await savePreset(activePreset);
     const saved = {
@@ -185,9 +207,9 @@ export default function EditorPage() {
       description: `${saved.description} Invio dei parametri (scena attiva) alla MG-30 in corso.`,
       variant: result === 'local-error' ? 'destructive' : undefined,
     });
-  };
+  });
 
-  const handleSyncFromHardware = () => {
+  const handleSyncFromHardware = useStableCallback(() => {
     if (status !== 'connected') {
       toast({
         title: "Pedaliera non connessa",
@@ -204,7 +226,7 @@ export default function EditorPage() {
       title: "Sincronizzazione automatica attiva",
       description: "Modifica i parametri sulla pedaliera e l'editor si aggiornerà automaticamente in tempo reale.",
     });
-  };
+  });
 
   return (
     <>

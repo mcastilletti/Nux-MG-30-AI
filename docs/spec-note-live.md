@@ -69,6 +69,7 @@ Già fatto (Fasi 0–2):
 | M1 | **Ordine degli accordi** (NT11): dopo ogni scelta il punto di inserimento avanza, quindi G poi Gm danno "G, Gm" | Test unitario sull'indice di inserimento |
 | M2 | **Rimozione di accordi e sezioni** (NT9): X ≥44px; dopo la rimozione un toast con **"Annulla"** ripristina l'elemento | Nessuna conferma modale: l'annullamento basta |
 | M3 | **Controlli sempre visibili in modifica** (NT10): inserisci accordo, inserisci sezione e rimuovi a capo non dipendono dall'hover | Su touch l'hover non esiste |
+| M4b | **Inserimento in qualunque punto:**<br>• un "+" alla fine di ogni riga (anche dopo un a capo e nelle sezioni vuote);<br>• nel menu di ogni accordo **"Inserisci prima…"** e **"Inserisci dopo…"** per l'inizio o il mezzo di una riga | Vale per accordi, ripetizioni e a capo. Le scelte in sequenza restano in ordine |
 | M4 | **Campo attivo visibile con la tastiera**: al focus `scrollIntoView` del campo, altezza del foglio da `visualViewport` | Da verificare su iOS e Android reali |
 
 ## 5. Offline

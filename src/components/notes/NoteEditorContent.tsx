@@ -30,7 +30,7 @@ import { SaveStatus } from '@/components/common/save-status';
 import { awaitWrite, isOnline } from '@/lib/firestore-write';
 import { NoteReadMenu } from './note-read-menu';
 import { ChordChip, ChordInsertPopover } from './chord-picker';
-import { insertAt, removeAt } from './chord-edit';
+import { insertAt, insertionSlots, isNewline, removeAt } from './chord-edit';
 import { IconButton } from '@/components/common/icon-button';
 import { ToastAction } from '@/components/ui/toast';
 import { DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
@@ -810,15 +810,22 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
                       </div>
                       <div className="p-3 flex-1 flex flex-col gap-3">
                         <div className="flex flex-wrap items-center gap-2">
-                          {editMode && (
-                            <ChordInsertPopover
-                              label="Inserisci accordo all'inizio"
-                              startIndex={0}
-                              onInsert={(chord, index) => insertChord(section.id, index, chord)}
-                            />
-                          )}
-                          {(section.chords || []).map((chord, cIdx) => (
-                            chord.trim().toUpperCase() === "NEWLINE" ? (
+                          {(() => {
+                            const chords = section.chords || [];
+                            const slots = editMode ? insertionSlots(chords) : [];
+                            const multiLine = chords.some(isNewline);
+                            // Un "+" alla fine di ogni riga; per l'inizio o il mezzo c'è il menu dell'accordo.
+                            const slotsAt = (position: number) => slots.filter((slot) => slot.index === position).map((slot) => (
+                              <ChordInsertPopover
+                                key={`${section.id}-slot-${slot.line}`}
+                                label={chords.length === 0 ? 'Inserisci accordo' : multiLine ? `Inserisci alla fine della riga ${slot.line + 1}` : 'Inserisci alla fine'}
+                                startIndex={slot.index}
+                                append
+                                onInsert={(chord, index) => insertChord(section.id, index, chord)}
+                              />
+                            ));
+                            return [...chords.flatMap((chord, cIdx) => [...slotsAt(cIdx), (
+                            isNewline(chord) ? (
                               <div key={`${section.id}-${cIdx}`} className={cn("basis-full flex items-center gap-2", editMode ? "min-h-11" : "h-4")}>
                                 {editMode && (
                                   <>
@@ -841,10 +848,12 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
                                     : [SECTION_COLORS[section.type as SectionType]?.bg, SECTION_COLORS[section.type as SectionType]?.border, SECTION_COLORS[section.type as SectionType]?.text]
                                 )}
                                 onInsertAfter={(newChord, picksSoFar) => insertChord(section.id, cIdx + 1 + picksSoFar, newChord)}
+                                onInsertBefore={(newChord, picksSoFar) => insertChord(section.id, cIdx + picksSoFar, newChord)}
                                 onRemove={() => removeChord(section.id, cIdx)}
                               />
                             )
-                          ))}
+                            )]), ...slotsAt(chords.length)];
+                          })()}
                         </div>
                         {editMode ? (
                           <Input 

@@ -23,6 +23,8 @@ import { ElectricGuitarIcon } from '@/components/icons/electric-guitar-icon';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { MOBILE_BAR, MOBILE_MORE, NAV_ENTRIES, SIDEBAR_GROUPS, getActiveNavKey, getRouteTitle, isMoreActive, type NavKey } from './nav-config';
 
+const APP_NAME = 'MG30 Studio';
+
 export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { status, lastError, initialize, syncActivePreset } = useMidiStore(useShallow((s) => ({ status: s.status, lastError: s.lastError, initialize: s.initialize, syncActivePreset: s.syncActivePreset })));
   const pathname = usePathname();
@@ -40,6 +42,12 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
   const contentRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     contentRef.current?.scrollTo({ top: 0 });
+  }, [pathname]);
+
+  // Titolo della scheda per pagina (le pagine sono client: niente metadata per rotta).
+  useEffect(() => {
+    const title = getRouteTitle(pathname);
+    document.title = title === APP_NAME ? APP_NAME : `${title} · ${APP_NAME}`;
   }, [pathname]);
 
   useEffect(() => {

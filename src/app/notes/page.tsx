@@ -560,14 +560,14 @@ function NotesLibraryContent() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 bg-card/40 p-3 rounded-2xl border border-border shadow-sm">
           <Select value={selectedBand || 'all'} onValueChange={(v) => { setSelectedBand(v === 'all' ? null : v); setSelectedSetlist(null); }}>
-            <SelectTrigger className="h-11 bg-background/50 border-border text-[14px] font-bold"><SelectValue placeholder="Tutte le band" /></SelectTrigger>
+            <SelectTrigger aria-label="Filtra per band" className="h-11 bg-background/50 border-border text-[14px] font-bold"><SelectValue placeholder="Tutte le band" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Tutte le band</SelectItem>
               {bands.map(band => <SelectItem key={band} value={band}>{band}</SelectItem>)}
             </SelectContent>
           </Select>
           <Select value={selectedSetlist || 'all'} onValueChange={(v) => setSelectedSetlist(v === 'all' ? null : v)} disabled={!selectedBand}>
-            <SelectTrigger className="h-11 bg-background/50 border-border text-[14px] font-bold"><SelectValue placeholder="Tutte le scalette" /></SelectTrigger>
+            <SelectTrigger aria-label="Filtra per scaletta" className="h-11 bg-background/50 border-border text-[14px] font-bold"><SelectValue placeholder="Tutte le scalette" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Tutte le scalette</SelectItem>
               {setlists.map(setlist => <SelectItem key={setlist} value={setlist}>{setlist}</SelectItem>)}
@@ -643,7 +643,7 @@ function NotesLibraryContent() {
               <div className="py-4 space-y-4">
                 <p className="text-sm font-bold">Step 1: Scegli la Band</p>
                 <Select value={targetBand} onValueChange={setTargetBand}>
-                    <SelectTrigger className="h-11 text-[14px]"><SelectValue placeholder="Scegli band..." /></SelectTrigger>
+                    <SelectTrigger aria-label="Band di destinazione" className="h-11 text-[14px]"><SelectValue placeholder="Scegli band..." /></SelectTrigger>
                     <SelectContent>
                         {bands.map(b => <SelectItem key={`cb-${b}`} value={b}>{b}</SelectItem>)}
                     </SelectContent>
@@ -654,7 +654,7 @@ function NotesLibraryContent() {
                <div className="py-4 space-y-4">
                  <p className="text-sm font-bold">Step 2: Scegli o crea una Scaletta</p>
                 <Select value={targetSetlist} onValueChange={setTargetSetlist}>
-                    <SelectTrigger className="h-11 text-[14px]"><SelectValue placeholder="Scegli scaletta..." /></SelectTrigger>
+                    <SelectTrigger aria-label="Scaletta di destinazione" className="h-11 text-[14px]"><SelectValue placeholder="Scegli scaletta..." /></SelectTrigger>
                     <SelectContent>
                         {setlistsForCopy.map(s => <SelectItem key={`cs-${s}`} value={s}>{s}</SelectItem>)}
                     </SelectContent>
@@ -890,7 +890,7 @@ const SortableNoteCard = React.memo(React.forwardRef<HTMLDivElement, {
               </div>
               <div className="flex items-center gap-1 shrink-0 no-print">
                  <Button variant="ghost" size="icon" aria-label="Copia nota" className="h-9 w-9 text-primary opacity-30 transition-opacity group-hover:opacity-100" onClick={(e) => onCopy(e, note)}><Copy className="w-4 h-4" /></Button>
-                <Button variant="ghost" size="icon" className="h-9 w-9 text-destructive opacity-30 group-hover:opacity-100 transition-opacity" onClick={onDelete}><Trash2 className="w-4 h-4" /></Button>
+                <Button variant="ghost" size="icon" aria-label="Elimina nota" className="h-9 w-9 text-destructive opacity-30 group-hover:opacity-100 transition-opacity" onClick={onDelete}><Trash2 className="w-4 h-4" /></Button>
               </div>
             </div>
           ) : (
@@ -901,7 +901,7 @@ const SortableNoteCard = React.memo(React.forwardRef<HTMLDivElement, {
                 </div>
                 <div className="flex items-center gap-1 shrink-0 no-print">
                   <Button variant="ghost" size="icon" aria-label="Copia nota" className="h-9 w-9 text-primary opacity-30 transition-opacity group-hover:opacity-100" onClick={(e) => onCopy(e, note)}><Copy className="w-4 h-4" /></Button>
-                  <Button variant="ghost" size="icon" className="h-9 w-9 text-destructive opacity-30 group-hover:opacity-100 transition-opacity" onClick={onDelete}><Trash2 className="w-4 h-4" /></Button>
+                  <Button variant="ghost" size="icon" aria-label="Elimina nota" className="h-9 w-9 text-destructive opacity-30 group-hover:opacity-100 transition-opacity" onClick={onDelete}><Trash2 className="w-4 h-4" /></Button>
                 </div>
               </div>
               <div className="flex items-center gap-2 mt-2">

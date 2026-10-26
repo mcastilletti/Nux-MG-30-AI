@@ -61,12 +61,13 @@ const hasAllScenes = (preset: Preset) =>
 const withCurrentScene = (preset: Preset, effects: EffectState[]): Preset => {
   // Percorso veloce (M5): con le 3 scene già presenti si aggiorna solo quella attiva,
   // senza riclonare tutte le scene a ogni frame di un trascinamento.
+  // Gli effetti non modificati restano gli stessi oggetti (aggiornamenti immutabili),
+  // così i blocchi memoizzati della catena non si ridisegnano.
   if (hasAllScenes(preset)) {
-    const cloned = cloneEffects(effects);
     return {
       ...preset,
-      effects: cloned,
-      scenes: { ...preset.scenes, [preset.activeScene]: cloneEffects(cloned) },
+      effects,
+      scenes: { ...preset.scenes, [preset.activeScene]: cloneEffects(effects) },
     };
   }
   const norm = ensurePresetScenes(preset);

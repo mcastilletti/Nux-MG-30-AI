@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { memo, useCallback } from 'react';
 import { Settings2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -13,15 +13,20 @@ import type { EffectState } from '@/types/preset';
 import { getBlockColorVar } from './block-colors';
 
 /** Pannello del blocco selezionato: modello, bypass e manopole. */
-export function BlockParamsPanel({ selectedEffect, handleModelChange, handleToggleBlock, handleParamChange }: {
+export const BlockParamsPanel = memo(function BlockParamsPanel({ selectedEffect, handleModelChange, handleToggleBlock, handleParamChange }: {
   selectedEffect: EffectState;
   handleModelChange: (effectId: string, type: string, modelId: string) => void;
   handleToggleBlock: (e: React.MouseEvent, effectId: string, type: string, currentEnabled: boolean) => void;
   handleParamChange: (effectType: string, paramId: string, value: number, index: number) => void;
 }) {
-  const availableModels = MG30_MODELS[selectedEffect.type] || [];
   const currentModelData = MG30_MODELS[selectedEffect.type]?.find(m => m.id === selectedEffect.model) || MG30_MODELS[selectedEffect.type]?.[0];
   const currentBlockColor = `hsl(${getBlockColorVar(selectedEffect.type)})`;
+  const parameters = currentModelData?.parameters;
+  // Gestore stabile per tutte le manopole: solo quella che cambia valore si ridisegna.
+  const handleKnobChange = useCallback((value: number, index: number) => {
+    const param = parameters?.[index];
+    if (param) handleParamChange(selectedEffect.type, param.id, value, index);
+  }, [parameters, selectedEffect.type, handleParamChange]);
   return (
     <Card
       className="rounded-2xl shadow-none transition-colors"
@@ -53,10 +58,7 @@ export function BlockParamsPanel({ selectedEffect, handleModelChange, handleTogg
           </CardTitle>
         </div>
         <div className="flex w-full items-center gap-3 sm:w-auto sm:gap-4">
-          <Select value={selectedEffect?.model} onValueChange={(val) => handleModelChange(selectedEffect!.id, selectedEffect!.type, val)}>
-            <SelectTrigger className="h-11 w-full sm:w-[220px]"><SelectValue placeholder="Model" /></SelectTrigger>
-            <SelectContent>{availableModels.map(m => <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>)}</SelectContent>
-          </Select>
+          <ModelPicker effectId={selectedEffect.id} type={selectedEffect.type} model={selectedEffect.model} onChange={handleModelChange} />
           <div className="flex shrink-0 items-center gap-2 text-xs font-semibold text-muted-foreground">
             <span className="hidden sm:inline">{selectedEffect?.enabled ? 'Attivo' : 'Bypass'}</span>
             <Switch
@@ -74,7 +76,7 @@ export function BlockParamsPanel({ selectedEffect, handleModelChange, handleTogg
           <div className="grid grid-cols-2 justify-items-center gap-x-3 gap-y-9 sm:grid-cols-4 sm:gap-x-8 lg:grid-cols-5 lg:gap-y-12">
             {currentModelData.parameters.map((param, index) => (
               <div key={param.id}>
-                <RotaryKnob label={param.name} value={Number(selectedEffect.parameters[param.id.toLowerCase()] ?? param.default)} min={param.min} max={param.max} step={param.step} onChange={(v) => handleParamChange(selectedEffect.type, param.id, v, index)} color={currentBlockColor} />
+                <RotaryKnob label={param.name} value={Number(selectedEffect.parameters[param.id.toLowerCase()] ?? param.default)} min={param.min} max={param.max} step={param.step} index={index} onChange={handleKnobChange} color={currentBlockColor} />
               </div>
             ))}
           </div>
@@ -82,4 +84,20 @@ export function BlockParamsPanel({ selectedEffect, handleModelChange, handleTogg
       </CardContent>
     </Card>
   );
-}
+});
+
+/** Menu dei modelli: separato dal pannello, non si ridisegna a ogni giro di manopola. */
+const ModelPicker = memo(function ModelPicker({ effectId, type, model, onChange }: {
+  effectId: string;
+  type: EffectState['type'];
+  model: string;
+  onChange: (effectId: string, type: string, modelId: string) => void;
+}) {
+  const availableModels = MG30_MODELS[type] || [];
+  return (
+    <Select value={model} onValueChange={(val) => onChange(effectId, type, val)}>
+      <SelectTrigger aria-label={`Modello ${type}`} className="h-11 w-full sm:w-[220px]"><SelectValue placeholder="Model" /></SelectTrigger>
+      <SelectContent>{availableModels.map(m => <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>)}</SelectContent>
+    </Select>
+  );
+});

@@ -167,3 +167,18 @@ export function getPlaylistAlphabetical(playlist: Playlist | null | undefined, n
     .map((entry) => ({ note: entry.note, position: entry.position, isCurrent: entry.note.id === noteId }))
     .sort((a, b) => (a.note.title || '').localeCompare(b.note.title || '', 'it', { sensitivity: 'base', numeric: true }));
 }
+
+/** Come la playlist usa il preset del brano (PL12): predefinito, proprio o nessuno. */
+export type ItemPresetMode = 'default' | 'custom' | 'none';
+
+export function itemPresetMode(item: PlaylistItem | null | undefined): ItemPresetMode {
+  if (!item || item.presetSlot === undefined) return 'default';
+  return item.presetSlot === '' ? 'none' : 'custom';
+}
+
+/** Valore per `setItemPreset` a partire dalla scelta nel foglio. */
+export function presetSlotForMode(mode: ItemPresetMode, slot: string): string | null {
+  if (mode === 'default') return null;
+  if (mode === 'none') return '';
+  return slot || null;
+}

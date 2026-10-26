@@ -5,7 +5,7 @@ import type { SavedNote } from '@/types/note';
 import type { Playlist } from '@/types/playlist';
 import {
   addNotes, effectivePreset, getPlaylistAlphabetical, getPlaylistPosition, indexNotes, moveItem, playlistEntries,
-  playlistsContaining, removeNote, removeNoteFromAll, replaceNote, resolveNoteId, restoreItem, setItemPreset,
+  itemPresetMode, playlistsContaining, presetSlotForMode, removeNote, removeNoteFromAll, replaceNote, resolveNoteId, restoreItem, setItemPreset,
 } from './playlist-ops';
 
 const note = (id: string, title: string, extra: Partial<SavedNote> = {}): SavedNote => ({ id, title, band: '', setlist: '', ...extra });
@@ -86,4 +86,16 @@ test('posizione e Prec/Succ seguono la playlist da cui si è aperto il brano', (
 test('scelta libera (V11): ordine alfabetico con la posizione reale', () => {
   const list = getPlaylistAlphabetical(pl(['a', 'b', 'c']), byId, 'b');
   assert.deepEqual(list.map((e) => [e.note.title, e.position, e.isCurrent]), [['Angels', 3, false], ['Creep', 2, true], ['Wonderwall', 1, false]]);
+});
+
+test('modalità del preset nella playlist e ritorno a setItemPreset', () => {
+  assert.equal(itemPresetMode(null), 'default');
+  assert.equal(itemPresetMode({ noteId: 'a' }), 'default');
+  assert.equal(itemPresetMode({ noteId: 'a', presetSlot: '' }), 'none');
+  assert.equal(itemPresetMode({ noteId: 'a', presetSlot: '48' }), 'custom');
+  assert.equal(presetSlotForMode('default', '48'), null);
+  assert.equal(presetSlotForMode('none', '48'), '');
+  assert.equal(presetSlotForMode('custom', '48'), '48');
+  // "Preset proprio" senza slot scelto equivale al predefinito.
+  assert.equal(presetSlotForMode('custom', ''), null);
 });

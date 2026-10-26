@@ -7,14 +7,14 @@ import { Button } from '@/components/ui/button';
 import { useUser } from '@/firebase';
 import { Database, ShieldCheck, ExternalLink, AlertCircle, Globe, HelpCircle, Terminal, Trash2 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { useMidiStore } from '@/stores/use-midi-store';
+import { useMidiLogStore } from '@/stores/use-midi-log-store';
 
 // ── MIDI Monitor (componente separato per evitare re-render pesanti) ────────
 function MidiMonitorCard() {
-  const midiLog = useMidiStore(s => s.midiLog);
-  const midiOutLog = useMidiStore(s => s.midiOutLog);
-  const clearMidiLog = useMidiStore(s => s.clearMidiLog);
-  const clearMidiOutLog = useMidiStore(s => s.clearMidiOutLog);
+  const midiLog = useMidiLogStore(s => s.midiLog);
+  const midiOutLog = useMidiLogStore(s => s.midiOutLog);
+  const clearMidiLog = useMidiLogStore(s => s.clearMidiLog);
+  const clearMidiOutLog = useMidiLogStore(s => s.clearMidiOutLog);
 
   return (
     <Card className="border-primary/20 bg-card">

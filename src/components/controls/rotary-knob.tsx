@@ -1,7 +1,7 @@
 
 "use client"
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { memo, useState, useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
 import { usePresetStore } from '@/stores/use-preset-store';
 
@@ -12,86 +12,122 @@ interface RotaryKnobProps {
   max?: number;
   step?: number;
   unit?: string;
-  onChange: (value: number) => void;
+  /** Posizione della manopola nel blocco: torna in `onChange`, così il genitore può passare un gestore unico e stabile. */
+  index?: number;
+  onChange: (value: number, index: number) => void;
   className?: string;
   size?: number;
   color?: string; // Hex, HSL or CSS variable
 }
 
-export const RotaryKnob: React.FC<RotaryKnobProps> = ({
+/** Pixel di trascinamento verticale per l'intera escursione. */
+const FULL_TRAVEL_PX = 200;
+/** Spostamento orizzontale oltre il quale il trascinamento diventa fine (K3). */
+const FINE_OFFSET_PX = 48;
+/** Sensibilità della regolazione fine (con il dito spostato di lato o con Shift). */
+const FINE_FACTOR = 0.2;
+
+const ARROW_KEYS = new Set(['ArrowUp', 'ArrowRight', 'ArrowDown', 'ArrowLeft', 'Home', 'End']);
+
+/**
+ * Manopola: trascinamento verticale, tastiera e campo numerico.
+ * - Regolazione fine (K3): con Shift o spostando il dito di lato di oltre 48px;
+ *   il valore avanza in modo relativo, quindi il cambio di modalità non lo fa saltare.
+ * - Il campo numerico invia solo alla conferma (Invio o uscita dal campo), mai a ogni cifra (K4).
+ * - Trascinamento, frecce e campo numerico entrano nella cronologia undo (K7).
+ */
+export const RotaryKnob = memo(function RotaryKnob({
   label,
   value,
   min = 0,
   max = 100,
   step = 1,
   unit = '',
+  index = 0,
   onChange,
   className,
   size = 64,
   color = 'hsl(var(--primary))'
-}) => {
+}: RotaryKnobProps) {
   const [isDragging, setIsDragging] = useState(false);
+  const [isFine, setIsFine] = useState(false);
   const [inputValue, setInputValue] = useState(String(value));
   const [isInputFocused, setIsInputFocused] = useState(false);
-  const startY = useRef(0);
-  const startValue = useRef(0);
+  const startX = useRef(0);
+  const lastY = useRef(0);
+  const rawValue = useRef(value);
+  const lastEmitted = useRef(value);
+  const pointer = useRef({ x: 0, y: 0, shift: false });
   const rafRef = useRef<number | null>(null);
+  const cancelInput = useRef(false);
   const saveToHistory = usePresetStore((s) => s.saveToHistory);
 
   useEffect(() => {
     if (!isInputFocused) setInputValue(String(value));
   }, [value, isInputFocused]);
 
+  const toStep = (raw: number) => Number((Math.round(raw / step) * step).toFixed(6));
+
   const commitInputValue = () => {
     const parsed = Number(inputValue);
-    if (!Number.isFinite(parsed)) {
+    if (inputValue.trim() === '' || !Number.isFinite(parsed)) {
       setInputValue(String(value));
       return;
     }
-    const clamped = Math.max(min, Math.min(max, parsed));
-    const stepped = Math.round(clamped / step) * step;
-    onChange(Number(stepped.toFixed(6)));
+    const stepped = toStep(Math.max(min, Math.min(max, parsed)));
     setInputValue(String(Number(stepped.toFixed(step < 1 ? 4 : 0))));
+    if (stepped === value) return;
+    onChange(stepped, index);
+    saveToHistory();
   };
 
-  const updateFromPointer = (clientY: number, shiftKey = false) => {
-    const deltaY = startY.current - clientY;
-    const sensitivity = (max - min) / 200;
-    let newValue = startValue.current + deltaY * sensitivity;
-    if (shiftKey) newValue = startValue.current + (deltaY * sensitivity) / 5;
-    newValue = Math.max(min, Math.min(max, newValue));
-    onChange(Math.round(newValue / step) * step);
+  const applyPointer = () => {
+    rafRef.current = null;
+    const { x, y, shift } = pointer.current;
+    const fine = shift || Math.abs(x - startX.current) > FINE_OFFSET_PX;
+    setIsFine(fine);
+    const deltaY = lastY.current - y;
+    lastY.current = y;
+    const sensitivity = ((max - min) / FULL_TRAVEL_PX) * (fine ? FINE_FACTOR : 1);
+    rawValue.current = Math.max(min, Math.min(max, rawValue.current + deltaY * sensitivity));
+    const next = toStep(rawValue.current);
+    if (next !== lastEmitted.current) {
+      lastEmitted.current = next;
+      onChange(next, index);
+    }
   };
 
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     e.preventDefault();
     setIsDragging(true);
-    startY.current = e.clientY;
-    startValue.current = value;
+    setIsFine(e.shiftKey);
+    startX.current = e.clientX;
+    lastY.current = e.clientY;
+    rawValue.current = value;
+    lastEmitted.current = value;
+    pointer.current = { x: e.clientX, y: e.clientY, shift: e.shiftKey };
     e.currentTarget.setPointerCapture(e.pointerId);
   };
 
   const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!isDragging) return;
-    // Throttling tramite requestAnimationFrame per fluidità e performance
-    if (rafRef.current) return;
-
-    rafRef.current = requestAnimationFrame(() => {
-      updateFromPointer(e.clientY, e.shiftKey);
-      rafRef.current = null;
-    });
+    pointer.current = { x: e.clientX, y: e.clientY, shift: e.shiftKey };
+    // Un aggiornamento per frame (requestAnimationFrame), con l'ultima posizione.
+    if (rafRef.current === null) rafRef.current = requestAnimationFrame(applyPointer);
   };
 
   const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
-    setIsDragging(false);
+    if (!isDragging) return;
     if (e.currentTarget.hasPointerCapture(e.pointerId)) {
       e.currentTarget.releasePointerCapture(e.pointerId);
     }
-    if (rafRef.current) {
+    if (rafRef.current !== null) {
       cancelAnimationFrame(rafRef.current);
-      rafRef.current = null;
+      applyPointer();
     }
-    // Salviamo lo stato finale in cronologia alla fine del trascinamento
+    setIsDragging(false);
+    setIsFine(false);
+    // Lo stato finale del gesto entra in cronologia.
     saveToHistory();
   };
 
@@ -99,14 +135,19 @@ export const RotaryKnob: React.FC<RotaryKnobProps> = ({
     const delta = e.shiftKey ? step : step * 5;
     if (e.key === 'ArrowUp' || e.key === 'ArrowRight') {
       e.preventDefault();
-      onChange(Math.min(max, value + delta));
+      onChange(Math.min(max, value + delta), index);
     } else if (e.key === 'ArrowDown' || e.key === 'ArrowLeft') {
       e.preventDefault();
-      onChange(Math.max(min, value - delta));
+      onChange(Math.max(min, value - delta), index);
     } else if (e.key === 'Home' || e.key === 'End') {
       e.preventDefault();
-      onChange(e.key === 'Home' ? min : max);
+      onChange(e.key === 'Home' ? min : max, index);
     }
+  };
+
+  // Al rilascio del tasto (anche dopo una ripetizione automatica) una sola voce di cronologia.
+  const handleKeyUp = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (ARROW_KEYS.has(e.key)) saveToHistory();
   };
 
   const rotation = ((value - min) / (max - min)) * 270 - 135;
@@ -128,6 +169,7 @@ export const RotaryKnob: React.FC<RotaryKnobProps> = ({
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerUp}
         onKeyDown={handleKeyDown}
+        onKeyUp={handleKeyUp}
         role="slider"
         tabIndex={0}
         aria-label={label}
@@ -136,7 +178,7 @@ export const RotaryKnob: React.FC<RotaryKnobProps> = ({
         aria-valuenow={value}
         aria-valuetext={`${value}${unit}`}
         onDoubleClick={() => {
-          onChange((max + min) / 2);
+          onChange((max + min) / 2, index);
           saveToHistory();
         }}
         style={{ width: size, height: size }}
@@ -179,6 +221,7 @@ export const RotaryKnob: React.FC<RotaryKnobProps> = ({
              style={{ borderColor: color }}
            >
             {value.toFixed(step < 1 ? 1 : 0)}{unit}
+            {isFine && <span className="ml-1 text-muted-foreground">fine</span>}
           </span>
         </div>
       </div>
@@ -192,19 +235,19 @@ export const RotaryKnob: React.FC<RotaryKnobProps> = ({
         aria-label={`${label} valore numerico`}
         onPointerDown={(event) => event.stopPropagation()}
         onFocus={() => { setIsInputFocused(true); setInputValue(String(value)); }}
-        onChange={(event) => {
-          const next = event.target.value;
-          setInputValue(next);
-          if (next !== '' && Number.isFinite(Number(next))) {
-            const parsed = Math.max(min, Math.min(max, Number(next)));
-            onChange(Number(parsed.toFixed(step < 1 ? 4 : 0)));
-          }
+        onChange={(event) => setInputValue(event.target.value)}
+        onBlur={() => {
+          if (cancelInput.current) setInputValue(String(value));
+          else commitInputValue();
+          cancelInput.current = false;
+          setIsInputFocused(false);
         }}
-        onBlur={() => { commitInputValue(); setIsInputFocused(false); }}
         onKeyDown={(event) => {
           if (event.key === 'Enter') {
             event.preventDefault();
-            commitInputValue();
+            event.currentTarget.blur(); // l'uscita dal campo esegue la conferma
+          } else if (event.key === 'Escape') {
+            cancelInput.current = true; // Esc annulla: nessun invio
             event.currentTarget.blur();
           }
         }}
@@ -213,4 +256,4 @@ export const RotaryKnob: React.FC<RotaryKnobProps> = ({
       />
     </div>
   );
-};
+});

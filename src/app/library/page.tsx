@@ -282,9 +282,9 @@ export default function LibraryPage() {
               {namesLoading ? (
                 <Loader2 className="w-3 h-3 animate-spin" />
               ) : user ? (
-                <Cloud className="w-3 h-3 text-green-500" />
+                <Cloud className="w-3 h-3 text-success" />
               ) : (
-                <CloudOff className="w-3 h-3 text-amber-500" />
+                <CloudOff className="w-3 h-3 text-warning" />
               )}
               <span>{user ? 'Cloud sync attivo' : 'Solo locale — accedi per sync cloud'}</span>
             </div>

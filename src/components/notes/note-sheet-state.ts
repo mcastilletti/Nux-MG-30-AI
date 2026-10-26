@@ -6,11 +6,16 @@ export interface NoteSheetState {
   editorKind: NoteEditorKind;
   /** Modalità Live (spec V1–V11): sola lettura a schermo pieno. */
   live: boolean;
+  /**
+   * Playlist da cui è stato aperto il brano (spec playlist PL10): decide Prec/Succ,
+   * posizione e preset effettivo. Assente = brano aperto dal serbatoio.
+   */
+  playlistId?: string;
 }
 
 export type NoteSheetAction =
   /** `live` omesso: in un foglio già aperto resta com'è (Prec/Succ in Live restano in Live). */
-  | { type: 'open'; noteId: string | null; editorKind: NoteEditorKind; live?: boolean }
+  | { type: 'open'; noteId: string | null; editorKind: NoteEditorKind; live?: boolean; playlistId?: string | null }
   | { type: 'enter-live' }
   | { type: 'exit-live' }
   | { type: 'saved'; noteId: string; editorKind: NoteEditorKind }
@@ -27,6 +32,10 @@ export const initialNoteSheetState: NoteSheetState = {
 export const NOTE_SHEET_OPEN_PARAM = 'openNote';
 export const NOTE_SHEET_KIND_PARAM = 'noteKind';
 export const NOTE_SHEET_LIVE_PARAM = 'live';
+export const NOTE_SHEET_PLAYLIST_PARAM = 'playlist';
+
+const withPlaylist = <T extends object>(state: T, playlistId: string | null | undefined): T & { playlistId?: string } =>
+  (playlistId ? { ...state, playlistId } : state);
 
 export function getNoteSheetStateFromSearchParams(
   searchParams: Pick<URLSearchParams, 'get'>,
@@ -38,13 +47,13 @@ export function getNoteSheetStateFromSearchParams(
     return null;
   }
 
-  return {
+  return withPlaylist<NoteSheetState>({
     isOpen: true,
     noteId: openNote || null,
     editorKind,
     // La Live è solo lettura: richiede una nota esistente.
     live: searchParams.get(NOTE_SHEET_LIVE_PARAM) === '1' && !!openNote,
-  };
+  }, searchParams.get(NOTE_SHEET_PLAYLIST_PARAM));
 }
 
 /**
@@ -59,12 +68,13 @@ export function noteSheetReducer(
 ): NoteSheetState {
   switch (action.type) {
     case 'open':
-      return {
+      // La playlist va sempre indicata da chi apre: Prec/Succ la ripassano, dal serbatoio non c'è.
+      return withPlaylist<NoteSheetState>({
         isOpen: true,
         noteId: action.noteId,
         editorKind: action.editorKind,
         live: action.noteId ? (action.live ?? (state.isOpen ? state.live : false)) : false,
-      };
+      }, action.playlistId);
     case 'enter-live':
       return state.isOpen && state.noteId ? { ...state, live: true } : state;
     case 'exit-live':

@@ -109,3 +109,21 @@ test('modalità Live: ingresso, navigazione, uscita e URL', async () => {
   assert.equal(getNoteSheetStateFromSearchParams(params)?.live, true);
   assert.equal(getNoteSheetStateFromSearchParams(new URLSearchParams('openNote=&noteKind=song&live=1'))?.live, false);
 });
+
+test('la playlist di apertura entra nello stato e nell\'URL, e Prec/Succ la conservano solo se ripassata', () => {
+  const fromPlaylist = noteSheetReducer(initialNoteSheetState, { type: 'open', noteId: 'a', editorKind: 'song', playlistId: 'live-2026' });
+  assert.equal(fromPlaylist.playlistId, 'live-2026');
+  const next = noteSheetReducer(fromPlaylist, { type: 'open', noteId: 'b', editorKind: 'song', playlistId: fromPlaylist.playlistId });
+  assert.equal(next.playlistId, 'live-2026');
+  const fromPool = noteSheetReducer(next, { type: 'open', noteId: 'c', editorKind: 'song' });
+  assert.equal('playlistId' in fromPool, false);
+  const saved = noteSheetReducer(fromPlaylist, { type: 'saved', noteId: 'a2', editorKind: 'song' });
+  assert.equal(saved.playlistId, 'live-2026');
+  assert.equal(noteSheetReducer(fromPlaylist, { type: 'enter-live' }).playlistId, 'live-2026');
+});
+
+test('playlist ripristinata dall\'URL', () => {
+  const params = new URLSearchParams('openNote=a&noteKind=song&live=1&playlist=p1');
+  assert.deepEqual(getNoteSheetStateFromSearchParams(params), { isOpen: true, noteId: 'a', editorKind: 'song', live: true, playlistId: 'p1' });
+  assert.equal('playlistId' in getNoteSheetStateFromSearchParams(new URLSearchParams('openNote=a&noteKind=song'))!, false);
+});

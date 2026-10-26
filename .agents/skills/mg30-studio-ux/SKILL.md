@@ -119,6 +119,11 @@ Prima di progettare o modificare la sezione Note leggi `references/live-notes.md
   - frecce, campo e trascinamento entrano nell'undo;
   - regolazione fine con Shift o spostando il dito di lato (oltre 48px), con l'etichetta "fine".
   - Non reintrodurre l'invio a ogni carattere.
+- **Parametri a nome** (`options` in `mg30-data.ts`: microfono, posizione, Sub Div, Mode…): mai una manopola con numeri, ma `OptionParam` (`option-param.tsx`).
+  - Fino a 4 valori: pulsanti tutti visibili, con `role="radio"` e segno di spunta sulla scelta.
+  - Più di 4 valori: menu a tendina.
+  - Il valore inviato resta `min + indice`, come per la manopola. Ogni scelta entra nell'undo.
+  - I nomi seguono la pedaliera. Per un nuovo parametro a valori discreti aggiungi `options` invece di lasciarlo numerico.
 - **Catena**: il chip ON/OFF è un `button` fratello del blocco, mai annidato nel suo `button`.
 - **Accessibilità**:
   - `lang="it"`;

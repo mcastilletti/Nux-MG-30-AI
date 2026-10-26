@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RotaryKnob } from '@/components/controls/rotary-knob';
+import { OptionParam } from '@/components/controls/option-param';
 import { cn } from '@/lib/utils';
 import { MG30_MODELS } from '@/lib/mg30-data';
 import type { EffectState } from '@/types/preset';
@@ -74,11 +75,19 @@ export const BlockParamsPanel = memo(function BlockParamsPanel({ selectedEffect,
       <CardContent className="p-5 md:p-8 lg:p-10">
         {currentModelData && (
           <div className="grid grid-cols-2 justify-items-center gap-x-3 gap-y-9 sm:grid-cols-4 sm:gap-x-8 lg:grid-cols-5 lg:gap-y-12">
-            {currentModelData.parameters.map((param, index) => (
-              <div key={param.id}>
-                <RotaryKnob label={param.name} value={Number(selectedEffect.parameters[param.id.toLowerCase()] ?? param.default)} min={param.min} max={param.max} step={param.step} index={index} onChange={handleKnobChange} color={currentBlockColor} />
-              </div>
-            ))}
+            {currentModelData.parameters.map((param, index) => {
+              const value = Number(selectedEffect.parameters[param.id.toLowerCase()] ?? param.default);
+              // Valori a nome (microfono, posizione, Sub Div…): si sceglie il nome, non un numero.
+              return param.options ? (
+                <div key={param.id} className="col-span-2 w-full max-w-sm">
+                  <OptionParam label={param.name} options={param.options} value={value} min={param.min} index={index} onChange={handleKnobChange} color={currentBlockColor} />
+                </div>
+              ) : (
+                <div key={param.id}>
+                  <RotaryKnob label={param.name} value={value} min={param.min} max={param.max} step={param.step} index={index} onChange={handleKnobChange} color={currentBlockColor} />
+                </div>
+              );
+            })}
           </div>
         )}
       </CardContent>

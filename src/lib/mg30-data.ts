@@ -32,7 +32,9 @@ const SUBDIV: MG30Parameter = {
 };
 
 const IR_GUITAR_PARAMS: MG30Parameter[] = [
-  { id: 'mic', name: 'Mic', min: 0, max: 7, step: 1, default: 1 },
+  // Nomi dei microfoni come sulla pedaliera: i primi 6 dallo schema NUX degli effetti MG-30
+  // (colonna troncata dopo "C414/ C"), gli ultimi 2 dalla lista del NUX Solid Studio, da cui derivano questi IR.
+  { id: 'mic', name: 'Mic', min: 0, max: 7, step: 1, default: 1, options: ['DYN421', 'S57', 'U87', 'R122', 'R121', 'C414', 'C3000', 'B52'] },
   { id: 'axis', name: 'Axis', min: 0, max: 2, step: 1, default: 0, options: ['CENTER', 'MIDDLE', 'EDGE'] },
   { id: 'level', name: 'Level', min: -12, max: 12, step: 1, default: 0, unit: 'dB' },
   { id: 'lowcut', name: 'Lo Cut', min: 20, max: 1000, step: 1, default: 20, unit: 'Hz' },

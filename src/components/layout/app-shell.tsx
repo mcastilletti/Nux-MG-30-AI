@@ -140,6 +140,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
     <SidebarProvider>
       <div className="flex min-h-[100dvh] w-full bg-background overflow-hidden">
         <Sidebar className="border-r border-white/5">
+          <nav aria-label="Navigazione principale" className="flex min-h-0 flex-1 flex-col">
           <SidebarHeader className="p-4 border-b border-white/5">
             <div className="flex items-center gap-3">
               <div className="w-[70px] h-[70px] flex items-center justify-center overflow-hidden">
@@ -150,7 +151,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
                 />
               </div>
               <div>
-                <h1 className="text-base font-bold tracking-tight">MG30 STUDIO</h1>
+                <p className="text-base font-bold tracking-tight">MG30 STUDIO</p>
                 <p className="text-[12px] text-muted-foreground uppercase tracking-widest">NUX EDITOR</p>
               </div>
             </div>
@@ -191,6 +192,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
               </SidebarGroupContent>
             </SidebarGroup>
           </SidebarContent>
+          </nav>
         </Sidebar>
 
         <main className="flex-1 flex flex-col min-w-0 bg-background min-h-[100dvh]">
@@ -200,9 +202,10 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
               <SidebarTrigger className="hidden md:flex" />
               <div className="mx-2 hidden h-4 w-[1px] bg-white/10 md:block" />
               <div className="flex min-w-0 items-center gap-2">
-                <span className="truncate text-base font-semibold">
+                {/* Titolo principale della pagina (h1), su mobile e desktop. */}
+                <h1 className="truncate text-base font-semibold">
                   {getRouteTitle(pathname)}
-                </span>
+                </h1>
                 <ConnectionStatus status={status} lastError={lastError} />
               </div>
             </div>

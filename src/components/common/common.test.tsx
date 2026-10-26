@@ -41,7 +41,8 @@ test('SaveStatus: annunciato e con testo per ogni stato', () => {
 
 test('EmptyState ed ErrorState: titolo come heading, icona nascosta', () => {
   const html = renderToStaticMarkup(<EmptyState icon={<svg />} title="Nessun brano" description="Aggiungi un brano" />);
-  assert.match(html, /<h3[^>]*>Nessun brano<\/h3>/);
+  // h2: lo stato vuoto sta subito sotto il titolo della pagina (h1).
+  assert.match(html, /<h2[^>]*>Nessun brano<\/h2>/);
   assert.match(html, /aria-hidden="true"/);
   const err = renderToStaticMarkup(<ErrorState onRetry={() => {}} />);
   assert.match(err, /Riprova/);

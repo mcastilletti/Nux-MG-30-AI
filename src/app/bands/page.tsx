@@ -1,7 +1,6 @@
 "use client"
 
 import React, { useState, useEffect, useMemo, Suspense } from 'react';
-import { AppShell } from '@/components/layout/app-shell';
 import { Card, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -429,31 +428,31 @@ function BandsContent() {
 
   if (!userLoading && !user) {
     return (
-      <AppShell>
+      <>
         <div className="mx-auto max-w-md py-16 text-center space-y-3">
           <Users className="w-10 h-10 mx-auto text-muted-foreground" aria-hidden="true" />
           <h2 className="text-xl font-bold">Accedi per gestire band e scalette</h2>
           <p className="text-sm text-muted-foreground">Band e scalette sono salvate nel tuo account. Accedi con Google dal menu laterale.</p>
         </div>
-      </AppShell>
+      </>
     );
   }
 
   if (isLoading) {
     return (
-      <AppShell>
+      <>
         <div className="flex items-center justify-center py-20">
           <div className="text-center space-y-4">
             <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
             <p className="text-muted-foreground">Caricamento band e scalette...</p>
           </div>
         </div>
-      </AppShell>
+      </>
     );
   }
 
   return (
-    <AppShell>
+    <>
       <div className="max-w-5xl mx-auto space-y-6 pb-20 px-2 md:px-0">
         <header className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-4">
@@ -821,7 +820,7 @@ function BandsContent() {
           </DialogContent>
         </Dialog>
       </div>
-    </AppShell>
+    </>
   );
 }
 

@@ -4,6 +4,7 @@ import { EffectType, Preset, EffectState } from '@/types/preset';
 import { usePresetStore } from './use-preset-store';
 import { MG30_MODELS } from '@/lib/mg30-data';
 import { formatSlotLabel } from '@/lib/slot';
+import { createDefaultEffects } from '@/lib/default-effects';
 
 // Tabella CC per Modelli e Bypass
 const BLOCK_MODEL_CC: Record<string, number> = {
@@ -106,21 +107,6 @@ const blockStateMidiValue = (blockType: string, modelIndex: number, enabled: boo
 const SELECT_BLOCK_CC = 75; 
 const ENTER_EDITOR_CC = 78;
 
-
-const createDefaultEffects = (): EffectState[] => [
-  { id: 'wah', type: 'wah', model: 'clyde', enabled: false, parameters: { position: 0 } },
-  { id: 'ng', type: 'noise-gate', model: 'gate', enabled: true, parameters: { threshold: 20, decay: 50 } },
-  { id: 'cmp', type: 'compressor', model: 'rose', enabled: false, parameters: { sustain: 50, level: 50 } },
-  { id: 'efx', type: 'efx', model: 'tscream', enabled: false, parameters: { drive: 50, tone: 50, level: 50 } },
-  { id: 'amp', type: 'amp', model: 'plexi100w', enabled: true, parameters: { gain: 50, master: 50, bass: 50, mid: 50, treble: 50, presence: 50 } },
-  { id: 'eq', type: 'eq', model: 'eq-ge6', enabled: false, parameters: { '100hz': 50, '220hz': 50, '500hz': 50, '1.2khz': 50, '2.6khz': 50, '6.4khz': 50, level: 50 } },
-  { id: 'ir', type: 'ir', model: 'ir-jz120', enabled: true, parameters: { level: 0, lowcut: 20, highcut: 20000 } },
-  { id: 'sr', type: 'sr', model: 'send-return', enabled: false, parameters: { send: 100, return: 100 } },
-  { id: 'mod', type: 'modulation', model: 'mod-ce1', enabled: false, parameters: { intensity: 50, depth: 50, rate: 50 } },
-  { id: 'delay', type: 'delay', model: 'dly-analog', enabled: false, parameters: { repeat: 30, echo: 30, intensity: 30 } },
-  { id: 'reverb', type: 'reverb', model: 'room', enabled: true, parameters: { decay: 50, tone: 50, level: 30 } },
-  { id: 'vol', type: 'vol', model: 'patch-vol', enabled: true, parameters: { min: 30, max: 60 } }
-];
 
 export const INITIAL_PRESETS: Preset[] = Array.from({ length: 128 }, (_, i) => ({
   slot: i + 1,

@@ -2,7 +2,6 @@
 
 import React, { useState, useMemo, useEffect, useRef, useReducer, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { AppShell } from '@/components/layout/app-shell';
 import { Card, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -430,7 +429,7 @@ function NotesLibraryContent() {
   };
 
   return (
-    <AppShell>
+    <>
       <div className="max-w-7xl mx-auto space-y-8 py-8 pb-20 px-2 md:px-0 no-print">
         <header className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-4">
@@ -839,7 +838,7 @@ function NotesLibraryContent() {
           />
         )}
       </NoteSheet>
-    </AppShell>
+    </>
   );
 }
 

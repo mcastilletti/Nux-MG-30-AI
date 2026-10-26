@@ -547,7 +547,18 @@ F0 Baseline ──┬─► F0b Correzioni P0 ───────────�
 - **Rischi:** nessuno sul codice.
 - **Accettazione:** i 9 scenari della sezione 8 hanno comportamento atteso e test associato.
 
-### Fase 4 — Architettura frontend e componenti condivisi (L)
+### Fase 4 — Architettura frontend e componenti condivisi (L) — 🔶 in corso (2026-10-26)
+
+**Fatto:**
+- `applyJsonToPreset` e `parseDirectJsonInput` spostati in `src/lib/preset-json.ts`, con test di caratterizzazione sull'output attuale;
+- `AppShell` nel layout principale: la shell non si rimonta più a ogni pagina e le richieste SysEx alla pedaliera navigando fra 5 pagine scendono da 4 a 2;
+- editor diviso in `EditorHeader`, `SignalChain`, `BlockParamsPanel`, `CopySceneDialog`, `AiModeDialog`: `editor/page.tsx` passa da 1189 a 262 righe. Log MIDI e schermate identici prima e dopo;
+- un solo elenco di blocchi di partenza (`src/lib/default-effects.ts`, EQ dopo l'AMP come già in 127 slot su 128): lo slot attivo all'avvio non mostra più un ordine diverso dagli altri. Gli stessi messaggi MIDI vengono inviati, alcuni in ordine diverso.
+
+**Aperto:**
+- **alias unificati (M2):** cambia il risultato della lettura del JSON, quindi va fatto con i test di caratterizzazione come riferimento e solo con una differenza voluta;
+- **codice morto:** in attesa di D5/D9;
+- **ordine della catena per preset (nuovo):** sulla MG-30 la catena non è fissa e i blocchi si possono spostare in ogni preset (conferma dell'utente). L'app non legge né invia l'ordine: mostra sempre l'ordine di partenza. Servirebbe il formato SysEx dell'ordine della catena, oggi non documentato. Fuori ambito finché non richiesto.
 - **Deliverable:**
   - estrazioni dall'editor: `EditorHeader`, `SignalChain`/`BlockCard`, `BlockParamsPanel`, `AiModeDialog`, `CopySceneDialog`, `useEditorMidiActions`;
   - `applyJsonToPreset` spostato in `src/lib` e unificato con gli alias del normalizzatore;

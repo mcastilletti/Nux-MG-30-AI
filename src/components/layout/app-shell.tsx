@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { useMidiStore } from '@/stores/use-midi-store';
 import { useNotesCache } from '@/stores/use-notes-cache';
@@ -32,6 +32,12 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
   useEffect(() => {
     initialize();
   }, [initialize]);
+
+  // La shell resta montata tra le pagine: ogni nuova pagina parte dall'inizio.
+  const contentRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    contentRef.current?.scrollTo({ top: 0 });
+  }, [pathname]);
 
   useEffect(() => {
     if (status === 'connected') {
@@ -197,7 +203,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
             </div>
           </header>
 
-          <div className="flex-1 overflow-auto px-4 py-5 pb-[calc(6rem+env(safe-area-inset-bottom))] md:p-8 md:pb-8">
+          <div ref={contentRef} className="flex-1 overflow-auto px-4 py-5 pb-[calc(6rem+env(safe-area-inset-bottom))] md:p-8 md:pb-8">
             {children}
           </div>
         </main>

@@ -1,6 +1,7 @@
 import type {Metadata, Viewport} from 'next';
 import './globals.css';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
+import { AppShell } from '@/components/layout/app-shell';
 
 export const viewport: Viewport = {
   themeColor: '#0a0a0b',
@@ -49,7 +50,8 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased selection:bg-primary/30">
         <FirebaseClientProvider>
-          {children}
+          {/* Shell condivisa (N3): MIDI, wake lock e salvataggio dei preset non ripartono a ogni pagina. */}
+          <AppShell>{children}</AppShell>
         </FirebaseClientProvider>
       </body>
     </html>

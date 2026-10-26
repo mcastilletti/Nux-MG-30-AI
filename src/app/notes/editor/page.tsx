@@ -3,7 +3,6 @@
 
 import React, { useState, useMemo, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { AppShell } from '@/components/layout/app-shell';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -261,7 +260,7 @@ function NoteEditorContent() {
   };
 
   return (
-    <AppShell>
+    <>
       <TooltipProvider>
       <div className="flex flex-col md:flex-row gap-6 h-full min-h-[calc(100vh-140px)]">
         <main className="flex-1 space-y-6 max-w-2xl mx-auto md:mx-0 w-full pb-20">
@@ -675,7 +674,7 @@ function NoteEditorContent() {
       </Dialog>
 
       </TooltipProvider>
-    </AppShell>
+    </>
   );
 }
 

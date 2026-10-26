@@ -10,7 +10,8 @@ import { useNotesCache } from '@/stores/use-notes-cache';
 import { getNoteLoadAction } from './note-load-action';
 import { serializeDraft } from './note-draft';
 import { useUnsavedChangesGuard } from '@/hooks/use-unsaved-changes-guard';
-import { formatPresetLabel, getPresetChipState, getPresetSendCommands, readAutoSendSetting } from './preset-send';
+import { formatPresetLabel, getPresetChipState, readAutoSendSetting } from './preset-send';
+import { useNotePresetSender } from '@/hooks/use-note-preset-sender';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -41,10 +42,12 @@ interface NoteEditorContentProps {
   onClose: () => void;
   onUpdate: (note: SavedNote) => void;
   onEditModeChange?: (isEditing: boolean) => void;
+  /** Avvia la modalità Live dal brano aperto (menu ⋮). */
+  onStartLive?: () => void;
 }
 
 
-export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange }: NoteEditorContentProps) {
+export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange, onStartLive }: NoteEditorContentProps) {
   const { devicePresets, status, sendProgramChange, sendSceneChange } = useMidiStore();
   const { toast } = useToast();
   const { firestore } = useFirebase();
@@ -78,8 +81,8 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange 
   const isDirty = editMode && currentDraft !== savedDraftRef.current;
   // NT17: un solo salvataggio alla volta e stato visibile.
   const [isSaving, setIsSaving] = useState(false);
-  // Stato dell'etichetta del preset (L4): inviato alla pedaliera per la nota aperta.
-  const [presetSent, setPresetSent] = useState(false);
+  // Invio del preset (D2) ed etichetta "inviato" (L4), condivisi con la Live.
+  const { send: sendNotePreset, sent: presetSent, resetSent: resetPresetSent } = useNotePresetSender();
   const savingRef = useRef(false);
   const [saveFailed, setSaveFailed] = useState(false);
   const saveState = isSaving ? 'saving' : saveFailed ? 'error' : isDirty ? 'dirty' : 'idle';
@@ -167,21 +170,9 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange 
     });
     setEditMode(false);
     setIsNotesOpen(true);
-    setPresetSent(false);
+    resetPresetSent();
   };
 
-  // Richiama sulla pedaliera il preset collegato al brano (D2: solo all'apertura e con ▶).
-  const sendNotePreset = (presetSlot?: string, presetScene?: string) => {
-    const commands = getPresetSendCommands({ presetSlot, presetScene });
-    if (!commands || status !== 'connected') return false;
-    sendProgramChange(commands.program);
-    if (commands.scene !== null) {
-      const scene = commands.scene;
-      setTimeout(() => sendSceneChange(scene), 500);
-    }
-    setPresetSent(true);
-    return true;
-  };
 
   const handleSaveNote = async () => {
     if (savingRef.current) return;
@@ -410,7 +401,7 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange 
                   <Pencil className="h-5 w-5" />
                 </button>
               )}
-              {!editMode && noteId && !isNoteMissing && <NoteReadMenu showAutoSend />}
+              {!editMode && noteId && !isNoteMissing && <NoteReadMenu showAutoSend onStartLive={onStartLive} />}
               {editMode && (
                 <>
                   <button

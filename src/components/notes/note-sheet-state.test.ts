@@ -24,6 +24,7 @@ test('keeps an edited song note open across app, list and realtime updates', () 
       isOpen: true,
       noteId: 'song-42',
       editorKind: 'song',
+    live: false,
     });
   }
 });
@@ -45,6 +46,7 @@ test('autosave assigns a new id without closing or changing the mounted editor',
     isOpen: true,
     noteId: 'created-song',
     editorKind: 'song',
+    live: false,
   });
 });
 
@@ -68,6 +70,7 @@ test('restores an open note after a document reload', () => {
     isOpen: true,
     noteId: 'song-42',
     editorKind: 'song',
+    live: false,
   });
 });
 
@@ -80,5 +83,29 @@ test('restores a new unsaved note without inventing an id', () => {
     isOpen: true,
     noteId: null,
     editorKind: 'song',
+    live: false,
   });
+});
+
+test('modalità Live: ingresso, navigazione, uscita e URL', async () => {
+  const { NOTE_SHEET_LIVE_PARAM } = await import('./note-sheet-state');
+  let state = noteSheetReducer(initialNoteSheetState, { type: 'open', noteId: 'a', editorKind: 'song' });
+  assert.equal(state.live, false);
+  state = noteSheetReducer(state, { type: 'enter-live' });
+  assert.equal(state.live, true);
+  // Prec/Succ in Live restano in Live
+  state = noteSheetReducer(state, { type: 'open', noteId: 'b', editorKind: 'block' });
+  assert.deepEqual(state, { isOpen: true, noteId: 'b', editorKind: 'block', live: true });
+  state = noteSheetReducer(state, { type: 'exit-live' });
+  assert.equal(state.live, false);
+  // avvio diretto in Live dalla lista
+  state = noteSheetReducer(initialNoteSheetState, { type: 'open', noteId: 'c', editorKind: 'song', live: true });
+  assert.equal(state.live, true);
+  assert.equal(noteSheetReducer(state, { type: 'close' }).live, false);
+  // nota nuova: mai in Live
+  assert.equal(noteSheetReducer(state, { type: 'open', noteId: null, editorKind: 'song' }).live, false);
+  assert.equal(noteSheetReducer({ ...initialNoteSheetState, isOpen: true, noteId: null }, { type: 'enter-live' }).live, false);
+  const params = new URLSearchParams(`openNote=c&noteKind=song&${NOTE_SHEET_LIVE_PARAM}=1`);
+  assert.equal(getNoteSheetStateFromSearchParams(params)?.live, true);
+  assert.equal(getNoteSheetStateFromSearchParams(new URLSearchParams('openNote=&noteKind=song&live=1'))?.live, false);
 });

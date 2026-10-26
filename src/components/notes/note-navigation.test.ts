@@ -31,3 +31,19 @@ test('posizione, precedente e successivo nella scaletta', async () => {
   assert.equal(getSetlistPosition(notes, 'new-block'), null);
   assert.equal(getSetlistPosition(notes, 'missing'), null);
 });
+
+test('elenco alfabetico della scaletta con posizione reale (V11)', async () => {
+  const { getSetlistAlphabetical } = await import('./note-navigation');
+  const set: SavedNote[] = [
+    { id: 'w', title: 'wonderwall', band: 'A', setlist: 'L', order: 0 },
+    { id: 'c', title: 'Creep', band: 'A', setlist: 'L', order: 1 },
+    { id: 'a10', title: 'Song 10', band: 'A', setlist: 'L', order: 2 },
+    { id: 'a2', title: 'Song 2', band: 'A', setlist: 'L', order: 3 },
+    { id: 'x', title: 'Altro', band: 'B', setlist: 'L', order: 0 },
+  ];
+  const list = getSetlistAlphabetical(set, 'c');
+  assert.deepEqual(list.map((e) => e.note.id), ['c', 'a2', 'a10', 'w']);
+  assert.deepEqual(list.map((e) => e.position), [2, 4, 3, 1]);
+  assert.equal(list.find((e) => e.isCurrent)?.note.id, 'c');
+  assert.deepEqual(getSetlistAlphabetical(set, 'missing'), []);
+});

@@ -3,75 +3,30 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { usePresetStore, cloneEffects } from '@/stores/use-preset-store';
 import { useMidiStore } from '@/stores/use-midi-store';
-import { RotaryKnob } from '@/components/controls/rotary-knob';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Switch } from '@/components/ui/switch';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Textarea } from '@/components/ui/textarea';
-import { Input } from '@/components/ui/input';
-import { Undo2, Redo2, Save, LayoutGrid, ChevronLeft, ChevronRight, Settings2, Sparkles, Loader2, RefreshCw, CheckCircle2, X, Layers, Copy, Pencil, Download } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { MG30_MODELS } from '@/lib/mg30-data';
-import { generateMG30Preset, MG30PresetOutput } from '@/ai/flows/mg30-preset-gen';
+import { Card } from '@/components/ui/card';
+import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { EffectType, Preset } from '@/types/preset';
-import { formatValue, normalizePresetState, normalizePresetSuggestion, PresetNormalizationResult } from '@/lib/mg30-preset-normalizer';
-import { useInstrumentationStore } from '@/stores/use-instrumentation-store';
-import { buildInstrumentationContext, resolveAmplifier, resolveGuitar } from '@/lib/instrumentation-context';
+import { Preset } from '@/types/preset';
 import { usePresetNames } from '@/hooks/use-preset-names';
 import { useSavePreset } from '@/hooks/use-preset-persistence';
-import { BlockIcon } from '@/components/icons/block-icons';
 import { formatSlotLabel } from '@/lib/slot';
-import { applyJsonToPreset, parseDirectJsonInput } from '@/lib/preset-json';
-
-const BLOCK_TYPES_WITH_COLOR = ['wah', 'noise-gate', 'compressor', 'efx', 'amp', 'ir', 'sr', 'modulation', 'delay', 'reverb', 'vol', 'eq'];
-// I valori sono variabili CSS in globals.css (--block-*).
-const getBlockColorVar = (type: string) =>
-  BLOCK_TYPES_WITH_COLOR.includes(type) ? `var(--block-${type})` : 'var(--primary)';
-
+import { EditorHeader } from '@/components/editor/EditorHeader';
+import { SignalChain } from '@/components/editor/SignalChain';
+import { BlockParamsPanel } from '@/components/editor/BlockParamsPanel';
 
 export default function EditorPage() {
   const { activePreset, updateParameter, updateModel, updateScene, toggleEffect, undo, redo, setActivePreset, updatePresetName, copyScene } = usePresetStore();
-  const { status, devicePresets, sendProgramChange, sendKnobParameter, sendModelChange, sendSceneChange, toggleBlock, enterBlockEditor, exitBlockEditor, isEditorSyncing, syncActivePreset, syncFullPreset, updatePresetName: updateMidiPresetName } = useMidiStore();
+  const { status, devicePresets, sendProgramChange, sendKnobParameter, sendModelChange, sendSceneChange, toggleBlock, enterBlockEditor, exitBlockEditor, isEditorSyncing, syncActivePreset, syncFullPreset } = useMidiStore();
   const { toast } = useToast();
   const { savedNames, savePresetName } = usePresetNames();
   const savePreset = useSavePreset();
 
   const [selectedBlockId, setSelectedBlockId] = useState<string>('amp');
-  const [isAiModalOpen, setIsAiModalOpen] = useState(false);
-  const [aiPrompt, setAiPrompt] = useState('');
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [proposedPreset, setProposedPreset] = useState<MG30PresetOutput | null>(null);
-  const [proposedNormalization, setProposedNormalization] = useState<PresetNormalizationResult | null>(null);
-  const [isCopySceneOpen, setIsCopySceneOpen] = useState(false);
-  const [copySourceScene, setCopySourceScene] = useState(String(activePreset.activeScene));
-  const [copyTargetSlot, setCopyTargetSlot] = useState(String(activePreset.slot));
-  const [copyTargetScene, setCopyTargetScene] = useState(String(activePreset.activeScene === 0 ? 1 : 0));
-  const [isEditingPresetName, setIsEditingPresetName] = useState(false);
-  const [presetNameDraft, setPresetNameDraft] = useState('');
-  const { guitars, amplifiers, selectedGuitarId, selectedAmplifierId, selectGuitar, selectAmplifier } = useInstrumentationStore();
-  const selectedGuitar = resolveGuitar(guitars, selectedGuitarId);
-  const selectedAmplifier = resolveAmplifier(amplifiers, selectedAmplifierId);
-
-  const handleOpenCopyDialog = () => {
-    setCopySourceScene(String(activePreset.activeScene));
-    setCopyTargetSlot(String(activePreset.slot));
-    setCopyTargetScene(String(activePreset.activeScene === 0 ? 1 : 0));
-    setIsCopySceneOpen(true);
-  };
 
   const selectedEffect = useMemo(() =>
     activePreset.effects.find(e => e.id === selectedBlockId),
     [activePreset.effects, selectedBlockId]
   );
-
-  const currentModelData = useMemo(() => {
-    if (!selectedEffect) return null;
-    return MG30_MODELS[selectedEffect.type]?.find(m => m.id === selectedEffect.model) || MG30_MODELS[selectedEffect.type]?.[0];
-  }, [selectedEffect]);
 
   useEffect(() => {
     if (status === 'connected') {
@@ -139,13 +94,10 @@ export default function EditorPage() {
   const getPresetDisplayName = (preset: Preset) =>
     savedNames[preset.slot] || preset.name || formatSlotLabel(preset.slot);
 
-  const saveEditorPresetName = () => {
-    const nextName = presetNameDraft.trim();
-    if (!nextName) return;
+  const handleRenamePreset = (nextName: string) => {
     updatePresetName(nextName);
     savePresetName(activePreset.slot, nextName);
     useMidiStore.getState().updatePresetName(activePreset.slot, nextName);
-    setIsEditingPresetName(false);
   };
 
   const handlePresetSelect = (value: string) => {
@@ -160,10 +112,7 @@ export default function EditorPage() {
     setActivePreset({ ...preset, name: getPresetDisplayName(preset) });
   };
 
-  const handleCopyScene = () => {
-    const sourceScene = Number(copySourceScene);
-    const targetSlot = Number(copyTargetSlot);
-    const targetScene = Number(copyTargetScene);
+  const handleCopyScene = (sourceScene: number, targetSlot: number, targetScene: number) => {
     const targetPresetRaw = devicePresets.find((preset) => preset.slot === targetSlot) || activePreset;
 
     const updatedTarget = copyScene(sourceScene, targetPresetRaw, targetScene);
@@ -200,7 +149,6 @@ export default function EditorPage() {
       }
     }
 
-    setIsCopySceneOpen(false);
     toast({
       title: 'Scena copiata e attivata',
       description: `Posizionato su ${formatSlotLabel(targetSlot)} / Scena ${targetScene + 1}. Duplicata da Scena ${sourceScene + 1}.`,
@@ -258,96 +206,6 @@ export default function EditorPage() {
     });
   };
 
-  const handleAiModeGenerate = async () => {
-    const trimmedPrompt = aiPrompt.trim();
-    if (!trimmedPrompt) return;
-
-    // Un JSON, anche dentro un blocco markdown, è sempre un comando diretto e non passa dall'AI.
-    const directJson = parseDirectJsonInput(trimmedPrompt);
-    if (directJson.looksLikeJson) {
-      if (directJson.error) {
-        toast({
-          title: "Errore nel JSON",
-          description: "La configurazione diretta non è valida: " + directJson.error,
-          variant: "destructive"
-        });
-        return;
-      }
-
-      try {
-        const parsedJson = directJson.parsed;
-        // Applica i parametri JSON al preset attivo
-        const { updatedPreset, appliedCount, warnings } = applyJsonToPreset(activePreset, parsedJson);
-
-        if (appliedCount > 0) {
-          setActivePreset(updatedPreset);
-          toast({
-            title: "Parametri JSON Applicati",
-            description: `${appliedCount} modifiche applicate${warnings.length ? `, ${warnings.length} valori corretti.` : '.'} Clicca SAVE per sincronizzare la pedaliera.`,
-          });
-          setIsAiModalOpen(false);
-          setAiPrompt('');
-          return;
-        } else {
-          toast({
-            title: "JSON Valido ma Nessun Parametro Corrispondente",
-            description: "Il JSON è valido ma non contiene parametri o moduli validi per MG-30.",
-            variant: "destructive"
-          });
-          return;
-        }
-      } catch (err: any) {
-        toast({
-          title: "Errore nel JSON",
-          description: "La stringa inserita inizia come un JSON ma contiene errori di sintassi: " + err.message,
-          variant: "destructive"
-        });
-        return;
-      }
-    }
-
-    // Altrimenti, procedi con la generazione tramite Intelligenza Artificiale
-    setIsGenerating(true);
-    setProposedPreset(null);
-    setProposedNormalization(null);
-    try {
-      const instrumentation = buildInstrumentationContext(selectedGuitar, selectedAmplifier);
-      const result = await generateMG30Preset({ description: aiPrompt, instrumentation });
-      setProposedPreset(result);
-      setProposedNormalization(normalizePresetSuggestion(activePreset, result));
-    } catch (error: any) {
-      const isRateLimit = error.message?.includes('429') || error.message?.toLowerCase().includes('rate');
-      toast({
-        title: isRateLimit ? "Limite AI raggiunto" : "Errore AI",
-        description: isRateLimit ? "Attendi un minuto prima di generare un altro suono." : error.message,
-        variant: "destructive"
-      });
-    } finally {
-      setIsGenerating(false);
-    }
-  };
-
-  const applyProposedPreset = () => {
-    if (!proposedPreset || !proposedNormalization) return;
-
-    const newPreset = proposedNormalization.updatedPreset;
-
-    setActivePreset(newPreset);
-
-    toast({
-      title: "AI Tone Applied",
-      description: `Il preset '${proposedPreset.name}' è pronto. Clicca SAVE per sincronizzare la pedaliera.`
-    });
-
-    setProposedPreset(null);
-    setProposedNormalization(null);
-    setIsAiModalOpen(false);
-    setAiPrompt('');
-  };
-
-  const availableModels = selectedEffect ? MG30_MODELS[selectedEffect.type] || [] : [];
-  const currentBlockColor = selectedEffect ? `hsl(${getBlockColorVar(selectedEffect.type)})` : 'hsl(var(--primary))';
-
   return (
     <>
       <div className="relative mx-auto max-w-[1440px] space-y-5 py-1 md:space-y-6 md:py-2">
@@ -363,428 +221,40 @@ export default function EditorPage() {
           </div>
         )}
 
-        <div className="app-surface flex flex-col gap-4 rounded-2xl p-3 md:p-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex min-w-0 items-center gap-3 rounded-xl p-1 transition-colors md:gap-4">
-            <div className="flex items-center gap-2">
-              <button aria-label="Preset precedente" onClick={(e) => { e.stopPropagation(); handleSlotChange('prev'); }} className="touch-target rounded-full p-2 transition-colors hover:bg-secondary"><ChevronLeft className="mx-auto h-5 w-5" /></button>
-              <div className="flex h-12 w-[4.5rem] items-center justify-center rounded-lg border border-primary/30 bg-primary/10 font-mono text-lg font-bold text-primary">{formatSlotLabel(activePreset.slot)}</div>
-              <button aria-label="Preset successivo" onClick={(e) => { e.stopPropagation(); handleSlotChange('next'); }} className="touch-target rounded-full p-2 transition-colors hover:bg-secondary"><ChevronRight className="mx-auto h-5 w-5" /></button>
-            </div>
-            <div className="min-w-0">
-              <div className="flex items-center gap-1">
-                {isEditingPresetName ? (
-                  <Input
-                    autoFocus
-                    value={presetNameDraft}
-                    onChange={(event) => setPresetNameDraft(event.target.value)}
-                    onBlur={saveEditorPresetName}
-                    onKeyDown={(event) => {
-                      if (event.key === 'Enter') saveEditorPresetName();
-                      if (event.key === 'Escape') setIsEditingPresetName(false);
-                    }}
-                    className="h-8 w-full max-w-[19rem] text-lg font-bold md:text-xl"
-                    aria-label="Modifica nome preset"
-                  />
-                ) : (
-                  <Select value={String(activePreset.slot)} onValueChange={handlePresetSelect}>
-                    <SelectTrigger
-                      className="h-auto min-h-8 w-full max-w-[19rem] justify-start border-0 bg-transparent px-0 py-0 text-left text-lg font-bold shadow-none hover:text-primary focus:ring-0 md:text-xl"
-                      aria-label="Seleziona preset"
-                    >
-                      <SelectValue placeholder="Seleziona preset">{getPresetDisplayName(activePreset)}</SelectValue>
-                    </SelectTrigger>
-                    <SelectContent className="max-h-[min(24rem,60vh)]">
-                      {devicePresets.map((preset) => (
-                        <SelectItem key={preset.slot} value={String(preset.slot)}>
-                          <span className="font-mono text-primary">{formatSlotLabel(preset.slot)}</span>
-                          <span className="ml-2">{getPresetDisplayName(preset)}</span>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-                {!isEditingPresetName && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 shrink-0 text-muted-foreground hover:text-primary"
-                    aria-label="Modifica nome preset"
-                    title="Modifica nome preset"
-                    onClick={() => { setPresetNameDraft(activePreset.name); setIsEditingPresetName(true); }}
-                  >
-                    <Pencil className="h-3.5 w-3.5" />
-                  </Button>
-                )}
-              </div>
-              <div className="mt-1 flex flex-wrap items-center gap-2">
-                <Badge variant="outline" className="text-label">{status === 'connected' ? 'MG-30 CONNECTED' : 'MG-30 OFFLINE'}</Badge>
-                <Badge variant="secondary" className="border-primary/30 bg-primary/15 text-label text-primary">SCENE {activePreset.activeScene + 1}</Badge>
-              </div>
-            </div>
-          </div>
+        <EditorHeader
+          activePreset={activePreset}
+          devicePresets={devicePresets}
+          status={status}
+          isEditorSyncing={isEditorSyncing}
+          getPresetDisplayName={getPresetDisplayName}
+          handleSlotChange={handleSlotChange}
+          handlePresetSelect={handlePresetSelect}
+          onRenamePreset={handleRenamePreset}
+          handleSceneChange={handleSceneChange}
+          onCopyScene={handleCopyScene}
+          setActivePreset={setActivePreset}
+          handleSyncFromHardware={handleSyncFromHardware}
+          syncFullPreset={syncFullPreset}
+          undo={undo}
+          redo={redo}
+          handleSave={handleSave}
+        />
 
-          <div className="flex min-w-0 w-full flex-wrap items-center gap-2 md:gap-3 lg:w-auto lg:justify-end">
-            {/* Scene Selector */}
-            <div className="flex items-center gap-1 rounded-xl border border-border bg-secondary/30 p-1">
-              <div className="px-2 text-label font-black uppercase text-muted-foreground flex items-center gap-1"><Layers className="w-3 h-3" /> Scenes</div>
-              {[0, 1, 2].map((idx) => (
-                <Button
-                  key={`scene-btn-${idx}`}
-                  variant={activePreset.activeScene === idx ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => handleSceneChange(idx)}
-                  className={cn(
-                    "h-10 w-10 font-bold transition-all",
-                    activePreset.activeScene === idx ? "bg-primary shadow-lg scale-105" : "text-muted-foreground"
-                  )}
-                >
-                  {idx + 1}
-                </Button>
-              ))}
-            </div>
-
-            <Dialog open={isCopySceneOpen} onOpenChange={(open) => { if (open) handleOpenCopyDialog(); else setIsCopySceneOpen(false); }}>
-              <DialogTrigger asChild>
-                <Button variant="outline" size="sm" className="h-10 gap-2" onClick={handleOpenCopyDialog} aria-label="Copia scena">
-                  <Copy className="h-4 w-4" />
-                  <span className="hidden sm:inline">Copia scena</span>
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[440px]">
-                <DialogHeader>
-                  <DialogTitle className="flex items-center gap-2"><Copy className="h-5 w-5 text-primary" /> Copia preset su scena</DialogTitle>
-                  <DialogDescription>
-                    Duplica esattamente la configurazione di tutti i blocchi e parametri da una scena all'altra.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4 py-3">
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Scena Origine</label>
-                    <div className="flex items-center gap-2">
-                      <div className="flex h-10 items-center shrink-0 rounded-md border border-primary/30 bg-primary/10 px-3 text-xs font-mono font-bold text-primary">
-                        {formatSlotLabel(activePreset.slot)}
-                      </div>
-                      <Select value={copySourceScene} onValueChange={setCopySourceScene}>
-                        <SelectTrigger aria-label="Scena di origine" className="flex-1"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          {[0, 1, 2].map((scene) => (
-                            <SelectItem key={scene} value={String(scene)}>Scena {scene + 1}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
-                    <div className="space-y-2">
-                      <label className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Preset destinazione</label>
-                      <Select value={copyTargetSlot} onValueChange={setCopyTargetSlot}>
-                        <SelectTrigger aria-label="Preset destinazione"><SelectValue /></SelectTrigger>
-                        <SelectContent className="max-h-[min(24rem,60vh)]">
-                          {devicePresets.map((preset) => (
-                            <SelectItem key={preset.slot} value={String(preset.slot)}>
-                              <span className="font-mono text-primary">{formatSlotLabel(preset.slot)}</span>
-                              <span className="ml-2">{getPresetDisplayName(preset)}</span>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Scena Destinazione</label>
-                      <Select value={copyTargetScene} onValueChange={setCopyTargetScene}>
-                        <SelectTrigger aria-label="Scena destinazione"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          {[0, 1, 2].map((scene) => (
-                            <SelectItem key={scene} value={String(scene)}>Scena {scene + 1}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setIsCopySceneOpen(false)}>Annulla</Button>
-                  <Button onClick={handleCopyScene}>Copia scena</Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-
-            <div className="hidden sm:block w-[1px] h-8 bg-border mx-1" />
-
-            <div className="flex items-center gap-2">
-              <Dialog open={isAiModalOpen} onOpenChange={setIsAiModalOpen}>
-                <DialogTrigger asChild>
-                  <Button variant="outline" className="gap-2 border-primary/50 text-primary">
-                    <Sparkles className="w-4 h-4" /> AI Mode
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-[500px]">
-                  {!proposedPreset ? (
-                    <>
-                      <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2"><Sparkles className="w-5 h-5 text-primary" /> AI Tone Designer</DialogTitle>
-                        <DialogDescription>Per l’AI descrivi genericamente band, brano, periodo e tipo di chitarra. Se incolli un JSON, verrà applicato direttamente senza interpretazione AI.</DialogDescription>
-                      </DialogHeader>
-                      <div className="space-y-4 py-4">
-                        <div className="grid gap-3 rounded-lg border border-primary/20 bg-primary/5 p-3 sm:grid-cols-2">
-                          <div className="space-y-2">
-                            <p className="text-xs font-semibold uppercase tracking-wide text-primary">Chitarra</p>
-                            <Select value={selectedGuitar?.id ?? 'none'} onValueChange={(value) => selectGuitar(value === 'none' ? undefined : value)}>
-                              <SelectTrigger className="bg-background/60"><SelectValue placeholder="Predefinita (Epiphone ES-335)" /></SelectTrigger>
-                              <SelectContent><SelectItem value="none">Predefinita (Epiphone ES-335)</SelectItem>{guitars.map(guitar => <SelectItem key={guitar.id} value={guitar.id}>{guitar.model}</SelectItem>)}</SelectContent>
-                            </Select>
-                          </div>
-                          <div className="space-y-2">
-                            <p className="text-xs font-semibold uppercase tracking-wide text-primary">Amplificatore</p>
-                            <Select value={selectedAmplifier?.id ?? 'none'} onValueChange={(value) => selectAmplifier(value === 'none' ? undefined : value)}>
-                              <SelectTrigger className="bg-background/60"><SelectValue placeholder="Predefinito (Headrush FRFR-112)" /></SelectTrigger>
-                              <SelectContent><SelectItem value="none">Predefinito (Headrush FRFR-112)</SelectItem>{amplifiers.map(amplifier => <SelectItem key={amplifier.id} value={amplifier.id}>{amplifier.model}</SelectItem>)}</SelectContent>
-                            </Select>
-                          </div>
-                          <p className="text-caption text-muted-foreground sm:col-span-2">La selezione viene applicata automaticamente a ogni nuova generazione AI.</p>
-                        </div>
-                        <Textarea
-                          placeholder={`Es. per prompt AI: Suono grosso in stile Oasis, chitarra humbucker, ritmica anni '90, medi presenti e ambiente contenuto...
-Es. per JSON: { "amp": { "gain": 60, "master": 80 }, "delay": { "enabled": true } }`}
-                          value={aiPrompt}
-                          onChange={(e) => setAiPrompt(e.target.value)}
-                          className="min-h-[150px] bg-secondary/20 font-mono text-sm"
-                        />
-                      </div>
-                      <DialogFooter>
-                        <Button onClick={handleAiModeGenerate} disabled={isGenerating || !aiPrompt.trim()} className="w-full">
-                          {isGenerating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Sparkles className="w-4 h-4 mr-2" />}
-                          Genera Preset
-                        </Button>
-                      </DialogFooter>
-                    </>
-                  ) : (
-                    <>
-                      <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2"><CheckCircle2 className="w-5 h-5 text-green-500" /> Preset Generato: {proposedPreset.name}</DialogTitle>
-                        <DialogDescription>L'AI ha selezionato i modelli e i parametri migliori.</DialogDescription>
-                      </DialogHeader>
-                      <div className="py-4 space-y-4">
-                        <div className="p-3 rounded-lg bg-secondary/30 border border-border text-xs italic">
-                          "{proposedPreset.explanation}"
-                        </div>
-                        <div className="rounded-lg border border-border bg-background/40 p-3">
-                          <p className="section-kicker mb-2">Modifiche rilevate</p>
-                          {proposedNormalization?.changes.length ? (
-                            <div className="max-h-44 space-y-1.5 overflow-y-auto">
-                              {proposedNormalization.changes.map((change, index) => (
-                                <div key={`${change.type}-${change.label}-${index}`} className="flex items-center justify-between gap-3 text-xs">
-                                  <span className="truncate text-muted-foreground"><span className="font-semibold uppercase text-foreground">{change.type}</span> · {change.label}</span>
-                                  <span className="shrink-0 font-mono text-primary">{formatValue(change.from)} → {formatValue(change.to)}</span>
-                                </div>
-                              ))}
-                            </div>
-                          ) : (
-                            <p className="text-xs text-muted-foreground">Nessuna modifica applicabile trovata.</p>
-                          )}
-                        </div>
-                        {!!proposedNormalization?.warnings.length && (
-                          <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 text-xs text-amber-200">
-                            <p className="mb-1 font-semibold">Avvisi di validazione</p>
-                            <ul className="list-disc space-y-1 pl-4">
-                              {proposedNormalization.warnings.map((warning, index) => <li key={`${warning}-${index}`}>{warning}</li>)}
-                            </ul>
-                          </div>
-                        )}
-                      </div>
-                      <DialogFooter className="gap-2">
-                        <Button variant="ghost" onClick={() => { setProposedPreset(null); setProposedNormalization(null); }}>Scarta</Button>
-                        <Button onClick={applyProposedPreset} disabled={!proposedNormalization?.changes.length} className="flex-1">Applica all'Editor</Button>
-                      </DialogFooter>
-                    </>
-                  )}
-                </DialogContent>
-              </Dialog>
-              <Button
-                variant="outline"
-                size="icon"
-                className="touch-target"
-                onClick={handleSyncFromHardware}
-                title="Leggi il nome del preset dalla pedaliera"
-                aria-label="Leggi il nome del preset dalla pedaliera"
-              >
-                <Download className="h-4 w-4" />
-              </Button>
-              <div className="hidden sm:block w-[1px] h-8 bg-border mx-1" />
-              <Button
-                variant="outline"
-                size="icon"
-                className="touch-target"
-                onClick={() => syncFullPreset(activePreset)}
-                disabled={status !== 'connected' || isEditorSyncing}
-                title={status === 'connected' ? "Invia il preset alla pedaliera" : "Invia il preset alla pedaliera (pedaliera non collegata)"}
-                aria-label="Invia il preset alla pedaliera"
-              >
-                <RefreshCw className={cn("h-4 w-4", isEditorSyncing && "animate-spin")} />
-              </Button>
-              <Button variant="outline" size="icon" className="touch-target" onClick={undo} title="Annulla" aria-label="Annulla ultima modifica"><Undo2 className="h-4 w-4" /></Button>
-              <Button variant="outline" size="icon" className="touch-target" onClick={redo} title="Ripristina" aria-label="Ripristina modifica"><Redo2 className="h-4 w-4" /></Button>
-              <Button className="touch-target shrink-0 gap-2 px-4 sm:px-5" onClick={handleSave}><Save className="h-4 w-4" /> <span className="hidden sm:inline">SALVA</span><span className="sm:hidden">SAVE</span></Button>
-            </div>
-          </div>
-        </div>
-
-        <Card className="app-surface overflow-hidden rounded-2xl bg-background/40 shadow-none">
-          <CardHeader className="flex flex-row items-center justify-between border-b border-border/80 bg-secondary/20 py-3">
-            <CardTitle className="section-kicker flex items-center gap-2"><LayoutGrid className="h-4 w-4 text-primary" /> Signal Chain</CardTitle>
-            <Button variant="ghost" size="sm" className="h-9 gap-2 text-label font-bold uppercase" onClick={exitBlockEditor}><X className="h-3.5 w-3.5" /> Chiudi</Button>
-          </CardHeader>
-          <CardContent className="py-4">
-            <div className="mx-auto flex max-w-6xl items-center gap-3 overflow-x-auto px-4 py-5 md:gap-4 md:px-8 md:py-6">
-              {activePreset.effects.map((effect, idx) => {
-                const isSelected = selectedBlockId === effect.id;
-                const blockColor = getBlockColorVar(effect.type);
-                const isEnabled = effect.enabled;
-
-                return (
-                  <React.Fragment key={effect.id}>
-                    <button
-                      type="button"
-                      onClick={() => handleSelectBlock(effect.id, effect.type)}
-                      aria-label={`Apri ${effect.type}`}
-                      className={cn(
-                        "relative flex h-[7.25rem] w-24 shrink-0 cursor-pointer flex-col items-stretch justify-between overflow-hidden rounded-xl border transition-all md:h-[8.25rem] md:w-28",
-                        isEnabled
-                          ? isSelected
-                            ? "border-2 shadow-[0_0_15px_hsla(var(--block-glow),0.35)]"
-                            : "border-border/60 hover:border-primary/50 bg-secondary/40"
-                          : isSelected
-                            ? "border-2 border-zinc-500 bg-zinc-950/80 shadow-md grayscale"
-                            : "border-zinc-800/80 hover:border-zinc-700 bg-zinc-950/60 grayscale"
-                      )}
-                      style={{
-                        '--block-glow': blockColor,
-                        ...(isEnabled && isSelected ? { borderColor: `hsl(${blockColor})` } : {}),
-                        ...(isEnabled && effect.type === 'modulation' ? { backgroundColor: `hsl(${blockColor} / 0.12)` } : {})
-                      } as React.CSSProperties}
-                    >
-                      <div className="relative min-h-0 flex-1">
-                        <BlockIcon
-                          type={effect.type}
-                          className={cn(
-                            "absolute inset-1.5 transition-all",
-                            isEnabled
-                              ? "drop-shadow-[0_0_8px_hsl(var(--icon-color)_/_0.7)]"
-                              : "drop-shadow-none opacity-40"
-                          )}
-                          style={{
-                            '--icon-color': isEnabled ? blockColor : '0 0% 50%',
-                            color: isEnabled ? `hsl(${blockColor})` : 'hsl(0, 0%, 50%)'
-                          } as React.CSSProperties}
-                        />
-                        <span
-                          role="button"
-                          tabIndex={0}
-                          onClick={(e) => handleToggleBlock(e, effect.id, effect.type, effect.enabled)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter' || e.key === ' ') {
-                              e.stopPropagation();
-                              handleToggleBlock(e as any, effect.id, effect.type, effect.enabled);
-                            }
-                          }}
-                          title={effect.enabled ? "Disattiva blocco" : "Attiva blocco"}
-                          className={cn(
-                            "absolute left-1.5 top-1.5 rounded-md px-1.5 py-0.5 text-micro font-bold uppercase tracking-wide border transition-all hover:scale-105 cursor-pointer select-none",
-                            isEnabled
-                              ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/40 hover:bg-emerald-500/30"
-                              : "bg-zinc-800/90 text-zinc-400 border-zinc-700/60 hover:bg-zinc-700/80 hover:text-zinc-200"
-                          )}
-                        >
-                          {effect.enabled ? 'ON' : 'OFF'}
-                        </span>
-                      </div>
-                      <span
-                        className={cn(
-                          "truncate border-t px-2 py-2 text-label font-semibold uppercase tracking-wide transition-colors",
-                          isEnabled
-                            ? "border-border/50 text-foreground"
-                            : "border-zinc-800/80 text-zinc-400"
-                        )}
-                      >
-                        {effect.type === 'noise-gate' ? 'Gate' : effect.type === 'modulation' ? 'Mod' : effect.type}
-                      </span>
-                    </button>
-                    {idx < activePreset.effects.length - 1 && (
-                      <div
-                        className={cn(
-                          "flex-1 min-w-[20px] h-[2px] transition-colors",
-                          isEnabled ? "bg-border/60" : "bg-zinc-800/50"
-                        )}
-                      />
-                    )}
-                  </React.Fragment>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
+        <SignalChain
+          effects={activePreset.effects}
+          selectedBlockId={selectedBlockId}
+          handleSelectBlock={handleSelectBlock}
+          handleToggleBlock={handleToggleBlock}
+          exitBlockEditor={exitBlockEditor}
+        />
 
         {selectedEffect && (
-          <Card
-            className="rounded-2xl shadow-none transition-colors"
-            style={{
-              borderColor: selectedEffect.enabled
-                ? `hsl(${getBlockColorVar(selectedEffect.type)} / 0.4)`
-                : 'rgba(255, 255, 255, 0.1)'
-            }}
-          >
-            <CardHeader className="flex flex-col items-start justify-between gap-4 border-b border-border/50 sm:flex-row sm:items-center">
-              <div className="flex items-center gap-4">
-                <Settings2
-                  className="w-5 h-5 transition-colors"
-                  style={{
-                    color: selectedEffect.enabled
-                      ? `hsl(${getBlockColorVar(selectedEffect.type)})`
-                      : 'hsl(0, 0%, 50%)'
-                  }}
-                />
-                <CardTitle
-                  className="text-base uppercase md:text-lg transition-colors"
-                  style={{
-                    color: selectedEffect.enabled
-                      ? `hsl(${getBlockColorVar(selectedEffect.type)})`
-                      : 'hsl(0, 0%, 65%)'
-                  }}
-                >
-                  {selectedEffect?.type} <Badge variant="outline" className={cn("text-label ml-2", !selectedEffect.enabled && "text-muted-foreground border-zinc-700")}>{selectedEffect?.model}</Badge>
-                </CardTitle>
-              </div>
-              <div className="flex w-full items-center gap-3 sm:w-auto sm:gap-4">
-                <Select value={selectedEffect?.model} onValueChange={(val) => handleModelChange(selectedEffect!.id, selectedEffect!.type, val)}>
-                  <SelectTrigger className="h-11 w-full sm:w-[220px]"><SelectValue placeholder="Model" /></SelectTrigger>
-                  <SelectContent>{availableModels.map(m => <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>)}</SelectContent>
-                </Select>
-                <div className="flex shrink-0 items-center gap-2 text-xs font-semibold text-muted-foreground">
-                  <span className="hidden sm:inline">{selectedEffect?.enabled ? 'Attivo' : 'Bypass'}</span>
-                  <Switch
-                    aria-label={`${selectedEffect?.enabled ? 'Disattiva' : 'Attiva'} ${selectedEffect?.type}`}
-                    checked={selectedEffect?.enabled}
-                    className="data-[state=checked]:bg-transparent"
-                    style={selectedEffect?.enabled ? { backgroundColor: `hsl(${getBlockColorVar(selectedEffect.type)})` } : undefined}
-                    onCheckedChange={() => handleToggleBlock({ stopPropagation: () => { } } as any, selectedEffect!.id, selectedEffect!.type, selectedEffect!.enabled)}
-                  />
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="p-5 md:p-8 lg:p-10">
-              {currentModelData && (
-                <div className="grid grid-cols-2 justify-items-center gap-x-3 gap-y-9 sm:grid-cols-4 sm:gap-x-8 lg:grid-cols-5 lg:gap-y-12">
-                  {currentModelData.parameters.map((param, index) => (
-                    <div key={param.id}>
-                      <RotaryKnob label={param.name} value={Number(selectedEffect.parameters[param.id.toLowerCase()] ?? param.default)} min={param.min} max={param.max} step={param.step} onChange={(v) => handleParamChange(selectedEffect.type, param.id, v, index)} color={currentBlockColor} />
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <BlockParamsPanel
+            selectedEffect={selectedEffect}
+            handleModelChange={handleModelChange}
+            handleToggleBlock={handleToggleBlock}
+            handleParamChange={handleParamChange}
+          />
         )}
       </div>
     </>

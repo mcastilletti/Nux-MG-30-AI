@@ -96,7 +96,7 @@ Funzione pura `migrateToPlaylists(notes, bands, setlists)`, coperta da test, che
 
 | ID | Requisito | Note |
 |---|---|---|
-| PL1 | **Vista serbatoio** ("Tutti i brani"): brani e blocchi in ordine alfabetico, ricerca, filtro Brani/Blocchi; ogni riga mostra le playlist in cui il brano compare (chip, al massimo 2 più "+N") | È la vista predefinita senza band |
+| PL1 | **Vista serbatoio** ("Tutti i brani"): brani e blocchi in ordine alfabetico, ricerca, filtro Brani/Blocchi; ogni riga mostra le playlist in cui il brano compare (chip, al massimo 2 più "+N") | È la vista predefinita senza band. Con una band scelta diventa **"Tutti i brani della band"**: solo i brani presenti in almeno una sua playlist |
 | PL2 | **Vista playlist:** ordine della playlist, riordino con le maniglie (scrive `items`), numero di posizione | Come la lista di scaletta di oggi |
 | PL3 | **"Aggiungi brani"** nella vista playlist: foglio con ricerca e selezione multipla dal serbatoio; i brani già presenti risultano spuntati e disattivati; i nuovi vanno in coda | Pulsante principale della vista playlist |
 | PL4 | **"Togli dalla playlist"** nel menu della riga (vista playlist): non elimina il brano; toast con **Annulla** | Nessuna conferma modale |
@@ -167,3 +167,31 @@ Simulazione della migrazione sul backup dell'utente (121 note: 107 brani, 14 blo
   - Esito: 2 blocchi di scrittura, 0 note modificate nel contenuto, 5 playlist su 5 identiche a prima per brani, ordine e preset effettivo.
   - Due copie unite avevano una scena senza slot: la scena senza slot non manda comandi (`getPresetSendCommands`), quindi viene considerata vuota.
 - **Preset "nessuno" per playlist:** quando una copia senza preset viene unita a una copia con preset, la sua playlist conserva "nessun preset" (`presetSlot: ''`), per non mandare un preset che prima non partiva (es. *335 - Don't look back in anger* in *Acu + letture*).
+
+## 10. Unisci note identiche (dopo la conversione)
+
+Dal menu ⋮ della pagina Note, solo nel modello a playlist. Trova le note con **contenuto identico ma titolo diverso** (es. "Hello" e "ACU - Hello"):
+
+- **Contenuto:**
+  - conta: sezioni (tipo, testo, accordi), note generali, testo del blocco;
+  - non conta: titolo e preset;
+  - le note senza contenuto non si uniscono mai, perché brani diversi ancora vuoti non sono doppioni.
+- **Nota proposta da tenere,** in quest'ordine di preferenza:
+  1. senza "ACU" nel titolo;
+  2. senza "335";
+  3. il titolo più corto.
+
+  L'utente può scegliere un'altra nota o escludere un gruppo.
+- **Nelle playlist** la nota tenuta prende il posto delle altre, nella stessa posizione. Il preset effettivo non cambia: se la copia eliminata aveva un preset diverso, diventa il preset proprio della playlist. Se la nota tenuta era già nella playlist, la copia viene tolta.
+- **Ordine delle scritture:**
+  1. le playlist;
+  2. le copie già unite (`mergedInto`) che puntavano alle note eliminate;
+  3. l'eliminazione delle note.
+
+  Se una playlist non si salva, nulla viene eliminato.
+- **Prima di eliminare** si chiede conferma; dal dialogo si può esportare il backup.
+
+Prova sul backup reale del 2026-10-26, dopo la conversione simulata:
+- 11 gruppi, 14 note da eliminare, 3 playlist modificate;
+- in ogni playlist restano lo stesso numero di brani, lo stesso ordine e lo stesso preset effettivo;
+- esclusi 2 falsi gruppi: 13 brani diversi senza testo e 8 blocchi vuoti.

@@ -3,7 +3,7 @@ import test from 'node:test';
 
 import type { SavedNote } from '@/types/note';
 import type { Band, Playlist } from '@/types/playlist';
-import { buildVersionNote, chipSummary, groupPlaylistsByBand, nextVersionTitle, playlistLabelsFor, poolNotes } from './playlist-view';
+import { bandNoteIds, buildVersionNote, chipSummary, groupPlaylistsByBand, nextVersionTitle, playlistLabelsFor, poolNotes } from './playlist-view';
 
 const n = (id: string, title: string, extra: Partial<SavedNote> = {}): SavedNote => ({ id, title, band: '', setlist: '', ...extra });
 const bands: Band[] = [{ id: 'r', name: "ROCKIN' STARS", userId: 'u' }, { id: 'e', name: 'EMERALD', userId: 'u' }];
@@ -46,4 +46,14 @@ test('la versione copia contenuto e preset, non id, unione o playlist', () => {
   assert.equal(v.generalNotes, 'Capo 2');
   assert.deepEqual(v.sections![0].chords, ['Am']);
   assert.notEqual(v.sections![0].chords, original.sections![0].chords);
+});
+
+test('filtro band su "Tutti i brani": solo i brani delle sue playlist, anche se uniti', () => {
+  const notes = [n('1', 'Wonderwall'), n('2', 'Creep'), n('3', 'Angels'), n('4', 'Pausa', { type: 'block' }), n('5', 'Wonderwall', { mergedInto: '1' })];
+  const playlists = [pl('a', 'Live', 'r', ['2', '5', 'manca']), pl('b', 'Prove', 'r', ['4']), pl('c', 'Estate', 'e', ['3'])];
+  const ids = bandNoteIds(notes, playlists, 'r');
+  assert.deepEqual([...ids].sort(), ['1', '2', '4']);
+  assert.deepEqual(poolNotes(notes, { onlyIds: ids }).map((x) => x.id), ['2', '4', '1']);
+  assert.deepEqual(poolNotes(notes, { onlyIds: ids, type: 'song' }).map((x) => x.id), ['2', '1']);
+  assert.deepEqual(poolNotes(notes, { onlyIds: bandNoteIds(notes, playlists, 'x') }), []);
 });

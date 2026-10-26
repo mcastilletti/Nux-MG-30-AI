@@ -1,6 +1,6 @@
 import type { SavedNote } from '@/types/note';
 import type { Band, Playlist } from '@/types/playlist';
-import { isVisibleNote } from './playlist-ops';
+import { indexNotes, isVisibleNote, resolveNoteId } from './playlist-ops';
 
 /** Viste della pagina Note nel modello a playlist (spec PL1–PL7). */
 
@@ -11,12 +11,30 @@ export const matchesQuery = (note: SavedNote, query: string) => !query.trim() ||
 const byTitle = (a: SavedNote, b: SavedNote) => (a.title || '').localeCompare(b.title || '', 'it', { sensitivity: 'base', numeric: true });
 
 /** Serbatoio (PL1): brani e blocchi visibili in ordine alfabetico, con ricerca e filtro per tipo. */
-export function poolNotes(notes: SavedNote[], { query = '', type = 'all' }: { query?: string; type?: PoolTypeFilter } = {}): SavedNote[] {
+export function poolNotes(
+  notes: SavedNote[],
+  { query = '', type = 'all', onlyIds }: { query?: string; type?: PoolTypeFilter; onlyIds?: Set<string> | null } = {},
+): SavedNote[] {
   return notes
     .filter(isVisibleNote)
+    .filter((note) => !onlyIds || onlyIds.has(note.id))
     .filter((note) => type === 'all' || (type === 'block' ? note.type === 'block' : note.type !== 'block'))
     .filter((note) => matchesQuery(note, query))
     .sort(byTitle);
+}
+
+/** Brani presenti in almeno una playlist della band (filtro band su "Tutti i brani"). */
+export function bandNoteIds(notes: SavedNote[], playlists: Playlist[], bandId: string): Set<string> {
+  const byId = indexNotes(notes);
+  const ids = new Set<string>();
+  for (const playlist of playlists) {
+    if (playlist.bandId !== bandId) continue;
+    for (const item of playlist.items) {
+      const id = resolveNoteId(item.noteId, byId);
+      if (id) ids.add(id);
+    }
+  }
+  return ids;
 }
 
 export interface PlaylistLabel { id: string; name: string; bandName: string }

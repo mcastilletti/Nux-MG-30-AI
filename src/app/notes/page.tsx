@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { Card, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { NotebookPen, Plus, Trash2, GripVertical, Music2, Layers, Printer, Copy, ArrowRight, FileText, Search, X, Loader2, Play, MoreVertical, Download } from 'lucide-react';
+import { NotebookPen, Plus, Trash2, GripVertical, Music2, Layers, Printer, Copy, ArrowRight, FileText, Search, X, Loader2, Play, MoreVertical, Download, CopyMinus } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { buildNotesBackup, notesBackupFileName } from '@/lib/notes-backup';
 import { useFirebase, useUser } from '@/firebase';
@@ -45,6 +45,8 @@ import { ToastAction } from '@/components/ui/toast';
 import { NOTE_SHEET_PLAYLIST_PARAM } from '@/components/notes/note-sheet-state';
 import { PlaylistLibrary } from '@/components/notes/playlist/PlaylistLibrary';
 import { AddToPlaylistsDialog } from '@/components/notes/playlist/AddToPlaylistsDialog';
+import { ContentDuplicatesDialog } from '@/components/notes/playlist/ContentDuplicatesDialog';
+import type { ContentMergePlan } from '@/lib/content-duplicates';
 import { ConversionBanner } from '@/components/notes/playlist/ConversionBanner';
 import { usePlaylistsCache } from '@/stores/use-playlists-cache';
 import { usePlaylistActions } from '@/hooks/use-playlist-actions';
@@ -483,6 +485,17 @@ function NotesLibraryContent() {
   const [isExportingBackup, setIsExportingBackup] = useState(false);
 
   /** Backup JSON di tutte le note, band e scalette (prima della conversione a playlist). */
+  const [duplicatesOpen, setDuplicatesOpen] = useState(false);
+  const handleMergeDuplicates = async (plan: ContentMergePlan) => {
+    const ok = await playlistActions.mergeContentDuplicates(plan);
+    if (!ok) return;
+    const changed = plan.playlists.length;
+    toast({
+      title: `${plan.deleteIds.length} ${plan.deleteIds.length === 1 ? 'nota eliminata' : 'note eliminate'}`,
+      description: changed ? `${changed} ${changed === 1 ? 'playlist aggiornata' : 'playlist aggiornate'} con le note tenute.` : undefined,
+    });
+  };
+
   const handleExportBackup = async () => {
     if (isExportingBackup) return;
     setIsExportingBackup(true);
@@ -688,6 +701,11 @@ function NotesLibraryContent() {
                 <DropdownMenuItem className="min-h-11 gap-2" disabled={isExportingBackup || (!user && cachedNotes.length === 0)} onSelect={handleExportBackup}>
                   <Download className="h-4 w-4" /> Esporta backup (JSON)
                 </DropdownMenuItem>
+                {isPlaylistModel && (
+                  <DropdownMenuItem className="min-h-11 gap-2" disabled={cachedNotes.length === 0} onSelect={() => setTimeout(() => setDuplicatesOpen(true), 150)}>
+                    <CopyMinus className="h-4 w-4" /> Unisci note identiche…
+                  </DropdownMenuItem>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
             <Popover open={isAddMenuOpen} onOpenChange={setIsAddMenuOpen}>
@@ -996,6 +1014,16 @@ function NotesLibraryContent() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ContentDuplicatesDialog
+        open={duplicatesOpen}
+        onOpenChange={setDuplicatesOpen}
+        notes={cachedNotes}
+        playlists={playlists}
+        bands={playlistBands}
+        onBackup={handleExportBackup}
+        onApply={handleMergeDuplicates}
+      />
 
       <AddToPlaylistsDialog
         note={addToNote}

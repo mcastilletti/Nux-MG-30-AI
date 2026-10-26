@@ -1,6 +1,6 @@
 # Specifica — Note in prova e dal vivo (Fase 3)
 
-Stato: **proposta da approvare** (2026-10-25). Prototipo statico: `docs/prototypes/note-live.html`.
+Stato: **approvata** (2026-10-25); V11 aggiunto su richiesta dell'utente il 2026-10-26. Prototipo statico: `docs/prototypes/note-live.html`.
 
 Base: audit `docs/audit-ux-frontend.md` §8 e skill `mg30-studio-ux` (`references/live-notes.md`).
 
@@ -51,8 +51,9 @@ Base: audit `docs/audit-ux-frontend.md` §8 e skill `mg30-studio-ux` (`reference
 | V6 | **Blocco anti-tocco**: con il blocco attivo restano attivi solo Prec/Succ; per uscire o sbloccare serve una **pressione prolungata di 1 s** sul lucchetto, con anello di avanzamento | Nessun tocco singolo esce dalla Live |
 | V7 | **Schermo acceso**: indicatore "Schermo sempre acceso" se il wake lock è attivo, avviso se non è disponibile | Usa `use-wake-lock.ts` |
 | V8 | **Schermo intero facoltativo** dal menu (Fullscreen API), mai obbligatorio | Su iOS Safari la Fullscreen API non è disponibile: il pulsante non compare |
-| V9 | **Uscita**: "Esci dalla Live" (pressione prolungata se bloccata) torna al foglio in lettura sullo stesso brano | Indietro di sistema: esce dalla Live senza chiudere il foglio |
+| V9 | **Uscita**: "Esci dalla Live" dal menu (con il blocco attivo bisogna prima sbloccare con la pressione prolungata) torna al foglio in lettura sullo stesso brano | Indietro di sistema: esce dalla Live senza chiudere il foglio. Esc non esce (chiude solo menu e pannelli) |
 | V10 | **Blocchi di testo** (`type: 'block'`) mostrati in Live con lo stesso testo grande | — |
+| V11 | **Scelta libera del brano** (richiesta dell'utente): la posizione `n / N` nella barra apre l'elenco dei brani della scaletta **in ordine alfabetico**, con posizione reale, preset e brano corrente evidenziato. Un tocco apre il brano scelto (D2 come per Succ) | Disponibile anche con il blocco attivo (è navigazione) e nella lettura in prova. Per suonare un brano fuori ordine o rifarne uno |
 
 ## 4. Modifica sicura
 

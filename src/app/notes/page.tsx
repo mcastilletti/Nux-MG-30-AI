@@ -195,6 +195,12 @@ function NotesLibraryContent() {
 
   const setlistPosition = useMemo(() => getSetlistPosition(cachedNotes, selectedNoteId), [cachedNotes, selectedNoteId]);
   const setlistEntries = useMemo(() => getSetlistAlphabetical(cachedNotes, selectedNoteId), [cachedNotes, selectedNoteId]);
+  // L'editor segnala solo i cambi di modalità: chiudendo il foglio (o passando
+  // alla Live, dove l'editor non è montato) lo stato di modifica va azzerato,
+  // altrimenti la barra Prec/Succ resterebbe nascosta.
+  useEffect(() => {
+    if (!isSheetOpen || noteSheet.live) setIsEditing(false);
+  }, [isSheetOpen, noteSheet.live]);
   // Brani della scaletta selezionata nell'ordine reale, per "Avvia live" (ignora la ricerca).
   const liveSetlist = useMemo(() => {
     if (!selectedBand || !selectedSetlist) return [];

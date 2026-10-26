@@ -50,12 +50,18 @@ export function LiveNoteView({ noteId, position, onExit }: {
     return () => window.clearTimeout(timer);
   }, []);
 
-  // V4 + D2: passare a un brano equivale ad aprirlo.
+  // V4 + D2: passare a un brano equivale ad aprirlo. Se la nota arriva dopo
+  // (link Live senza copia in cache) l'invio parte quando diventa disponibile,
+  // una sola volta per brano.
+  const autoSentFor = useRef<string | null>(null);
+  const noteAvailable = !!note;
   useEffect(() => {
-    resetSent();
-    if (note && note.type !== 'block' && readAutoSendSetting(window.localStorage)) send(note.presetSlot, note.presetScene);
+    if (autoSentFor.current !== noteId) resetSent();
+    if (!note || autoSentFor.current === noteId) return;
+    autoSentFor.current = noteId;
+    if (note.type !== 'block' && readAutoSendSetting(window.localStorage)) send(note.presetSlot, note.presetScene);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [noteId]);
+  }, [noteId, noteAvailable]);
 
   // V9: Indietro esce dalla Live senza chiudere il foglio.
   useEffect(() => {

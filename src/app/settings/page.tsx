@@ -1,7 +1,6 @@
 "use client"
 
 import React, { useState, useEffect } from 'react';
-import { AppShell } from '@/components/layout/app-shell';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -69,7 +68,7 @@ export default function SettingsPage() {
   }, []);
 
   return (
-    <AppShell>
+    <>
       <div className="max-w-4xl mx-auto space-y-8 pb-20">
         <header>
           <h2 className="text-3xl font-bold tracking-tight">Impostazioni</h2>
@@ -184,6 +183,6 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
       </div>
-    </AppShell>
+    </>
   );
 }

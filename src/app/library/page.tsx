@@ -3,7 +3,6 @@
 
 import React, { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { AppShell } from '@/components/layout/app-shell';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Search, Plus, RefreshCw, Loader2, Check, MoreVertical, LayoutGrid, List, Settings2, CloudOff, Cloud, CheckSquare, Square, X, Download, Upload, HardDriveDownload } from 'lucide-react';
@@ -269,7 +268,7 @@ export default function LibraryPage() {
   };
 
   return (
-    <AppShell>
+    <>
       <div className="mx-auto max-w-7xl space-y-5 py-1 md:space-y-7 md:py-2">
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
@@ -646,6 +645,6 @@ export default function LibraryPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </AppShell>
+    </>
   );
 }

@@ -1,7 +1,6 @@
 "use client"
 
 import React, { useState } from 'react';
-import { AppShell } from '@/components/layout/app-shell';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -58,7 +57,7 @@ export default function SysExAnalyzerPage() {
   };
 
   return (
-    <AppShell>
+    <>
       <div className="max-w-4xl mx-auto space-y-8">
         <header className="flex items-center gap-4">
           <div className="rounded-xl border border-primary/30 bg-primary/10 p-3">
@@ -160,6 +159,6 @@ export default function SysExAnalyzerPage() {
            </CardContent>
         </Card>
       </div>
-    </AppShell>
+    </>
   );
 }

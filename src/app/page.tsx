@@ -1,7 +1,6 @@
 
 "use client"
 
-import { AppShell } from '@/components/layout/app-shell';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useMidiStore } from '@/stores/use-midi-store';
 import { Button } from '@/components/ui/button';
@@ -13,7 +12,7 @@ export default function HomePage() {
   const { status, refreshDevices, availableDevices } = useMidiStore();
 
   return (
-    <AppShell>
+    <>
       <div className="mx-auto max-w-7xl space-y-8 py-2 md:space-y-10 md:py-4">
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="max-w-3xl">
@@ -183,6 +182,6 @@ export default function HomePage() {
           </Card>
         </div>
       </div>
-    </AppShell>
+    </>
   );
 }

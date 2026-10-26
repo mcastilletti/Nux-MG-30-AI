@@ -1,6 +1,6 @@
 # Specifica — Brani in un serbatoio unico, scalette come playlist (Fasi 6.2–6.4)
 
-Stato: **approvata** (2026-10-26), con il preset per playlist (P4) e le correzioni emerse dalla prova sul backup reale (§9). Richiesta dell'utente, sostituisce la decisione aperta D7 (unificazione band/scalette).
+Stato: **realizzata** (Fasi 6.2–6.4, 2026-10-26; conversione eseguita dall'utente sul proprio account), con il preset per playlist (P4) e le correzioni emerse dalla prova sul backup reale (§9). Richiesta dell'utente, sostituisce la decisione aperta D7 (unificazione band/scalette).
 
 ## 1. Obiettivo
 

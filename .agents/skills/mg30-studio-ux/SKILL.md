@@ -82,7 +82,7 @@ Questa skill contiene solo ciò che è specifico del prodotto. Per il resto rima
 
 ## Note in sala prove e dal vivo
 
-- **Modello a playlist** (`docs/spec-playlist.md`): i brani stanno in un serbatoio (`notes`), le playlist (`setlists.items`) ne danno l'ordine e possono avere un preset proprio per brano (predefinito / proprio / nessuno). Non scrivere più `band`, `setlist` e `order` nelle note; non usarli per ordinare né per navigare. Prec/Succ, Live e invio del preset seguono la playlist da cui è aperto il brano (`playlist=` nell'URL) e il preset effettivo (`effectivePreset`). Le note con `mergedInto` sono nascoste ovunque.
+- **Modello a playlist** (`docs/spec-playlist.md`): i brani stanno in un serbatoio (`notes`), le playlist (`setlists.items`) ne danno l'ordine e possono avere un preset proprio per brano (predefinito / proprio / nessuno). Non scrivere più `band`, `setlist` e `order` nelle note; non usarli per ordinare né per navigare. Prec/Succ, Live e invio del preset seguono la playlist da cui è aperto il brano (`playlist=` nell'URL) e il preset effettivo (`effectivePreset`). Le note con `mergedInto` sono nascoste ovunque. Band e playlist si creano, rinominano ed eliminano dalla pagina Band (`usePlaylistActions`); eliminare una playlist o una band non elimina mai i brani.
 
 La sezione Note è uno strumento operativo, non un campo di testo. Priorità: trovare il brano giusto in pochi secondi, leggerlo senza zoom da distanza di pedaliera, passare al brano successivo con un solo gesto, non perdere mai una modifica, non inviare MIDI per errore.
 

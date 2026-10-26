@@ -177,6 +177,16 @@ function NotesLibraryContent() {
       setPlBandId(localStorage.getItem(FILTER_PL_BAND_KEY) || null);
       setPlPlaylistId(localStorage.getItem(FILTER_PL_PLAYLIST_KEY) || null);
     } catch { /* preferenza facoltativa */ }
+    // Link dalla pagina Band: /notes?view=<playlist> apre direttamente quella playlist.
+    const view = new URLSearchParams(window.location.search).get('view');
+    if (view) {
+      const target = usePlaylistsCache.getState().playlists.find((p) => p.id === view);
+      setPlBandId(target?.bandId ?? null);
+      setPlPlaylistId(view);
+      const url = new URL(window.location.href);
+      url.searchParams.delete('view');
+      window.history.replaceState(window.history.state, '', url);
+    }
   }, []);
 
   useEffect(() => {

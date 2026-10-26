@@ -280,7 +280,7 @@ Colonne: **ID** · **Problema** · **Evidenza** · **Impatto** · **P** · **Sol
 | N3 [V] | La shell si rimonta a ogni pagina | ogni `page.tsx` contiene `<AppShell>` | Wake lock, `initialize()` e sync MIDI rieseguiti a ogni navigazione; sidebar che "lampeggia" | P2 | Spostare `AppShell` in un layout condiviso (route group) | F4 | Medio (effetti MIDI) | Una sola inizializzazione MIDI per sessione (log) |
 | N4 [V] | Nessuna safe area con `black-translucent` e barra fissa in basso | `layout.tsx:18`, `app-shell.tsx:201`; nessun `env(safe-area-inset-*)` | [H] (resta da provare su iPhone: non riproducibile in Chromium) Header sotto la barra di stato e barra nav sotto l'indicatore home nella PWA iOS | P1 | `viewport-fit=cover` + padding con `env(safe-area-inset-*)` | F2 | Basso | Dispositivo iOS in modalità standalone |
 | N5 [V] | Lingua mista: "Navigation", "Hardware Status", "Settings", pagina SysEx in inglese | `app-shell.tsx:110,153,172`; `tools/sysex-analyzer` | Incoerenza | P3 | Testi in italiano, termini tecnici del dispositivo invariati | F5 | Basso | Revisione dei testi |
-| N6 [V] | `/notes/editor` è orfana e duplica `NoteEditorContent` | nessun link (grep); `notes/editor/page.tsx:27-68,707` | Manutenzione doppia, divergenze | P2 | Decisione D5, poi rimozione dopo verifica | D5 | Basso | Nessun riferimento residuo; test verdi |
+| N6 [V] ✅ Fase 6.4 | `/notes/editor` è orfana e duplica `NoteEditorContent` | nessun link (grep); `notes/editor/page.tsx:27-68,707` | Manutenzione doppia, divergenze | P2 | Decisione D5, poi rimozione dopo verifica | D5 | Basso | Nessun riferimento residuo; test verdi |
 
 ### 5.2 Home
 
@@ -351,7 +351,7 @@ Le voci Note sono **[V]** salvo dove indicato. Requisiti di dettaglio e scenari 
 | NT16 | Testo non regolabile, zoom disabilitato, nessuna modalità di lettura live | `layout.tsx:9-10`; grep | Leggibilità sul palco | P1 | Modalità Live [P] e decisione D3 | D3, D4 | Medio | Scenari 2 e 7 |
 | NT17 [V] | Nessuno stato di salvataggio e nessuna protezione dal doppio invio | `handleSaveNote` senza stato di invio; pulsante mai disabilitato | **Confermato dal codice** (il test richiede login): due tocchi su una nota nuova creano due documenti | P1 | Componente `SaveStatus`, pulsante disabilitato durante il salvataggio | F2 | Basso | Scenario 4 |
 | NT18 | La stampa taglia i brani lunghi (pagina A4 fissa, `overflow: hidden`) e stampa lo slot grezzo | `globals.css:118-133`; `notes/page.tsx:673` | Scalette stampate incomplete | P2 | Più pagine per brano lungo; etichetta `01A` | F5 | Basso | Stampa di un brano lungo |
-| NT19 | Doppio modello band/scalette: le band create in Band non compaiono nell'editor note, e nel foglio non si può creare una nuova band o scaletta | `bands/page.tsx:74-98`; `NoteEditorContent.tsx:217-234,546-563` | Flusso di organizzazione spezzato | P2 | Decisione D7 | D7 | Alto (dati) | — |
+| NT19 ✅ Fasi 6.2–6.4 | Doppio modello band/scalette: le band create in Band non compaiono nell'editor note, e nel foglio non si può creare una nuova band o scaletta | `bands/page.tsx:74-98`; `NoteEditorContent.tsx:217-234,546-563` | Flusso di organizzazione spezzato | P2 | Decisione D7 | D7 | Alto (dati) | — |
 | NT20 ✅ `0cd1f5a` | Il blocco ha due pulsanti "successivo" | `BlockEditorContent.tsx:133-152` | Incoerenza (corretta solo per i brani) | P3 | Tenere solo il primario | — | Basso | Ispezione |
 | NT21 | La lista mostra "Nessun brano" anche durante il caricamento e da non loggati | `notes/page.tsx:542-545` | Stato ambiguo | P2 | Stati distinti: caricamento, accedi, vuoto, errore con riprova | F2 | Basso | Test |
 
@@ -701,12 +701,28 @@ Richiesta dell'utente del 2026-10-26: brani in un serbatoio unico, scalette trat
     - preset per playlist salvato;
     - importazione JSON con creazione della playlist.
 
-### Fase 6.4 — Pagina Band, pulizia e documentazione (M)
+### Fase 6.4 — Pagina Band, pulizia e documentazione (M) — ✅ completata (2026-10-26)
 - **Deliverable:**
   - pagina Band con band e playlist reali (crea, rinomina, elimina, conteggio brani), senza scalette "derivate dalle note";
   - rimozione della pagina orfana `/notes/editor` (N6), che scriverebbe il modello vecchio;
   - aggiornamento della skill `mg30-studio-ux` e dello stato dell'audit.
 - **Accettazione:** Playwright della pagina Band; typecheck e test verdi.
+- **Esito:**
+  - **Pagina Band riscritta sul modello a playlist** (`src/app/bands/page.tsx`):
+    - band in ordine alfabetico, ciascuna con le sue playlist e il numero di brani; i duplicati uniti non contano;
+    - crea, rinomina ed elimina band e playlist;
+    - i nomi doppi sono segnalati anche se differiscono solo per spazi o maiuscole;
+    - eliminando una band si sceglie se eliminare le sue playlist o spostarle in un'altra band; i brani restano sempre nel serbatoio;
+    - il logo della band resta;
+    - ogni playlist apre la sua vista nella pagina Note (`/notes?view=<id>`);
+    - spariscono le scalette "derivate dalle note".
+  - Se l'account non è convertito, la pagina rimanda alla conversione nella pagina Note.
+  - `/notes/editor` rimossa (N6).
+  - Etichetta "Chiudi il messaggio" sulla X dei toast, segnalata da axe.
+  - **Verifiche:**
+    - Playwright `check-bands` 16/16, compreso axe senza violazioni gravi e 390px senza scroll orizzontale;
+    - `check-pl` 35/35 e regressioni verdi;
+    - test 122/122.
 
 ### Fase 7 — Verifica finale e regressioni (S)
 - **Deliverable:**

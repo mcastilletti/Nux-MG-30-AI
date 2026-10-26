@@ -15,9 +15,13 @@ const base = usePresetStore.getState().activePreset;
 for (const [name, json] of Object.entries(PRESET_JSON_CASES)) {
   test(`applyJsonToPreset invariato: ${name}`, () => {
     const r = applyJsonToPreset(base, json);
+    // Confronto per tipo di blocco: l'ordine della catena non fa parte del risultato
+    // (sulla MG-30 varia per preset; l'app parte da createDefaultEffects).
+    const byType = (effects: { type: string }[]) => Object.fromEntries([...effects].sort((a, b) => a.type.localeCompare(b.type)).map((e) => [e.type, e]));
+    const now = r.updatedPreset.effects.map((e) => ({ type: e.type, model: e.model, enabled: e.enabled, parameters: e.parameters }));
     assert.deepEqual(
-      { appliedCount: r.appliedCount, warnings: r.warnings, effects: r.updatedPreset.effects.map((e) => ({ type: e.type, model: e.model, enabled: e.enabled, parameters: e.parameters })) },
-      golden[name],
+      { appliedCount: r.appliedCount, warnings: r.warnings, effects: byType(now) },
+      { appliedCount: golden[name].appliedCount, warnings: golden[name].warnings, effects: byType(golden[name].effects) },
     );
   });
 }

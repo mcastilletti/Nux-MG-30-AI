@@ -1,6 +1,6 @@
 # Specifica — Brani in un serbatoio unico, scalette come playlist (Fasi 6.2–6.4)
 
-Stato: **bozza da approvare** (2026-10-26). Richiesta dell'utente, sostituisce la decisione aperta D7 (unificazione band/scalette).
+Stato: **approvata** (2026-10-26), con il preset per playlist (P4) e le correzioni emerse dalla prova sul backup reale (§9). Richiesta dell'utente, sostituisce la decisione aperta D7 (unificazione band/scalette).
 
 ## 1. Obiettivo
 
@@ -21,11 +21,14 @@ Decisioni dell'utente (2026-10-26):
 | P1 | **Serbatoio unico, senza band.** Le playlist appartengono a una band, come le scalette di oggi. Lo stesso brano può stare in playlist di band diverse |
 | P2 | **I blocchi stanno nel serbatoio** come i brani e si possono mettere in più playlist |
 | P3 | **Migrazione:** si uniscono solo i duplicati **identici** (stesso titolo e stesso contenuto). Se differiscono restano due brani, cioè due versioni |
+| P4 | **Preset per playlist:** il brano ha un preset predefinito; ogni playlist può impostarne uno proprio per quel brano. Nella migrazione due copie che differiscono **solo** per il preset diventano un brano unico, e ogni playlist conserva il preset della sua copia |
+| P5 | **"Senza Scaletta" non diventa una playlist:** quelle note restano solo nel serbatoio. I nomi di band e scalette perdono gli spazi superflui ("EMERALD " = "EMERALD") |
 
 ## 2. Modello dati
 
 **Nota** (`notes/{id}`, invariata nei campi di contenuto):
 - è il brano o blocco del serbatoio: `title`, `sections`, `generalNotes`, `presetSlot`, `presetScene`, `type`, `blockContent`, `userId`, `updatedAt`;
+- `presetSlot`/`presetScene` sono il **preset predefinito** del brano, usato quando il brano è aperto dal serbatoio o quando la playlist non ne imposta uno proprio;
 - i campi `band`, `setlist` e `order` **non vengono più letti né scritti**. Restano nei documenti esistenti, intatti, per poter tornare indietro;
 - nuovo campo facoltativo `mergedInto?: string`, impostato dalla migrazione su un duplicato identico. Un duplicato così marcato è nascosto ovunque.
 
@@ -37,14 +40,21 @@ interface Playlist {
   name: string;
   bandId: string;          // band di appartenenza (collezione `bands`)
   userId: string;
-  noteIds: string[];       // ordine della playlist; un brano compare al massimo una volta
+  items: PlaylistItem[];   // ordine della playlist; un brano compare al massimo una volta
   createdAt?: unknown;
   updatedAt?: unknown;
+}
+
+interface PlaylistItem {
+  noteId: string;
+  presetSlot?: string;     // preset proprio della playlist (P4); assente = predefinito del brano
+  presetScene?: string;
 }
 ```
 
 **Regole:**
-- **Ordine:** l'ordine di una playlist è l'ordine di `noteIds`. Riordinare scrive un solo documento, non N note.
+- **Ordine:** l'ordine di una playlist è l'ordine di `items`. Riordinare scrive un solo documento, non N note.
+- **Preset effettivo:** quello dell'elemento della playlist se impostato, altrimenti quello del brano. Vale per il chip del preset, ▶, l'invio automatico (D2) e la Live.
 - **Niente doppioni:** lo stesso brano non può stare due volte nella stessa playlist. Per rifare un brano dal vivo c'è la scelta libera (V11).
 - **Eliminare una playlist** non elimina i brani.
 - **Eliminare un brano:** lo toglie dal serbatoio e da tutte le playlist, dopo una conferma che dice in quante playlist si trova.
@@ -61,12 +71,14 @@ Funzione pura `migrateToPlaylists(notes, bands, setlists)`, coperta da test, che
 
 1. **Band:** ogni nome di band usato nelle note e assente dalla collezione `bands` diventa un documento band. "Senza Band" diventa la band "Senza band".
 2. **Playlist:** ogni coppia (band, scaletta) delle note diventa una playlist, riusando il documento `setlists` con lo stesso nome e la stessa band se esiste già.
-   - `noteIds` segue l'`order` attuale, e a parità d'ordine il titolo.
+   - I nomi vengono confrontati senza spazi superflui (P5).
+   - "Senza Scaletta" (o scaletta vuota) non diventa una playlist: quelle note restano solo nel serbatoio (P5).
+   - `items` segue l'`order` attuale, e a parità d'ordine il titolo.
    - Anche le scalette create nella pagina Band e ancora vuote diventano playlist vuote.
-3. **Duplicati identici (P3):**
-   - **Criterio di identità:** stesso titolo (normalizzato: spazi e maiuscole), stesso `type`, stessi `sections`/`blockContent`, `generalNotes`, `presetSlot` e `presetScene`.
-   - Per ogni gruppo di identici resta la nota modificata più di recente; le altre ricevono `mergedInto`.
-   - Nelle playlist il riferimento punta alla nota rimasta.
+3. **Duplicati (P3, P4):**
+   - **Criterio:** stesso titolo (normalizzato: spazi e maiuscole), stesso `type`, stessi `sections` (ignorando gli id delle sezioni), `blockContent` e `generalNotes` (ignorando spazi iniziali/finali e a capo Windows). Il preset **non** conta.
+   - Per ogni gruppo resta la nota modificata più di recente, con il suo preset come predefinito; le altre ricevono `mergedInto`.
+   - Nelle playlist il riferimento punta alla nota rimasta; se la copia originale aveva un preset diverso dal predefinito, l'elemento della playlist lo conserva come preset proprio. Il comportamento di ogni playlist resta quindi identico a prima.
 4. **Nessuna cancellazione e nessuna modifica del contenuto:** si aggiungono solo documenti e campi.
 5. **Avvio manuale:**
    - la conversione **non parte da sola**;
@@ -85,7 +97,7 @@ Funzione pura `migrateToPlaylists(notes, bands, setlists)`, coperta da test, che
 | ID | Requisito | Note |
 |---|---|---|
 | PL1 | **Vista serbatoio** ("Tutti i brani"): brani e blocchi in ordine alfabetico, ricerca, filtro Brani/Blocchi; ogni riga mostra le playlist in cui il brano compare (chip, al massimo 2 più "+N") | È la vista predefinita senza band |
-| PL2 | **Vista playlist:** ordine della playlist, riordino con le maniglie (scrive `noteIds`), numero di posizione | Come la lista di scaletta di oggi |
+| PL2 | **Vista playlist:** ordine della playlist, riordino con le maniglie (scrive `items`), numero di posizione | Come la lista di scaletta di oggi |
 | PL3 | **"Aggiungi brani"** nella vista playlist: foglio con ricerca e selezione multipla dal serbatoio; i brani già presenti risultano spuntati e disattivati; i nuovi vanno in coda | Pulsante principale della vista playlist |
 | PL4 | **"Togli dalla playlist"** nel menu della riga (vista playlist): non elimina il brano; toast con **Annulla** | Nessuna conferma modale |
 | PL5 | **"Elimina brano"** (vista serbatoio e foglio): conferma "È in N playlist: verrà tolto da tutte" | `ConfirmDialog` |
@@ -94,6 +106,7 @@ Funzione pura `migrateToPlaylists(notes, bands, setlists)`, coperta da test, che
 | PL8 | **Avviso di condivisione** in modifica: "Questo brano è in 3 playlist: le modifiche valgono per tutte" con il link "Crea versione" | Solo se le playlist sono 2 o più |
 | PL9 | **Nuovo brano o blocco:** creato da una playlist va nel serbatoio e in coda alla playlist; creato da "Tutti i brani" va solo nel serbatoio | Il foglio non chiede più band e scaletta |
 | PL10 | **Navigazione e Live per playlist:** Prec/Succ, posizione `n / N`, elenco alfabetico (V11), "Avvia live" e invio del preset (D2) seguono la playlist da cui si è aperto il brano | Nell'URL `playlist=<id>` accanto a `openNote`; senza playlist (dal serbatoio) niente barra Prec/Succ |
+| PL12 | **Preset per playlist (P4):** nel foglio aperto da una playlist il campo preset modifica il preset **di quella playlist**, con la scritta "Predefinito del brano: 48 · S2" e il comando "Usa il predefinito"; aperto dal serbatoio modifica il predefinito del brano | Il chip del preset mostra sempre il preset effettivo |
 | PL11 | **Importazione JSON:** il brano entra nel serbatoio e, se aperta, nella playlist corrente; i campi `band`/`setlist` del JSON, se presenti, aggiungono il brano a quella playlist creandola se manca. **Esportazione PDF:** segue l'ordine della playlist | Compatibile con i file esistenti |
 
 ## 5. Pagina Band
@@ -124,10 +137,33 @@ Funzione pura `migrateToPlaylists(notes, bands, setlists)`, coperta da test, che
 
 - **Test unitari:**
   - migrazione: duplicati identici e diversi, ordine, band mancanti, scalette vuote, idempotenza, note nuove dopo la migrazione;
-  - operazioni sulle playlist: aggiungi, togli, riordina, sostituisci con una versione, eliminazione di un brano condiviso;
+  - operazioni sulle playlist: aggiungi, togli, riordina, sostituisci con una versione, eliminazione di un brano condiviso, preset effettivo;
   - posizione e navigazione per playlist.
 - **Playwright**, con serbatoio e playlist iniettati in cache:
-  - PL1–PL11;
+  - PL1–PL12;
   - Live e V11 su due playlist che condividono un brano;
   - nessuna regressione negli scenari Note esistenti (`check-live`, `check-f3a`, `check-f3b`, `check-nt2`, `check-nt3`, `check-d1d2`).
 - **Manuale (Fase 7)**, con account Google reale: backup, migrazione, riepilogo, due playlist con un brano comune, modifica condivisa, creazione di una versione.
+
+## 9. Prova sul backup reale (2026-10-26)
+
+Simulazione della migrazione sul backup dell'utente (121 note: 107 brani, 14 blocchi), senza scritture sull'account:
+
+| Regola | Serbatoio | Unioni |
+|---|---|---|
+| Solo identici (P3) | 108 | 13: 6 brani acustici presenti in due scalette, 6 blocchi copiati in "Senza Scaletta", 1 copia in "Senza Band" |
+| Identici a parte il preset (P3 + P4, **scelta**) | 104 | 17: le 13 precedenti più *Supersonic*, *335 - Don't look back in anger*, *ACU - Hello*, *Go Let It Out* |
+
+- **Playlist risultanti (5):**
+  - BRIT / Prova;
+  - EMERALD / Completa;
+  - ROCKIN' STARS / Acoustic O'Connell;
+  - ROCKIN' STARS / Acu + letture;
+  - ROCKIN' STARS / Rockin' 2026.
+- **Note solo nel serbatoio ("Senza Scaletta"):** 8, di cui 6 sono doppioni identici di blocchi già presenti in *Acu + letture*.
+- **Titoli come "ACU - …" e "335 - …"** sono versioni volute: restano brani distinti.
+- **Nomi con spazio finale** ("EMERALD ", "Completa ") coincidono con la band "EMERALD" della pagina Band dopo la normalizzazione (P5).
+- **Prova completa in memoria (Fase 6.2):** piano, esecutore con scrittore finto e rilettura dei documenti.
+  - Esito: 2 blocchi di scrittura, 0 note modificate nel contenuto, 5 playlist su 5 identiche a prima per brani, ordine e preset effettivo.
+  - Due copie unite avevano una scena senza slot: la scena senza slot non manda comandi (`getPresetSendCommands`), quindi viene considerata vuota.
+- **Preset "nessuno" per playlist:** quando una copia senza preset viene unita a una copia con preset, la sua playlist conserva "nessun preset" (`presetSlot: ''`), per non mandare un preset che prima non partiva (es. *335 - Don't look back in anger* in *Acu + letture*).

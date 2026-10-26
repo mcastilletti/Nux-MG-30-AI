@@ -571,7 +571,7 @@ F0 Baseline ──┬─► F0b Correzioni P0 ───────────�
   - nessun cambiamento visivo o di comportamento (screenshot e log MIDI invariati);
   - `editor/page.tsx` sotto le 300 righe.
 
-### Fase 5 — Implementazione progressiva delle pagine (L) — 🔶 in corso (2026-10-26)
+### Fase 5 — Implementazione progressiva delle pagine (L) — ✅ completata (2026-10-26)
 
 **Fatto:**
 - **Note e Live:** PR #16 e #17.
@@ -579,7 +579,7 @@ F0 Baseline ──┬─► F0b Correzioni P0 ───────────�
 - **Editor:** intestazione su due righe; SALVA intero a 360px; azioni secondarie nel menu ⋮ sotto i 1024px (E1, E10).
 - **Testo minimo a 12px:** l'unica eccezione sono i badge di stato ON/OFF, a 10px.
 
-**Aperto:** migrazione dei colori `zinc-*`/`green-*`/`emerald-*` ai token, pagina per pagina (M7). Va fatta con confronto delle schermate.
+- **Colori di stato ai token (M7):** prima i valori identici, con schermate identiche; poi i toni quasi identici (log MIDI, titoli "Elimina"). Restano scritti a mano per scelta la palette della Live, il grigio dei blocchi in bypass e i colori delle sezioni (annotato nella skill).
 - **Ordine** (impatto alto e rischio basso per primi):
   1. Note: lettura, Prec/Succ, stato di salvataggio, modalità Live;
   2. Editor: header mobile, catena, manopole;

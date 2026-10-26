@@ -94,6 +94,7 @@ Prima di progettare o modificare la sezione Note leggi `references/live-notes.md
   - testo piccolo: `text-label` (10px), `text-caption` (11px), `text-body-sm` (13px), `text-micro` (9px, da eliminare). Niente nuovi `text-[Npx]`; direzione: nessun testo sotto 12px salvo badge.
   - `--primary-foreground` è scuro: sul viola usa `text-primary-foreground`, mai `text-white`.
   - I moduli in `src/lib` sono analizzati da Tailwind: le classi lì dentro vengono generate.
+  - **Colori scritti a mano per scelta, da non "correggere":** la palette `zinc-*` della modalità Live (tema palco nero ad alto contrasto, `LiveNoteView.tsx`); il grigio dei blocchi in bypass (`SignalChain.tsx`, `BlockParamsPanel.tsx`); i colori delle sezioni del brano (`src/lib/section-colors.ts` e la stampa in `globals.css`). Tutto il resto usa i token.
 - **Componenti**: shadcn in `src/components/ui`. Attenzione: `button.tsx` applica `[&_svg]:size-4`, che annulla le classi di dimensione sulle icone dentro `<Button>`.
 - **Componenti comuni** (`src/components/common`), da preferire al markup ad hoc:
   - `IconButton` per ogni pulsante con sola icona (`label` obbligatorio, 44×44px);

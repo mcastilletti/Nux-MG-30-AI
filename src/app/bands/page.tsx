@@ -1,833 +1,421 @@
 "use client"
 
-import React, { useState, useEffect, useMemo, Suspense } from 'react';
-import { Card, CardTitle, CardContent } from '@/components/ui/card';
+import React, { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { ListMusic, Loader2, Music2, Pencil, Plus, Trash2, Users, X } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { Badge } from '@/components/ui/badge';
-import { Music2, Plus, Trash2, Edit, Layers, ChevronRight, Users, X } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { IconButton } from '@/components/common/icon-button';
+import { ConfirmDialog } from '@/components/common/confirm-dialog';
+import { EmptyState } from '@/components/common/empty-state';
 import { useFirebase, useUser } from '@/firebase';
-import { collection, getDocs, query, where, doc, deleteDoc, addDoc, updateDoc, serverTimestamp, writeBatch } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { useToast } from '@/hooks/use-toast';
+import { usePlaylistActions } from '@/hooks/use-playlist-actions';
+import { usePlaylistsCache } from '@/stores/use-playlists-cache';
+import { useNotesCache } from '@/stores/use-notes-cache';
+import { indexNotes, playlistEntries } from '@/lib/playlist-ops';
+import { nameKey } from '@/lib/playlist-migration';
 import { cn } from '@/lib/utils';
+import type { Band, Playlist } from '@/types/playlist';
 
-export interface Band {
-  id: string;
-  name: string;
-  logoUrl?: string | null;
-  userId: string;
-  createdAt?: any;
-  updatedAt?: any;
-  isFromNotes?: boolean;
-}
-
-export interface Setlist {
-  id: string;
-  name: string;
-  bandId: string;
-  userId: string;
-  createdAt?: any;
-  updatedAt?: any;
-  isFromNotes?: boolean;
-}
-
-function BandsContent() {
+/**
+ * Pagina Band (spec playlist §5): band e playlist reali, create, rinominate ed
+ * eliminate qui; i brani stanno nel serbatoio e si gestiscono dalla pagina Note.
+ */
+export default function BandsPage() {
   const { toast } = useToast();
-  const { firestore, storage } = useFirebase();
-  const { user, isUserLoading: userLoading } = useUser();
-  
-  const [bands, setBands] = useState<Band[]>([]);
-  const [setlists, setSetlists] = useState<Setlist[]>([]);
-  const [notesBands, setNotesBands] = useState<Set<string>>(new Set());
-  const [notesSetlists, setNotesSetlists] = useState<Map<string, Set<string>>>(new Map());
-  const [isLoading, setIsLoading] = useState(true);
-  
-  const [isBandDialogOpen, setIsBandDialogOpen] = useState(false);
-  const [isSetlistDialogOpen, setIsSetlistDialogOpen] = useState(false);
-  const [editingBand, setEditingBand] = useState<Band | null>(null);
-  const [editingSetlist, setEditingSetlist] = useState<Setlist | null>(null);
-  const [selectedBandForSetlist, setSelectedBandForSetlist] = useState<Band | null>(null);
-  
-  const [bandName, setBandName] = useState('');
-  const [bandLogo, setBandLogo] = useState<File | null>(null);
-  const [bandLogoPreview, setBandLogoPreview] = useState<string>('');
-  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
-  const [removeLogo, setRemoveLogo] = useState(false);
-  const [storageDisabled, setStorageDisabled] = useState(false);
-  const [setlistName, setSetlistName] = useState('');
-  
-  const [isDeleteBandDialogOpen, setIsDeleteBandDialogOpen] = useState(false);
-  const [isDeleteSetlistDialogOpen, setIsDeleteSetlistDialogOpen] = useState(false);
+  const { storage } = useFirebase();
+  const { user, isUserLoading } = useUser();
+  const actions = usePlaylistActions();
+  const bands = usePlaylistsCache((s) => s.bands);
+  const playlists = usePlaylistsCache((s) => s.playlists);
+  const marker = usePlaylistsCache((s) => s.marker);
+  const notes = useNotesCache((s) => s.notes);
+  const [loading, setLoading] = useState(true);
+  const converted = !!marker && marker.version >= 2;
+
+  // Dialoghi
+  const [bandDialog, setBandDialog] = useState<{ band: Band | null } | null>(null);
+  const [playlistDialog, setPlaylistDialog] = useState<{ band: Band; playlist: Playlist | null } | null>(null);
+  const [playlistToDelete, setPlaylistToDelete] = useState<Playlist | null>(null);
   const [bandToDelete, setBandToDelete] = useState<Band | null>(null);
-  const [setlistToDelete, setSetlistToDelete] = useState<Setlist | null>(null);
 
   useEffect(() => {
-    if (userLoading || !user) return;
+    if (isUserLoading) return;
+    if (!user) { setLoading(false); return; }
+    actions.refresh()
+      .catch((error) => {
+        console.warn('[band] caricamento non riuscito', error);
+        toast({ title: 'Band non aggiornate', description: 'Mostro la copia sul dispositivo.', variant: 'destructive' });
+      })
+      .finally(() => setLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, isUserLoading]);
 
-    const loadData = async () => {
-      try {
-        setIsLoading(true);
-        
-        const [bandsSnapshot, setlistsSnapshot, notesSnapshot] = await Promise.all([
-          getDocs(query(collection(firestore, "bands"), where("userId", "==", user.uid))),
-          getDocs(query(collection(firestore, "setlists"), where("userId", "==", user.uid))),
-          getDocs(query(collection(firestore, "notes"), where("userId", "==", user.uid)))
-        ]);
-        
-        const loadedBands = bandsSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() } as Band));
-        const loadedSetlists = setlistsSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() } as Setlist));
-        
-        // Extract bands and setlists from existing notes
-        const notesBandsSet = new Set<string>();
-        const notesSetlistsMap = new Map<string, Set<string>>();
-        
-        notesSnapshot.docs.forEach((doc) => {
-          const note = doc.data();
-          if (note.band) {
-            notesBandsSet.add(note.band);
-            if (note.setlist) {
-              if (!notesSetlistsMap.has(note.band)) {
-                notesSetlistsMap.set(note.band, new Set());
-              }
-              notesSetlistsMap.get(note.band)!.add(note.setlist);
-            }
-          }
-        });
-        
-        setBands(loadedBands);
-        setSetlists(loadedSetlists);
-        setNotesBands(notesBandsSet);
-        setNotesSetlists(notesSetlistsMap);
-      } catch (error) {
-        console.error('Error loading data:', error);
-        toast({ title: "Errore caricamento dati", variant: "destructive" });
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const notesById = useMemo(() => indexNotes(notes), [notes]);
+  const sortedBands = useMemo(() => [...bands].sort((a, b) => a.name.localeCompare(b.name, 'it')), [bands]);
+  const playlistsOf = (bandId: string) => playlists.filter((p) => p.bandId === bandId).sort((a, b) => a.name.localeCompare(b.name, 'it'));
+  const songCount = (playlist: Playlist) => playlistEntries(playlist, notesById).length;
 
-    loadData();
-  }, [user, userLoading, firestore, toast]);
-
-  const getSetlistsForBand = (bandId: string, bandName: string) => {
-    const formalSetlists = setlists.filter(s => s.bandId === bandId);
-    const notesSetlistsForBand = notesSetlists.get(bandName) || new Set();
-    
-    // Combine formal setlists with notes setlists, avoiding duplicates
-    const allSetlists = [...formalSetlists];
-    notesSetlistsForBand.forEach(notesSetlistName => {
-      if (!formalSetlists.some(fs => fs.name === notesSetlistName)) {
-        allSetlists.push({
-          id: `notes-${notesSetlistName}`,
-          name: notesSetlistName,
-          bandId: bandId,
-          userId: user?.uid || '',
-          isFromNotes: true
-        });
-      }
-    });
-    
-    return allSetlists.sort((a, b) => a.name.localeCompare(b.name));
-  };
-
-  const getAllBands = () => {
-    const formalBandNames = new Set(bands.map(b => b.name));
-    const allBandNames = [...notesBands].filter(bandName => !formalBandNames.has(bandName));
-    
-    const allBands = [...bands];
-    allBandNames.forEach(bandName => {
-      allBands.push({
-        id: `notes-${bandName}`,
-        name: bandName,
-        userId: user?.uid || '',
-        isFromNotes: true
-      });
-    });
-    
-    return allBands.sort((a, b) => a.name.localeCompare(b.name));
-  };
-
-  const handleLogoUpload = async (file: File): Promise<string> => {
-    if (!storage || !user) {
-      toast({ title: "Storage non disponibile", variant: "destructive" });
-      throw new Error('Storage not available');
-    }
-    
-    try {
-      const fileName = `${Date.now()}_${file.name}`;
-      const storageRef = ref(storage, `band-logos/${user.uid}/${fileName}`);
-      
-      // Set a timeout to prevent infinite retries (reduced to 3 seconds for better UX)
-      const uploadPromise = uploadBytes(storageRef, file);
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Upload timeout - CORS blocked')), 3000)
-      );
-      
-      await Promise.race([uploadPromise, timeoutPromise]);
-      const downloadURL = await getDownloadURL(storageRef);
-      
-      return downloadURL;
-    } catch (error: any) {
-      console.error('Logo upload error:', error);
-      
-      // Check if it's a CORS error or timeout
-      if (error.code === 'storage/cors-error' || 
-          error.message?.includes('CORS') || 
-          error.message?.includes('blocked by CORS policy') ||
-          error.message?.includes('Upload timeout') ||
-          error.message?.includes('ERR_FAILED') ||
-          error.message?.includes('Upload timeout - CORS blocked')) {
-        setStorageDisabled(true);
-        toast({ 
-          title: "Storage disabilitato temporaneamente", 
-          description: "Il caricamento dei logo non è disponibile. Le altre funzionalità continuano a funzionare.",
-          variant: "destructive" 
-        });
-        throw new Error('CORS error - Storage not configured');
-      }
-      
-      toast({ title: "Errore caricamento logo", variant: "destructive" });
-      throw error;
-    }
-  };
-
-  const handleCreateBand = async () => {
-    if (!bandName.trim() || !user) return;
-    
-    try {
-      setIsUploadingLogo(true);
-      
-      let logoUrl: string | undefined = undefined;
-      if (bandLogo && !storageDisabled) {
-        try {
-          logoUrl = await handleLogoUpload(bandLogo);
-        } catch (logoError) {
-          // If logo upload fails, continue without logo
-          console.warn('Logo upload failed, creating band without logo:', logoError);
-          logoUrl = undefined;
-        }
-      }
-      
-      const newBand: any = {
-        name: bandName.trim(),
-        userId: user.uid,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
-      };
-      
-      if (logoUrl) {
-        newBand.logoUrl = logoUrl;
-      }
-      
-      const docRef = await addDoc(collection(firestore, "bands"), newBand);
-      setBands([...bands, { ...newBand, id: docRef.id }]);
-      setBandName('');
-      setBandLogo(null);
-      setBandLogoPreview('');
-      setIsBandDialogOpen(false);
-      toast({ title: "Band creata con successo" });
-    } catch (error) {
-      console.error('Error creating band:', error);
-      toast({ title: "Errore creazione band", variant: "destructive" });
-    } finally {
-      setIsUploadingLogo(false);
-    }
-  };
-
-  const handleUpdateBand = async () => {
-    if (!editingBand || !bandName.trim()) return;
-    
-    try {
-      setIsUploadingLogo(true);
-      
-      let logoUrl: string | undefined = editingBand.logoUrl ?? undefined;
-      
-      if (removeLogo) {
-        logoUrl = undefined;
-      } else if (bandLogo && !storageDisabled) {
-        try {
-          logoUrl = await handleLogoUpload(bandLogo);
-        } catch (logoError) {
-          // If logo upload fails, keep existing logo or continue without logo
-          console.warn('Logo upload failed, updating band without new logo:', logoError);
-          logoUrl = editingBand.logoUrl ?? undefined; // Keep existing logo
-        }
-      }
-      
-      const isFromNotes = editingBand.isFromNotes;
-      
-      if (isFromNotes) {
-        // Se è una band dalle note, la creiamo formalmente
-        const newBand: any = {
-          name: bandName.trim(),
-          userId: user?.uid,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp()
-        };
-        
-        if (logoUrl) {
-          newBand.logoUrl = logoUrl;
-        }
-        
-        const docRef = await addDoc(collection(firestore, "bands"), newBand);
-        const createdBand = { ...newBand, id: docRef.id };
-        
-        // Rimuovi dalle note bands e aggiungi alle bands formali
-        setNotesBands(prev => {
-          const newSet = new Set(prev);
-          newSet.delete(editingBand.name);
-          return newSet;
-        });
-        setBands([...bands, createdBand]);
-      } else {
-        // Se è una band formale, la aggiorniamo normalmente
-        const updateData: any = {
-          name: bandName.trim(),
-          updatedAt: serverTimestamp()
-        };
-        
-        if (logoUrl) {
-          updateData.logoUrl = logoUrl;
-        } else if (removeLogo) {
-          updateData.logoUrl = null;
-        }
-        
-        await updateDoc(doc(firestore, "bands", editingBand.id), updateData);
-        
-        setBands(bands.map(b => b.id === editingBand.id ? { ...b, name: bandName.trim(), logoUrl } : b));
-      }
-      
-      setBandName('');
-      setBandLogo(null);
-      setBandLogoPreview('');
-      setRemoveLogo(false);
-      setEditingBand(null);
-      setIsBandDialogOpen(false);
-      toast({ title: isFromNotes ? "Band formalizzata con successo" : "Band aggiornata con successo" });
-    } catch (error) {
-      console.error('Error updating band:', error);
-      toast({ title: "Errore aggiornamento band", variant: "destructive" });
-    } finally {
-      setIsUploadingLogo(false);
-    }
-  };
-
-  const handleDeleteBand = async () => {
-    if (!bandToDelete) return;
-    
-    try {
-      const bandSetlists = getSetlistsForBand(bandToDelete.id, bandToDelete.name);
-      
-      const batch = writeBatch(firestore);
-      batch.delete(doc(firestore, "bands", bandToDelete.id));
-      
-      bandSetlists.forEach(setlist => {
-        batch.delete(doc(firestore, "setlists", setlist.id));
-      });
-      
-      await batch.commit();
-      
-      setBands(bands.filter(b => b.id !== bandToDelete.id));
-      setSetlists(setlists.filter(s => s.bandId !== bandToDelete.id));
-      setIsDeleteBandDialogOpen(false);
-      setBandToDelete(null);
-      toast({ title: "Band e scalette eliminate con successo" });
-    } catch (error) {
-      console.error('Error deleting band:', error);
-      toast({ title: "Errore eliminazione band", variant: "destructive" });
-    }
-  };
-
-  const handleCreateSetlist = async () => {
-    if (!setlistName.trim() || !selectedBandForSetlist || !user) return;
-    
-    try {
-      const newSetlist = {
-        name: setlistName.trim(),
-        bandId: selectedBandForSetlist.id,
-        userId: user.uid,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
-      };
-      
-      const docRef = await addDoc(collection(firestore, "setlists"), newSetlist);
-      setSetlists([...setlists, { ...newSetlist, id: docRef.id }]);
-      setSetlistName('');
-      setSelectedBandForSetlist(null);
-      setIsSetlistDialogOpen(false);
-      toast({ title: "Scaletta creata con successo" });
-    } catch (error) {
-      console.error('Error creating setlist:', error);
-      toast({ title: "Errore creazione scaletta", variant: "destructive" });
-    }
-  };
-
-  const handleUpdateSetlist = async () => {
-    if (!editingSetlist || !setlistName.trim()) return;
-    
-    try {
-      await updateDoc(doc(firestore, "setlists", editingSetlist.id), {
-        name: setlistName.trim(),
-        updatedAt: serverTimestamp()
-      });
-      
-      setSetlists(setlists.map(s => s.id === editingSetlist.id ? { ...s, name: setlistName.trim() } : s));
-      setSetlistName('');
-      setEditingSetlist(null);
-      setIsSetlistDialogOpen(false);
-      toast({ title: "Scaletta aggiornata con successo" });
-    } catch (error) {
-      console.error('Error updating setlist:', error);
-      toast({ title: "Errore aggiornamento scaletta", variant: "destructive" });
-    }
-  };
-
-  const handleDeleteSetlist = async () => {
-    if (!setlistToDelete) return;
-    
-    try {
-      await deleteDoc(doc(firestore, "setlists", setlistToDelete.id));
-      setSetlists(setlists.filter(s => s.id !== setlistToDelete.id));
-      setIsDeleteSetlistDialogOpen(false);
-      setSetlistToDelete(null);
-      toast({ title: "Scaletta eliminata con successo" });
-    } catch (error) {
-      console.error('Error deleting setlist:', error);
-      toast({ title: "Errore eliminazione scaletta", variant: "destructive" });
-    }
-  };
-
-  const openBandDialog = (band?: Band) => {
-    if (band) {
-      setEditingBand(band);
-      setBandName(band.name);
-      setBandLogoPreview(band.logoUrl || '');
-    } else {
-      setEditingBand(null);
-      setBandName('');
-      setBandLogoPreview('');
-    }
-    setBandLogo(null);
-    setRemoveLogo(false);
-    setIsBandDialogOpen(true);
-  };
-
-  const openSetlistDialog = (band: Band, setlist?: Setlist) => {
-    setSelectedBandForSetlist(band);
-    if (setlist) {
-      setEditingSetlist(setlist);
-      setSetlistName(setlist.name);
-    } else {
-      setEditingSetlist(null);
-      setSetlistName('');
-    }
-    setIsSetlistDialogOpen(true);
-  };
-
-  if (!userLoading && !user) {
+  // Senza account si mostra solo una copia locale già convertita (al logout la cache viene svuotata).
+  if (!isUserLoading && !user && !converted) {
     return (
-      <>
-        <div className="mx-auto max-w-md py-16 text-center space-y-3">
-          <Users className="w-10 h-10 mx-auto text-muted-foreground" aria-hidden="true" />
-          <h2 className="text-xl font-bold">Accedi per gestire band e scalette</h2>
-          <p className="text-sm text-muted-foreground">Band e scalette sono salvate nel tuo account. Accedi con Google dal menu laterale.</p>
-        </div>
-      </>
+      <EmptyState
+        icon={<Users className="h-10 w-10" />}
+        title="Accedi per gestire band e playlist"
+        description="Band e playlist sono salvate nel tuo account. Accedi con Google dal menu laterale."
+      />
     );
   }
 
-  if (isLoading) {
+  if (loading && bands.length === 0) {
+    return <EmptyState icon={<Loader2 className="h-10 w-10 animate-spin" />} title="Caricamento band e playlist…" />;
+  }
+
+  if (!converted) {
     return (
-      <>
-        <div className="flex items-center justify-center py-20">
-          <div className="text-center space-y-4">
-            <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
-            <p className="text-muted-foreground">Caricamento band e scalette...</p>
-          </div>
-        </div>
-      </>
+      <EmptyState
+        icon={<ListMusic className="h-10 w-10" />}
+        title="Prima converti le scalette in playlist"
+        description="Band e playlist si gestiscono qui dopo la conversione. Apri la pagina Note e usa l'avviso «Nuova organizzazione a playlist»."
+        action={<Button asChild className="min-h-11"><Link href="/notes">Vai alle Note</Link></Button>}
+      />
     );
   }
 
   return (
-    <>
-      <div className="max-w-5xl mx-auto space-y-6 pb-20 px-2 md:px-0">
-        <header className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <div className="rounded-xl border border-primary/30 bg-primary/10 p-3">
-              <Users className="h-6 w-6 text-primary" />
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold tracking-tight text-foreground">Gestione band</h2>
-              <p className="text-sm text-muted-foreground">Organizza le tue scalette musicali</p>
-            </div>
+    <div className="mx-auto max-w-5xl space-y-6 px-2 pb-20 md:px-0">
+      <header className="flex flex-wrap items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <div className="rounded-xl border border-primary/30 bg-primary/10 p-3">
+            <Users className="h-6 w-6 text-primary" aria-hidden="true" />
           </div>
-          <Button 
-            onClick={() => openBandDialog()} 
-            className="gap-2 font-semibold"
-          >
-            <Plus className="w-4 h-4" />
-            Nuova Band
-          </Button>
-        </header>
+          <div>
+            <h2 className="text-2xl font-bold tracking-tight">Band e playlist</h2>
+            <p className="text-sm text-muted-foreground">I brani si aggiungono alle playlist dalla pagina Note.</p>
+          </div>
+        </div>
+        <Button onClick={() => setBandDialog({ band: null })} className="min-h-11 gap-2 font-semibold">
+          <Plus className="h-4 w-4" aria-hidden="true" /> Nuova band
+        </Button>
+      </header>
 
-        {getAllBands().length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-32 text-center space-y-6">
-            <div className="relative">
-              <div className="relative rounded-2xl border border-primary/20 bg-primary/10 p-6">
-                <Users className="h-16 w-16 text-primary" />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <h3 className="text-xl font-bold text-foreground">Nessuna band</h3>
-              <p className="text-sm text-muted-foreground max-w-md">Crea la tua prima band per iniziare a organizzare le tue scalette musicali in modo professionale</p>
-            </div>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 gap-6">
-            {getAllBands().map((band) => {
-              const bandSetlists = getSetlistsForBand(band.id, band.name);
-              const isFromNotes = band.isFromNotes;
-              return (
-                <Card key={band.id} className={cn(
-                  "overflow-hidden transition-all duration-300 hover:shadow-xl",
-                  isFromNotes 
-                    ? "border-muted-foreground/20 bg-muted/30" 
-                    : "border-primary/20 bg-primary/[0.03]"
-                )}>
-                  <CardContent className="p-0">
-                    <div className="p-6">
-                      <div className="flex items-start justify-between mb-6">
-                        <div className="flex items-center gap-4">
-                          <div className={cn(
-                            "w-16 h-16 rounded-xl border transition-all duration-300 flex items-center justify-center overflow-hidden",
-                            isFromNotes 
-                              ? "bg-muted/50 border-muted-foreground/30" 
-                              : "bg-primary/10 border-primary/30"
-                          )}>
-                            {band.logoUrl ? (
-                              <img src={band.logoUrl} alt={band.name} className="w-full h-full object-cover" />
-                            ) : (
-                              <Music2 className={cn("w-6 h-6", isFromNotes ? "text-muted-foreground" : "text-primary")} />
-                            )}
-                          </div>
-                          <div className="space-y-1">
-                            <h3 className="text-xl font-bold">{band.name}</h3>
-                            <div className="flex items-center gap-2">
-                              <Badge variant="outline" className={cn(
-                                "text-xs font-semibold px-2.5 py-0.5",
-                                isFromNotes 
-                                  ? "bg-muted/50 border-muted-foreground/30 text-muted-foreground" 
-                                    : "bg-primary/10 border-primary/30 text-primary"
-                              )}>
-                                {bandSetlists.length} {bandSetlists.length === 1 ? 'scaletta' : 'scalette'}
-                              </Badge>
-                              {isFromNotes && (
-                                <Badge variant="outline" className="text-xs font-semibold px-2.5 py-0.5 bg-muted/50 border-muted-foreground/30 text-muted-foreground">
-                                  Dalle note
-                                </Badge>
-                              )}
-                            </div>
-                          </div>
+      {sortedBands.length === 0 ? (
+        <EmptyState icon={<Users className="h-10 w-10" />} title="Nessuna band" description="Crea la prima band, poi aggiungi le sue playlist." />
+      ) : (
+        <ul className="grid grid-cols-1 gap-6" aria-label="Band">
+          {sortedBands.map((band) => {
+            const own = playlistsOf(band.id);
+            return (
+              <li key={band.id}>
+                <Card className="overflow-hidden border-primary/20 bg-primary/[0.03]">
+                  <CardContent className="space-y-4 p-4 sm:p-6">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex min-w-0 items-center gap-4">
+                        <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-primary/30 bg-primary/10">
+                          {band.logoUrl ? <img src={band.logoUrl} alt="" className="h-full w-full object-cover" /> : <Music2 className="h-6 w-6 text-primary" aria-hidden="true" />}
                         </div>
-                        <div className="flex items-center gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-9 w-9 text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
-                            onClick={() => openBandDialog(band)}
-                          >
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                          {!isFromNotes && (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-9 w-9 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-                              onClick={() => {
-                                setBandToDelete(band);
-                                setIsDeleteBandDialogOpen(true);
-                              }}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          )}
+                        <div className="min-w-0">
+                          <h3 className="break-words text-xl font-bold">{band.name}</h3>
+                          <p className="text-sm text-muted-foreground">{own.length} {own.length === 1 ? 'playlist' : 'playlist'}</p>
                         </div>
                       </div>
-
-                      {bandSetlists.length > 0 ? (
-                        <div className="space-y-2 pl-16">
-                          {bandSetlists.map((setlist) => {
-                            const isSetlistFromNotes = setlist.isFromNotes;
-                            return (
-                              <div
-                                key={setlist.id}
-                                className={cn(
-                                  "flex items-center justify-between p-4 rounded-xl border transition-all duration-200 hover:scale-[1.02]",
-                                  isSetlistFromNotes 
-                                    ? "bg-muted/30 border-muted-foreground/20 hover:bg-muted/50" 
-                                    : "bg-primary/[0.03] border-primary/20 hover:bg-primary/10 hover:border-primary/30"
-                                )}
-                              >
-                                <div className="flex items-center gap-3">
-                                  <div className={cn(
-                                    "p-2 rounded-lg border transition-colors",
-                                    isSetlistFromNotes 
-                                      ? "bg-muted/50 border-muted-foreground/30" 
-                                      : "bg-primary/10 border-primary/30"
-                                  )}>
-                                    <Layers className={cn("w-4 h-4", isSetlistFromNotes ? "text-muted-foreground" : "text-primary")} />
-                                  </div>
-                                  <span className="font-medium text-sm">{setlist.name}</span>
-                                  {isSetlistFromNotes && (
-                                    <Badge variant="outline" className="text-label font-semibold px-2 py-0.5 bg-muted/50 border-muted-foreground/30 text-muted-foreground">
-                                      Dalle note
-                                    </Badge>
-                                  )}
-                                </div>
-                                {!isSetlistFromNotes && (
-                                  <div className="flex items-center gap-1">
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
-                                      onClick={() => openSetlistDialog(band, setlist)}
-                                    >
-                                      <Edit className="w-3.5 h-3.5" />
-                                    </Button>
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-                                      onClick={() => {
-                                        setSetlistToDelete(setlist);
-                                        setIsDeleteSetlistDialogOpen(true);
-                                      }}
-                                    >
-                                      <Trash2 className="w-3.5 h-3.5" />
-                                    </Button>
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      ) : (
-                        <div className="pl-16 py-4 text-sm text-muted-foreground italic">
-                          Nessuna scaletta creata per questa band
-                        </div>
-                      )}
-
-                      {!isFromNotes && (
-                        <div className="pl-16 mt-4">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="gap-2 text-sm font-semibold border-primary/30 text-primary hover:bg-primary/10 hover:border-primary/50 transition-colors"
-                            onClick={() => openSetlistDialog(band)}
-                          >
-                            <Plus className="w-4 h-4" />
-                            Aggiungi Scaletta
-                          </Button>
-                        </div>
-                      )}
+                      <div className="flex shrink-0 items-center">
+                        <IconButton label={`Modifica la band ${band.name}`} className="text-muted-foreground hover:text-primary" onClick={() => setBandDialog({ band })}>
+                          <Pencil className="h-4 w-4" />
+                        </IconButton>
+                        <IconButton label={`Elimina la band ${band.name}`} className="text-muted-foreground hover:text-destructive" onClick={() => setBandToDelete(band)}>
+                          <Trash2 className="h-4 w-4" />
+                        </IconButton>
+                      </div>
                     </div>
+
+                    {own.length > 0 ? (
+                      <ul className="space-y-2" aria-label={`Playlist di ${band.name}`}>
+                        {own.map((playlist) => {
+                          const count = songCount(playlist);
+                          return (
+                            <li key={playlist.id} className="flex items-center gap-2 rounded-xl border border-primary/20 bg-background/40 pl-1">
+                              <Link
+                                href={`/notes?view=${encodeURIComponent(playlist.id)}`}
+                                className="flex min-h-12 min-w-0 flex-1 items-center gap-3 rounded-lg px-2 hover:text-primary"
+                              >
+                                <ListMusic className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+                                <span className="min-w-0 flex-1 truncate font-semibold">{playlist.name}</span>
+                                <span className="shrink-0 text-caption tabular-nums text-muted-foreground">{count} {count === 1 ? 'brano' : 'brani'}</span>
+                              </Link>
+                              <IconButton label={`Rinomina la playlist ${playlist.name}`} className="text-muted-foreground hover:text-primary" onClick={() => setPlaylistDialog({ band, playlist })}>
+                                <Pencil className="h-4 w-4" />
+                              </IconButton>
+                              <IconButton label={`Elimina la playlist ${playlist.name}`} className="text-muted-foreground hover:text-destructive" onClick={() => setPlaylistToDelete(playlist)}>
+                                <Trash2 className="h-4 w-4" />
+                              </IconButton>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    ) : (
+                      <p className="text-sm italic text-muted-foreground">Nessuna playlist per questa band.</p>
+                    )}
+
+                    <Button variant="outline" className="min-h-11 gap-2 border-primary/30 font-semibold text-primary" onClick={() => setPlaylistDialog({ band, playlist: null })}>
+                      <Plus className="h-4 w-4" aria-hidden="true" /> Nuova playlist
+                    </Button>
                   </CardContent>
                 </Card>
-              );
-            })}
-          </div>
-        )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
 
-        {/* Band Dialog */}
-        <Dialog open={isBandDialogOpen} onOpenChange={setIsBandDialogOpen}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle className="text-xl font-bold">{editingBand ? 'Modifica Band' : 'Nuova Band'}</DialogTitle>
-              <DialogDescription className="text-sm text-muted-foreground">
-                {editingBand ? 'Modifica il nome della band esistente.' : 'Crea una nuova band per organizzare le tue scalette.'}
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 py-6">
-              <div className="space-y-2">
-                <label className="text-sm font-semibold">Nome Band</label>
-                <Input
-                  value={bandName}
-                  onChange={(e) => setBandName(e.target.value)}
-                  placeholder="Es. The Beatles, Queen, Metallica..."
-                  className="h-11"
-                  autoFocus
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-semibold">Logo Band (opzionale)</label>
-                <div className="flex items-center gap-4">
-                  <div className="w-20 h-20 rounded-lg border-2 border-dashed border-border/50 flex items-center justify-center overflow-hidden bg-muted/30 relative">
-                    {bandLogoPreview ? (
-                      <>
-                        <img src={bandLogoPreview} alt="Logo preview" className="w-full h-full object-cover" />
-                        {editingBand && editingBand.logoUrl && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setBandLogoPreview('');
-                              setRemoveLogo(true);
-                            }}
-                            className="absolute top-1 right-1 bg-destructive/80 hover:bg-destructive text-white rounded-full p-1 transition-colors"
-                            title="Rimuovi logo"
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
-                        )}
-                      </>
-                    ) : (
-                      <Music2 className="w-8 h-8 text-muted-foreground" />
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <Input
-                      type="file"
-                      accept="image/*"
-                      disabled={storageDisabled}
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) {
-                          setBandLogo(file);
-                          setRemoveLogo(false);
-                          const reader = new FileReader();
-                          reader.onloadend = () => {
-                            setBandLogoPreview(reader.result as string);
-                          };
-                          reader.readAsDataURL(file);
-                        }
-                      }}
-                      className="h-11"
-                    />
-                    {storageDisabled && (
-                      <p className="text-xs text-destructive mt-1">Caricamento logo disabilitato (errore CORS)</p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-            <DialogFooter className="gap-2">
-              <Button variant="outline" onClick={() => setIsBandDialogOpen(false)} className="font-semibold">
-                Annulla
-              </Button>
-              <Button 
-                onClick={editingBand ? handleUpdateBand : handleCreateBand}
-                disabled={!bandName.trim() || isUploadingLogo}
-                className="font-semibold"
-              >
-                {isUploadingLogo ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
-                    Caricamento...
-                  </>
-                ) : (
-                  editingBand ? 'Aggiorna' : 'Crea'
-                )}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+      <BandDialog
+        state={bandDialog}
+        onOpenChange={(open) => { if (!open) setBandDialog(null); }}
+        bands={bands}
+        uploadLogo={async (file) => {
+          if (!storage || !user) throw new Error('Storage non disponibile');
+          const storageRef = ref(storage, `band-logos/${user.uid}/${Date.now()}_${file.name}`);
+          const timeout = new Promise<never>((_, reject) => setTimeout(() => reject(new Error('Upload timeout')), 8000));
+          await Promise.race([uploadBytes(storageRef, file), timeout]);
+          return getDownloadURL(storageRef);
+        }}
+        onSave={async (band, name, logoUrl) => {
+          if (band) await actions.updateBand(band, { name, logoUrl });
+          else await actions.createBand(name, logoUrl ?? null);
+          toast({ title: band ? 'Band aggiornata' : 'Band creata' });
+        }}
+      />
 
-        {/* Setlist Dialog */}
-        <Dialog open={isSetlistDialogOpen} onOpenChange={setIsSetlistDialogOpen}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle className="text-xl font-bold">{editingSetlist ? 'Modifica Scaletta' : 'Nuova Scaletta'}</DialogTitle>
-              <DialogDescription className="text-sm text-muted-foreground">
-                {editingSetlist 
-                  ? `Modifica la scaletta per ${selectedBandForSetlist?.name}.` 
-                  : `Crea una nuova scaletta per ${selectedBandForSetlist?.name}.`}
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 py-6">
-              <div className="space-y-2">
-                <label className="text-sm font-semibold">Nome Scaletta</label>
-                <Input
-                  value={setlistName}
-                  onChange={(e) => setSetlistName(e.target.value)}
-                  placeholder="Es. Tour 2024, Festival, Radio Show..."
-                  className="h-11"
-                  autoFocus
-                />
-              </div>
-            </div>
-            <DialogFooter className="gap-2">
-              <Button variant="outline" onClick={() => setIsSetlistDialogOpen(false)} className="font-semibold">
-                Annulla
-              </Button>
-              <Button 
-                onClick={editingSetlist ? handleUpdateSetlist : handleCreateSetlist}
-                disabled={!setlistName.trim()}
-                className="font-semibold"
-              >
-                {editingSetlist ? 'Aggiorna' : 'Crea'}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+      <PlaylistDialog
+        state={playlistDialog}
+        onOpenChange={(open) => { if (!open) setPlaylistDialog(null); }}
+        playlists={playlists}
+        onSave={async (band, playlist, name) => {
+          if (playlist) await actions.renamePlaylist(playlist, name);
+          else await actions.createPlaylist(band.id, name);
+          toast({ title: playlist ? 'Playlist rinominata' : 'Playlist creata', description: playlist ? undefined : 'Aggiungi i brani dalla pagina Note.' });
+        }}
+      />
 
-        {/* Delete Band Dialog */}
-        <Dialog open={isDeleteBandDialogOpen} onOpenChange={setIsDeleteBandDialogOpen}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle className="text-xl font-bold text-destructive">Elimina Band</DialogTitle>
-              <DialogDescription className="text-sm text-muted-foreground">
-                Sei sicuro di voler eliminare <span className="font-semibold text-foreground">"{bandToDelete?.name}"</span>? Questa azione eliminerà anche tutte le scalette associate. Questa azione è irreversibile.
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter className="gap-2">
-              <Button variant="outline" onClick={() => setIsDeleteBandDialogOpen(false)} className="font-semibold">
-                Annulla
-              </Button>
-              <Button 
-                variant="destructive"
-                onClick={handleDeleteBand}
-                className="font-semibold"
-              >
-                Elimina
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+      <ConfirmDialog
+        open={!!playlistToDelete}
+        onOpenChange={(open) => { if (!open) setPlaylistToDelete(null); }}
+        title={`Eliminare «${playlistToDelete?.name ?? ''}»?`}
+        description={playlistToDelete ? `La playlist viene eliminata; i suoi ${songCount(playlistToDelete)} brani restano nel serbatoio e nelle altre playlist.` : undefined}
+        confirmLabel="Elimina playlist"
+        destructive
+        onConfirm={async () => {
+          if (!playlistToDelete) return;
+          const target = playlistToDelete;
+          setPlaylistToDelete(null);
+          await actions.deletePlaylist(target);
+          toast({ title: `Playlist «${target.name}» eliminata` });
+        }}
+      />
 
-        {/* Delete Setlist Dialog */}
-        <Dialog open={isDeleteSetlistDialogOpen} onOpenChange={setIsDeleteSetlistDialogOpen}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle className="text-xl font-bold text-destructive">Elimina Scaletta</DialogTitle>
-              <DialogDescription className="text-sm text-muted-foreground">
-                Sei sicuro di voler eliminare <span className="font-semibold text-foreground">"{setlistToDelete?.name}"</span>? Questa azione è irreversibile.
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter className="gap-2">
-              <Button variant="outline" onClick={() => setIsDeleteSetlistDialogOpen(false)} className="font-semibold">
-                Annulla
-              </Button>
-              <Button 
-                variant="destructive"
-                onClick={handleDeleteSetlist}
-                className="font-semibold"
-              >
-                Elimina
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </div>
-    </>
+      <DeleteBandDialog
+        band={bandToDelete}
+        onOpenChange={(open) => { if (!open) setBandToDelete(null); }}
+        bands={bands}
+        playlistCount={bandToDelete ? playlistsOf(bandToDelete.id).length : 0}
+        onConfirm={async (band, moveTo) => {
+          setBandToDelete(null);
+          await actions.deleteBand(band, moveTo);
+          toast({ title: `Band «${band.name}» eliminata`, description: moveTo ? 'Le playlist sono state spostate.' : 'I brani restano nel serbatoio.' });
+        }}
+      />
+    </div>
   );
 }
 
-export default function BandsPage() {
+function BandDialog({ state, onOpenChange, bands, uploadLogo, onSave }: {
+  state: { band: Band | null } | null;
+  onOpenChange: (open: boolean) => void;
+  bands: Band[];
+  uploadLogo: (file: File) => Promise<string>;
+  onSave: (band: Band | null, name: string, logoUrl: string | null | undefined) => Promise<void>;
+}) {
+  const band = state?.band ?? null;
+  const [name, setName] = useState('');
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState('');
+  const [removeLogo, setRemoveLogo] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [logoError, setLogoError] = useState('');
+
+  useEffect(() => {
+    if (!state) return;
+    setName(state.band?.name ?? '');
+    setPreview(state.band?.logoUrl ?? '');
+    setLogoFile(null);
+    setRemoveLogo(false);
+    setLogoError('');
+  }, [state]);
+
+  const duplicate = !!name.trim() && bands.some((b) => b.id !== band?.id && nameKey(b.name) === nameKey(name));
+
+  const save = async () => {
+    setSaving(true);
+    try {
+      let logoUrl: string | null | undefined = removeLogo ? null : undefined;
+      if (logoFile) {
+        try {
+          logoUrl = await uploadLogo(logoFile);
+        } catch {
+          setLogoError('Logo non caricato: la band viene salvata senza il nuovo logo.');
+        }
+      }
+      await onSave(band, name, logoUrl);
+      onOpenChange(false);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
-    <Suspense fallback={<div className="flex items-center justify-center py-20"><div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>}>
-      <BandsContent />
-    </Suspense>
+    <Dialog open={!!state} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>{band ? 'Modifica band' : 'Nuova band'}</DialogTitle>
+          <DialogDescription>{band ? 'Cambia nome o logo della band.' : 'Le playlist della band si creano dopo, dalla sua scheda.'}</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4 py-2">
+          <div className="space-y-2">
+            <label htmlFor="band-name" className="text-sm font-semibold">Nome</label>
+            <Input id="band-name" value={name} onChange={(e) => setName(e.target.value)} className="h-11" autoFocus />
+            {duplicate && <p className="text-caption text-warning">Esiste già una band con questo nome.</p>}
+          </div>
+          <div className="space-y-2">
+            <span className="text-sm font-semibold">Logo (facoltativo)</span>
+            <div className="flex items-center gap-4">
+              <div className="relative flex h-20 w-20 items-center justify-center overflow-hidden rounded-lg border-2 border-dashed border-border/50 bg-muted/30">
+                {preview ? <img src={preview} alt="Anteprima del logo" className="h-full w-full object-cover" /> : <Music2 className="h-8 w-8 text-muted-foreground" aria-hidden="true" />}
+                {preview && (
+                  <button type="button" aria-label="Togli il logo" onClick={() => { setPreview(''); setLogoFile(null); setRemoveLogo(true); }} className="absolute right-1 top-1 rounded-full bg-destructive p-1 text-destructive-foreground">
+                    <X className="h-3 w-3" aria-hidden="true" />
+                  </button>
+                )}
+              </div>
+              <Input
+                type="file"
+                accept="image/*"
+                aria-label="Scegli il logo"
+                className="h-11 flex-1"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  setLogoFile(file);
+                  setRemoveLogo(false);
+                  const reader = new FileReader();
+                  reader.onloadend = () => setPreview(reader.result as string);
+                  reader.readAsDataURL(file);
+                }}
+              />
+            </div>
+            {logoError && <p className="text-caption text-warning">{logoError}</p>}
+          </div>
+        </div>
+        <DialogFooter className="gap-2">
+          <Button variant="outline" className="min-h-11" onClick={() => onOpenChange(false)}>Annulla</Button>
+          <Button className="min-h-11 gap-2" disabled={!name.trim() || duplicate || saving} onClick={save}>
+            {saving && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />} {band ? 'Salva' : 'Crea'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function PlaylistDialog({ state, onOpenChange, playlists, onSave }: {
+  state: { band: Band; playlist: Playlist | null } | null;
+  onOpenChange: (open: boolean) => void;
+  playlists: Playlist[];
+  onSave: (band: Band, playlist: Playlist | null, name: string) => Promise<void>;
+}) {
+  const [name, setName] = useState('');
+  const [saving, setSaving] = useState(false);
+  useEffect(() => { if (state) setName(state.playlist?.name ?? ''); }, [state]);
+  const duplicate = !!state && !!name.trim() && playlists.some((p) => p.bandId === state.band.id && p.id !== state.playlist?.id && nameKey(p.name) === nameKey(name));
+
+  return (
+    <Dialog open={!!state} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>{state?.playlist ? 'Rinomina playlist' : 'Nuova playlist'}</DialogTitle>
+          <DialogDescription>{state ? `Band: ${state.band.name}` : ''}</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-2 py-2">
+          <label htmlFor="playlist-name" className="text-sm font-semibold">Nome</label>
+          <Input id="playlist-name" value={name} onChange={(e) => setName(e.target.value)} className="h-11" autoFocus />
+          {duplicate && <p className="text-caption text-warning">Questa band ha già una playlist con questo nome.</p>}
+        </div>
+        <DialogFooter className="gap-2">
+          <Button variant="outline" className="min-h-11" onClick={() => onOpenChange(false)}>Annulla</Button>
+          <Button
+            className="min-h-11"
+            disabled={!name.trim() || duplicate || saving}
+            onClick={async () => {
+              if (!state) return;
+              setSaving(true);
+              try { await onSave(state.band, state.playlist, name); onOpenChange(false); } finally { setSaving(false); }
+            }}
+          >
+            {state?.playlist ? 'Salva' : 'Crea'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+const DELETE_PLAYLISTS = '__delete__';
+
+function DeleteBandDialog({ band, onOpenChange, bands, playlistCount, onConfirm }: {
+  band: Band | null;
+  onOpenChange: (open: boolean) => void;
+  bands: Band[];
+  playlistCount: number;
+  onConfirm: (band: Band, moveToBandId: string | null) => void;
+}) {
+  const others = bands.filter((b) => b.id !== band?.id).sort((a, b) => a.name.localeCompare(b.name, 'it'));
+  const [choice, setChoice] = useState<string>(DELETE_PLAYLISTS);
+  useEffect(() => { setChoice(DELETE_PLAYLISTS); }, [band?.id]);
+
+  return (
+    <Dialog open={!!band} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="text-destructive">Eliminare «{band?.name}»?</DialogTitle>
+          <DialogDescription>
+            {playlistCount > 0
+              ? `La band ha ${playlistCount} playlist. Scegli cosa farne: i brani restano comunque nel serbatoio.`
+              : 'La band non ha playlist. I brani non vengono toccati.'}
+          </DialogDescription>
+        </DialogHeader>
+        {playlistCount > 0 && (
+          <div className="space-y-2 py-2">
+            <label className="text-sm font-semibold" id="delete-band-choice">Playlist della band</label>
+            <Select value={choice} onValueChange={setChoice}>
+              <SelectTrigger aria-labelledby="delete-band-choice" className="h-11"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value={DELETE_PLAYLISTS}>Elimina anche le playlist</SelectItem>
+                {others.map((b) => <SelectItem key={b.id} value={b.id}>Sposta in «{b.name}»</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+        <DialogFooter className="gap-2">
+          <Button variant="outline" className="min-h-11" onClick={() => onOpenChange(false)}>Annulla</Button>
+          <Button variant="destructive" className={cn('min-h-11')} onClick={() => band && onConfirm(band, choice === DELETE_PLAYLISTS ? null : choice)}>
+            Elimina band
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

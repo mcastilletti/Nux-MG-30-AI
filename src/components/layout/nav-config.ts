@@ -33,7 +33,7 @@ export const SIDEBAR_GROUPS: { label: string; keys: NavKey[] }[] = [
 export const MOBILE_BAR: NavKey[] = ['editor', 'library', 'notes', 'bands'];
 export const MOBILE_MORE: NavKey[] = ['home', 'instrumentation', 'settings', 'sysex'];
 
-/** Voce di navigazione della pagina corrente (sottopagine comprese, es. /notes/editor). */
+/** Voce di navigazione della pagina corrente (sottopagine comprese, es. /notes/qualcosa). */
 export function getActiveNavKey(pathname: string): NavKey | null {
   const entries = Object.values(NAV_ENTRIES);
   const exact = entries.find((e) => e.href === pathname);

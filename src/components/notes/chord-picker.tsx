@@ -6,7 +6,7 @@ import { Plus, Trash2 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { CHORD_ROOTS, CHORD_TABLE, getChordPositions } from '@/lib/chord-data';
 import { cn } from '@/lib/utils';
-import { sequentialIndex } from './chord-edit';
+import { appendIndex, isNewline, sequentialIndex } from './chord-edit';
 
 type PickerStep = 'type' | 'letter' | 'quality' | 'multiplier';
 
@@ -130,15 +130,22 @@ function ChordPicker({ onSelect, step, setStep, setSelectedLetter, selectedRoot,
  * Popover di inserimento accordi (M1): resta aperto e ogni scelta va dopo la
  * precedente, così "G" poi "Gm" danno "G, Gm".
  */
-function useSequentialPicker(onInsert: (chord: string, index: number) => void, startIndex: number) {
+function useSequentialPicker(onInsert: (chord: string, index: number) => void, startIndex: number, append = false) {
   const [step, setStep] = useState<PickerStep>('type');
   const [, setSelectedLetter] = useState<string | null>(null);
   const [selectedRoot, setSelectedRoot] = useState<string | null>(null);
   const picks = useRef(0);
-  const reset = () => { setStep('type'); setSelectedLetter(null); setSelectedRoot(null); picks.current = 0; };
+  const firstNewlinePick = useRef<number | null>(null);
+  const reset = () => { setStep('type'); setSelectedLetter(null); setSelectedRoot(null); picks.current = 0; firstNewlinePick.current = null; };
+  const select = (chord: string) => {
+    const index = append ? appendIndex(startIndex, picks.current, firstNewlinePick.current) : sequentialIndex(startIndex, picks.current);
+    onInsert(chord, index);
+    if (append && firstNewlinePick.current === null && isNewline(chord)) firstNewlinePick.current = picks.current;
+    picks.current += 1;
+  };
   const picker = (
     <ChordPicker
-      onSelect={(chord) => { onInsert(chord, sequentialIndex(startIndex, picks.current)); picks.current += 1; }}
+      onSelect={select}
       step={step}
       setStep={setStep}
       setSelectedLetter={setSelectedLetter}
@@ -149,13 +156,15 @@ function useSequentialPicker(onInsert: (chord: string, index: number) => void, s
   return { picker, reset };
 }
 
-export function ChordInsertPopover({ startIndex, onInsert, label, className }: {
+export function ChordInsertPopover({ startIndex, onInsert, label, className, append = false }: {
   startIndex: number;
   onInsert: (chord: string, index: number) => void;
   label: string;
   className?: string;
+  /** Fine riga: `startIndex` segue già gli inserimenti, le scelte vanno sempre in coda. */
+  append?: boolean;
 }) {
-  const { picker, reset } = useSequentialPicker(onInsert, startIndex);
+  const { picker, reset } = useSequentialPicker(onInsert, startIndex, append);
   return (
     <Popover onOpenChange={(open) => { if (open) reset(); }}>
       <PopoverTrigger asChild>
@@ -207,18 +216,20 @@ function ChordInfo({ chord }: { chord: string }) {
 
 /**
  * Accordo toccabile (L6, M2, M3): in lettura mostra le posizioni; in modifica
- * offre "Inserisci dopo…" e "Rimuovi accordo" con target da 44px.
+ * offre "Inserisci prima…", "Inserisci dopo…" e "Rimuovi accordo" con target da 44px.
  */
-export function ChordChip({ chord, editMode, className, onInsertAfter, onRemove }: {
+export function ChordChip({ chord, editMode, className, onInsertAfter, onInsertBefore, onRemove }: {
   chord: string;
   editMode: boolean;
   className?: string;
   onInsertAfter: (chord: string, picksSoFar: number) => void;
+  onInsertBefore?: (chord: string, picksSoFar: number) => void;
   onRemove: () => void;
 }) {
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<'actions' | 'picker'>('actions');
-  const { picker, reset } = useSequentialPicker((c, index) => onInsertAfter(c, index), 0);
+  const direction = useRef<'before' | 'after'>('after');
+  const { picker, reset } = useSequentialPicker((c, index) => (direction.current === 'before' && onInsertBefore ? onInsertBefore(c, index) : onInsertAfter(c, index)), 0);
   return (
     <Popover open={open} onOpenChange={(o) => { setOpen(o); if (o) { setMode('actions'); reset(); } }}>
       <PopoverTrigger asChild>
@@ -237,7 +248,12 @@ export function ChordChip({ chord, editMode, className, onInsertAfter, onRemove 
           picker
         ) : (
           <div className="grid gap-1">
-            <button type="button" onClick={() => setMode('picker')} className="flex min-h-11 items-center gap-2 rounded-md px-3 text-sm font-semibold hover:bg-secondary">
+            {onInsertBefore && (
+              <button type="button" onClick={() => { direction.current = 'before'; setMode('picker'); }} className="flex min-h-11 items-center gap-2 rounded-md px-3 text-sm font-semibold hover:bg-secondary">
+                <Plus className="h-4 w-4" aria-hidden="true" /> Inserisci prima…
+              </button>
+            )}
+            <button type="button" onClick={() => { direction.current = 'after'; setMode('picker'); }} className="flex min-h-11 items-center gap-2 rounded-md px-3 text-sm font-semibold hover:bg-secondary">
               <Plus className="h-4 w-4" aria-hidden="true" /> Inserisci dopo…
             </button>
             <button type="button" onClick={() => { setOpen(false); onRemove(); }} className="flex min-h-11 items-center gap-2 rounded-md px-3 text-sm font-semibold text-destructive hover:bg-destructive/10">

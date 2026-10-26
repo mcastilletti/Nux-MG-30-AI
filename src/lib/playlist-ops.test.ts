@@ -5,7 +5,7 @@ import type { SavedNote } from '@/types/note';
 import type { Playlist } from '@/types/playlist';
 import {
   addNotes, effectivePreset, getPlaylistAlphabetical, getPlaylistPosition, indexNotes, moveItem, playlistEntries,
-  itemPresetMode, playlistsContaining, presetSlotForMode, removeNote, removeNoteFromAll, replaceNote, resolveNoteId, restoreItem, setItemPreset,
+  itemPresetMode, playlistsContaining, presetFieldsFor, presetSlotForMode, removeNote, removeNoteFromAll, replaceNote, resolveNoteId, restoreItem, setItemPreset,
 } from './playlist-ops';
 
 const note = (id: string, title: string, extra: Partial<SavedNote> = {}): SavedNote => ({ id, title, band: '', setlist: '', ...extra });
@@ -98,4 +98,12 @@ test('modalità del preset nella playlist e ritorno a setItemPreset', () => {
   assert.equal(presetSlotForMode('custom', '48'), '48');
   // "Preset proprio" senza slot scelto equivale al predefinito.
   assert.equal(presetSlotForMode('custom', ''), null);
+});
+
+test('campi preset del foglio: dalla playlist o dal brano', () => {
+  const note = { presetSlot: '12', presetScene: '2' };
+  assert.deepEqual(presetFieldsFor(note, null), { mode: 'default', slot: '12', scene: '2' });
+  assert.deepEqual(presetFieldsFor(note, { noteId: 'a' }), { mode: 'default', slot: '', scene: '' });
+  assert.deepEqual(presetFieldsFor(note, { noteId: 'a', presetSlot: '' }), { mode: 'none', slot: '', scene: '' });
+  assert.deepEqual(presetFieldsFor(note, { noteId: 'a', presetSlot: '48', presetScene: '3' }), { mode: 'custom', slot: '48', scene: '3' });
 });

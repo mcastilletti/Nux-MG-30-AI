@@ -36,9 +36,16 @@ export function usePlaylistActions() {
 
   /** Salva l'ordine e i preset di una playlist (un solo documento). */
   const savePlaylist = useCallback(async (playlist: Playlist) => {
+    const previous = usePlaylistsCache.getState().playlists.find((p) => p.id === playlist.id);
     usePlaylistsCache.getState().upsertPlaylist(playlist);
     if (!uid) return true;
-    return write(setDoc(doc(firestore, 'setlists', playlist.id), { items: playlist.items, updatedAt: serverTimestamp() }, { merge: true }));
+    const ok = await write(setDoc(doc(firestore, 'setlists', playlist.id), { items: playlist.items, updatedAt: serverTimestamp() }, { merge: true }));
+    // Scrittura non riuscita: la copia locale torna com'era, così resta allineata all'account
+    // (salvo modifiche successive alla stessa playlist, che non si toccano).
+    if (!ok && previous && usePlaylistsCache.getState().playlists.find((p) => p.id === playlist.id) === playlist) {
+      usePlaylistsCache.getState().upsertPlaylist(previous);
+    }
+    return ok;
   }, [firestore, uid, write]);
 
   const createBand = useCallback(async (name: string, logoUrl: string | null = null): Promise<Band> => {

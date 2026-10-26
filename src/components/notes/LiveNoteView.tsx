@@ -62,7 +62,8 @@ export function LiveNoteView({ noteId, position, onExit, preset }: {
   const noteAvailable = !!note;
   const sendKey = `${noteId}|${presetSlot ?? ''}|${presetScene ?? ''}`;
   useEffect(() => {
-    if (!autoSentFor.current?.startsWith(`${noteId}|`)) resetSent();
+    // Brano o preset diversi: lo stato "inviato" riguarda il preset precedente.
+    if (autoSentFor.current !== sendKey) resetSent();
     if (!note || autoSentFor.current === sendKey) return;
     autoSentFor.current = sendKey;
     if (note.type !== 'block' && readAutoSendSetting(window.localStorage)) send(presetSlot, presetScene);

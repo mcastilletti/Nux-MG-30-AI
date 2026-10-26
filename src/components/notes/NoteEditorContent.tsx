@@ -36,7 +36,7 @@ import { ToastAction } from '@/components/ui/toast';
 import { DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { usePlaylistsCache } from '@/stores/use-playlists-cache';
 import { usePlaylistActions } from '@/hooks/use-playlist-actions';
-import { addNotes, effectivePreset, findItem, itemPresetMode, presetSlotForMode, setItemPreset, type ItemPresetMode } from '@/lib/playlist-ops';
+import { addNotes, effectivePreset, findItem, presetFieldsFor, presetSlotForMode, setItemPreset, type ItemPresetMode, type PresetFields } from '@/lib/playlist-ops';
 import { playlistLabelsFor } from '@/lib/playlist-view';
 import { CopyPlus, ListPlus, Trash2 as TrashIcon } from 'lucide-react';
 
@@ -141,6 +141,8 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
   const playlistItemKey = playlistItem ? JSON.stringify(playlistItem) : '';
   const loadedItemKeyRef = useRef('');
   const sentPresetRef = useRef('');
+  // Campi del preset come caricati: servono a capire se l'utente li ha cambiati.
+  const loadedPresetFieldsRef = useRef<PresetFields>({ mode: 'default', slot: '', scene: '' });
 
   useEffect(() => {
     const action = getNoteLoadAction({ noteId, note: cachedNote, loadedNoteId: loadedNoteIdRef.current });
@@ -168,10 +170,15 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
     if (!cachedNote || loadedNoteIdRef.current !== cachedNote.id || loadedItemKeyRef.current === playlistItemKey) return;
     loadedItemKeyRef.current = playlistItemKey;
     if (editMode) {
-      const mode = playlistItem ? itemPresetMode(playlistItem) : 'default';
-      setPresetMode(mode);
-      setSelectedPresetSlot(playlistItem ? (mode === 'custom' ? playlistItem.presetSlot ?? '' : '') : cachedNote.presetSlot || '');
-      setSelectedPresetScene(playlistItem ? (mode === 'custom' ? playlistItem.presetScene ?? '' : '') : cachedNote.presetScene || '');
+      // Se l'utente ha già cambiato il preset, la sua scelta resta.
+      const loaded = loadedPresetFieldsRef.current;
+      const untouched = presetMode === loaded.mode && selectedPresetSlot === loaded.slot && selectedPresetScene === loaded.scene;
+      if (!untouched) return;
+      const next = presetFieldsFor(cachedNote, playlistItem);
+      loadedPresetFieldsRef.current = next;
+      setPresetMode(next.mode);
+      setSelectedPresetSlot(next.slot);
+      setSelectedPresetScene(next.scene);
       return;
     }
     loadNote(cachedNote);
@@ -218,10 +225,8 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
     setBand(note.band);
     setSetlist(note.setlist);
     // Dalla playlist i campi preset mostrano il preset proprio della playlist; altrimenti il predefinito del brano.
-    const item = findItem(playlist, note.id);
-    const mode = item ? itemPresetMode(item) : 'default';
-    const slot = item ? (mode === 'custom' ? item.presetSlot ?? '' : '') : note.presetSlot || '';
-    const scene = item ? (mode === 'custom' ? item.presetScene ?? '' : '') : note.presetScene || '';
+    const { mode, slot, scene } = presetFieldsFor(note, findItem(playlist, note.id));
+    loadedPresetFieldsRef.current = { mode, slot, scene };
     setPresetMode(mode);
     setSelectedPresetSlot(slot);
     setSelectedPresetScene(scene);

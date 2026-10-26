@@ -106,6 +106,22 @@ Prima di progettare o modificare la sezione Note leggi `references/live-notes.md
 - **Foglio Note**: `src/components/notes/NoteSheet.tsx` su Radix Dialog; stato di apertura in `note-sheet-state.ts`, sincronizzato con l'URL.
 - **Schermo sempre acceso**: `src/hooks/use-wake-lock.ts`, attivo su tutte le pagine.
 - **Catalogo MG-30**: `src/lib/mg30-data.ts`. **Etichetta slot** (es. `01A`): `formatSlotLabel` e `matchesSlotSearch` in `src/lib/slot.ts`. Colori delle sezioni in `src/lib/section-colors.ts`, accordi in `src/lib/chord-data.ts`.
+- **Stato e prestazioni** (Fase 6):
+  - leggi gli store Zustand con selettori (`useStore((s) => s.x)` o `useShallow`), mai `useStore()` intero;
+  - il log MIDI sta in `useMidiLogStore`, separato;
+  - i log di diagnostica passano per `debugLog`, attivo solo in sviluppo;
+  - nell'editor i gestori passati ai componenti memoizzati usano `useStableCallback`;
+  - il preset arriva in `devicePresets` a fine gesto (`useDeferredPresetCommit`).
+- **Manopola** (`rotary-knob.tsx`):
+  - il campo numerico invia solo alla conferma (Invio o uscita dal campo); Esc annulla;
+  - frecce, campo e trascinamento entrano nell'undo;
+  - regolazione fine con Shift o spostando il dito di lato (oltre 48px), con l'etichetta "fine".
+  - Non reintrodurre l'invio a ogni carattere.
+- **Catena**: il chip ON/OFF è un `button` fratello del blocco, mai annidato nel suo `button`.
+- **Accessibilità**:
+  - `lang="it"`;
+  - titolo della scheda per pagina da `getRouteTitle`;
+  - zoom bloccato per scelta (D3): l'unica violazione critica attesa di axe è `meta-viewport`.
 - **Safe area**: header, barra in basso e foglio nota usano `env(safe-area-inset-*)`; ogni nuovo elemento fisso ai bordi deve fare lo stesso.
 - **Verifica visiva**: Playwright è disponibile nell'ambiente; le note si possono iniettare in `localStorage` (`mg30-notes-cache`) per testare lista e foglio senza login.
 

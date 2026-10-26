@@ -6,7 +6,7 @@ import { AppShell } from '@/components/layout/app-shell';
 import { Card, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { NotebookPen, Plus, Trash2, GripVertical, Music2, Layers, Printer, Copy, ArrowRight, FileText, Search, X, Loader2 } from 'lucide-react';
+import { NotebookPen, Plus, Trash2, GripVertical, Music2, Layers, Printer, Copy, ArrowRight, FileText, Search, X, Loader2, Play } from 'lucide-react';
 import { useFirebase, useUser } from '@/firebase';
 import { collection, getDocs, query, where, doc, deleteDoc, writeBatch, addDoc, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
@@ -27,11 +27,13 @@ import {
   getNoteSheetStateFromSearchParams,
   initialNoteSheetState,
   NOTE_SHEET_KIND_PARAM,
+  NOTE_SHEET_LIVE_PARAM,
   NOTE_SHEET_OPEN_PARAM,
   noteSheetReducer,
 } from '@/components/notes/note-sheet-state';
 import type { NoteSection, SavedNote } from '@/types/note';
-import { getSetlistPosition } from '@/components/notes/note-navigation';
+import { getSetlistAlphabetical, getSetlistPosition } from '@/components/notes/note-navigation';
+import { LiveNoteView } from '@/components/notes/LiveNoteView';
 import { SetlistNavBar } from '@/components/notes/setlist-nav-bar';
 import { GUARD_HISTORY_RESTORED_EVENT } from '@/hooks/use-unsaved-changes-guard';
 import { formatSlotLabel } from '@/lib/slot';
@@ -95,6 +97,7 @@ function NotesLibraryContent() {
           type: 'open',
           noteId: restoredState.noteId,
           editorKind: restoredState.editorKind,
+          live: restoredState.live,
         });
       }
       return;
@@ -105,9 +108,12 @@ function NotesLibraryContent() {
       if (noteSheet.isOpen) {
         url.searchParams.set(NOTE_SHEET_OPEN_PARAM, noteSheet.noteId ?? '');
         url.searchParams.set(NOTE_SHEET_KIND_PARAM, noteSheet.editorKind);
+        if (noteSheet.live) url.searchParams.set(NOTE_SHEET_LIVE_PARAM, '1');
+        else url.searchParams.delete(NOTE_SHEET_LIVE_PARAM);
       } else {
         url.searchParams.delete(NOTE_SHEET_OPEN_PARAM);
         url.searchParams.delete(NOTE_SHEET_KIND_PARAM);
+        url.searchParams.delete(NOTE_SHEET_LIVE_PARAM);
       }
       if (url.href !== window.location.href) {
         window.history.replaceState(window.history.state, '', url);
@@ -188,6 +194,20 @@ function NotesLibraryContent() {
   }, [cachedNotes, selectedBand, selectedSetlist, searchQuery]);
 
   const setlistPosition = useMemo(() => getSetlistPosition(cachedNotes, selectedNoteId), [cachedNotes, selectedNoteId]);
+  const setlistEntries = useMemo(() => getSetlistAlphabetical(cachedNotes, selectedNoteId), [cachedNotes, selectedNoteId]);
+  // L'editor segnala solo i cambi di modalità: chiudendo il foglio (o passando
+  // alla Live, dove l'editor non è montato) lo stato di modifica va azzerato,
+  // altrimenti la barra Prec/Succ resterebbe nascosta.
+  useEffect(() => {
+    if (!isSheetOpen || noteSheet.live) setIsEditing(false);
+  }, [isSheetOpen, noteSheet.live]);
+  // Brani della scaletta selezionata nell'ordine reale, per "Avvia live" (ignora la ricerca).
+  const liveSetlist = useMemo(() => {
+    if (!selectedBand || !selectedSetlist) return [];
+    return cachedNotes
+      .filter(n => n.band === selectedBand && n.setlist === selectedSetlist)
+      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  }, [cachedNotes, selectedBand, selectedSetlist]);
 
   const openNoteInSheet = (note: SavedNote | null) => {
     if (!note) return;
@@ -556,6 +576,18 @@ function NotesLibraryContent() {
           </Select>
         </div>
 
+        {liveSetlist.length > 0 && (
+          <Button
+            className="min-h-12 w-full gap-2 text-base font-bold"
+            onClick={() => {
+              const first = liveSetlist[0];
+              dispatchNoteSheet({ type: 'open', noteId: first.id, editorKind: first.type === 'block' ? 'block' : 'song', live: true });
+            }}
+          >
+            <Play className="h-5 w-5" aria-hidden="true" /> Avvia live · {liveSetlist.length} {liveSetlist.length === 1 ? 'brano' : 'brani'}
+          </Button>
+        )}
+
         <div className="space-y-2">
           {filteredNotes.length === 0 ? (
             cachedNotes.length === 0 && loadState === 'loading' ? (
@@ -748,18 +780,28 @@ function NotesLibraryContent() {
       <NoteSheet
         isOpen={isSheetOpen}
         onClose={() => dispatchNoteSheet({ type: 'close' })}
-        disableGestures={isEditing}
+        disableGestures={isEditing || noteSheet.live}
         contentKey={selectedNoteId}
-        footer={!isEditing && setlistPosition && setlistPosition.total > 1 ? (
+        footer={!isEditing && setlistPosition && (setlistPosition.total > 1 || noteSheet.live) ? (
           <SetlistNavBar
+            size={noteSheet.live ? 'live' : 'rehearsal'}
+            className={noteSheet.live ? 'border-zinc-800 bg-zinc-950' : undefined}
             index={setlistPosition.index}
             total={setlistPosition.total}
             onPrevious={setlistPosition.previous ? () => openNoteInSheet(setlistPosition.previous) : undefined}
             onNext={setlistPosition.next ? () => openNoteInSheet(setlistPosition.next) : undefined}
+            entries={setlistEntries}
+            onPick={(note) => openNoteInSheet(note)}
           />
         ) : null}
       >
-        {editorKind === 'block' ? (
+        {noteSheet.live && selectedNoteId ? (
+          <LiveNoteView
+            noteId={selectedNoteId}
+            position={setlistPosition ? { index: setlistPosition.index, total: setlistPosition.total } : null}
+            onExit={() => dispatchNoteSheet({ type: 'exit-live' })}
+          />
+        ) : editorKind === 'block' ? (
           <BlockEditorContent
             noteId={selectedNoteId}
             initialBand={newBlockInitialBand}
@@ -770,6 +812,7 @@ function NotesLibraryContent() {
               setNewBlockInitialSetlist(null);
             }}
             onEditModeChange={setIsEditing}
+            onStartLive={() => dispatchNoteSheet({ type: 'enter-live' })}
             onUpdate={(note: SavedNote) => {
               if (selectedNoteId && selectedNoteId !== 'new-block') {
                 updateNote(note);
@@ -784,6 +827,7 @@ function NotesLibraryContent() {
             noteId={selectedNoteId}
             onClose={() => dispatchNoteSheet({ type: 'close' })}
             onEditModeChange={setIsEditing}
+            onStartLive={() => dispatchNoteSheet({ type: 'enter-live' })}
             onUpdate={(note: SavedNote) => {
               if (selectedNoteId) {
                 updateNote(note);

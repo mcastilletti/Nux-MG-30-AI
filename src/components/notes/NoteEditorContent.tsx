@@ -10,7 +10,8 @@ import { useNotesCache } from '@/stores/use-notes-cache';
 import { getNoteLoadAction } from './note-load-action';
 import { serializeDraft } from './note-draft';
 import { useUnsavedChangesGuard } from '@/hooks/use-unsaved-changes-guard';
-import { formatPresetLabel, getPresetChipState, getPresetSendCommands, readAutoSendSetting } from './preset-send';
+import { formatPresetLabel, getPresetChipState, readAutoSendSetting } from './preset-send';
+import { useNotePresetSender } from '@/hooks/use-note-preset-sender';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -19,17 +20,18 @@ import { Button } from '@/components/ui/button';
 import { Plus, Trash2, ChevronDown, ChevronUp, Save, Layers, Pencil, X, Copy, ArrowUp, ArrowDown, MoreVertical } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Badge } from '@/components/ui/badge';
-import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
-import { CHORD_ROOTS, CHORD_TABLE, getChordPositions } from '@/lib/chord-data';
 import { SECTION_COLORS, type SectionType } from '@/lib/section-colors';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { formatSlotLabel, matchesSlotSearch } from '@/lib/slot';
 import { SaveStatus } from '@/components/common/save-status';
 import { awaitWrite, isOnline } from '@/lib/firestore-write';
 import { NoteReadMenu } from './note-read-menu';
+import { ChordChip, ChordInsertPopover } from './chord-picker';
+import { insertAt, removeAt } from './chord-edit';
+import { IconButton } from '@/components/common/icon-button';
+import { ToastAction } from '@/components/ui/toast';
 
 
 
@@ -40,117 +42,12 @@ interface NoteEditorContentProps {
   onClose: () => void;
   onUpdate: (note: SavedNote) => void;
   onEditModeChange?: (isEditing: boolean) => void;
+  /** Avvia la modalità Live dal brano aperto (menu ⋮). */
+  onStartLive?: () => void;
 }
 
-function ChordPicker({ onSelect, step, setStep, selectedLetter, setSelectedLetter, selectedRoot, setSelectedRoot }: any) {
-  // Initial step: choose what to insert
-  if (step === 'type') {
-    return (
-      <div className="flex flex-col gap-3">
-        <p className="text-caption font-bold uppercase text-muted-foreground tracking-wider">Inserisci</p>
-        <div className="grid grid-cols-3 gap-2">
-          <button
-            onClick={() => setStep('letter')}
-            className="p-3 flex flex-col items-center gap-1 text-sm font-bold bg-secondary hover:bg-secondary/80 rounded-lg border border-border/50 transition-colors"
-          >
-            <span className="text-xl">🎵</span>
-            <span className="text-caption uppercase tracking-wide">Accordo</span>
-          </button>
-          <button
-            onClick={() => onSelect('NEWLINE')}
-            className="p-3 flex flex-col items-center gap-1 text-sm font-bold bg-secondary hover:bg-secondary/80 rounded-lg border border-border/50 transition-colors"
-          >
-            <span className="text-xl">↵</span>
-            <span className="text-caption uppercase tracking-wide">A Capo</span>
-          </button>
-          <button
-            onClick={() => setStep('multiplier')}
-            className="p-3 flex flex-col items-center gap-1 text-sm font-bold bg-secondary hover:bg-secondary/80 rounded-lg border border-border/50 transition-colors"
-          >
-            <span className="text-xl">×</span>
-            <span className="text-caption uppercase tracking-wide">Ripeti</span>
-          </button>
-        </div>
-      </div>
-    );
-  }
 
-  // Multiplier step
-  if (step === 'multiplier') {
-    return (
-      <div className="flex flex-col gap-3">
-        <div className="flex items-center gap-2">
-          <button onClick={() => setStep('type')} className="text-caption text-muted-foreground hover:text-foreground transition-colors">← Indietro</button>
-          <p className="text-caption font-bold uppercase text-muted-foreground tracking-wider">Ripetizioni</p>
-        </div>
-        <div className="grid grid-cols-4 gap-2">
-          {[2, 3, 4, 5, 6, 7, 8].map(n => (
-            <button
-              key={n}
-              onClick={() => onSelect(`x${n}`)}
-              className="p-2 text-sm font-bold bg-primary/10 hover:bg-primary/20 text-primary rounded border border-primary/20 transition-colors"
-            >
-              x{n}
-            </button>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  if (step === 'letter') {
-    return (
-      <div className="flex flex-col gap-3">
-        <div className="flex items-center gap-2">
-          <button onClick={() => setStep('type')} className="text-caption text-muted-foreground hover:text-foreground transition-colors">← Indietro</button>
-          <p className="text-caption font-bold uppercase text-muted-foreground tracking-wider">Nota</p>
-        </div>
-        <div className="grid grid-cols-4 gap-2">
-          {CHORD_ROOTS.map(root => (
-            <button
-              key={root}
-              onClick={() => {
-                setSelectedLetter(root);
-                setSelectedRoot(root);
-                setStep('quality');
-              }}
-              className="p-2 text-sm font-bold bg-secondary hover:bg-secondary/80 rounded"
-            >
-              {root}
-            </button>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  if (step === 'quality' && selectedRoot) {
-    const chords = CHORD_TABLE[selectedRoot] || [];
-    return (
-      <div className="flex flex-col gap-3">
-        <div className="flex items-center gap-2">
-          <button onClick={() => setStep('letter')} className="text-caption text-muted-foreground hover:text-foreground transition-colors">← Indietro</button>
-          <p className="text-caption font-bold uppercase text-muted-foreground tracking-wider">{selectedRoot}</p>
-        </div>
-        <div className="grid grid-cols-3 gap-2">
-          {chords.map(chord => (
-            <button
-              key={chord}
-              onClick={() => onSelect(chord)}
-              className="p-2 text-sm font-bold bg-primary/10 hover:bg-primary/20 text-primary rounded"
-            >
-              {chord}
-            </button>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  return null;
-}
-
-export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange }: NoteEditorContentProps) {
+export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange, onStartLive }: NoteEditorContentProps) {
   const { devicePresets, status, sendProgramChange, sendSceneChange } = useMidiStore();
   const { toast } = useToast();
   const { firestore } = useFirebase();
@@ -174,12 +71,7 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange 
     onEditModeChange?.(editMode);
   }, [editMode, onEditModeChange]);
 
-  const [chordPickerStep, setChordPickerStep] = useState<'type' | 'letter' | 'quality' | 'multiplier'>('type');
-  const [selectedLetter, setSelectedLetter] = useState<string | null>(null);
-  const [selectedRoot, setSelectedRoot] = useState<string | null>(null);
 
-  const [isDeleteSectionDialogOpen, setIsDeleteSectionDialogOpen] = useState(false);
-  const [sectionToDelete, setSectionToDelete] = useState<string | null>(null);
 
   // Modifiche non salvate: confronto con l'ultima versione caricata o salvata.
   const savedDraftRef = useRef<string>('');
@@ -189,8 +81,8 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange 
   const isDirty = editMode && currentDraft !== savedDraftRef.current;
   // NT17: un solo salvataggio alla volta e stato visibile.
   const [isSaving, setIsSaving] = useState(false);
-  // Stato dell'etichetta del preset (L4): inviato alla pedaliera per la nota aperta.
-  const [presetSent, setPresetSent] = useState(false);
+  // Invio del preset (D2) ed etichetta "inviato" (L4), condivisi con la Live.
+  const { send: sendNotePreset, sent: presetSent, resetSent: resetPresetSent } = useNotePresetSender();
   const savingRef = useRef(false);
   const [saveFailed, setSaveFailed] = useState(false);
   const saveState = isSaving ? 'saving' : saveFailed ? 'error' : isDirty ? 'dirty' : 'idle';
@@ -278,21 +170,9 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange 
     });
     setEditMode(false);
     setIsNotesOpen(true);
-    setPresetSent(false);
+    resetPresetSent();
   };
 
-  // Richiama sulla pedaliera il preset collegato al brano (D2: solo all'apertura e con ▶).
-  const sendNotePreset = (presetSlot?: string, presetScene?: string) => {
-    const commands = getPresetSendCommands({ presetSlot, presetScene });
-    if (!commands || status !== 'connected') return false;
-    sendProgramChange(commands.program);
-    if (commands.scene !== null) {
-      const scene = commands.scene;
-      setTimeout(() => sendSceneChange(scene), 500);
-    }
-    setPresetSent(true);
-    return true;
-  };
 
   const handleSaveNote = async () => {
     if (savingRef.current) return;
@@ -379,7 +259,18 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange 
   };
 
   const handleDeleteSection = (id: string) => {
-    setSections(sections.filter(s => s.id !== id));
+    const index = sections.findIndex(s => s.id === id);
+    if (index < 0) return;
+    const removed = sections[index];
+    setSections(prev => prev.filter(s => s.id !== id));
+    toast({
+      title: `Sezione ${removed.type} rimossa`,
+      action: (
+        <ToastAction altText="Annulla la rimozione" onClick={() => setSections(prev => insertAt(prev, index, removed))}>
+          Annulla
+        </ToastAction>
+      ),
+    });
   };
 
   const handleDuplicateSection = (id: string) => {
@@ -416,19 +307,31 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange 
     setSections(newSections);
   };
 
-  const handleAddChordAt = (sectionId: string, chordIndex: number, chord: string) => {
-    setSections(sections.map(s => {
-      if (s.id === sectionId) {
-        const newChords = [...(s.chords || [])];
-        newChords.splice(chordIndex, 0, chord);
-        return { ...s, chords: newChords };
-      }
-      return s;
-    }));
+  // Aggiornamenti funzionali: più scelte di fila dallo stesso selettore non perdono accordi.
+  const insertChord = (sectionId: string, index: number, chord: string) => {
+    setSections(prev => prev.map(s => s.id === sectionId ? { ...s, chords: insertAt(s.chords || [], index, chord) } : s));
+  };
+
+  // M2: rimozione immediata con "Annulla" nel messaggio, al posto della conferma.
+  const removeChord = (sectionId: string, index: number) => {
+    const section = sections.find(s => s.id === sectionId);
+    if (!section) return;
+    const { removed } = removeAt(section.chords || [], index);
+    if (removed === undefined) return;
+    setSections(prev => prev.map(s => s.id === sectionId ? { ...s, chords: removeAt(s.chords || [], index).list } : s));
+    const isNewline = removed.trim().toUpperCase() === 'NEWLINE';
+    toast({
+      title: isNewline ? 'A capo rimosso' : `Accordo ${removed} rimosso`,
+      action: (
+        <ToastAction altText="Annulla la rimozione" onClick={() => setSections(prev => prev.map(s => s.id === sectionId ? { ...s, chords: insertAt(s.chords || [], index, removed) } : s))}>
+          Annulla
+        </ToastAction>
+      ),
+    });
   };
 
   return (
-    <TooltipProvider>
+    <>
       <div className="flex flex-col gap-6 h-full">
         <div className="sticky top-0 z-20 border-b border-white/10 bg-background/95 px-3 py-3 shadow-[0_10px_30px_-24px_hsl(var(--primary))] backdrop-blur-xl lg:px-5">
           <div className="grid min-h-11 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3">
@@ -443,7 +346,7 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange 
             </button>
 
             <div className="min-w-0">
-              <span className="flex items-center gap-2 leading-none"><span className="section-kicker">Nota brano</span>{editMode && <SaveStatus state={saveState} />}</span>
+              <span className="flex items-center gap-2 leading-none"><span className="section-kicker whitespace-nowrap">Nota brano</span>{editMode && <SaveStatus state={saveState} className="whitespace-nowrap" />}</span>
               {editMode ? (
                 <Input
                   aria-label="Titolo brano"
@@ -498,7 +401,7 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange 
                   <Pencil className="h-5 w-5" />
                 </button>
               )}
-              {!editMode && noteId && !isNoteMissing && <NoteReadMenu showAutoSend />}
+              {!editMode && noteId && !isNoteMissing && <NoteReadMenu showAutoSend onStartLive={onStartLive} />}
               {editMode && (
                 <>
                   <button
@@ -654,8 +557,8 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange 
                 {sections.map((section, sIdx) => (
                   <React.Fragment key={section.id}>
                     {editMode && sIdx === 0 && (
-                      <div className="flex items-center justify-center h-8 group/insert">
-                        <button onClick={() => handleAddSection(0)} className="opacity-0 group-hover/insert:opacity-100 flex items-center gap-2 text-label font-bold uppercase text-primary transition-opacity">
+                      <div className="flex items-center justify-center py-1">
+                        <button onClick={() => handleAddSection(0)} className="flex min-h-11 items-center gap-2 rounded-full px-3 text-caption font-bold uppercase text-primary hover:bg-primary/10">
                           <Plus className="w-4 h-4" /> Inserisci Sezione
                         </button>
                       </div>
@@ -698,102 +601,38 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange 
                       <div className="p-3 flex-1 flex flex-col gap-3">
                         <div className="flex flex-wrap items-center gap-2">
                           {editMode && (
-                            <Popover onOpenChange={() => { setChordPickerStep('type'); setSelectedLetter(null); setSelectedRoot(null); }}>
-                              <PopoverTrigger asChild>
-                                <button className="h-8 w-8 rounded-full border border-dashed border-primary/20 text-primary/40 hover:text-primary hover:border-primary/50 flex items-center justify-center" title="Inserisci accordo all'inizio">
-                                  <Plus className="w-4 h-4" />
-                                </button>
-                              </PopoverTrigger>
-                              <PopoverContent className="w-72 p-4" align="start">
-                                <ChordPicker onSelect={(chord: string) => handleAddChordAt(section.id, 0, chord)} step={chordPickerStep} setStep={setChordPickerStep} selectedLetter={selectedLetter} setSelectedLetter={setSelectedLetter} selectedRoot={selectedRoot} setSelectedRoot={setSelectedRoot} />
-                              </PopoverContent>
-                            </Popover>
+                            <ChordInsertPopover
+                              label="Inserisci accordo all'inizio"
+                              startIndex={0}
+                              onInsert={(chord, index) => insertChord(section.id, index, chord)}
+                            />
                           )}
-
                           {(section.chords || []).map((chord, cIdx) => (
-                             chord.trim().toUpperCase() === "NEWLINE" ? (
-                              <div key={`${section.id}-${cIdx}`} className="basis-full h-4 flex items-center justify-center relative group/newline">
+                            chord.trim().toUpperCase() === "NEWLINE" ? (
+                              <div key={`${section.id}-${cIdx}`} className={cn("basis-full flex items-center gap-2", editMode ? "min-h-11" : "h-4")}>
                                 {editMode && (
                                   <>
-                                    <div className="w-full border-t border-dashed border-primary/10"></div>
-                                    <button
-                                      className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover/newline:opacity-100 bg-background rounded-full p-0.5 text-destructive transition-opacity"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setSections(sections.map(s => s.id === section.id ? { ...s, chords: (s.chords || []).filter((_, idx) => idx !== cIdx) } : s));
-                                      }}
-                                    >
-                                      <X className="w-3.5 h-3.5" />
-                                    </button>
+                                    <div className="flex-1 border-t border-dashed border-primary/30" />
+                                    <IconButton label="Rimuovi a capo" className="text-destructive" onClick={() => removeChord(section.id, cIdx)}>
+                                      <X className="h-4 w-4" />
+                                    </IconButton>
                                   </>
                                 )}
                               </div>
                             ) : (
-                              <React.Fragment key={`${section.id}-${cIdx}`}>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Badge
-                                    variant="outline"
-                                    className={cn(
-                                      "min-h-9 h-auto px-3 text-[length:calc(20px*var(--note-scale,1))] font-black shadow-sm cursor-help relative group/badge",
-                                      chord.startsWith('x') && chord.length <= 3
-                                        ? "bg-primary/10 border-primary/30 text-primary"
-                                        : SECTION_COLORS[section.type as SectionType]?.bg,
-                                      chord.startsWith('x') && chord.length <= 3
-                                        ? ""
-                                        : SECTION_COLORS[section.type as SectionType]?.border,
-                                      chord.startsWith('x') && chord.length <= 3
-                                        ? ""
-                                        : SECTION_COLORS[section.type as SectionType]?.text
-                                    )}
-                                  >
-                                    {chord}
-                                    {editMode && (
-                                      <button
-                                        className="ml-2 opacity-30 hover:opacity-100 text-destructive transition-opacity"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          setSections(sections.map(s => s.id === section.id ? { ...s, chords: (s.chords || []).filter((_, idx) => idx !== cIdx) } : s));
-                                        }}
-                                      >
-                                        <X className="w-3.5 h-3.5" />
-                                      </button>
-                                    )}
-                                  </Badge>
-                                </TooltipTrigger>
-                                <TooltipContent className="p-3 bg-card border-primary/40">
-                                  <div className="space-y-2">
-                                    <p className="text-caption font-bold uppercase text-primary border-b border-primary/20 pb-1">
-                                      {chord.startsWith('x') ? 'Ripetizione' : 'Posizioni Chitarra'}
-                                    </p>
-                                    {chord.startsWith('x') ? (
-                                      <p className="text-[12px] font-medium">Ripeti la sequenza {chord.substring(1)} volte.</p>
-                                    ) : (
-                                      <div className="space-y-1">
-                                        {getChordPositions(chord)?.map((pos, pIdx) => (
-                                          <div key={`${chord}-${pIdx}`} className="flex items-center gap-2 font-mono text-[12px]">
-                                            <span className="text-muted-foreground w-4">{pIdx + 1}.</span>
-                                            <span className="text-foreground font-bold">{pos}</span>
-                                          </div>
-                                        )) || <p className="text-caption italic opacity-60">Posizioni non trovate</p>}
-                                      </div>
-                                    )}
-                                  </div>
-                                </TooltipContent>
-                              </Tooltip>
-                              {editMode && (
-                                <Popover onOpenChange={() => { setChordPickerStep('type'); setSelectedLetter(null); setSelectedRoot(null); }}>
-                                  <PopoverTrigger asChild>
-                                    <button className="h-8 w-8 rounded-full border border-dashed border-primary/10 text-primary/20 hover:text-primary hover:border-primary/50 transition-all opacity-0 hover:opacity-100 flex items-center justify-center">
-                                      <Plus className="w-3 h-3" />
-                                    </button>
-                                  </PopoverTrigger>
-                                  <PopoverContent className="w-72 p-4" align="center">
-                                    <ChordPicker onSelect={(chord: string) => handleAddChordAt(section.id, cIdx + 1, chord)} step={chordPickerStep} setStep={setChordPickerStep} selectedLetter={selectedLetter} setSelectedLetter={setSelectedLetter} selectedRoot={selectedRoot} setSelectedRoot={setSelectedRoot} />
-                                  </PopoverContent>
-                                </Popover>
-                              )}
-                            </React.Fragment>
+                              <ChordChip
+                                key={`${section.id}-${cIdx}`}
+                                chord={chord}
+                                editMode={editMode}
+                                className={cn(
+                                  "text-[length:calc(20px*var(--note-scale,1))]",
+                                  /^x\d+$/i.test(chord.trim())
+                                    ? "bg-primary/10 border-primary/30 text-primary"
+                                    : [SECTION_COLORS[section.type as SectionType]?.bg, SECTION_COLORS[section.type as SectionType]?.border, SECTION_COLORS[section.type as SectionType]?.text]
+                                )}
+                                onInsertAfter={(newChord, picksSoFar) => insertChord(section.id, cIdx + 1 + picksSoFar, newChord)}
+                                onRemove={() => removeChord(section.id, cIdx)}
+                              />
                             )
                           ))}
                         </div>
@@ -812,9 +651,9 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange 
                         <div className="p-3 w-auto flex items-center justify-center align-top gap-1">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <button className="h-10 w-10 text-muted-foreground/30 hover:text-primary transition-colors flex items-center justify-center" title="Opzioni sezione">
+                              <IconButton label="Opzioni sezione" className="text-muted-foreground hover:text-primary">
                                 <MoreVertical className="w-5 h-5" />
-                              </button>
+                              </IconButton>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                               <DropdownMenuItem onClick={() => handleDuplicateSection(section.id)}>
@@ -829,7 +668,7 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange 
                                 <ArrowDown className="w-4 h-4 mr-2" />
                                 Sposta giù
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => { setSectionToDelete(section.id); setIsDeleteSectionDialogOpen(true); }} className="text-destructive">
+                              <DropdownMenuItem onClick={() => handleDeleteSection(section.id)} className="text-destructive">
                                 <Trash2 className="w-4 h-4 mr-2" />
                                 Elimina
                               </DropdownMenuItem>
@@ -839,9 +678,9 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange 
                       )}
                     </div>
                     {editMode && (
-                      <div className="flex items-center justify-center h-8 group/insert relative">
+                      <div className="relative flex items-center justify-center py-1">
                         <div className="absolute left-0 right-0 top-1/2 h-[1px] bg-primary/5 -translate-y-1/2" />
-                        <button onClick={() => handleAddSection(sIdx + 1)} className="relative z-10 opacity-0 group-hover/insert:opacity-100 bg-background px-3 flex items-center gap-2 text-label font-bold uppercase text-primary transition-opacity border border-primary/20 rounded-full py-1">
+                        <button onClick={() => handleAddSection(sIdx + 1)} className="relative z-10 flex min-h-11 items-center gap-2 rounded-full border border-primary/20 bg-background px-3 text-caption font-bold uppercase text-primary hover:bg-primary/10">
                           <Plus className="w-3.5 h-3.5" /> Inserisci Sezione Qui
                         </button>
                       </div>
@@ -879,29 +718,7 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange 
           </AlertDialogContent>
         </AlertDialog>
 
-        {/* Delete Section Confirmation Dialog */}
-        <AlertDialog open={isDeleteSectionDialogOpen} onOpenChange={setIsDeleteSectionDialogOpen}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Eliminare sezione?</AlertDialogTitle>
-              <AlertDialogDescription>
-                Questa azione non può essere annullata. La sezione verrà rimossa definitivamente.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Annulla</AlertDialogCancel>
-              <AlertDialogAction onClick={() => {
-                if (sectionToDelete) {
-                  handleDeleteSection(sectionToDelete);
-                  setSectionToDelete(null);
-                }
-              }} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                Elimina
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
       </div>
-    </TooltipProvider>
+    </>
   );
 }

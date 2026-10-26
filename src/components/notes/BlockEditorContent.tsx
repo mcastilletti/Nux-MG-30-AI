@@ -27,9 +27,11 @@ interface BlockEditorContentProps {
   onClose: () => void;
   onUpdate: (note: SavedNote) => void;
   onEditModeChange?: (isEditing: boolean) => void;
+  /** Avvia la modalità Live dal brano aperto (menu ⋮). */
+  onStartLive?: () => void;
 }
 
-export function BlockEditorContent({ noteId, initialBand, initialSetlist, onClose, onUpdate, onEditModeChange }: BlockEditorContentProps) {
+export function BlockEditorContent({ noteId, initialBand, initialSetlist, onClose, onUpdate, onEditModeChange, onStartLive }: BlockEditorContentProps) {
   const { toast } = useToast();
   const { firestore } = useFirebase();
   const { user } = useUser();
@@ -185,7 +187,7 @@ export function BlockEditorContent({ noteId, initialBand, initialSetlist, onClos
               <Pencil className="w-5 h-5 lg:w-7 lg:h-7" />
             </button>
           )}
-          {!editMode && !isNoteMissing && noteId && noteId !== 'new-block' && <NoteReadMenu />}
+          {!editMode && !isNoteMissing && noteId && noteId !== 'new-block' && <NoteReadMenu onStartLive={onStartLive} />}
           {editMode && (
             <div className="flex items-center gap-2">
               <SaveStatus state={saveState} className="hidden sm:inline-flex" />

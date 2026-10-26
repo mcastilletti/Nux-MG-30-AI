@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { AArrowDown, AArrowUp, MoreVertical } from 'lucide-react';
+import { AArrowDown, AArrowUp, MoreVertical, Play } from 'lucide-react';
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { IconButton } from '@/components/common/icon-button';
 import { useNoteTextScale } from '@/hooks/use-note-text-scale';
@@ -9,7 +9,7 @@ import { useNotesAutoSend } from '@/hooks/use-notes-auto-send';
 import { NOTE_TEXT_SCALES, formatTextScale, stepTextScale } from './note-text-scale';
 
 /** Menu ⋮ del foglio in lettura: testo regolabile (L7) e invio automatico del preset (D2). */
-export function NoteReadMenu({ showAutoSend = false, children }: { showAutoSend?: boolean; children?: React.ReactNode }) {
+export function NoteReadMenu({ showAutoSend = false, onStartLive, children }: { showAutoSend?: boolean; onStartLive?: () => void; children?: React.ReactNode }) {
   const [scale, setScale] = useNoteTextScale();
   const [autoSend, setAutoSend] = useNotesAutoSend();
   const min = NOTE_TEXT_SCALES[0];
@@ -38,6 +38,14 @@ export function NoteReadMenu({ showAutoSend = false, children }: { showAutoSend?
             <DropdownMenuCheckboxItem className="min-h-11" checked={autoSend} onCheckedChange={(v) => setAutoSend(!!v)} onSelect={(e) => e.preventDefault()}>
               Invia il preset quando apro un brano
             </DropdownMenuCheckboxItem>
+          </>
+        )}
+        {onStartLive && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem className="min-h-11 gap-2 font-semibold" onSelect={onStartLive}>
+              <Play className="h-4 w-4" aria-hidden="true" /> Avvia live da qui
+            </DropdownMenuItem>
           </>
         )}
         {children}

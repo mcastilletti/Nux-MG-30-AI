@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Preset } from '@/types/preset';
 import { usePresetNames } from '@/hooks/use-preset-names';
 import { useSavePreset } from '@/hooks/use-preset-persistence';
+import { useDeferredPresetCommit } from '@/hooks/use-deferred-preset-commit';
 import { formatSlotLabel } from '@/lib/slot';
 import { EditorHeader } from '@/components/editor/EditorHeader';
 import { SignalChain } from '@/components/editor/SignalChain';
@@ -59,12 +60,8 @@ export default function EditorPage() {
     }
   }, [status, syncActivePreset]);
 
-  // Rispecchia continuamente il preset in editing nella libreria devicePresets:
-  // senza questo, cambiare slot (o copiare una scena) scarta ogni modifica non
-  // ancora sincronizzata con l'hardware.
-  useEffect(() => {
-    useMidiStore.getState().commitPreset(activePreset);
-  }, [activePreset]);
+  // Rispecchia il preset in editing nella libreria devicePresets, a fine gesto (M5).
+  useDeferredPresetCommit(activePreset);
 
   const handleParamChange = (effectType: string, paramId: string, value: number, index: number) => {
     updateParameter(selectedBlockId, paramId, value);
@@ -181,8 +178,7 @@ export default function EditorPage() {
   };
 
   const handleSave = async () => {
-    // Garantisce che la libreria rifletta il preset anche se il commit continuo
-    // (vedi useEffect su activePreset) venisse rimosso in futuro.
+    // Il commit in libreria è differito (useDeferredPresetCommit): qui serve subito.
     useMidiStore.getState().commitPreset(activePreset);
     const result = await savePreset(activePreset);
     const saved = {

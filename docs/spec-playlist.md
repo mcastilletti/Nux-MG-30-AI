@@ -68,11 +68,15 @@ Funzione pura `migrateToPlaylists(notes, bands, setlists)`, coperta da test, che
    - Per ogni gruppo di identici resta la nota modificata più di recente; le altre ricevono `mergedInto`.
    - Nelle playlist il riferimento punta alla nota rimasta.
 4. **Nessuna cancellazione e nessuna modifica del contenuto:** si aggiungono solo documenti e campi.
-5. **Idempotenza:**
+5. **Avvio manuale:**
+   - la conversione **non parte da sola**;
+   - finché manca il marcatore, la pagina Note mostra l'avviso *"Nuova organizzazione a playlist"* con due pulsanti, **Scarica backup** e **Converti**;
+   - **Converti** chiede conferma e ricorda il backup se non è stato scaricato in questa sessione.
+6. **Idempotenza:**
    - la migrazione parte solo senza il marcatore `version: 2`;
    - se si interrompe, al riavvio ricalcola il piano da capo e riusa le playlist già create, con stesso nome e band.
-6. **Riepilogo:** al termine un toast riporta quante playlist sono state create e quanti duplicati uniti, per esempio "3 playlist, 2 duplicati uniti".
-7. **Offline:** la migrazione richiede la rete. Senza rete la lista resta in sola lettura con il modello vecchio e un avviso.
+7. **Riepilogo:** al termine un toast riporta quante playlist sono state create e quanti duplicati uniti, per esempio "3 playlist, 2 duplicati uniti".
+8. **Offline:** la conversione richiede la rete; senza rete **Converti** è disattivato e la lista resta con il modello vecchio.
 
 ## 4. Interfaccia (pagina Note)
 
@@ -110,7 +114,7 @@ Funzione pura `migrateToPlaylists(notes, bands, setlists)`, coperta da test, che
 
 - **Dati reali in Firestore:** la migrazione scrive sull'account vero.
   - Mitigazioni: nessuna cancellazione, piano calcolato da funzione pura e testato, marcatore di versione, riepilogo.
-  - Va **provata su un account reale con un backup**: export JSON delle note dalla pagina Note prima dell'aggiornamento.
+  - Va **provata su un account reale con un backup**: menu ⋮ della pagina Note → **Esporta backup (JSON)**, disponibile da subito (PR separata, prima della Fase 6.2), e conversione avviata a mano.
 - **Due dispositivi:** se un dispositivo con la versione vecchia scrive una nota dopo la migrazione, quella nota avrà solo `band`/`setlist`.
   - All'avvio, con il marcatore presente, le note senza playlist e non unite compaiono nel serbatoio e restano raggiungibili.
   - Dopo il rilascio basta aggiornare la PWA.

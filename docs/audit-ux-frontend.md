@@ -665,7 +665,7 @@ Richiesta dell'utente del 2026-10-26: brani in un serbatoio unico, scalette trat
     - ogni playlist ha gli stessi brani, nello stesso ordine e con lo stesso preset effettivo di prima.
   - Nessun cambio visibile: il pulsante **Converti** arriva con la Fase 6.3.
 
-### Fase 6.3 — Pagina Note su serbatoio e playlist (L)
+### Fase 6.3 — Pagina Note su serbatoio e playlist (L) — ✅ completata (2026-10-26)
 - **Deliverable:**
   - PL1–PL11: vista "Tutti i brani", vista playlist, "Aggiungi brani", "Togli dalla playlist", "Aggiungi a playlist…", "Crea versione", avviso di brano condiviso;
   - navigazione, Live e V11 per playlist (`playlist=` nell'URL);
@@ -673,6 +673,33 @@ Richiesta dell'utente del 2026-10-26: brani in un serbatoio unico, scalette trat
   - foglio del brano senza i campi band e scaletta.
 - **Rischi:** medio-alto, perché tocca tutta la sezione Note.
 - **Accettazione:** Playwright PL1–PL11 e Live su due playlist con un brano comune; nessuna regressione negli scenari Note esistenti.
+- **Esito:**
+  - **Due modi nella stessa pagina:**
+    - finché l'account non è convertito resta la pagina di prima, con in più l'avviso **Scarica backup / Converti**;
+    - **Converti** mostra il riepilogo calcolato sui dati letti in quel momento dall'account, poi scrive.
+    - Dopo la conversione la pagina passa al modello a playlist; un altro dispositivo se ne accorge e ricarica le note.
+  - **Componenti nuovi** in `src/components/notes/playlist/`:
+    - `PlaylistLibrary`, `PlaylistNoteRow`;
+    - `AddSongsDialog`, `AddToPlaylistsDialog`;
+    - `ConversionBanner`.
+  - **Altri file:**
+    - scritture in `use-playlist-actions.ts`;
+    - viste pure in `src/lib/playlist-view.ts`;
+    - `playlist=` nello stato del foglio e nell'URL.
+  - **Editor brano e blocco:** niente band e scaletta. Il preset si sceglie per playlist (predefinito / proprio / nessuno). Avviso del brano condiviso con "Crea versione". Menu ⋮ con "Aggiungi a playlist…", "Crea versione" ed "Elimina".
+  - **Verifiche:**
+    - Playwright `check-pl`: 35/35 su PL1–PL12, Live e V11 con due playlist che condividono un brano, 390px senza scroll orizzontale;
+    - regressioni Note, Live, NT2, NT3, D1/D2, backup e navigazione verdi;
+    - confronto pixel del modello vecchio con `main`: 40 schermate su 40 identiche;
+    - axe su serbatoio, playlist, dialoghi e foglio in modifica: nessuna violazione grave salvo lo zoom (D3).
+  - **Corretti durante l'audit:**
+    - `--accent-foreground` scuro: il bianco sul viola dell'hover era 2,8:1;
+    - nomi per i menu slot, scena, band, scaletta e tipo di sezione.
+  - **Da provare con l'account reale (Fase 7):**
+    - conversione;
+    - creazione di brani nuovi da una playlist;
+    - preset per playlist salvato;
+    - importazione JSON con creazione della playlist.
 
 ### Fase 6.4 — Pagina Band, pulizia e documentazione (M)
 - **Deliverable:**

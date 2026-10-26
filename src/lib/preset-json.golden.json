@@ -1,0 +1,837 @@
+{
+ "signalChain": {
+  "appliedCount": 9,
+  "warnings": [
+   "delay.repeat: 400 corretto in 100.",
+   "vol.min forzato a 50 (valore minimo consentito)."
+  ],
+  "effects": [
+   {
+    "type": "wah",
+    "model": "clyde",
+    "enabled": false,
+    "parameters": {
+     "position": 0
+    }
+   },
+   {
+    "type": "noise-gate",
+    "model": "gate",
+    "enabled": true,
+    "parameters": {
+     "threshold": 20,
+     "decay": 50
+    }
+   },
+   {
+    "type": "compressor",
+    "model": "rose",
+    "enabled": false,
+    "parameters": {
+     "sustain": 50,
+     "level": 50
+    }
+   },
+   {
+    "type": "efx",
+    "model": "tscream",
+    "enabled": false,
+    "parameters": {
+     "drive": 50,
+     "tone": 50,
+     "level": 50
+    }
+   },
+   {
+    "type": "amp",
+    "model": "plexi100w",
+    "enabled": true,
+    "parameters": {
+     "gain": 80,
+     "master": 50,
+     "bass": 40,
+     "mid": 50,
+     "treble": 50,
+     "presence": 50,
+     "bias": 50,
+     "level": 50
+    }
+   },
+   {
+    "type": "ir",
+    "model": "ir-jz120",
+    "enabled": true,
+    "parameters": {
+     "level": 0,
+     "lowcut": 20,
+     "highcut": 20000,
+     "mic": 1,
+     "axis": 0
+    }
+   },
+   {
+    "type": "sr",
+    "model": "send-return",
+    "enabled": false,
+    "parameters": {
+     "send": 100,
+     "return": 100
+    }
+   },
+   {
+    "type": "modulation",
+    "model": "mod-ce1",
+    "enabled": false,
+    "parameters": {
+     "intensity": 50,
+     "depth": 50,
+     "rate": 50,
+     "subdiv": 2
+    }
+   },
+   {
+    "type": "delay",
+    "model": "dly-analog",
+    "enabled": false,
+    "parameters": {
+     "repeat": 100,
+     "echo": 50,
+     "intensity": 50,
+     "subdiv": 2
+    }
+   },
+   {
+    "type": "reverb",
+    "model": "room",
+    "enabled": false,
+    "parameters": {
+     "decay": 50,
+     "tone": 50,
+     "level": 30
+    }
+   },
+   {
+    "type": "eq",
+    "model": "eq-ge6",
+    "enabled": false,
+    "parameters": {
+     "100hz": 50,
+     "220hz": 50,
+     "500hz": 50,
+     "1.2khz": 50,
+     "2.6khz": 50,
+     "6.4khz": 50,
+     "level": 50
+    }
+   },
+   {
+    "type": "vol",
+    "model": "patch-vol",
+    "enabled": true,
+    "parameters": {
+     "min": 50,
+     "max": 60
+    }
+   }
+  ]
+ },
+ "midiCcParameters": {
+  "appliedCount": 3,
+  "warnings": [
+   "vol.min forzato a 50 (valore minimo consentito)."
+  ],
+  "effects": [
+   {
+    "type": "wah",
+    "model": "clyde",
+    "enabled": false,
+    "parameters": {
+     "position": 0
+    }
+   },
+   {
+    "type": "noise-gate",
+    "model": "gate",
+    "enabled": true,
+    "parameters": {
+     "threshold": 20,
+     "decay": 50
+    }
+   },
+   {
+    "type": "compressor",
+    "model": "rose",
+    "enabled": false,
+    "parameters": {
+     "sustain": 50,
+     "level": 50
+    }
+   },
+   {
+    "type": "efx",
+    "model": "tscream",
+    "enabled": false,
+    "parameters": {
+     "drive": 50,
+     "tone": 50,
+     "level": 50
+    }
+   },
+   {
+    "type": "amp",
+    "model": "plexi100w",
+    "enabled": true,
+    "parameters": {
+     "gain": 70,
+     "master": 50,
+     "bass": 50,
+     "mid": 50,
+     "treble": 50,
+     "presence": 50,
+     "bias": 50,
+     "level": 50
+    }
+   },
+   {
+    "type": "ir",
+    "model": "ir-jz120",
+    "enabled": true,
+    "parameters": {
+     "level": 0,
+     "lowcut": 20,
+     "highcut": 20000,
+     "mic": 1,
+     "axis": 0
+    }
+   },
+   {
+    "type": "sr",
+    "model": "send-return",
+    "enabled": false,
+    "parameters": {
+     "send": 100,
+     "return": 100
+    }
+   },
+   {
+    "type": "modulation",
+    "model": "mod-ce1",
+    "enabled": false,
+    "parameters": {
+     "intensity": 50,
+     "depth": 50,
+     "rate": 50,
+     "subdiv": 2
+    }
+   },
+   {
+    "type": "delay",
+    "model": "dly-analog",
+    "enabled": false,
+    "parameters": {
+     "repeat": 30,
+     "echo": 30,
+     "intensity": 30,
+     "subdiv": 2
+    }
+   },
+   {
+    "type": "reverb",
+    "model": "room",
+    "enabled": true,
+    "parameters": {
+     "decay": 50,
+     "tone": 50,
+     "level": 35
+    }
+   },
+   {
+    "type": "eq",
+    "model": "eq-ge6",
+    "enabled": false,
+    "parameters": {
+     "100hz": 50,
+     "220hz": 50,
+     "500hz": 50,
+     "1.2khz": 50,
+     "2.6khz": 50,
+     "6.4khz": 50,
+     "level": 50
+    }
+   },
+   {
+    "type": "vol",
+    "model": "patch-vol",
+    "enabled": true,
+    "parameters": {
+     "min": 50,
+     "max": 60
+    }
+   }
+  ]
+ },
+ "flatByType": {
+  "appliedCount": 5,
+  "warnings": [
+   "vol.min forzato a 50 (valore minimo consentito)."
+  ],
+  "effects": [
+   {
+    "type": "wah",
+    "model": "clyde",
+    "enabled": false,
+    "parameters": {
+     "position": 0
+    }
+   },
+   {
+    "type": "noise-gate",
+    "model": "gate",
+    "enabled": true,
+    "parameters": {
+     "threshold": 20,
+     "decay": 50
+    }
+   },
+   {
+    "type": "compressor",
+    "model": "rose",
+    "enabled": true,
+    "parameters": {
+     "sustain": 60,
+     "level": 50
+    }
+   },
+   {
+    "type": "efx",
+    "model": "tscream",
+    "enabled": false,
+    "parameters": {
+     "drive": 50,
+     "tone": 50,
+     "level": 50
+    }
+   },
+   {
+    "type": "amp",
+    "model": "plexi100w",
+    "enabled": true,
+    "parameters": {
+     "gain": 66,
+     "master": 55,
+     "bass": 50,
+     "mid": 50,
+     "treble": 50,
+     "presence": 50,
+     "bias": 50,
+     "level": 50
+    }
+   },
+   {
+    "type": "ir",
+    "model": "ir-jz120",
+    "enabled": true,
+    "parameters": {
+     "level": 0,
+     "lowcut": 20,
+     "highcut": 20000,
+     "mic": 1,
+     "axis": 0
+    }
+   },
+   {
+    "type": "sr",
+    "model": "send-return",
+    "enabled": false,
+    "parameters": {
+     "send": 100,
+     "return": 100
+    }
+   },
+   {
+    "type": "modulation",
+    "model": "mod-ce1",
+    "enabled": false,
+    "parameters": {
+     "intensity": 50,
+     "depth": 50,
+     "rate": 50,
+     "subdiv": 2
+    }
+   },
+   {
+    "type": "delay",
+    "model": "dly-analog",
+    "enabled": false,
+    "parameters": {
+     "repeat": 30,
+     "echo": 30,
+     "intensity": 30,
+     "subdiv": 2
+    }
+   },
+   {
+    "type": "reverb",
+    "model": "room",
+    "enabled": true,
+    "parameters": {
+     "decay": 50,
+     "tone": 50,
+     "level": 30
+    }
+   },
+   {
+    "type": "eq",
+    "model": "eq-ge6",
+    "enabled": false,
+    "parameters": {
+     "100hz": 50,
+     "220hz": 50,
+     "500hz": 50,
+     "1.2khz": 50,
+     "2.6khz": 50,
+     "6.4khz": 50,
+     "level": 50
+    }
+   },
+   {
+    "type": "vol",
+    "model": "patch-vol",
+    "enabled": true,
+    "parameters": {
+     "min": 50,
+     "max": 60
+    }
+   }
+  ]
+ },
+ "arrayOfBlocks": {
+  "appliedCount": 4,
+  "warnings": [
+   "vol.min forzato a 50 (valore minimo consentito)."
+  ],
+  "effects": [
+   {
+    "type": "wah",
+    "model": "clyde",
+    "enabled": false,
+    "parameters": {
+     "position": 0
+    }
+   },
+   {
+    "type": "noise-gate",
+    "model": "gate",
+    "enabled": true,
+    "parameters": {
+     "threshold": 20,
+     "decay": 50
+    }
+   },
+   {
+    "type": "compressor",
+    "model": "rose",
+    "enabled": false,
+    "parameters": {
+     "sustain": 50,
+     "level": 50
+    }
+   },
+   {
+    "type": "efx",
+    "model": "tscream",
+    "enabled": false,
+    "parameters": {
+     "drive": 50,
+     "tone": 50,
+     "level": 50
+    }
+   },
+   {
+    "type": "amp",
+    "model": "plexi100w",
+    "enabled": true,
+    "parameters": {
+     "gain": 90,
+     "master": 50,
+     "bass": 50,
+     "mid": 50,
+     "treble": 50,
+     "presence": 50,
+     "bias": 50,
+     "level": 50
+    }
+   },
+   {
+    "type": "ir",
+    "model": "ir-jz120",
+    "enabled": true,
+    "parameters": {
+     "level": 0,
+     "lowcut": 20,
+     "highcut": 20000,
+     "mic": 1,
+     "axis": 0
+    }
+   },
+   {
+    "type": "sr",
+    "model": "send-return",
+    "enabled": false,
+    "parameters": {
+     "send": 100,
+     "return": 100
+    }
+   },
+   {
+    "type": "modulation",
+    "model": "mod-ce1",
+    "enabled": false,
+    "parameters": {
+     "intensity": 50,
+     "depth": 50,
+     "rate": 50,
+     "subdiv": 2
+    }
+   },
+   {
+    "type": "delay",
+    "model": "dly-analog",
+    "enabled": false,
+    "parameters": {
+     "repeat": 30,
+     "echo": 30,
+     "intensity": 30,
+     "subdiv": 2
+    }
+   },
+   {
+    "type": "reverb",
+    "model": "room",
+    "enabled": true,
+    "parameters": {
+     "decay": 70,
+     "tone": 50,
+     "level": 30
+    }
+   },
+   {
+    "type": "eq",
+    "model": "eq-ge6",
+    "enabled": false,
+    "parameters": {
+     "100hz": 50,
+     "220hz": 50,
+     "500hz": 50,
+     "1.2khz": 50,
+     "2.6khz": 50,
+     "6.4khz": 50,
+     "level": 50
+    }
+   },
+   {
+    "type": "vol",
+    "model": "patch-vol",
+    "enabled": true,
+    "parameters": {
+     "min": 50,
+     "max": 60
+    }
+   }
+  ]
+ },
+ "outOfRange": {
+  "appliedCount": 3,
+  "warnings": [
+   "amp.gain: 999 corretto in 100.",
+   "vol.min forzato a 50 (valore minimo consentito)."
+  ],
+  "effects": [
+   {
+    "type": "wah",
+    "model": "clyde",
+    "enabled": false,
+    "parameters": {
+     "position": 0
+    }
+   },
+   {
+    "type": "noise-gate",
+    "model": "gate",
+    "enabled": true,
+    "parameters": {
+     "threshold": 20,
+     "decay": 50
+    }
+   },
+   {
+    "type": "compressor",
+    "model": "rose",
+    "enabled": false,
+    "parameters": {
+     "sustain": 50,
+     "level": 50
+    }
+   },
+   {
+    "type": "efx",
+    "model": "tscream",
+    "enabled": false,
+    "parameters": {
+     "drive": 50,
+     "tone": 50,
+     "level": 50
+    }
+   },
+   {
+    "type": "amp",
+    "model": "plexi100w",
+    "enabled": true,
+    "parameters": {
+     "gain": 100,
+     "master": 50,
+     "bass": 50,
+     "mid": 50,
+     "treble": 50,
+     "presence": 50,
+     "bias": 50,
+     "level": 50
+    }
+   },
+   {
+    "type": "ir",
+    "model": "ir-jz120",
+    "enabled": true,
+    "parameters": {
+     "level": 0,
+     "lowcut": 20,
+     "highcut": 20000,
+     "mic": 1,
+     "axis": 0
+    }
+   },
+   {
+    "type": "sr",
+    "model": "send-return",
+    "enabled": false,
+    "parameters": {
+     "send": 100,
+     "return": 100
+    }
+   },
+   {
+    "type": "modulation",
+    "model": "mod-ce1",
+    "enabled": false,
+    "parameters": {
+     "intensity": 50,
+     "depth": 50,
+     "rate": 50,
+     "subdiv": 2
+    }
+   },
+   {
+    "type": "delay",
+    "model": "dly-analog",
+    "enabled": false,
+    "parameters": {
+     "repeat": 30,
+     "echo": 30,
+     "intensity": 30,
+     "subdiv": 2
+    }
+   },
+   {
+    "type": "reverb",
+    "model": "room",
+    "enabled": true,
+    "parameters": {
+     "decay": 50,
+     "tone": 50,
+     "level": 30
+    }
+   },
+   {
+    "type": "eq",
+    "model": "eq-ge6",
+    "enabled": false,
+    "parameters": {
+     "100hz": 50,
+     "220hz": 50,
+     "500hz": 50,
+     "1.2khz": 50,
+     "2.6khz": 50,
+     "6.4khz": 50,
+     "level": 50
+    }
+   },
+   {
+    "type": "vol",
+    "model": "patch-vol",
+    "enabled": true,
+    "parameters": {
+     "min": 50,
+     "max": 60
+    }
+   }
+  ]
+ },
+ "unknown": {
+  "appliedCount": 1,
+  "warnings": [
+   "vol.min forzato a 50 (valore minimo consentito)."
+  ],
+  "effects": [
+   {
+    "type": "wah",
+    "model": "clyde",
+    "enabled": false,
+    "parameters": {
+     "position": 0
+    }
+   },
+   {
+    "type": "noise-gate",
+    "model": "gate",
+    "enabled": true,
+    "parameters": {
+     "threshold": 20,
+     "decay": 50
+    }
+   },
+   {
+    "type": "compressor",
+    "model": "rose",
+    "enabled": false,
+    "parameters": {
+     "sustain": 50,
+     "level": 50
+    }
+   },
+   {
+    "type": "efx",
+    "model": "tscream",
+    "enabled": false,
+    "parameters": {
+     "drive": 50,
+     "tone": 50,
+     "level": 50
+    }
+   },
+   {
+    "type": "amp",
+    "model": "plexi100w",
+    "enabled": true,
+    "parameters": {
+     "gain": 50,
+     "master": 50,
+     "bass": 50,
+     "mid": 50,
+     "treble": 50,
+     "presence": 50,
+     "bias": 50,
+     "level": 50
+    }
+   },
+   {
+    "type": "ir",
+    "model": "ir-jz120",
+    "enabled": true,
+    "parameters": {
+     "level": 0,
+     "lowcut": 20,
+     "highcut": 20000,
+     "mic": 1,
+     "axis": 0
+    }
+   },
+   {
+    "type": "sr",
+    "model": "send-return",
+    "enabled": false,
+    "parameters": {
+     "send": 100,
+     "return": 100
+    }
+   },
+   {
+    "type": "modulation",
+    "model": "mod-ce1",
+    "enabled": false,
+    "parameters": {
+     "intensity": 50,
+     "depth": 50,
+     "rate": 50,
+     "subdiv": 2
+    }
+   },
+   {
+    "type": "delay",
+    "model": "dly-analog",
+    "enabled": false,
+    "parameters": {
+     "repeat": 30,
+     "echo": 30,
+     "intensity": 30,
+     "subdiv": 2
+    }
+   },
+   {
+    "type": "reverb",
+    "model": "room",
+    "enabled": true,
+    "parameters": {
+     "decay": 50,
+     "tone": 50,
+     "level": 30
+    }
+   },
+   {
+    "type": "eq",
+    "model": "eq-ge6",
+    "enabled": false,
+    "parameters": {
+     "100hz": 50,
+     "220hz": 50,
+     "500hz": 50,
+     "1.2khz": 50,
+     "2.6khz": 50,
+     "6.4khz": 50,
+     "level": 50
+    }
+   },
+   {
+    "type": "vol",
+    "model": "patch-vol",
+    "enabled": true,
+    "parameters": {
+     "min": 50,
+     "max": 60
+    }
+   }
+  ]
+ },
+ "parse": [
+  {
+   "parsed": {
+    "a": 1
+   },
+   "looksLikeJson": true
+  },
+  {
+   "parsed": {
+    "b": 2
+   },
+   "looksLikeJson": true
+  },
+  {
+   "parsed": null,
+   "looksLikeJson": false
+  },
+  {
+   "parsed": null,
+   "looksLikeJson": true,
+   "error": "Expected property name or '}' in JSON at position 1 (line 1 column 2)"
+  }
+ ]
+}

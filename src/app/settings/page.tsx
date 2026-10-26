@@ -25,14 +25,14 @@ function MidiMonitorCard() {
           </CardTitle>
           <div className="flex items-center gap-2">
             <Badge variant="outline" className="text-label">IN: {midiLog.length}</Badge>
-            <Badge variant="outline" className="text-label text-green-500 border-green-500/30">OUT: {midiOutLog.length}</Badge>
+            <Badge variant="outline" className="text-label text-success border-success/30">OUT: {midiOutLog.length}</Badge>
             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { clearMidiLog(); clearMidiOutLog(); }} title="Cancella log">
               <Trash2 className="w-3.5 h-3.5" />
             </Button>
           </div>
         </div>
         <CardDescription className="text-caption">
-          Messaggi HEX MIDI in tempo reale. <span className="text-green-400 font-mono">[OUT]</span> = inviati alla pedaliera, <span className="text-amber-400 font-mono">[IN]</span> = ricevuti dalla pedaliera.
+          Messaggi HEX MIDI in tempo reale. <span className="text-success font-mono">[OUT]</span> = inviati alla pedaliera, <span className="text-warning font-mono">[IN]</span> = ricevuti dalla pedaliera.
           I messaggi SysEx sono evidenziati in arancione.
         </CardDescription>
       </CardHeader>
@@ -45,7 +45,7 @@ function MidiMonitorCard() {
           <div className="bg-background rounded-md border border-border overflow-hidden">
             <div className="max-h-72 overflow-y-auto p-3 space-y-0.5 font-mono text-caption">
               {[...midiOutLog, ...midiLog].map((msg, i) => (
-                <div key={i} className={`leading-5 ${msg.includes('F0') ? 'text-amber-400' : msg.includes('[OUT]') ? 'text-green-400' : 'text-muted-foreground'}`}>
+                <div key={i} className={`leading-5 ${msg.includes('F0') ? 'text-warning' : msg.includes('[OUT]') ? 'text-success' : 'text-muted-foreground'}`}>
                   {msg}
                 </div>
               ))}
@@ -76,9 +76,9 @@ export default function SettingsPage() {
         </header>
 
         {!user && (
-          <Alert variant="destructive" className="border-amber-500/50 bg-amber-500/5">
-            <AlertCircle className="h-4 w-4 text-amber-500" />
-            <AlertTitle className="text-amber-500 font-bold">Sincronizzazione Cloud Disattivata</AlertTitle>
+          <Alert variant="destructive" className="border-warning/50 bg-warning/5">
+            <AlertCircle className="h-4 w-4 text-warning" />
+            <AlertTitle className="text-warning font-bold">Sincronizzazione Cloud Disattivata</AlertTitle>
             <AlertDescription className="text-xs">
               Effettua il login con Google per attivare il backup cloud. Senza login, i dati sono salvati solo localmente nel browser.
             </AlertDescription>
@@ -96,7 +96,7 @@ export default function SettingsPage() {
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between text-xs">
                 <span className="text-muted-foreground font-medium uppercase">Firestore Database</span>
-                <Badge variant="outline" className="text-green-500 border-green-500/30">ATTIVO</Badge>
+                <Badge variant="outline" className="text-success border-success/30">ATTIVO</Badge>
               </div>
               <div className="text-label text-muted-foreground leading-relaxed italic">
                 Il piano Spark di Firebase offre 1GB di database gratuito, sufficiente per migliaia di preset e note.
@@ -115,7 +115,7 @@ export default function SettingsPage() {
               {user ? (
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 bg-secondary/50 p-2 rounded border border-border">
-                    <div className="w-2 h-2 rounded-full bg-green-500" />
+                    <div className="w-2 h-2 rounded-full bg-success" />
                     <span className="font-mono text-label truncate">{user.email}</span>
                   </div>
                   <div className="text-label text-muted-foreground">
@@ -134,22 +134,22 @@ export default function SettingsPage() {
         {/* MIDI Monitor — per diagnosticare i nomi dei preset */}
         <MidiMonitorCard />
 
-        <Card className="border-amber-500/20 bg-amber-500/5">
+        <Card className="border-warning/20 bg-warning/5">
           <CardHeader>
-            <CardTitle className="text-sm flex items-center gap-2 text-amber-500 uppercase tracking-widest font-bold">
+            <CardTitle className="text-sm flex items-center gap-2 text-warning uppercase tracking-widest font-bold">
               <Globe className="w-4 h-4" /> Risoluzione Problemi Login
             </CardTitle>
             <CardDescription>Per errori "unauthorized-domain" o "popup-closed"</CardDescription>
           </CardHeader>
           <CardContent className="text-xs space-y-4">
             <div className="space-y-2">
-              <div className="font-bold flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-amber-500" /> 1. Autorizza il dominio attuale</div>
+              <div className="font-bold flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-warning" /> 1. Autorizza il dominio attuale</div>
               <div className="text-muted-foreground ml-3">Vai nella Console Firebase &gt; Auth &gt; Settings &gt; Authorized Domains e aggiungi:</div>
               <code className="block ml-3 bg-secondary p-2 rounded text-primary font-mono text-center select-all">{currentHostname}</code>
             </div>
             
             <div className="space-y-2">
-              <div className="font-bold flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-amber-500" /> 2. Controlla il blocco popup</div>
+              <div className="font-bold flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-warning" /> 2. Controlla il blocco popup</div>
               <div className="text-muted-foreground ml-3">Se la finestra si chiude da sola (popup-closed), assicurati che il tuo browser non stia bloccando i redirect di Google. Controlla l'icona a destra nella barra degli indirizzi.</div>
             </div>
 

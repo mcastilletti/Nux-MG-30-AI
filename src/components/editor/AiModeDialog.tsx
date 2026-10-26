@@ -164,7 +164,7 @@ export function AiModeDialog({ open, onOpenChange, activePreset, setActivePreset
         ) : (
           <>
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-2"><CheckCircle2 className="w-5 h-5 text-green-500" /> Preset Generato: {proposedPreset.name}</DialogTitle>
+              <DialogTitle className="flex items-center gap-2"><CheckCircle2 className="w-5 h-5 text-success" /> Preset Generato: {proposedPreset.name}</DialogTitle>
               <DialogDescription>L'AI ha selezionato i modelli e i parametri migliori.</DialogDescription>
             </DialogHeader>
             <div className="py-4 space-y-4">
@@ -187,7 +187,7 @@ export function AiModeDialog({ open, onOpenChange, activePreset, setActivePreset
                 )}
               </div>
               {!!proposedNormalization?.warnings.length && (
-                <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 text-xs text-amber-200">
+                <div className="rounded-lg border border-warning/30 bg-warning/5 p-3 text-xs text-warning">
                   <p className="mb-1 font-semibold">Avvisi di validazione</p>
                   <ul className="list-disc space-y-1 pl-4">
                     {proposedNormalization.warnings.map((warning, index) => <li key={`${warning}-${index}`}>{warning}</li>)}

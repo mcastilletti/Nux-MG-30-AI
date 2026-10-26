@@ -146,7 +146,7 @@ export default function HomePage() {
             </CardHeader>
             <CardContent>
               <div className="flex items-center gap-6 p-6 rounded-xl bg-card/50 border border-white/5 shadow-[0_4px_20px_-8px_rgba(0,0,0,0.3)]">
-                <div className={`p-4 rounded-full ${status === 'connected' ? 'bg-green-500/10 text-green-500 border border-green-500/20' : 'bg-red-500/10 text-red-500 border border-red-500/20'}`}>
+                <div className={`p-4 rounded-full ${status === 'connected' ? 'bg-success/10 text-success border border-success/20' : 'bg-destructive/10 text-destructive border border-destructive/20'}`}>
                    <Usb className="w-8 h-8" />
                 </div>
                 <div>

@@ -545,7 +545,7 @@ function BandsContent() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-9 w-9 text-muted-foreground hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                              className="h-9 w-9 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
                               onClick={() => {
                                 setBandToDelete(band);
                                 setIsDeleteBandDialogOpen(true);
@@ -600,7 +600,7 @@ function BandsContent() {
                                     <Button
                                       variant="ghost"
                                       size="icon"
-                                      className="h-8 w-8 text-muted-foreground hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                                      className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
                                       onClick={() => {
                                         setSetlistToDelete(setlist);
                                         setIsDeleteSetlistDialogOpen(true);
@@ -776,7 +776,7 @@ function BandsContent() {
         <Dialog open={isDeleteBandDialogOpen} onOpenChange={setIsDeleteBandDialogOpen}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle className="text-xl font-bold text-red-400">Elimina Band</DialogTitle>
+              <DialogTitle className="text-xl font-bold text-destructive">Elimina Band</DialogTitle>
               <DialogDescription className="text-sm text-muted-foreground">
                 Sei sicuro di voler eliminare <span className="font-semibold text-foreground">"{bandToDelete?.name}"</span>? Questa azione eliminerà anche tutte le scalette associate. Questa azione è irreversibile.
               </DialogDescription>
@@ -800,7 +800,7 @@ function BandsContent() {
         <Dialog open={isDeleteSetlistDialogOpen} onOpenChange={setIsDeleteSetlistDialogOpen}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle className="text-xl font-bold text-red-400">Elimina Scaletta</DialogTitle>
+              <DialogTitle className="text-xl font-bold text-destructive">Elimina Scaletta</DialogTitle>
               <DialogDescription className="text-sm text-muted-foreground">
                 Sei sicuro di voler eliminare <span className="font-semibold text-foreground">"{setlistToDelete?.name}"</span>? Questa azione è irreversibile.
               </DialogDescription>

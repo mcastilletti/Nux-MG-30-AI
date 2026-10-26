@@ -163,3 +163,7 @@ Simulazione della migrazione sul backup dell'utente (121 note: 107 brani, 14 blo
 - **Note solo nel serbatoio ("Senza Scaletta"):** 8, di cui 6 sono doppioni identici di blocchi già presenti in *Acu + letture*.
 - **Titoli come "ACU - …" e "335 - …"** sono versioni volute: restano brani distinti.
 - **Nomi con spazio finale** ("EMERALD ", "Completa ") coincidono con la band "EMERALD" della pagina Band dopo la normalizzazione (P5).
+- **Prova completa in memoria (Fase 6.2):** piano, esecutore con scrittore finto e rilettura dei documenti.
+  - Esito: 2 blocchi di scrittura, 0 note modificate nel contenuto, 5 playlist su 5 identiche a prima per brani, ordine e preset effettivo.
+  - Due copie unite avevano una scena senza slot: la scena senza slot non manda comandi (`getPresetSendCommands`), quindi viene considerata vuota.
+- **Preset "nessuno" per playlist:** quando una copia senza preset viene unita a una copia con preset, la sua playlist conserva "nessun preset" (`presetSlot: ''`), per non mandare un preset che prima non partiva (es. *335 - Don't look back in anger* in *Acu + letture*).

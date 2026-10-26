@@ -639,7 +639,7 @@ Ridisegni misurati con uno script Playwright che conta i componenti React ridise
   - nessuna regressione negli screenshot;
   - audit di accessibilità senza errori bloccanti.
 
-### Fase 6.2 — Serbatoio dei brani e playlist: modello dati e migrazione (M) — 🔶 in corso (specifica approvata)
+### Fase 6.2 — Serbatoio dei brani e playlist: modello dati e migrazione (M) — ✅ completata (2026-10-26)
 Richiesta dell'utente del 2026-10-26: brani in un serbatoio unico, scalette trattate come playlist. Specifica in `docs/spec-playlist.md`; sostituisce D7.
 - **Deliverable:**
   - tipi `Playlist` (documenti `setlists` con `items` e preset per playlist) e operazioni pure sulle playlist (aggiungi, togli, riordina, sostituisci, posizione, preset effettivo);
@@ -649,6 +649,21 @@ Richiesta dell'utente del 2026-10-26: brani in un serbatoio unico, scalette trat
   - nessun cambio visibile.
 - **Rischi:** alto, perché scrive dati reali. Nessuna cancellazione, piano testato, idempotenza.
 - **Accettazione:** test unitari della migrazione e delle operazioni; scenari della §8 della specifica.
+- **Esito:**
+  - **File:**
+    - `src/types/playlist.ts`;
+    - operazioni pure in `src/lib/playlist-ops.ts`;
+    - piano di conversione in `src/lib/playlist-migration.ts`;
+    - esecutore a blocchi in `src/lib/playlist-migration-run.ts`, con il marcatore scritto per ultimo;
+    - lettura difensiva in `src/lib/playlist-data.ts`;
+    - adattatore Firestore in `src/lib/firestore-playlists.ts`;
+    - cache `mg30-playlists-cache`, svuotata al logout.
+  - **Test:** 114 test verdi, di cui 31 nuovi.
+  - **Prova completa in memoria sul backup reale dell'utente**, con 121 note:
+    - risultato: 104 elementi nel serbatoio, 17 doppioni uniti, 5 playlist e 2 band nuove;
+    - nessuna nota modificata nel contenuto;
+    - ogni playlist ha gli stessi brani, nello stesso ordine e con lo stesso preset effettivo di prima.
+  - Nessun cambio visibile: il pulsante **Converti** arriva con la Fase 6.3.
 
 ### Fase 6.3 — Pagina Note su serbatoio e playlist (L)
 - **Deliverable:**

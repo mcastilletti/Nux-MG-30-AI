@@ -6,6 +6,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { useMidiStore } from '@/stores/use-midi-store';
 import { useNotesCache } from '@/stores/use-notes-cache';
+import { usePlaylistsCache } from '@/stores/use-playlists-cache';
 import { LayoutDashboard, Library, Sliders, Settings, Zap, NotebookPen, LogIn, LogOut, User as UserIcon, Users, MoreHorizontal } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -91,6 +92,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
     await signOut(auth);
     // Le note in cache appartengono all'account appena disconnesso.
     useNotesCache.getState().clearCache();
+    usePlaylistsCache.getState().clearCache();
     clearSavedPresets();
     toast({
       title: "Logout effettuato",

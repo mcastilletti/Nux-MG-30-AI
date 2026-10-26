@@ -26,12 +26,16 @@ const sectionBarClass = (type: string) => SECTION_COLORS[type as SectionType]?.b
  * Modalità Live (spec V1–V11): sola lettura, testo grande, alto contrasto,
  * blocco anti-tocco. Prec/Succ e scelta del brano sono nella barra in fondo al foglio.
  */
-export function LiveNoteView({ noteId, position, onExit }: {
+export function LiveNoteView({ noteId, position, onExit, preset }: {
   noteId: string;
   position?: { index: number; total: number } | null;
   onExit: () => void;
+  /** Preset effettivo nella playlist (spec playlist P4); assente = preset del brano. */
+  preset?: { presetSlot: string; presetScene: string } | null;
 }) {
   const note = useNotesCache((state) => state.notes.find((n) => n.id === noteId));
+  const presetSlot = preset ? preset.presetSlot : note?.presetSlot;
+  const presetScene = preset ? preset.presetScene : note?.presetScene;
   const [scale, setScale] = useNoteTextScale();
   const [locked, setLocked] = useLocalFlag(LIVE_LOCK_KEY, false);
   const wakeLockActive = useWakeLock();
@@ -59,7 +63,7 @@ export function LiveNoteView({ noteId, position, onExit }: {
     if (autoSentFor.current !== noteId) resetSent();
     if (!note || autoSentFor.current === noteId) return;
     autoSentFor.current = noteId;
-    if (note.type !== 'block' && readAutoSendSetting(window.localStorage)) send(note.presetSlot, note.presetScene);
+    if (note.type !== 'block' && readAutoSendSetting(window.localStorage)) send(presetSlot, presetScene);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [noteId, noteAvailable]);
 
@@ -96,8 +100,8 @@ export function LiveNoteView({ noteId, position, onExit }: {
     );
   }
 
-  const chip = note.type !== 'block' && note.presetSlot ? {
-    label: formatPresetLabel(formatSlotLabel(Number(note.presetSlot)), note.presetScene),
+  const chip = note.type !== 'block' && presetSlot ? {
+    label: formatPresetLabel(formatSlotLabel(Number(presetSlot)), presetScene),
     state: getPresetChipState({ connected, sent }),
   } : null;
   const min = NOTE_TEXT_SCALES[0];
@@ -115,7 +119,7 @@ export function LiveNoteView({ noteId, position, onExit }: {
             {chip && (
               <button
                 type="button"
-                onClick={() => send(note.presetSlot, note.presetScene)}
+                onClick={() => send(presetSlot, presetScene)}
                 disabled={!connected}
                 aria-label={`Preset ${chip.label}: ${connected ? chip.state.text : 'pedaliera non collegata'}. Tocca per inviarlo alla pedaliera`}
                 className={cn('inline-flex min-h-8 items-center gap-1.5 whitespace-nowrap rounded-full border px-3 text-caption font-semibold',

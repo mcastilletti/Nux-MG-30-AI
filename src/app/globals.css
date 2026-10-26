@@ -17,7 +17,7 @@
     --muted: 240 10% 8%;
     --muted-foreground: 0 0% 75%;
     --accent: 282 75% 70%;
-    --accent-foreground: 0 0% 100%;
+    --accent-foreground: 240 10% 6%; /* scuro: il bianco sul viola chiaro era 2,8:1 (Fase 6.3, axe) */
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
     --border: 240 10% 12%;

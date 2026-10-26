@@ -40,10 +40,27 @@ import { GUARD_HISTORY_RESTORED_EVENT } from '@/hooks/use-unsaved-changes-guard'
 import { formatSlotLabel } from '@/lib/slot';
 import { SECTION_COLORS } from '@/lib/section-colors';
 import { EmptyState, ErrorState } from '@/components/common/empty-state';
+import { ConfirmDialog } from '@/components/common/confirm-dialog';
+import { ToastAction } from '@/components/ui/toast';
+import { NOTE_SHEET_PLAYLIST_PARAM } from '@/components/notes/note-sheet-state';
+import { PlaylistLibrary } from '@/components/notes/playlist/PlaylistLibrary';
+import { AddToPlaylistsDialog } from '@/components/notes/playlist/AddToPlaylistsDialog';
+import { ConversionBanner } from '@/components/notes/playlist/ConversionBanner';
+import { usePlaylistsCache } from '@/stores/use-playlists-cache';
+import { usePlaylistActions } from '@/hooks/use-playlist-actions';
+import { addNotes, effectivePreset, findItem, getPlaylistAlphabetical, getPlaylistPosition, indexNotes, moveItem, playlistEntries, playlistsContaining, removeNote, replaceNote, restoreItem } from '@/lib/playlist-ops';
+import { buildVersionNote, matchesQuery, nextVersionTitle, poolNotes } from '@/lib/playlist-view';
+import { nameKey } from '@/lib/playlist-migration';
+import { awaitWrite, isOnline } from '@/lib/firestore-write';
+import { setDoc } from 'firebase/firestore';
+import type { Playlist } from '@/types/playlist';
 
 
 const FILTER_BAND_KEY = 'mg30_notes_filter_band';
 const FILTER_SETLIST_KEY = 'mg30_notes_filter_setlist';
+// Modello a playlist: band e playlist scelte (per id).
+const FILTER_PL_BAND_KEY = 'mg30_notes_filter_band_id';
+const FILTER_PL_PLAYLIST_KEY = 'mg30_notes_filter_playlist';
 
 function NotesLibraryContent() {
   const searchParams = useSearchParams();
@@ -86,6 +103,25 @@ function NotesLibraryContent() {
 
   const scrollToId = searchParams.get('scrollTo');
 
+  // Modello a playlist (spec playlist): attivo dopo la conversione dell'account.
+  const marker = usePlaylistsCache((state) => state.marker);
+  const playlists = usePlaylistsCache((state) => state.playlists);
+  const playlistBands = usePlaylistsCache((state) => state.bands);
+  const model: 'legacy' | 'playlists' = marker && marker.version >= 2 ? 'playlists' : 'legacy';
+  const isPlaylistModel = model === 'playlists';
+  const playlistActions = usePlaylistActions();
+  const [plBandId, setPlBandId] = useState<string | null>(null);
+  const [plPlaylistId, setPlPlaylistId] = useState<string | null>(null);
+  const [addToNote, setAddToNote] = useState<SavedNote | null>(null);
+  const [versionPrompt, setVersionPromptState] = useState<{ original: SavedNote; created: SavedNote; playlist: Playlist } | null>(null);
+  // Il dialogo chiama sia la conferma sia la chiusura: il ref garantisce una sola risoluzione.
+  const versionPromptRef = useRef<typeof versionPrompt>(null);
+  const setVersionPrompt = (value: typeof versionPrompt) => { versionPromptRef.current = value; setVersionPromptState(value); };
+  const [backupDownloaded, setBackupDownloaded] = useState(false);
+  const notesById = useMemo(() => indexNotes(cachedNotes), [cachedNotes]);
+  const currentPlaylist = isPlaylistModel && plPlaylistId ? playlists.find((p) => p.id === plPlaylistId) ?? null : null;
+  const sheetPlaylist = isPlaylistModel && noteSheet.playlistId ? playlists.find((p) => p.id === noteSheet.playlistId) ?? null : null;
+
   useEffect(() => {
     if (!hasRestoredNoteSheet.current) {
       hasRestoredNoteSheet.current = true;
@@ -99,6 +135,7 @@ function NotesLibraryContent() {
           noteId: restoredState.noteId,
           editorKind: restoredState.editorKind,
           live: restoredState.live,
+          playlistId: restoredState.playlistId,
         });
       }
       return;
@@ -111,10 +148,13 @@ function NotesLibraryContent() {
         url.searchParams.set(NOTE_SHEET_KIND_PARAM, noteSheet.editorKind);
         if (noteSheet.live) url.searchParams.set(NOTE_SHEET_LIVE_PARAM, '1');
         else url.searchParams.delete(NOTE_SHEET_LIVE_PARAM);
+        if (noteSheet.playlistId) url.searchParams.set(NOTE_SHEET_PLAYLIST_PARAM, noteSheet.playlistId);
+        else url.searchParams.delete(NOTE_SHEET_PLAYLIST_PARAM);
       } else {
         url.searchParams.delete(NOTE_SHEET_OPEN_PARAM);
         url.searchParams.delete(NOTE_SHEET_KIND_PARAM);
         url.searchParams.delete(NOTE_SHEET_LIVE_PARAM);
+        url.searchParams.delete(NOTE_SHEET_PLAYLIST_PARAM);
       }
       if (url.href !== window.location.href) {
         window.history.replaceState(window.history.state, '', url);
@@ -133,7 +173,26 @@ function NotesLibraryContent() {
     const savedSetlist = localStorage.getItem(FILTER_SETLIST_KEY);
     if (savedBand && savedBand !== 'all') setSelectedBand(savedBand);
     if (savedSetlist && savedSetlist !== 'all') setSelectedSetlist(savedSetlist);
+    try {
+      setPlBandId(localStorage.getItem(FILTER_PL_BAND_KEY) || null);
+      setPlPlaylistId(localStorage.getItem(FILTER_PL_PLAYLIST_KEY) || null);
+    } catch { /* preferenza facoltativa */ }
   }, []);
+
+  useEffect(() => {
+    try {
+      if (plBandId) localStorage.setItem(FILTER_PL_BAND_KEY, plBandId); else localStorage.removeItem(FILTER_PL_BAND_KEY);
+      if (plPlaylistId) localStorage.setItem(FILTER_PL_PLAYLIST_KEY, plPlaylistId); else localStorage.removeItem(FILTER_PL_PLAYLIST_KEY);
+    } catch { /* preferenza facoltativa */ }
+  }, [plBandId, plPlaylistId]);
+
+  // Band, playlist e marcatore della conversione dall'account (anche per accorgersi
+  // di una conversione fatta da un altro dispositivo).
+  useEffect(() => {
+    if (userLoading || !user) return;
+    playlistActions.refresh().catch((error) => console.warn('[playlist] caricamento non riuscito', error));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, userLoading]);
 
   useEffect(() => {
     localStorage.setItem(FILTER_BAND_KEY, selectedBand || 'all');
@@ -194,8 +253,19 @@ function NotesLibraryContent() {
     return notesToFilter;
   }, [cachedNotes, selectedBand, selectedSetlist, searchQuery]);
 
-  const setlistPosition = useMemo(() => getSetlistPosition(cachedNotes, selectedNoteId), [cachedNotes, selectedNoteId]);
-  const setlistEntries = useMemo(() => getSetlistAlphabetical(cachedNotes, selectedNoteId), [cachedNotes, selectedNoteId]);
+  // Prec/Succ, posizione ed elenco alfabetico: dalla scaletta (modello vecchio) o
+  // dalla playlist da cui è stato aperto il brano (PL10).
+  const setlistPosition = useMemo(
+    () => (isPlaylistModel ? getPlaylistPosition(sheetPlaylist, notesById, selectedNoteId) : getSetlistPosition(cachedNotes, selectedNoteId)),
+    [isPlaylistModel, sheetPlaylist, notesById, cachedNotes, selectedNoteId],
+  );
+  const setlistEntries = useMemo(
+    () => (isPlaylistModel ? getPlaylistAlphabetical(sheetPlaylist, notesById, selectedNoteId) : getSetlistAlphabetical(cachedNotes, selectedNoteId)),
+    [isPlaylistModel, sheetPlaylist, notesById, cachedNotes, selectedNoteId],
+  );
+  const livePreset = isPlaylistModel && selectedNoteId && notesById.get(selectedNoteId)
+    ? effectivePreset(notesById.get(selectedNoteId)!, findItem(sheetPlaylist, selectedNoteId))
+    : null;
   // L'editor segnala solo i cambi di modalità: chiudendo il foglio (o passando
   // alla Live, dove l'editor non è montato) lo stato di modifica va azzerato,
   // altrimenti la barra Prec/Succ resterebbe nascosta.
@@ -212,7 +282,7 @@ function NotesLibraryContent() {
 
   const openNoteInSheet = (note: SavedNote | null) => {
     if (!note) return;
-    dispatchNoteSheet({ type: 'open', noteId: note.id, editorKind: note.type === 'block' ? 'block' : 'song' });
+    dispatchNoteSheet({ type: 'open', noteId: note.id, editorKind: note.type === 'block' ? 'block' : 'song', playlistId: isPlaylistModel ? noteSheet.playlistId : undefined });
   };
 
   useEffect(() => {
@@ -274,6 +344,15 @@ function NotesLibraryContent() {
 
   const handleConfirmDelete = async () => {
     if (!noteToDelete) return;
+    if (isPlaylistModel) {
+      const target = noteToDelete;
+      setIsDeleteDialogOpen(false);
+      setNoteToDelete(null);
+      if (selectedNoteId === target.id) dispatchNoteSheet({ type: 'close' });
+      const ok = await playlistActions.deleteNoteEverywhere(target);
+      if (ok) toast({ title: target.type === 'block' ? 'Blocco eliminato' : 'Brano eliminato' });
+      return;
+    }
     try {
       await deleteDoc(doc(firestore, "notes", noteToDelete.id));
       deleteNote(noteToDelete.id);
@@ -316,6 +395,81 @@ function NotesLibraryContent() {
     window.print();
   };
 
+  // --- Modello a playlist (PL2–PL7) ---
+  const requestDelete = (note: SavedNote) => { setNoteToDelete(note); setIsDeleteDialogOpen(true); };
+
+  const handleRemoveFromPlaylist = async (playlist: Playlist, note: SavedNote) => {
+    const { playlist: next, removed } = removeNote(playlist, note.id);
+    if (!removed) return;
+    await playlistActions.savePlaylist(next);
+    toast({
+      title: `«${note.title}» tolto da «${playlist.name}»`,
+      description: 'Il brano resta nel serbatoio.',
+      action: (
+        <ToastAction altText="Annulla" onClick={() => {
+          const latest = usePlaylistsCache.getState().playlists.find((p) => p.id === playlist.id);
+          if (latest) playlistActions.savePlaylist(restoreItem(latest, removed.item, removed.index));
+        }}>Annulla</ToastAction>
+      ),
+    });
+  };
+
+  const handleApplyPlaylists = async (note: SavedNote, add: string[], remove: string[]) => {
+    const all = usePlaylistsCache.getState().playlists;
+    for (const id of add) { const p = all.find((x) => x.id === id); if (p) await playlistActions.savePlaylist(addNotes(p, [note.id])); }
+    for (const id of remove) { const p = all.find((x) => x.id === id); if (p) await playlistActions.savePlaylist(removeNote(p, note.id).playlist); }
+    toast({ title: 'Playlist aggiornate', description: `«${note.title}»: ${add.length ? `aggiunto a ${add.length}` : ''}${add.length && remove.length ? ', ' : ''}${remove.length ? `tolto da ${remove.length}` : ''}.` });
+  };
+
+  /** PL7: duplica il brano; se aperto da una playlist che lo contiene, chiede se sostituirlo lì. */
+  const handleCreateVersion = async (note: SavedNote) => {
+    const title = nextVersionTitle(note.title, useNotesCache.getState().notes.map((n) => n.title));
+    const data = buildVersionNote(note, title);
+    const ref = doc(collection(firestore, 'notes'));
+    const created = { ...data, id: ref.id, userId: user?.uid } as SavedNote;
+    if (user) {
+      try {
+        await awaitWrite(setDoc(ref, { ...data, userId: user.uid, updatedAt: serverTimestamp() }), { online: isOnline() });
+      } catch {
+        toast({ title: 'Versione non creata', description: 'Controlla la connessione e riprova.', variant: 'destructive' });
+        return;
+      }
+    }
+    addNote(created);
+    const playlist = sheetPlaylist && sheetPlaylist.items.some((i) => i.noteId === note.id) ? sheetPlaylist : null;
+    if (playlist) {
+      setVersionPrompt({ original: note, created, playlist });
+    } else {
+      dispatchNoteSheet({ type: 'open', noteId: created.id, editorKind: created.type === 'block' ? 'block' : 'song' });
+      toast({ title: `Creata «${title}»`, description: 'È nel serbatoio: aggiungila alle playlist dal menu ⋮.' });
+    }
+  };
+
+  const resolveVersionPrompt = async (replace: boolean) => {
+    const pending = versionPromptRef.current;
+    if (!pending) return;
+    const { original, created, playlist } = pending;
+    setVersionPrompt(null);
+    if (replace) {
+      const latest = usePlaylistsCache.getState().playlists.find((p) => p.id === playlist.id) ?? playlist;
+      await playlistActions.savePlaylist(replaceNote(latest, original.id, created.id));
+    }
+    dispatchNoteSheet({ type: 'open', noteId: created.id, editorKind: created.type === 'block' ? 'block' : 'song', playlistId: replace ? playlist.id : undefined });
+    toast({ title: `Creata «${created.title}»`, description: replace ? `Ha preso il posto dell'originale in «${playlist.name}».` : 'È nel serbatoio.' });
+  };
+
+  /** PL11: il brano importato va nella playlist aperta, oppure in quella indicata nel JSON (creata se manca). */
+  const addImportedToPlaylist = async (noteId: string, bandName: string, playlistName: string) => {
+    if (currentPlaylist) { await playlistActions.savePlaylist(addNotes(currentPlaylist, [noteId])); return currentPlaylist.name; }
+    if (!nameKey(bandName) || !nameKey(playlistName)) return null;
+    const state = usePlaylistsCache.getState();
+    const band = state.bands.find((b) => nameKey(b.name) === nameKey(bandName)) ?? await playlistActions.createBand(bandName.replace(/\s+/g, ' ').trim());
+    const existing = usePlaylistsCache.getState().playlists.find((p) => p.bandId === band.id && nameKey(p.name) === nameKey(playlistName));
+    if (existing) { await playlistActions.savePlaylist(addNotes(existing, [noteId])); return existing.name; }
+    const created = await playlistActions.createPlaylist(band.id, playlistName.replace(/\s+/g, ' ').trim(), [noteId]);
+    return created.name;
+  };
+
   const [isExportingBackup, setIsExportingBackup] = useState(false);
 
   /** Backup JSON di tutte le note, band e scalette (prima della conversione a playlist). */
@@ -348,6 +502,7 @@ function NotesLibraryContent() {
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
+      setBackupDownloaded(true);
       const { songs, blocks, setlists } = file.counts;
       toast({
         title: 'Backup delle note scaricato',
@@ -444,8 +599,9 @@ function NotesLibraryContent() {
 
     const newNote = {
       title: parsed.title,
-      band: typeof parsed.band === 'string' ? parsed.band : '',
-      setlist: typeof parsed.setlist === 'string' ? parsed.setlist : '',
+      // Nel modello a playlist band e scaletta del JSON indicano solo la playlist di destinazione.
+      band: !isPlaylistModel && typeof parsed.band === 'string' ? parsed.band : '',
+      setlist: !isPlaylistModel && typeof parsed.setlist === 'string' ? parsed.setlist : '',
       generalNotes: typeof parsed.generalNotes === 'string' ? parsed.generalNotes : '',
       presetSlot: typeof parsed.presetSlot === 'string' ? parsed.presetSlot : '',
       presetScene: typeof parsed.presetScene === 'string' ? parsed.presetScene : '',
@@ -461,18 +617,28 @@ function NotesLibraryContent() {
       const docRef = await addDoc(collection(firestore, 'notes'), newNote);
       const createdNote = { ...newNote, id: docRef.id } as SavedNote;
       addNote(createdNote);
-      toast({ title: `Brano "${newNote.title}" importato con successo!` });
+      const into = isPlaylistModel
+        ? await addImportedToPlaylist(docRef.id, typeof parsed.band === 'string' ? parsed.band : '', typeof parsed.setlist === 'string' ? parsed.setlist : '')
+        : null;
+      toast({ title: `Brano "${newNote.title}" importato con successo!`, description: into ? `Aggiunto in coda a «${into}».` : undefined });
       setIsImportJsonDialogOpen(false);
       setImportJsonText('');
       setImportJsonError('');
       // Open the newly created note
-      dispatchNoteSheet({ type: 'open', noteId: docRef.id, editorKind: 'song' });
+      dispatchNoteSheet({ type: 'open', noteId: docRef.id, editorKind: 'song', playlistId: isPlaylistModel ? currentPlaylist?.id : undefined });
     } catch (e) {
       setImportJsonError('Errore durante il salvataggio. Riprova.');
     } finally {
       setIsImporting(false);
     }
   };
+
+  // Stampa (PDF): la scaletta filtrata, oppure la playlist aperta nel suo ordine.
+  const printNotes = isPlaylistModel
+    ? (currentPlaylist ? playlistEntries(currentPlaylist, notesById).map((e) => e.note).filter((n) => matchesQuery(n, searchQuery)) : poolNotes(cachedNotes, { query: searchQuery }))
+    : filteredNotes;
+  const canPrint = isPlaylistModel ? !!currentPlaylist && printNotes.length > 0 : !!selectedSetlist && filteredNotes.length > 0;
+  const deleteCount = isPlaylistModel && noteToDelete ? playlistsContaining(playlists, noteToDelete.id).length : 0;
 
   return (
     <>
@@ -506,8 +672,8 @@ function NotesLibraryContent() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-64">
-                <DropdownMenuItem className="min-h-11 gap-2" disabled={!selectedSetlist || filteredNotes.length === 0} onSelect={() => setTimeout(handleExportPdf, 150)}>
-                  <Printer className="h-4 w-4" /> Stampa la scaletta (PDF)
+                <DropdownMenuItem className="min-h-11 gap-2" disabled={!canPrint} onSelect={() => setTimeout(handleExportPdf, 150)}>
+                  <Printer className="h-4 w-4" /> {isPlaylistModel ? 'Stampa la playlist (PDF)' : 'Stampa la scaletta (PDF)'}
                 </DropdownMenuItem>
                 <DropdownMenuItem className="min-h-11 gap-2" disabled={isExportingBackup || (!user && cachedNotes.length === 0)} onSelect={handleExportBackup}>
                   <Download className="h-4 w-4" /> Esporta backup (JSON)
@@ -526,7 +692,7 @@ function NotesLibraryContent() {
                     variant="ghost"
                     className="justify-start gap-2 h-10"
                     onClick={() => {
-                      dispatchNoteSheet({ type: 'open', noteId: null, editorKind: 'song' });
+                      dispatchNoteSheet({ type: 'open', noteId: null, editorKind: 'song', playlistId: isPlaylistModel ? currentPlaylist?.id : undefined });
                       setIsAddMenuOpen(false);
                     }}
                   >
@@ -539,7 +705,7 @@ function NotesLibraryContent() {
                     onClick={() => {
                       setNewBlockInitialBand(selectedBand);
                       setNewBlockInitialSetlist(selectedSetlist);
-                      dispatchNoteSheet({ type: 'open', noteId: 'new-block', editorKind: 'block' });
+                      dispatchNoteSheet({ type: 'open', noteId: 'new-block', editorKind: 'block', playlistId: isPlaylistModel ? currentPlaylist?.id : undefined });
                       setIsAddMenuOpen(false);
                     }}
                   >
@@ -582,7 +748,7 @@ function NotesLibraryContent() {
                 </Button>
               )}
             </div>
-            {searchResults.length > 0 && (
+            {!isPlaylistModel && searchResults.length > 0 && (
               <div className="absolute top-full left-0 right-0 mt-2 bg-background border border-border rounded-xl shadow-xl z-50 max-h-64 overflow-auto">
                 {searchResults.map((note) => (
                   <button
@@ -614,6 +780,39 @@ function NotesLibraryContent() {
           </div>
         )}
 
+        {!isPlaylistModel && user && (
+          <ConversionBanner onBackup={handleExportBackup} backupDownloaded={backupDownloaded} />
+        )}
+
+        {isPlaylistModel ? (
+          <PlaylistLibrary
+            notes={cachedNotes}
+            playlists={playlists}
+            bands={playlistBands}
+            bandId={plBandId}
+            playlistId={currentPlaylist?.id ?? null}
+            onBandChange={setPlBandId}
+            onPlaylistChange={setPlPlaylistId}
+            searchQuery={searchQuery}
+            highlightedId={selectedNoteId ?? scrollToId}
+            onOpen={(note, playlistId) => dispatchNoteSheet({ type: 'open', noteId: note.id, editorKind: note.type === 'block' ? 'block' : 'song', playlistId })}
+            onStartLive={(note, playlistId) => dispatchNoteSheet({ type: 'open', noteId: note.id, editorKind: note.type === 'block' ? 'block' : 'song', live: true, playlistId })}
+            onRemoveFromPlaylist={handleRemoveFromPlaylist}
+            onAddToPlaylists={setAddToNote}
+            onDelete={requestDelete}
+            onReorder={(playlist, from, to) => playlistActions.savePlaylist(moveItem(playlist, from, to))}
+            onAddSongs={(playlist, ids) => {
+              playlistActions.savePlaylist(addNotes(playlist, ids));
+              toast({ title: `${ids.length} ${ids.length === 1 ? 'brano aggiunto' : 'brani aggiunti'} a «${playlist.name}»` });
+            }}
+            emptyState={
+              loadState === 'loading' ? <EmptyState icon={<Loader2 className="h-10 w-10 animate-spin" />} title="Caricamento dei brani…" />
+                : loadState === 'error' ? <ErrorState title="Brani non caricati" description="Controlla la connessione e riprova." onRetry={() => setLoadAttempt(n => n + 1)} />
+                : !userLoading && !user ? <EmptyState icon={<Music2 className="h-10 w-10" />} title="Accedi per vedere i tuoi brani" description="Le note si salvano nel tuo account: accedi con Google dal menu laterale." />
+                : undefined
+            }
+          />
+        ) : (<>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 bg-card/40 p-3 rounded-2xl border border-border shadow-sm">
           <Select value={selectedBand || 'all'} onValueChange={(v) => { setSelectedBand(v === 'all' ? null : v); setSelectedSetlist(null); }}>
             <SelectTrigger aria-label="Filtra per band" className="h-11 bg-background/50 border-border text-[14px] font-bold"><SelectValue placeholder="Tutte le band" /></SelectTrigger>
@@ -687,6 +886,7 @@ function NotesLibraryContent() {
             </>
           )}
         </div>
+        </>)}
       </div>
 
       <Dialog open={isCopyDialogOpen} onOpenChange={setIsCopyDialogOpen}>
@@ -739,7 +939,11 @@ function NotesLibraryContent() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Elimina "{noteToDelete?.title}"</DialogTitle>
-            <DialogDescription>Sei sicuro di voler eliminare questo brano? Questa azione non può essere annullata.</DialogDescription>
+            <DialogDescription>
+              {deleteCount > 0
+                ? `È in ${deleteCount} ${deleteCount === 1 ? 'playlist' : 'playlist'}: verrà tolto da tutte. Questa azione non può essere annullata.`
+                : 'Sei sicuro di voler eliminare questo brano? Questa azione non può essere annullata.'}
+            </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>Annulla</Button>
@@ -783,16 +987,35 @@ function NotesLibraryContent() {
         </DialogContent>
       </Dialog>
 
+      <AddToPlaylistsDialog
+        note={addToNote}
+        onOpenChange={(open) => { if (!open) setAddToNote(null); }}
+        playlists={playlists}
+        bands={playlistBands}
+        onApply={handleApplyPlaylists}
+      />
+
+      <ConfirmDialog
+        open={!!versionPrompt}
+        onOpenChange={(open) => { if (!open) resolveVersionPrompt(false); }}
+        title={`Sostituire in «${versionPrompt?.playlist.name ?? ''}»?`}
+        description={versionPrompt ? `«${versionPrompt.created.title}» è stata creata. Vuoi che prenda il posto di «${versionPrompt.original.title}» in «${versionPrompt.playlist.name}»? Le altre playlist restano con l'originale.` : undefined}
+        confirmLabel="Sostituisci"
+        cancelLabel="Solo nel serbatoio"
+        onConfirm={() => resolveVersionPrompt(true)}
+      />
+
       <div className="hidden print:block print-only">
-        {filteredNotes.map((note) => (
+        {printNotes.map((note) => (
           <div key={`print-${note.id}`} className="print-song-page">
             <h1 className="print-title">{note.title}</h1>
             
             <div className="print-subtitle">
-               <span>{note.band} - {note.setlist}</span>
-               {note.presetSlot && (
-                 <span>PRESET MG-30: {note.presetSlot} {note.presetScene ? `(S${parseInt(note.presetScene) + 1})` : ''}</span>
-               )}
+               <span>{isPlaylistModel ? (currentPlaylist?.name ?? 'Tutti i brani') : `${note.band} - ${note.setlist}`}</span>
+               {(() => {
+                 const preset = isPlaylistModel ? effectivePreset(note, findItem(currentPlaylist, note.id)) : { presetSlot: note.presetSlot ?? '', presetScene: note.presetScene ?? '' };
+                 return preset.presetSlot ? <span>PRESET MG-30: {preset.presetSlot} {preset.presetScene ? `(S${parseInt(preset.presetScene) + 1})` : ''}</span> : null;
+               })()}
             </div>
 
             {note.generalNotes && (
@@ -855,6 +1078,7 @@ function NotesLibraryContent() {
             noteId={selectedNoteId}
             position={setlistPosition ? { index: setlistPosition.index, total: setlistPosition.total } : null}
             onExit={() => dispatchNoteSheet({ type: 'exit-live' })}
+            preset={livePreset}
           />
         ) : editorKind === 'block' ? (
           <BlockEditorContent
@@ -868,6 +1092,10 @@ function NotesLibraryContent() {
             }}
             onEditModeChange={setIsEditing}
             onStartLive={() => dispatchNoteSheet({ type: 'enter-live' })}
+            model={model}
+            playlistId={noteSheet.playlistId}
+            onAddToPlaylists={setAddToNote}
+            onDeleteNote={requestDelete}
             onUpdate={(note: SavedNote) => {
               if (selectedNoteId && selectedNoteId !== 'new-block') {
                 updateNote(note);
@@ -883,6 +1111,11 @@ function NotesLibraryContent() {
             onClose={() => dispatchNoteSheet({ type: 'close' })}
             onEditModeChange={setIsEditing}
             onStartLive={() => dispatchNoteSheet({ type: 'enter-live' })}
+            model={model}
+            playlistId={noteSheet.playlistId}
+            onAddToPlaylists={setAddToNote}
+            onCreateVersion={handleCreateVersion}
+            onDeleteNote={requestDelete}
             onUpdate={(note: SavedNote) => {
               if (selectedNoteId) {
                 updateNote(note);

@@ -19,6 +19,11 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { SaveStatus } from '@/components/common/save-status';
 import { awaitWrite, isOnline } from '@/lib/firestore-write';
 import { NoteReadMenu } from './note-read-menu';
+import { DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
+import { ListPlus, Trash2 } from 'lucide-react';
+import { usePlaylistsCache } from '@/stores/use-playlists-cache';
+import { usePlaylistActions } from '@/hooks/use-playlist-actions';
+import { addNotes } from '@/lib/playlist-ops';
 
 interface BlockEditorContentProps {
   noteId: string | null;
@@ -29,9 +34,17 @@ interface BlockEditorContentProps {
   onEditModeChange?: (isEditing: boolean) => void;
   /** Avvia la modalità Live dal brano aperto (menu ⋮). */
   onStartLive?: () => void;
+  /** `playlists`: modello a serbatoio e playlist (niente band, scaletta né ordine nel blocco). */
+  model?: 'legacy' | 'playlists';
+  playlistId?: string | null;
+  onAddToPlaylists?: (note: SavedNote) => void;
+  onDeleteNote?: (note: SavedNote) => void;
 }
 
-export function BlockEditorContent({ noteId, initialBand, initialSetlist, onClose, onUpdate, onEditModeChange, onStartLive }: BlockEditorContentProps) {
+export function BlockEditorContent({ noteId, initialBand, initialSetlist, onClose, onUpdate, onEditModeChange, onStartLive, model = 'legacy', playlistId = null, onAddToPlaylists, onDeleteNote }: BlockEditorContentProps) {
+  const isPlaylistModel = model === 'playlists';
+  const playlist = usePlaylistsCache((state) => (isPlaylistModel && playlistId ? state.playlists.find((p) => p.id === playlistId) ?? null : null));
+  const { savePlaylist } = usePlaylistActions();
   const { toast } = useToast();
   const { firestore } = useFirebase();
   const { user } = useUser();
@@ -114,11 +127,21 @@ export function BlockEditorContent({ noteId, initialBand, initialSetlist, onClos
       return;
     }
 
-    const noteData = {
-      ...buildBlockNoteData({ title, blockContent, existing, initialBand, initialSetlist, notes }),
-      updatedAt: serverTimestamp(),
-      userId: user?.uid
-    };
+    const noteData = isPlaylistModel
+      ? {
+          // Modello a playlist: il blocco sta nel serbatoio; band e scaletta restano quelle di prima (o vuote).
+          title,
+          type: 'block' as const,
+          blockContent,
+          ...(existing ? {} : { band: '', setlist: '' }),
+          updatedAt: serverTimestamp(),
+          userId: user?.uid,
+        }
+      : {
+          ...buildBlockNoteData({ title, blockContent, existing, initialBand, initialSetlist, notes }),
+          updatedAt: serverTimestamp(),
+          userId: user?.uid
+        };
 
     savingRef.current = true;
     setIsSaving(true);
@@ -129,7 +152,9 @@ export function BlockEditorContent({ noteId, initialBand, initialSetlist, onClos
       const outcome = await awaitWrite(isNew ? setDoc(ref, noteData) : updateDoc(ref, noteData), { online: isOnline() });
       // Un blocco appena creato è già nell'editor: non va ricaricato.
       if (isNew) loadedNoteIdRef.current = ref.id;
-      onUpdate({ ...noteData, id: ref.id } as SavedNote);
+      // PL9: creato da una playlist, va in coda.
+      if (isNew && playlist) await savePlaylist(addNotes(playlist, [ref.id]));
+      onUpdate({ ...(existing ?? {}), ...noteData, id: ref.id } as SavedNote);
       savedDraftRef.current = currentDraft;
       setSaveFailed(false);
       setEditMode(false);
@@ -187,7 +212,25 @@ export function BlockEditorContent({ noteId, initialBand, initialSetlist, onClos
               <Pencil className="w-5 h-5 lg:w-7 lg:h-7" />
             </button>
           )}
-          {!editMode && !isNoteMissing && noteId && noteId !== 'new-block' && <NoteReadMenu onStartLive={onStartLive} />}
+          {!editMode && !isNoteMissing && noteId && noteId !== 'new-block' && (
+            <NoteReadMenu onStartLive={onStartLive}>
+              {isPlaylistModel && cachedNote && (
+                <>
+                  <DropdownMenuSeparator />
+                  {onAddToPlaylists && (
+                    <DropdownMenuItem className="min-h-11 gap-2" onSelect={() => onAddToPlaylists(cachedNote)}>
+                      <ListPlus className="h-4 w-4" aria-hidden="true" /> Aggiungi a playlist…
+                    </DropdownMenuItem>
+                  )}
+                  {onDeleteNote && (
+                    <DropdownMenuItem className="min-h-11 gap-2 text-destructive" onSelect={() => onDeleteNote(cachedNote)}>
+                      <Trash2 className="h-4 w-4" aria-hidden="true" /> Elimina blocco
+                    </DropdownMenuItem>
+                  )}
+                </>
+              )}
+            </NoteReadMenu>
+          )}
           {editMode && (
             <div className="flex items-center gap-2">
               <SaveStatus state={saveState} className="hidden sm:inline-flex" />

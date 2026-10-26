@@ -639,10 +639,10 @@ Ridisegni misurati con uno script Playwright che conta i componenti React ridise
   - nessuna regressione negli screenshot;
   - audit di accessibilità senza errori bloccanti.
 
-### Fase 6.2 — Serbatoio dei brani e playlist: modello dati e migrazione (M) — 📝 specifica da approvare
+### Fase 6.2 — Serbatoio dei brani e playlist: modello dati e migrazione (M) — 🔶 in corso (specifica approvata)
 Richiesta dell'utente del 2026-10-26: brani in un serbatoio unico, scalette trattate come playlist. Specifica in `docs/spec-playlist.md`; sostituisce D7.
 - **Deliverable:**
-  - tipi `Playlist` (documenti `setlists` con `noteIds`) e operazioni pure sulle playlist (aggiungi, togli, riordina, sostituisci, posizione);
+  - tipi `Playlist` (documenti `setlists` con `items` e preset per playlist) e operazioni pure sulle playlist (aggiungi, togli, riordina, sostituisci, posizione, preset effettivo);
   - funzione pura di migrazione con unione dei soli duplicati identici;
   - esecutore della migrazione con marcatore `users/{uid}/settings/notesModel`;
   - cache locale delle playlist;

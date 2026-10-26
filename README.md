@@ -1,34 +1,55 @@
-# MG30 Studio (mcastilletti/Nux-MG-30-AI)
+# MG30 Studio
 
-Un editor web professionale per la pedaliera multi-effetto **NUX MG-30**, potenziato dall'intelligenza artificiale e pronto per il deployment.
+Editor web per la pedaliera multieffetto **NUX MG-30**, con note dei brani per sala prove e palco. Funziona su smartphone, tablet e desktop ed è installabile come PWA.
 
-## 🚀 Push su GitHub
-Se hai clonato il progetto e vuoi caricarlo sul tuo repository `mcastilletti/Nux-MG-30-AI`, esegui questi comandi nel terminale:
-
-```bash
-git init
-git remote add origin https://github.com/mcastilletti/Nux-MG-30-AI.git
-git add .
-git commit -m "Initial commit: MG30 Studio with AI and PDF Fixes"
-git branch -M main
-git push -u origin main
-```
-
-## 🛠 Configurazione Rapida
-1.  **Chiave AI**: Ottieni una chiave API su [Google AI Studio](https://aistudio.google.com/app/apikey) e incollala nel file `.env` alla voce `GOOGLE_GENAI_API_KEY`.
-2.  **Icona PWA**: Assicurati di salvare la tua icona come `public/icon.png`. L'app è già configurata per impostare lo sfondo giallo (#FFD500) automaticamente su Android.
-
-## ✨ Funzionalità principali
-- **Visual Editor**: Controllo completo dei blocchi tramite MIDI e gestione delle **3 SCENE** (CC 80) per ogni preset.
-- **AI Mode**: Generazione automatica dei parametri da testo naturale utilizzando **Gemini 2.5 Flash** tramite Genkit v1.x.
-- **Note Brani & PDF**: Gestione scalette con accordi e stampa **PDF A4 su pagina singola garantita** (contenuto ridotto del 30% e altezza bloccata per evitare troncamenti).
-- **PWA Ready**: Installabile su Android con icona a sfondo giallo (#FFD500) e modalità "maskable" (nessun bordo bianco).
-
-## 💡 Risoluzione Problemi Migrazione
-Se il pulsante "Move now" di Firebase Studio è bloccato nonostante tu sia Owner:
-1. Premi `Ctrl+Shift+P` (o `Cmd+Shift+P` su Mac).
-2. Digita **"Zip & Download"** e premi Invio.
-3. Estrai e apri il progetto nel tuo IDE locale (es. VS Code) per continuare lo sviluppo.
+## Funzionalità
+- **Editor dei preset** via Web MIDI:
+  - catena effetti;
+  - manopole con campo numerico e regolazione fine anche col dito;
+  - 3 scene per preset;
+  - annulla/ripristina;
+  - invio e lettura dalla pedaliera.
+- **Library dei preset:**
+  - salvataggio nel proprio account (Firestore) o sul dispositivo;
+  - esportazione e importazione in JSON.
+- **AI Mode:** genera i parametri di un preset da una descrizione in linguaggio naturale. Usa Gemini 2.5 Flash tramite Genkit e tiene conto della strumentazione configurata.
+- **Note dei brani:**
+  - tutti i brani e i blocchi di testo stanno in un **serbatoio unico**;
+  - le **playlist** delle band ne definiscono l'ordine e possono impostare un preset proprio per ogni brano;
+  - con **Crea versione** si duplica un brano solo quando serve davvero.
+- **Modalità Live:**
+  - testo grande ad alto contrasto;
+  - Prec/Succ e scelta libera del brano;
+  - invio automatico del preset;
+  - blocco anti-tocco;
+  - schermo sempre acceso.
+- **Pagina Band:** band e playlist, con logo della band.
+- **Backup delle note** in JSON dal menu ⋮ della pagina Note. Contiene tutte le note, le band e le playlist.
 
 ## Sviluppo
-Basato su **Next.js 15**, **Genkit 1.x**, e **Zustand**.
+
+```bash
+npm install
+npm run dev        # http://localhost:9003
+npm run test       # test unitari (node:test via tsx)
+npx tsc --noEmit   # controllo dei tipi (la build non blocca sugli errori TS)
+npm run build      # build di produzione
+```
+
+- **AI Mode:** serve una chiave in `.env`, alla voce `GOOGLE_GENAI_API_KEY`. La chiave si ottiene su [Google AI Studio](https://aistudio.google.com/app/apikey).
+- **Firebase** (autenticazione Google, Firestore, Storage per i loghi): la configurazione è in `src/firebase/`, le regole di sicurezza in `firestore.rules`.
+- **Font:** Outfit e Source Code Pro sono inclusi nel progetto (`src/fonts/`, licenza OFL) e caricati con `next/font/local`. La build non scarica nulla da Google, ed è necessario per il deploy su Firebase App Hosting.
+
+## Deploy
+- **Produzione:** Firebase App Hosting (`apphosting.yaml`), che pubblica dal branch `main`.
+- **Anteprime delle PR:** Vercel.
+
+## Documentazione
+- `docs/audit-ux-frontend.md`: audit UX/UI, piano per fasi e stato di avanzamento.
+- `docs/spec-note-live.md`: note in sala prove e modalità Live.
+- `docs/spec-playlist.md`: serbatoio dei brani e playlist (modello dati, conversione, interfaccia).
+- `docs/backend.json`: collezioni Firestore usate dall'app.
+- `.agents/skills/mg30-studio-ux/SKILL.md`: regole UX del progetto per chi modifica l'interfaccia.
+
+## Tecnologie
+Next.js 15 (App Router), React 19, Tailwind CSS e shadcn/ui, Zustand, Firebase 11, Genkit 1.x.

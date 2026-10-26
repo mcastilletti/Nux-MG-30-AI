@@ -187,7 +187,7 @@ export function AiModeDialog({ open, onOpenChange, activePreset, setActivePreset
                 )}
               </div>
               {!!proposedNormalization?.warnings.length && (
-                <div className="rounded-lg border border-warning/30 bg-warning/5 p-3 text-xs text-amber-200">
+                <div className="rounded-lg border border-warning/30 bg-warning/5 p-3 text-xs text-warning">
                   <p className="mb-1 font-semibold">Avvisi di validazione</p>
                   <ul className="list-disc space-y-1 pl-4">
                     {proposedNormalization.warnings.map((warning, index) => <li key={`${warning}-${index}`}>{warning}</li>)}

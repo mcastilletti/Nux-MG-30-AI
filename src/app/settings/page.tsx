@@ -32,7 +32,7 @@ function MidiMonitorCard() {
           </div>
         </div>
         <CardDescription className="text-caption">
-          Messaggi HEX MIDI in tempo reale. <span className="text-green-400 font-mono">[OUT]</span> = inviati alla pedaliera, <span className="text-amber-400 font-mono">[IN]</span> = ricevuti dalla pedaliera.
+          Messaggi HEX MIDI in tempo reale. <span className="text-success font-mono">[OUT]</span> = inviati alla pedaliera, <span className="text-warning font-mono">[IN]</span> = ricevuti dalla pedaliera.
           I messaggi SysEx sono evidenziati in arancione.
         </CardDescription>
       </CardHeader>
@@ -45,7 +45,7 @@ function MidiMonitorCard() {
           <div className="bg-background rounded-md border border-border overflow-hidden">
             <div className="max-h-72 overflow-y-auto p-3 space-y-0.5 font-mono text-caption">
               {[...midiOutLog, ...midiLog].map((msg, i) => (
-                <div key={i} className={`leading-5 ${msg.includes('F0') ? 'text-amber-400' : msg.includes('[OUT]') ? 'text-green-400' : 'text-muted-foreground'}`}>
+                <div key={i} className={`leading-5 ${msg.includes('F0') ? 'text-warning' : msg.includes('[OUT]') ? 'text-success' : 'text-muted-foreground'}`}>
                   {msg}
                 </div>
               ))}

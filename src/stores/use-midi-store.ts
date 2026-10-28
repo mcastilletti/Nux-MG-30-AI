@@ -87,9 +87,21 @@ const parameterToMidiValue = (value: number, parameter: { id?: string; min: numb
   if (parameter.id === 'level' && parameter.min === -12 && parameter.max === 12) {
     return Math.round(((clamped - parameter.min) / (parameter.max - parameter.min)) * 100);
   }
-  if (parameter.min === 0 && parameter.max === 127) return Math.round(clamped);
+  // La MG-30 usa per le manopole la stessa scala 0..100 dell'editor (gain al massimo = CC 100):
+  // riscalare a 0..127 faceva arrivare 64 per un 50.
+  if (parameter.min === 0 && (parameter.max === 127 || parameter.max === 100)) return Math.round(clamped);
   if (parameter.max === parameter.min) return 0;
   return Math.round(((clamped - parameter.min) / (parameter.max - parameter.min)) * 127);
+};
+
+/** Inverso di parameterToMidiValue: valore CC ricevuto dalla pedaliera → valore dell'editor. */
+export const midiValueToParameter = (value: number, parameter: { id?: string; min: number; max: number }) => {
+  if (parameter.id === 'min' && parameter.min === 0 && parameter.max === 50) return Math.min(50, value);
+  if (parameter.id === 'max' && parameter.min === 51 && parameter.max === 100) return Math.round((value / 100) * 49 + 51);
+  if (parameter.id === 'level' && parameter.min === -12 && parameter.max === 12) return Math.round((value / 100) * 24 - 12);
+  if (parameter.min === 0 && (parameter.max === 127 || parameter.max === 100)) return Math.min(parameter.max, value);
+  if (parameter.max === parameter.min) return parameter.min;
+  return Math.round((value / 127) * (parameter.max - parameter.min) + parameter.min);
 };
 
 const blockStateMidiValue = (blockType: string, modelIndex: number, enabled: boolean) => {
@@ -104,6 +116,26 @@ const blockStateMidiValue = (blockType: string, modelIndex: number, enabled: boo
   if (baseOffset >= 64) return enabled ? onValue - 64 : onValue;
   return enabled ? onValue : onValue + 64;
 };
+
+/**
+ * Inverso di blockStateMidiValue: dal CC di modello ricevuto (es. B0 03 1E = amp acceso,
+ * B0 03 5E = stesso amp spento) ricava modello e ON/OFF. null se il valore è ambiguo.
+ */
+export const decodeBlockState = (blockType: string, value: number): { modelId: string; enabled: boolean } | null => {
+  const models = MG30_MODELS[blockType as EffectType] || [];
+  const matches: { modelId: string; enabled: boolean }[] = [];
+  models.forEach((model, index) => {
+    for (const enabled of [true, false]) {
+      const sent = Math.min(127, Math.max(0, blockStateMidiValue(blockType, index, enabled)));
+      if (sent === value) matches.push({ modelId: model.id, enabled });
+    }
+  });
+  return matches.length === 1 ? matches[0] : null;
+};
+
+const BLOCK_TYPE_BY_MODEL_CC: Record<number, string> = Object.fromEntries(
+  Object.entries(BLOCK_MODEL_CC).map(([type, cc]) => [cc, type]),
+);
 
 const SELECT_BLOCK_CC = 75; 
 const ENTER_EDITOR_CC = 78;
@@ -240,6 +272,17 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
       const value = data[2];
       debugLog('[MIDI] CC received:', cc, 'value:', value);
 
+      // Modello e ON/OFF del blocco (stessi CC che l'app invia): li riporta nell'editor.
+      const stateBlockType = BLOCK_TYPE_BY_MODEL_CC[cc];
+      if (stateBlockType) {
+        const decoded = decodeBlockState(stateBlockType, value);
+        const effect = usePresetStore.getState().activePreset.effects.find(e => e.type === stateBlockType);
+        if (decoded && effect) {
+          if (effect.model !== decoded.modelId) usePresetStore.getState().updateModel(effect.id, decoded.modelId);
+          if (effect.enabled !== decoded.enabled) usePresetStore.getState().updateBlockStateLocally(stateBlockType, decoded.enabled);
+        }
+      }
+
       // Mappa inversa dei CC per trovare il tipo di blocco e parametro
       const findBlockAndParam = (ccNumber: number) => {
         for (const [blockType, ccs] of Object.entries(BLOCK_PARAM_CCS)) {
@@ -262,29 +305,7 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
           if (model && model.parameters[paramIndex]) {
             const param = model.parameters[paramIndex];
             
-            // Converte il valore MIDI (0-127) nel range del parametro
-            let convertedValue: number;
-            if (param.min === 0 && param.max === 127) {
-              convertedValue = value;
-            } else if (param.max === param.min) {
-              convertedValue = param.min;
-            } else {
-              convertedValue = Math.round((value / 127) * (param.max - param.min) + param.min);
-            }
-            
-            // Caso speciale per IR Level (range -12..+12 dB, MIDI 0..100)
-            if (param.id === 'level' && param.min === -12 && param.max === 12) {
-              convertedValue = Math.round((value / 100) * 24 - 12);
-            }
-            
-            // Caso speciale per PATCH VOL MIN (0..50) e MAX (51..100)
-            if (param.id === 'min' && param.min === 0 && param.max === 50) {
-              convertedValue = value;
-            }
-            if (param.id === 'max' && param.min === 51 && param.max === 100) {
-              convertedValue = Math.round((value / 100) * 49 + 51);
-            }
-            
+            const convertedValue = midiValueToParameter(value, param);
             debugLog(`[MIDI] Syncing ${blockType}.${param.id}: ${value} -> ${convertedValue}`);
             
             // Aggiorna il preset nello store

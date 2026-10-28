@@ -7,7 +7,9 @@ import { formatSlotLabel } from '@/lib/slot';
 import { createDefaultEffects } from '@/lib/default-effects';
 import { debugLog, useMidiLogStore } from './use-midi-log-store';
 
-// Tabella CC per Modelli e Bypass
+// Mappa MIDI dalla tabella ufficiale delle impostazioni MIDI di QuickTone (MG-30).
+
+// Modello + ON/OFF del blocco: valore = indice modello + 1, +64 se in bypass.
 const BLOCK_MODEL_CC: Record<string, number> = {
   'wah': 0,
   'compressor': 1,
@@ -18,43 +20,34 @@ const BLOCK_MODEL_CC: Record<string, number> = {
   'modulation': 6,
   'delay': 7,
   'reverb': 8,
-  'ir': 9
+  'ir': 9,
+  'sr': 10,
+  'vol': 11
 };
 
 const SCENE_SELECT_CC = 80;
 
-// Offset base per lo stato ON
-const BLOCK_MODEL_OFFSET: Record<string, number> = {
-  'wah': 65,
-  'compressor': 65,
-  'efx': 1,
-  'amp': 1,
-  'eq': 1,
-  'noise-gate': 1,
-  'modulation': 65,
-  'delay': 1,
-  'reverb': 1,
-  'ir': 1,
-  'sr': 1,
-  'vol': 1
-};
+const ccRange = (first: number, count: number) => Array.from({ length: count }, (_, i) => first + i);
 
-// CC per i parametri dei blocchi
+// CC delle manopole di ciascun blocco (Knob 1..N), tutte in scala 0..100.
 const BLOCK_PARAM_CCS: Record<string, number[]> = {
-  'wah': [12],
-  'compressor': [14, 15, 16],
-  'efx': [18, 19, 20, 21, 22],
-  'amp': [24, 25, 26, 27, 28, 29, 30],
-  'eq': [32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42],
-  'noise-gate': [44, 45],
-  'modulation': [48, 49, 50, 51, 52],
-  'delay': [54, 55, 56, 57, 58, 59, 60],
-  'reverb': [62, 63, 64],
-  'ir': [66, 67, 68, 69, 70],
-  'sr': [72],
-  // PATCH VOL: accesso editor B0 4E 0B, MIN su 4B (0..50), MAX su 4C (0..64)
+  'wah': ccRange(12, 2),
+  'compressor': ccRange(14, 4),
+  'efx': ccRange(18, 6),
+  'amp': ccRange(24, 8),
+  'eq': ccRange(32, 12),
+  'noise-gate': ccRange(44, 4),
+  'modulation': ccRange(48, 6),
+  'delay': ccRange(54, 8),
+  'reverb': ccRange(62, 4),
+  'ir': ccRange(66, 6),
+  'sr': [72, 73],
+  // Patch Min / Patch Max
   'vol': [75, 76]
 };
+
+/** Posizione (0-based) della manopola sulla pedaliera, cioè l'indice in BLOCK_PARAM_CCS. */
+const knobSlot = (parameter: { knob?: number }, index: number) => (parameter.knob ?? index + 1) - 1;
 
 const BLOCK_INDEX_MAP: Record<string, number> = {
   'wah': 0,
@@ -71,42 +64,54 @@ const BLOCK_INDEX_MAP: Record<string, number> = {
   'vol': 11
 };
 
-/** Converte il valore usato dall'editor nel range MIDI 0-127. */
-const parameterToMidiValue = (value: number, parameter: { id?: string; min: number; max: number; unit?: string }) => {
+type MidiParam = { id?: string; min: number; max: number; options?: string[] };
+
+/**
+ * Valore dell'editor → valore CC (0..100). Le manopole della MG-30 sono tutte 0..100
+ * (gain al massimo = CC 100): un range diverso nell'editor (es. IR Level -12..+12 dB,
+ * Lo Cut 20..1000 Hz) si riporta su 0..100. I selettori (Sub Div, Mic…) inviano l'indice.
+ */
+export const parameterToMidiValue = (value: number, parameter: MidiParam) => {
   const clamped = Math.min(parameter.max, Math.max(parameter.min, value));
-  // PATCH VOL usa due scale hardware distinte: MIN 0..50 e MAX 51..100
-  // (il MAX viene rappresentato dalla MG-30 su CC 76 nel range 0..100).
-  if (parameter.id === 'min' && parameter.min === 0 && parameter.max === 50) {
-    return Math.round(clamped);
-  }
-  if (parameter.id === 'max' && parameter.min === 51 && parameter.max === 100) {
-    return Math.round(((clamped - 51) / 49) * 100);
-  }
-  // IR Level usa il CC 68 e la NUX lo rappresenta nel range 0..100,
-  // mentre l'Editor mostra il valore equivalente -12..+12 dB.
-  if (parameter.id === 'level' && parameter.min === -12 && parameter.max === 12) {
-    return Math.round(((clamped - parameter.min) / (parameter.max - parameter.min)) * 100);
-  }
-  if (parameter.min === 0 && parameter.max === 127) return Math.round(clamped);
+  if (parameter.options) return Math.round(clamped);
+  // PATCH VOL MIN: la pedaliera lo espone come 0..50, lo stesso valore dell'editor.
+  if (parameter.id === 'min' && parameter.min === 0 && parameter.max === 50) return Math.round(clamped);
   if (parameter.max === parameter.min) return 0;
-  return Math.round(((clamped - parameter.min) / (parameter.max - parameter.min)) * 127);
+  return Math.round(((clamped - parameter.min) / (parameter.max - parameter.min)) * 100);
 };
 
-const blockStateMidiValue = (blockType: string, modelIndex: number, enabled: boolean) => {
-  const baseOffset = BLOCK_MODEL_OFFSET[blockType] || 1;
-  const onValue = modelIndex + baseOffset;
-
-  // Il Wah usa la polarità inversa per il bypass rispetto agli altri blocchi.
-  if (blockType === 'wah') return enabled ? onValue - 64 : onValue;
-  // Comp e Gate hanno la polarità inversa rispetto agli altri blocchi
-  if (blockType === 'compressor' || blockType === 'noise-gate') return enabled ? onValue - 64 : onValue;
-  // Per i blocchi con baseOffset >= 64 (bypass-active), ON è il valore basso
-  if (baseOffset >= 64) return enabled ? onValue - 64 : onValue;
-  return enabled ? onValue : onValue + 64;
+/** Inverso di parameterToMidiValue: valore CC ricevuto dalla pedaliera → valore dell'editor. */
+export const midiValueToParameter = (value: number, parameter: MidiParam) => {
+  if (parameter.options) return Math.min(parameter.max, Math.max(parameter.min, value));
+  if (parameter.id === 'min' && parameter.min === 0 && parameter.max === 50) return Math.min(50, value);
+  if (parameter.max === parameter.min) return parameter.min;
+  const ratio = Math.min(100, Math.max(0, value)) / 100;
+  return Math.round(parameter.min + ratio * (parameter.max - parameter.min));
 };
 
-const SELECT_BLOCK_CC = 75; 
-const ENTER_EDITOR_CC = 78;
+/** Valore del CC di blocco: indice modello + 1 se acceso, +64 se in bypass (uguale per tutti i blocchi). */
+const blockStateMidiValue = (modelIndex: number, enabled: boolean) => modelIndex + 1 + (enabled ? 0 : 64);
+
+/**
+ * Inverso di blockStateMidiValue: dal CC ricevuto (es. B0 03 1E = amp acceso, B0 03 5E = stesso
+ * amp in bypass) ricava ON/OFF e, se l'app conosce quel modello, il modello. La pedaliera può
+ * avere più modelli dell'app (es. 35 amp): in quel caso si aggiorna solo ON/OFF.
+ */
+export const decodeBlockState = (blockType: string, value: number): { modelId?: string; enabled: boolean } | null => {
+  if (value < 1 || value > 127 || value === 64) return null;
+  const enabled = value < 64;
+  const modelIndex = (enabled ? value : value - 64) - 1;
+  const model = MG30_MODELS[blockType as EffectType]?.[modelIndex];
+  return { modelId: model?.id, enabled };
+};
+
+const BLOCK_TYPE_BY_MODEL_CC: Record<number, string> = Object.fromEntries(
+  Object.entries(BLOCK_MODEL_CC).map(([type, cc]) => [cc, type]),
+);
+
+// "Current Block": seleziona il blocco mostrato sulla pedaliera. (Il CC 75 è PATCH MIN, non la
+// selezione del blocco: usarlo per selezionare cambiava il volume minimo del preset.)
+const CURRENT_BLOCK_CC = 78;
 
 
 export const INITIAL_PRESETS: Preset[] = Array.from({ length: 128 }, (_, i) => ({
@@ -130,6 +135,10 @@ interface MidiStore {
   devicePresets: Preset[];
   isSyncing: boolean;
   isEditorSyncing: boolean;
+  /** Vero solo mentre syncFullPreset scrive il preset sulla pedaliera. */
+  isPushingPreset: boolean;
+  /** Vero mentre l'app chiede alla pedaliera lo stato di ogni blocco (readPresetFromPedal). */
+  isReadingPreset: boolean;
   isInitializing: boolean;
   syncProgress: number;
   lastError: string | null;
@@ -151,6 +160,7 @@ interface MidiStore {
   exitBlockEditor: () => void;
   syncBlockParameters: (blockType: string, parameters: Record<string, any>) => void;
   syncFullPreset: (preset: Preset) => void;
+  readPresetFromPedal: (finalBlockType?: string) => void;
   refreshDevices: () => void;
   syncPresets: (force?: boolean) => Promise<void>;
   syncActivePreset: () => void;
@@ -168,6 +178,8 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
   devicePresets: INITIAL_PRESETS,
   isSyncing: false,
   isEditorSyncing: false,
+  isPushingPreset: false,
+  isReadingPreset: false,
   isInitializing: false,
   syncProgress: 0,
   lastError: null,
@@ -233,58 +245,45 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     // Gestione Control Change messages per sincronizzazione parametri.
     // Mentre syncFullPreset sta scrivendo (es. appena dopo "copia scena"), la pedaliera
     // rispecchia in CC lo stato che ancora NON ha ricevuto i nostri valori nuovi: se li
-    // applichiamo qui sovrascriviamo nell'app i parametri appena copiati con quelli vecchi
-    // della pedaliera, finché syncFullPreset non arriva a quel blocco (fino a ~24s dopo).
-    if (statusByte === 0xB0 && !get().isEditorSyncing) {
+    // applichiamo qui sovrascriviamo nell'app i parametri appena copiati con quelli vecchi.
+    // (Non isEditorSyncing: resta attivo 2s dopo ogni cambio preset, proprio quando la
+    // pedaliera invia i valori del preset appena caricato.)
+    if (statusByte === 0xB0 && !get().isPushingPreset) {
       const cc = data[1];
       const value = data[2];
       debugLog('[MIDI] CC received:', cc, 'value:', value);
 
-      // Mappa inversa dei CC per trovare il tipo di blocco e parametro
-      const findBlockAndParam = (ccNumber: number) => {
+      // Modello e ON/OFF del blocco (stessi CC che l'app invia): li riporta nell'editor.
+      const stateBlockType = BLOCK_TYPE_BY_MODEL_CC[cc];
+      if (stateBlockType) {
+        const decoded = decodeBlockState(stateBlockType, value);
+        const effect = usePresetStore.getState().activePreset.effects.find(e => e.type === stateBlockType);
+        if (decoded && effect) {
+          if (decoded.modelId && effect.model !== decoded.modelId) usePresetStore.getState().updateModel(effect.id, decoded.modelId);
+          if (effect.enabled !== decoded.enabled) usePresetStore.getState().updateBlockStateLocally(stateBlockType, decoded.enabled);
+        }
+      }
+
+      // Mappa inversa dei CC per trovare il tipo di blocco e la manopola
+      const findBlockAndKnob = (ccNumber: number) => {
         for (const [blockType, ccs] of Object.entries(BLOCK_PARAM_CCS)) {
-          const paramIndex = ccs.indexOf(ccNumber);
-          if (paramIndex !== -1) {
-            return { blockType, paramIndex };
-          }
+          const slot = ccs.indexOf(ccNumber);
+          if (slot !== -1) return { blockType, slot };
         }
         return null;
       };
 
-      const blockInfo = findBlockAndParam(cc);
+      const blockInfo = findBlockAndKnob(cc);
       if (blockInfo) {
-        const { blockType, paramIndex } = blockInfo;
+        const { blockType, slot } = blockInfo;
         const activePreset = usePresetStore.getState().activePreset;
         const effect = activePreset.effects.find(e => e.type === blockType);
-        
+
         if (effect) {
           const model = MG30_MODELS[effect.type]?.find(m => m.id === effect.model);
-          if (model && model.parameters[paramIndex]) {
-            const param = model.parameters[paramIndex];
-            
-            // Converte il valore MIDI (0-127) nel range del parametro
-            let convertedValue: number;
-            if (param.min === 0 && param.max === 127) {
-              convertedValue = value;
-            } else if (param.max === param.min) {
-              convertedValue = param.min;
-            } else {
-              convertedValue = Math.round((value / 127) * (param.max - param.min) + param.min);
-            }
-            
-            // Caso speciale per IR Level (range -12..+12 dB, MIDI 0..100)
-            if (param.id === 'level' && param.min === -12 && param.max === 12) {
-              convertedValue = Math.round((value / 100) * 24 - 12);
-            }
-            
-            // Caso speciale per PATCH VOL MIN (0..50) e MAX (51..100)
-            if (param.id === 'min' && param.min === 0 && param.max === 50) {
-              convertedValue = value;
-            }
-            if (param.id === 'max' && param.min === 51 && param.max === 100) {
-              convertedValue = Math.round((value / 100) * 49 + 51);
-            }
-            
+          const param = model?.parameters.find((p, i) => knobSlot(p, i) === slot);
+          if (param) {
+            const convertedValue = midiValueToParameter(value, param);
             debugLog(`[MIDI] Syncing ${blockType}.${param.id}: ${value} -> ${convertedValue}`);
             
             // Aggiorna il preset nello store
@@ -409,15 +408,16 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     get().addMidiOutLog(`[OUT] ${hex}`);
   },
 
-  sendKnobParameter: (blockType, knobIndex, value) => {
+  // paramIndex: posizione del parametro nel modello dell'app; la CC dipende dalla manopola sulla pedaliera.
+  sendKnobParameter: (blockType, paramIndex, value) => {
     const ccs = BLOCK_PARAM_CCS[blockType];
-    if (ccs && ccs[knobIndex] !== undefined) {
-      const effect = usePresetStore.getState().activePreset.effects.find(e => e.type === blockType);
-      const model = effect && MG30_MODELS[effect.type]?.find(m => m.id === effect.model);
-      const parameter = model?.parameters[knobIndex];
-      const midiValue = parameter ? parameterToMidiValue(value, parameter) : value;
-      get().sendControlChange(ccs[knobIndex], midiValue);
-    }
+    if (!ccs) return;
+    const effect = usePresetStore.getState().activePreset.effects.find(e => e.type === blockType);
+    const model = effect && MG30_MODELS[effect.type]?.find(m => m.id === effect.model);
+    const parameter = model?.parameters[paramIndex];
+    const cc = ccs[parameter ? knobSlot(parameter, paramIndex) : paramIndex];
+    if (cc === undefined) return;
+    get().sendControlChange(cc, parameter ? parameterToMidiValue(value, parameter) : value);
   },
 
   // skipEnter: il chiamante (syncFullPreset) ha già aperto ed atteso l'editor del blocco;
@@ -435,7 +435,7 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
 
     const effect = usePresetStore.getState().activePreset.effects.find(e => e.type === blockType);
     const isEnabled = effect?.enabled ?? true;
-    const midiValue = blockStateMidiValue(blockType, safeIndex, isEnabled);
+    const midiValue = blockStateMidiValue(safeIndex, isEnabled);
 
     if (skipEnter) {
       sendControlChange(cc, midiValue);
@@ -455,31 +455,20 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     const models = MG30_MODELS[blockType as EffectType];
     const modelIndex = models?.findIndex(m => m.id === effect.model) ?? 0;
     const safeIndex = modelIndex === -1 ? 0 : modelIndex;
-    const midiValue = blockStateMidiValue(blockType, safeIndex, enabled);
+    const midiValue = blockStateMidiValue(safeIndex, enabled);
 
     get().sendControlChange(cc, midiValue);
   },
 
   selectBlock: (blockType) => {
     const index = BLOCK_INDEX_MAP[blockType];
-    if (index !== undefined) get().sendControlChange(SELECT_BLOCK_CC, index);
+    if (index !== undefined) get().sendControlChange(CURRENT_BLOCK_CC, index);
   },
 
-  enterBlockEditor: (blockType) => {
-    if (blockType === 'vol') {
-      // La pagina PATCH VOL si apre con B0 4E 0B.
-      get().sendControlChange(78, 11);
-      return;
-    }
-    const index = BLOCK_INDEX_MAP[blockType];
-    if (index !== undefined) {
-      get().sendControlChange(SELECT_BLOCK_CC, index);
-      setTimeout(() => get().sendControlChange(ENTER_EDITOR_CC, index), 250);
-    }
-  },
+  enterBlockEditor: (blockType) => get().selectBlock(blockType),
 
   exitBlockEditor: () => {
-    get().sendControlChange(ENTER_EDITOR_CC, 127);
+    get().sendControlChange(CURRENT_BLOCK_CC, 127);
   },
 
   syncBlockParameters: (blockType, parameters) => {
@@ -494,18 +483,35 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
 
     modelData.parameters.forEach((param, index) => {
       const val = Number(parameters[param.id.toLowerCase()] ?? param.default);
-      if (ccs[index] !== undefined) {
+      const cc = ccs[knobSlot(param, index)];
+      if (cc !== undefined) {
         const midiValue = parameterToMidiValue(val, param);
-        setTimeout(() => get().sendControlChange(ccs[index], midiValue), index * 100);
+        setTimeout(() => get().sendControlChange(cc, midiValue), index * 100);
       }
     });
+  },
+
+  // Chiede alla pedaliera lo stato di ogni blocco selezionandolo (Current Block): quando un
+  // blocco diventa quello corrente la MG-30 invia in CC modello, ON/OFF e manopole, che
+  // handleIncomingMidi riporta nella scena attiva dell'editor.
+  readPresetFromPedal: (finalBlockType = 'amp') => {
+    const { output, isPushingPreset, isReadingPreset } = get();
+    if (!output || isPushingPreset || isReadingPreset) return;
+    set({ isReadingPreset: true });
+    const STEP_MS = 250;
+    const blocks = Object.keys(BLOCK_INDEX_MAP);
+    blocks.forEach((type, i) => setTimeout(() => get().selectBlock(type), i * STEP_MS));
+    setTimeout(() => {
+      get().selectBlock(finalBlockType);
+      set({ isReadingPreset: false });
+    }, blocks.length * STEP_MS + STEP_MS);
   },
 
   syncFullPreset: (preset) => {
     const { sendModelChange, toggleBlock, syncBlockParameters, sendPresetName, isEditorSyncing } = get();
     if (isEditorSyncing) return;
 
-    set({ isEditorSyncing: true });
+    set({ isEditorSyncing: true, isPushingPreset: true });
 
     sendPresetName(preset.name);
 
@@ -530,7 +536,7 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     });
 
     const totalTime = preset.effects.length * BLOCK_WINDOW_MS + 500;
-    setTimeout(() => set({ isEditorSyncing: false }), totalTime);
+    setTimeout(() => set({ isEditorSyncing: false, isPushingPreset: false }), totalTime);
   },
 
 

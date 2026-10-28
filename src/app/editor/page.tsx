@@ -219,12 +219,11 @@ export default function EditorPage() {
       return;
     }
 
-    // Richiede il nome del preset alla pedaliera
-    syncActivePreset();
+    useMidiStore.getState().readPresetFromPedal(selectedEffect?.type);
 
     toast({
-      title: "Sincronizzazione automatica attiva",
-      description: "Modifica i parametri sulla pedaliera e l'editor si aggiornerà automaticamente in tempo reale.",
+      title: "Lettura dalla pedaliera",
+      description: `Scena ${activePreset.activeScene + 1}: l'editor riprende modelli, ON/OFF e manopole di ogni blocco dalla MG-30.`,
     });
   });
 

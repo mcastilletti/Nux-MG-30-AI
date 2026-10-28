@@ -22,7 +22,26 @@ export function contentKey(note: SavedNote): string | null {
   return JSON.stringify([note.type === 'block' ? 'block' : 'song', sections, text(note.blockContent), text(note.generalNotes)]);
 }
 
-const hasWord = (title: string, word: string) => new RegExp(`(^|[^\\p{L}\\p{N}])${word}([^\\p{L}\\p{N}]|$)`, 'iu').test(title);
+const isChord = (chord: string) => chord.trim() !== '' && chord.trim().toUpperCase() !== 'NEWLINE';
+
+/**
+ * Anteprima breve del contenuto comune a un gruppo, per distinguere gruppi
+ * con titoli simili e contenuti diversi (es. due gruppi di "Wonderwall").
+ */
+export function contentPreview(note: SavedNote, maxLength = 90): string {
+  const parts = (note.sections ?? [])
+    .map((section) => {
+      const chords = (section.chords ?? []).filter(isChord).map((c) => c.trim());
+      const body = chords.length ? chords.join(' ') : text(section.text).replace(/\s+/g, ' ');
+      return body ? `${(section.type ?? '').trim() || 'Sezione'}: ${body}` : '';
+    })
+    .filter(Boolean);
+  let preview = parts.join(' · ') || text(note.blockContent).replace(/\s+/g, ' ') || text(note.generalNotes).replace(/\s+/g, ' ');
+  if (preview.length > maxLength) preview = `${preview.slice(0, maxLength - 1).trimEnd()}…`;
+  return preview;
+}
+
+const hasWord =(title: string, word: string) => new RegExp(`(^|[^\\p{L}\\p{N}])${word}([^\\p{L}\\p{N}]|$)`, 'iu').test(title);
 
 /**
  * Ordine di preferenza della nota da tenere: senza "ACU" nel titolo, poi senza

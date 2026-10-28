@@ -33,8 +33,8 @@ export default function LibraryPage() {
   const [editName, setEditName] = useState('');
   const [selectedSlots, setSelectedSlots] = useState<Set<number>>(new Set());
   const [isBulkMode, setIsBulkMode] = useState(false);
-  const [bulkVolumeMin, setBulkVolumeMin] = useState(30);
-  const [bulkVolumeMax, setBulkVolumeMax] = useState(60);
+  const [bulkVolumeMin, setBulkVolumeMin] = useState(50);
+  const [bulkVolumeMax, setBulkVolumeMax] = useState(100);
 
   const { sendProgramChange, status, devicePresets, syncPresets, isSyncing, syncProgress, updatePresetName } = useMidiStore(useShallow((s) => ({
     sendProgramChange: s.sendProgramChange,
@@ -414,7 +414,7 @@ export default function LibraryPage() {
                           aria-label="Volume massimo del preset"
                           value={[bulkVolumeMax]}
                           onValueChange={(v) => setBulkVolumeMax(v[0])}
-                          min={51}
+                          min={50}
                           max={100}
                           step={1}
                           className="flex-1"

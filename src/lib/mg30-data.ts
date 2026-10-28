@@ -185,8 +185,10 @@ export const MG30_MODELS: Record<EffectType, MG30Model[]> = {
       name: 'VOL',
       fullName: 'PATCH VOLUME',
       parameters: [
-        { id: 'min', name: 'VOL MIN', min: 0, max: 50, step: 1, default: 30 },
-        { id: 'max', name: 'VOL MAX', min: 51, max: 100, step: 1, default: 60 },
+        // Due manopole: MIN copre 0..50 e MAX 50..100 sull'intera corsa.
+        // Predefinito: entrambe al massimo (MIN 50, MAX 100).
+        { id: 'min', name: 'VOL MIN', min: 0, max: 50, step: 1, default: 50 },
+        { id: 'max', name: 'VOL MAX', min: 50, max: 100, step: 1, default: 100 },
       ],
     }
   ],

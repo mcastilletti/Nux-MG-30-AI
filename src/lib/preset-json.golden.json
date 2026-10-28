@@ -1,9 +1,8 @@
 {
  "signalChain": {
-  "appliedCount": 9,
+  "appliedCount": 8,
   "warnings": [
-   "delay.repeat: 400 corretto in 100.",
-   "vol.min forzato a 50 (valore minimo consentito)."
+   "delay.repeat: 400 corretto in 100."
   ],
   "effects": [
    {
@@ -130,16 +129,14 @@
     "enabled": true,
     "parameters": {
      "min": 50,
-     "max": 60
+     "max": 100
     }
    }
   ]
  },
  "midiCcParameters": {
-  "appliedCount": 3,
-  "warnings": [
-   "vol.min forzato a 50 (valore minimo consentito)."
-  ],
+  "appliedCount": 2,
+  "warnings": [],
   "effects": [
    {
     "type": "wah",
@@ -265,16 +262,14 @@
     "enabled": true,
     "parameters": {
      "min": 50,
-     "max": 60
+     "max": 100
     }
    }
   ]
  },
  "flatByType": {
-  "appliedCount": 5,
-  "warnings": [
-   "vol.min forzato a 50 (valore minimo consentito)."
-  ],
+  "appliedCount": 4,
+  "warnings": [],
   "effects": [
    {
     "type": "wah",
@@ -400,16 +395,14 @@
     "enabled": true,
     "parameters": {
      "min": 50,
-     "max": 60
+     "max": 100
     }
    }
   ]
  },
  "arrayOfBlocks": {
-  "appliedCount": 4,
-  "warnings": [
-   "vol.min forzato a 50 (valore minimo consentito)."
-  ],
+  "appliedCount": 3,
+  "warnings": [],
   "effects": [
    {
     "type": "wah",
@@ -535,16 +528,15 @@
     "enabled": true,
     "parameters": {
      "min": 50,
-     "max": 60
+     "max": 100
     }
    }
   ]
  },
  "outOfRange": {
-  "appliedCount": 3,
+  "appliedCount": 2,
   "warnings": [
-   "amp.gain: 999 corretto in 100.",
-   "vol.min forzato a 50 (valore minimo consentito)."
+   "amp.gain: 999 corretto in 100."
   ],
   "effects": [
    {
@@ -671,16 +663,14 @@
     "enabled": true,
     "parameters": {
      "min": 50,
-     "max": 60
+     "max": 100
     }
    }
   ]
  },
  "unknown": {
-  "appliedCount": 1,
-  "warnings": [
-   "vol.min forzato a 50 (valore minimo consentito)."
-  ],
+  "appliedCount": 0,
+  "warnings": [],
   "effects": [
    {
     "type": "wah",
@@ -806,7 +796,7 @@
     "enabled": true,
     "parameters": {
      "min": 50,
-     "max": 60
+     "max": 100
     }
    }
   ]

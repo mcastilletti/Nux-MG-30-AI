@@ -52,7 +52,8 @@ const BLOCK_PARAM_CCS: Record<string, number[]> = {
   'reverb': [62, 63, 64],
   'ir': [66, 67, 68, 69, 70],
   'sr': [72],
-  // PATCH VOL: accesso editor B0 4E 0B, MIN su 4B (0..50), MAX su 4C (0..64)
+  // PATCH VOL: accesso editor B0 4E 0B. Due manopole sull'intera scala 0..127:
+  // MIN su 4B (0..50) e MAX su 4C (50..100). Manopole al massimo = MIN 50 / MAX 100.
   'vol': [75, 76]
 };
 
@@ -74,14 +75,6 @@ const BLOCK_INDEX_MAP: Record<string, number> = {
 /** Converte il valore usato dall'editor nel range MIDI 0-127. */
 const parameterToMidiValue = (value: number, parameter: { id?: string; min: number; max: number; unit?: string }) => {
   const clamped = Math.min(parameter.max, Math.max(parameter.min, value));
-  // PATCH VOL usa due scale hardware distinte: MIN 0..50 e MAX 51..100
-  // (il MAX viene rappresentato dalla MG-30 su CC 76 nel range 0..100).
-  if (parameter.id === 'min' && parameter.min === 0 && parameter.max === 50) {
-    return Math.round(clamped);
-  }
-  if (parameter.id === 'max' && parameter.min === 51 && parameter.max === 100) {
-    return Math.round(((clamped - 51) / 49) * 100);
-  }
   // IR Level usa il CC 68 e la NUX lo rappresenta nel range 0..100,
   // mentre l'Editor mostra il valore equivalente -12..+12 dB.
   if (parameter.id === 'level' && parameter.min === -12 && parameter.max === 12) {
@@ -271,14 +264,6 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
             // Caso speciale per IR Level (range -12..+12 dB, MIDI 0..100)
             if (param.id === 'level' && param.min === -12 && param.max === 12) {
               convertedValue = Math.round((value / 100) * 24 - 12);
-            }
-            
-            // Caso speciale per PATCH VOL MIN (0..50) e MAX (51..100)
-            if (param.id === 'min' && param.min === 0 && param.max === 50) {
-              convertedValue = value;
-            }
-            if (param.id === 'max' && param.min === 51 && param.max === 100) {
-              convertedValue = Math.round((value / 100) * 49 + 51);
             }
             
             debugLog(`[MIDI] Syncing ${blockType}.${param.id}: ${value} -> ${convertedValue}`);

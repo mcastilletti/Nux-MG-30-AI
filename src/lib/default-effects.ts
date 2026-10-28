@@ -20,5 +20,5 @@ export const createDefaultEffects = (): EffectState[] => [
   { id: 'mod', type: 'modulation', model: 'mod-ce1', enabled: false, parameters: { intensity: 50, depth: 50, rate: 50 } },
   { id: 'delay', type: 'delay', model: 'dly-analog', enabled: false, parameters: { repeat: 30, echo: 30, intensity: 30 } },
   { id: 'reverb', type: 'reverb', model: 'room', enabled: true, parameters: { decay: 50, tone: 50, level: 30 } },
-  { id: 'vol', type: 'vol', model: 'patch-vol', enabled: true, parameters: { min: 30, max: 60 } }
+  { id: 'vol', type: 'vol', model: 'patch-vol', enabled: true, parameters: { min: 50, max: 100 } }
 ];

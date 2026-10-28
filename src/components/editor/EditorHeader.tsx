@@ -128,7 +128,7 @@ export const EditorHeader = memo(function EditorHeader({
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem className="min-h-11 gap-2" onSelect={handleSyncFromHardware}>
-              <Download className="h-4 w-4" /> Leggi il nome dalla pedaliera
+              <Download className="h-4 w-4" /> Leggi il preset dalla pedaliera
             </DropdownMenuItem>
             <DropdownMenuItem className="min-h-11 gap-2" disabled={!canSend} onSelect={() => syncFullPreset(activePreset)}>
               <RefreshCw className={cn('h-4 w-4', isEditorSyncing && 'animate-spin')} /> Invia il preset alla pedaliera
@@ -166,7 +166,7 @@ export const EditorHeader = memo(function EditorHeader({
           <Button variant="outline" className="min-h-11 gap-2 border-primary/50 text-primary" onClick={() => setAiOpen(true)}>
             <Sparkles className="h-4 w-4" /> AI Mode
           </Button>
-          <IconButton label="Leggi il nome del preset dalla pedaliera" variant="outline" onClick={handleSyncFromHardware}>
+          <IconButton label="Leggi il preset dalla pedaliera" variant="outline" onClick={handleSyncFromHardware}>
             <Download className="h-4 w-4" />
           </IconButton>
           <IconButton

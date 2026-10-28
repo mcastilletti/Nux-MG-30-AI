@@ -10,6 +10,12 @@ export interface MG30Parameter {
   unit?: string;
   /** Etichette dei valori discreti, nell'ordine documentato (indice = valore). */
   options?: string[];
+  /**
+   * Posizione della manopola sulla pedaliera (1 = prima CC del blocco), se diversa
+   * dall'ordine nell'elenco: le pagine della MG-30 hanno 4 manopole e alcune restano
+   * vuote (schema NUX/QuickTone), es. Level del Tweedy è la manopola 5, non la 4.
+   */
+  knob?: number;
 }
 
 export interface MG30Model {
@@ -41,10 +47,11 @@ const IR_GUITAR_PARAMS: MG30Parameter[] = [
   { id: 'highcut', name: 'Hi Cut', min: 5000, max: 20000, step: 1, default: 20000, unit: 'Hz' }
 ];
 
-const IR_BASS_PARAMS = [
-  { id: 'level', name: 'Level', min: -12, max: 12, step: 1, default: 0, unit: 'dB' },
-  { id: 'lowcut', name: 'Lo Cut', min: 20, max: 1000, step: 1, default: 20, unit: 'Hz' },
-  { id: 'highcut', name: 'Hi Cut', min: 5000, max: 20000, step: 1, default: 20000, unit: 'Hz' }
+// Senza microfono le manopole 1-2 restano vuote: Level/Lo Cut/Hi Cut sono sempre su CC 68/69/70.
+const IR_BASS_PARAMS: MG30Parameter[] = [
+  { id: 'level', name: 'Level', min: -12, max: 12, step: 1, default: 0, unit: 'dB', knob: 3 },
+  { id: 'lowcut', name: 'Lo Cut', min: 20, max: 1000, step: 1, default: 20, unit: 'Hz', knob: 4 },
+  { id: 'highcut', name: 'Hi Cut', min: 5000, max: 20000, step: 1, default: 20000, unit: 'Hz', knob: 5 }
 ];
 
 export const MG30_MODELS: Record<EffectType, MG30Model[]> = {
@@ -66,7 +73,7 @@ export const MG30_MODELS: Record<EffectType, MG30Model[]> = {
   ],
   'compressor': [
     { id: 'rose', name: 'Rose Comp', fullName: 'Ross Compressor', parameters: [P1('sustain', 'Sustain'), P1('level', 'Level')] },
-    { id: 'kcomp', name: 'K Comp', fullName: 'Keeley Compressor', parameters: [P1('sustain', 'Sustain'), P1('clipping', 'Clipping'), P1('level', 'Level')] },
+    { id: 'kcomp', name: 'K Comp', fullName: 'Keeley Compressor', parameters: [P1('sustain', 'Sustain'), P1('level', 'Level'), P1('clipping', 'Clipping')] },
     { id: 'studiocomp', name: 'Studio Comp', fullName: 'Studio Compressor', parameters: [P1('threshold', 'Threshold'), P1('ratio', 'Ratio'), P1('gain', 'Gain'), P1('release', 'Release')] }
   ],
   'efx': [
@@ -87,7 +94,7 @@ export const MG30_MODELS: Record<EffectType, MG30Model[]> = {
     { id: 'jazzclean', name: 'JAZZ CLEAN', fullName: 'Roland JC-120', parameters: [P1('gain', 'Gain'), P1('master', 'Master'), P1('bass', 'Bass'), P1('mid', 'Middle'), P1('treble', 'Treble'), P1('brightsw', 'Bright SW', 0), P1('level', 'Level')] },
     { id: 'deluxervb', name: 'DELUXE RVB', fullName: '64 Fender Deluxe Reverb', parameters: [P1('gain', 'Gain'), P1('master', 'Master'), P1('bass', 'Bass'), P1('mid', 'Middle'), P1('treble', 'Treble'), P1('bias', 'Bias'), P1('level', 'Level')] },
     { id: 'bassmate', name: 'BASS MATE', fullName: '59 Fender Bassman', parameters: [P1('gain', 'Gain'), P1('master', 'Master'), P1('bass', 'Bass'), P1('mid', 'Middle'), P1('treble', 'Treble'), P1('presence', 'Presence'), P1('bias', 'Bias'), P1('level', 'Level')] },
-    { id: 'tweedy', name: 'TWEEDY', fullName: '57 Fender Tweed Deluxe', parameters: [P1('gain', 'Gain'), P1('tone', 'Tone'), P1('master', 'Master'), P1('level', 'Level')] },
+    { id: 'tweedy', name: 'TWEEDY', fullName: '57 Fender Tweed Deluxe', parameters: [P1('gain', 'Gain'), P1('tone', 'Tone'), P1('master', 'Master'), { ...P1('level', 'Level'), knob: 5 }] },
     { id: 'twinrvb', name: 'TWIN RVB', fullName: '65 Fender Twin Reverb', parameters: [P1('gain', 'Gain'), P1('master', 'Master'), P1('bass', 'Bass'), P1('mid', 'Middle'), P1('treble', 'Treble'), P1('brightsw', 'Bright SW', 0), P1('bias', 'Bias'), P1('level', 'Level')] },
     { id: 'hiwire', name: 'HIWIRE', fullName: '1969 HIWATT', parameters: [P1('gain', 'Gain'), P1('master', 'Master'), P1('bass', 'Bass'), P1('mid', 'Middle'), P1('treble', 'Treble'), P1('presence', 'Presence'), P1('bias', 'Bias'), P1('level', 'Level')] },
     { id: 'calicrunch', name: 'CALI CRUNCH', fullName: '1978 Mesa Boogie MK1', parameters: [P1('gain', 'Gain'), P1('master', 'Master'), P1('bass', 'Bass'), P1('mid', 'Middle'), P1('treble', 'Treble'), P1('presence', 'Presence'), P1('bias', 'Bias'), P1('level', 'Level')] },
@@ -194,6 +201,11 @@ export const MG30_MODELS: Record<EffectType, MG30Model[]> = {
     { id: 'eq-ge6', name: '6-BAND EQ', fullName: 'BOSS GE-6', parameters: [P1('100hz', '100Hz'), P1('220hz', '220Hz'), P1('500hz', '500Hz'), P1('1.2khz', '1.2kHz'), P1('2.6khz', '2.6kHz'), P1('6.4khz', '6.4kHz'), P1('level', 'Level')] },
     { id: 'eq-align', name: 'ALIGN EQ', fullName: 'ALIGN EQ', parameters: [{ id: 'hpf', name: 'HPF', min: 0, max: 2, step: 1, default: 0, options: ['50Hz', '80Hz', '160Hz'] }, P1('110hz', '110Hz'), P1('340hz', '340Hz'), P1('660hz', '660Hz'), P1('1300hz', '1300Hz'), P1('2600hz', '2600Hz'), P1('5000hz', '5000Hz'), P1('volume', 'Volume')] },
     { id: 'eq-10band', name: '10-BAND EQ', fullName: 'MXR 10 BAND', parameters: [{ id: 'vol', name: 'VOL', min: -10, max: 10, step: 1, default: 0 }, P1('31.25hz', '31.25Hz'), P1('62.5hz', '62.5Hz'), P1('125hz', '125Hz'), P1('250hz', '250Hz'), P1('500hz', '500Hz'), P1('1khz', '1KHz'), P1('2khz', '2KHz'), P1('4khz', '4KHz'), P1('8khz', '8KHz'), P1('16khz', '16KHz'), { id: 'gain', name: 'GAIN', min: -10, max: 10, step: 1, default: 0 }] },
-    { id: 'eq-para', name: 'PARA EQ', fullName: 'ALIGN EQ', parameters: [P1('b1freq', 'Band1 Freq'), P1('b1gain', 'Band1 Gain'), P1('b1q', 'Band1 Q'), P1('b2freq', 'Band2 Freq'), P1('b2gain', 'Band2 Gain'), P1('b2q', 'Band2 Q'), P1('b3freq', 'Band3 Freq'), P1('b3gain', 'Band3 Gain'), P1('b3q', 'Band3 Q')] }
+    { id: 'eq-para', name: 'PARA EQ', fullName: 'ALIGN EQ', parameters: [
+      // Una banda per pagina da 4 manopole: la quarta di ogni pagina è vuota.
+      P1('b1freq', 'Band1 Freq'), P1('b1gain', 'Band1 Gain'), P1('b1q', 'Band1 Q'),
+      { ...P1('b2freq', 'Band2 Freq'), knob: 5 }, { ...P1('b2gain', 'Band2 Gain'), knob: 6 }, { ...P1('b2q', 'Band2 Q'), knob: 7 },
+      { ...P1('b3freq', 'Band3 Freq'), knob: 9 }, { ...P1('b3gain', 'Band3 Gain'), knob: 10 }, { ...P1('b3q', 'Band3 Q'), knob: 11 },
+    ] }
   ]
 };

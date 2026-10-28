@@ -62,6 +62,64 @@ test('cattura reale: modello, ON/OFF e parametri dell\'amp letti dalla pedaliera
   assert.equal(amp.model, expectedModel.id);
 });
 
+function withModel(type: string, modelId: string) {
+  const store = usePresetStore.getState();
+  store.setActivePreset({ ...store.activePreset, slot: 122, activeScene: 0 });
+  const effect = usePresetStore.getState().activePreset.effects.find(e => e.type === type)!;
+  usePresetStore.getState().updateModel(effect.id, modelId);
+}
+
+function sentFor(type: string, paramId: string, value: number) {
+  const sent = captureSentMessages();
+  const effect = usePresetStore.getState().activePreset.effects.find(e => e.type === type)!;
+  const index = MG30_MODELS[effect.type].find(m => m.id === effect.model)!.parameters.findIndex(p => p.id === paramId);
+  useMidiStore.getState().sendKnobParameter(type, index, value);
+  return sent[0];
+}
+
+test('tabella QuickTone: le manopole vanno sulla CC della loro posizione sulla pedaliera', () => {
+  withModel('amp', 'plexi100w');
+  assert.deepEqual(sentFor('amp', 'level', 70), [0xB0, 31, 70], 'Amp Knob 8 = CC 31');
+  withModel('amp', 'tweedy');
+  assert.deepEqual(sentFor('amp', 'level', 70), [0xB0, 28, 70], 'Tweedy: Level è la manopola 5');
+  withModel('compressor', 'kcomp');
+  assert.deepEqual(sentFor('compressor', 'level', 40), [0xB0, 15, 40], 'K Comp: Sustain, Level, Clipping');
+  withModel('ir', 'ir-sv810');
+  assert.deepEqual(sentFor('ir', 'level', 0), [0xB0, 68, 50], 'IR senza microfono: Level resta su CC 68, 0 dB = 50');
+  assert.deepEqual(sentFor('ir', 'lowcut', 1000), [0xB0, 69, 100]);
+  withModel('eq', 'eq-para');
+  assert.deepEqual(sentFor('eq', 'b2freq', 30), [0xB0, 36, 30], 'Para EQ: banda 2 sulla seconda pagina');
+  withModel('modulation', 'mod-ce1');
+  assert.deepEqual(sentFor('modulation', 'subdiv', 3), [0xB0, 51, 3], 'i selettori inviano l\'indice');
+});
+
+test('ON/OFF uguale per tutti i blocchi: modello + 1, +64 in bypass', () => {
+  withModel('noise-gate', 'gate');
+  const sent = captureSentMessages();
+  useMidiStore.getState().toggleBlock('noise-gate', true);
+  useMidiStore.getState().toggleBlock('noise-gate', false);
+  useMidiStore.getState().toggleBlock('sr', true);
+  assert.deepEqual(sent, [[0xB0, 5, 1], [0xB0, 5, 65], [0xB0, 10, 1]]);
+});
+
+test('selezionare un blocco usa Current Block (CC 78), non PATCH MIN (CC 75)', () => {
+  const sent = captureSentMessages();
+  useMidiStore.getState().enterBlockEditor('delay');
+  assert.deepEqual(sent, [[0xB0, 78, 7]]);
+});
+
+test('i valori in arrivo dopo un cambio preset non vengono scartati', () => {
+  captureSentMessages();
+  withModel('amp', 'plexi100w');
+  useMidiStore.setState({ isEditorSyncing: true, isPushingPreset: false });
+  receive(0xB0, 0x18, 33);
+  assert.equal(usePresetStore.getState().activePreset.effects.find(e => e.type === 'amp')!.parameters.gain, 33);
+  useMidiStore.setState({ isEditorSyncing: false, isPushingPreset: true });
+  receive(0xB0, 0x18, 90);
+  assert.equal(usePresetStore.getState().activePreset.effects.find(e => e.type === 'amp')!.parameters.gain, 33, 'ignorato mentre l\'app scrive sulla pedaliera');
+  useMidiStore.setState({ isPushingPreset: false });
+});
+
 test('addressing a block by its id instead of its type sends nothing', () => {
   const sent = captureSentMessages();
   for (const id of ['ng', 'cmp', 'mod']) {

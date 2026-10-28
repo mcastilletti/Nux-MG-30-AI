@@ -143,7 +143,7 @@ interface MidiStore {
   sendProgramChange: (pc: number, skipAutoSync?: boolean) => void;
   sendSceneChange: (sceneIndex: number) => void;
   sendKnobParameter: (blockType: string, knobIndex: number, value: number) => void;
-  sendModelChange: (blockType: string, modelId: string) => void;
+  sendModelChange: (blockType: string, modelId: string, skipEnter?: boolean) => void;
   sendPresetName: (name: string) => void;
   toggleBlock: (blockType: string, enabled: boolean) => void;
   selectBlock: (blockType: string) => void;
@@ -416,7 +416,11 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     }
   },
 
-  sendModelChange: (blockType, modelId) => {
+  // skipEnter: il chiamante (syncFullPreset) ha già aperto ed atteso l'editor del blocco;
+  // entrare di nuovo qui (SELECT+ENTER CC in corsa con quelli già inviati) confondeva la
+  // pedaliera sul blocco "a fuoco", facendo arrivare il cambio modello sul blocco sbagliato
+  // (sintomo: dopo "copia scena" la pedaliera mostra amplificatori/effetti diversi da quelli copiati).
+  sendModelChange: (blockType, modelId, skipEnter) => {
     const { sendControlChange, enterBlockEditor } = get();
     const cc = BLOCK_MODEL_CC[blockType];
     if (cc === undefined) return;
@@ -428,7 +432,11 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     const effect = usePresetStore.getState().activePreset.effects.find(e => e.type === blockType);
     const isEnabled = effect?.enabled ?? true;
     const midiValue = blockStateMidiValue(blockType, safeIndex, isEnabled);
-    
+
+    if (skipEnter) {
+      sendControlChange(cc, midiValue);
+      return;
+    }
     enterBlockEditor(blockType);
     setTimeout(() => sendControlChange(cc, midiValue), 400);
   },
@@ -497,11 +505,16 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
 
     sendPresetName(preset.name);
 
+    // Finestra per blocco: entra una sola volta nell'editor (niente doppio SELECT/ENTER CC,
+    // vedi commento su sendModelChange) e lascia margine per il blocco con più parametri
+    // (eq: 11 CC a 100ms l'uno) prima che il blocco successivo prenda il focus sulla pedaliera.
+    const BLOCK_WINDOW_MS = 2000;
+
     preset.effects.forEach((e, idx) => {
       setTimeout(() => {
         get().enterBlockEditor(e.type);
         setTimeout(() => {
-          sendModelChange(e.type, e.model);
+          sendModelChange(e.type, e.model, true);
           setTimeout(() => {
             toggleBlock(e.type, e.enabled);
             setTimeout(() => {
@@ -509,10 +522,10 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
             }, 300);
           }, 300);
         }, 300);
-      }, idx * 1500);
+      }, idx * BLOCK_WINDOW_MS);
     });
 
-    const totalTime = preset.effects.length * 1500 + 500;
+    const totalTime = preset.effects.length * BLOCK_WINDOW_MS + 500;
     setTimeout(() => set({ isEditorSyncing: false }), totalTime);
   },
 

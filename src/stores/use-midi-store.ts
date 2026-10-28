@@ -230,12 +230,16 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     const hex = Array.from(data).map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
     get().addMidiLog(`[IN] ${hex}`);
 
-    // Gestione Control Change messages per sincronizzazione parametri
-    if (statusByte === 0xB0) {
+    // Gestione Control Change messages per sincronizzazione parametri.
+    // Mentre syncFullPreset sta scrivendo (es. appena dopo "copia scena"), la pedaliera
+    // rispecchia in CC lo stato che ancora NON ha ricevuto i nostri valori nuovi: se li
+    // applichiamo qui sovrascriviamo nell'app i parametri appena copiati con quelli vecchi
+    // della pedaliera, finché syncFullPreset non arriva a quel blocco (fino a ~24s dopo).
+    if (statusByte === 0xB0 && !get().isEditorSyncing) {
       const cc = data[1];
       const value = data[2];
       debugLog('[MIDI] CC received:', cc, 'value:', value);
-      
+
       // Mappa inversa dei CC per trovare il tipo di blocco e parametro
       const findBlockAndParam = (ccNumber: number) => {
         for (const [blockType, ccs] of Object.entries(BLOCK_PARAM_CCS)) {

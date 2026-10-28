@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/common/confirm-dialog';
 import { cn } from '@/lib/utils';
-import { findContentDuplicates, planContentMerge, type ContentMergePlan } from '@/lib/content-duplicates';
+import { contentPreview, findContentDuplicates, planContentMerge, type ContentMergePlan } from '@/lib/content-duplicates';
 import { playlistLabelsFor } from '@/lib/playlist-view';
 import { formatSlotLabel } from '@/lib/slot';
 import { formatPresetLabel } from '@/components/notes/preset-send';
@@ -78,7 +78,7 @@ export function ContentDuplicatesDialog({ open, onOpenChange, notes, playlists, 
           <DialogHeader>
             <DialogTitle>Unisci note identiche</DialogTitle>
             <DialogDescription>
-              Note con lo stesso contenuto ma titolo diverso. Per ogni gruppo scegli quale tenere: le altre vengono eliminate e nelle playlist le sostituisce quella tenuta, con lo stesso preset.
+              Note con lo stesso contenuto (accordi e testo) anche se il titolo è diverso. Brani con lo stesso titolo ma accordi diversi restano in gruppi separati. Per ogni gruppo scegli quale tenere: le altre vengono eliminate e nelle playlist le sostituisce quella tenuta, con lo stesso preset.
             </DialogDescription>
           </DialogHeader>
           <div className="-mx-2 min-h-0 flex-1 space-y-3 overflow-y-auto px-2">
@@ -99,8 +99,11 @@ export function ContentDuplicatesDialog({ open, onOpenChange, notes, playlists, 
                     <span className={cn('flex h-5 w-5 shrink-0 items-center justify-center rounded border', included ? 'border-primary bg-primary text-primary-foreground' : 'border-muted-foreground')}>
                       {included && <Check className="h-3.5 w-3.5" aria-hidden="true" />}
                     </span>
-                    Unisci questo gruppo ({group.notes.length} note)
+                    Gruppo {index + 1}: unisci {group.notes.length} note
                   </button>
+                  <p className="px-2 pb-1 text-caption text-muted-foreground">
+                    <span className="font-semibold text-foreground">Contenuto in comune:</span> {contentPreview(group.notes[0])}
+                  </p>
                   <div role="radiogroup" aria-label={`Nota da tenere, gruppo ${index + 1}`} className="mt-1 space-y-1">
                     {group.notes.map((note) => {
                       const kept = note.id === keepId;

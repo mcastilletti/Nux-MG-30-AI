@@ -3,7 +3,7 @@ import test from 'node:test';
 
 import type { SavedNote } from '@/types/note';
 import type { Playlist } from '@/types/playlist';
-import { compareKeepers, contentKey, findContentDuplicates, planContentMerge } from './content-duplicates';
+import { compareKeepers, contentKey, contentPreview, findContentDuplicates, planContentMerge } from './content-duplicates';
 
 const verse = (chords: string[], text = '') => [{ id: 'x', type: 'Verse', text, chords }];
 const n = (id: string, title: string, extra: Partial<SavedNote> = {}): SavedNote => ({ id, title, band: '', setlist: '', sections: verse(['C', 'G']), ...extra });
@@ -37,6 +37,24 @@ test('gruppi: solo note visibili con lo stesso contenuto', () => {
   assert.equal(groups.length, 1);
   assert.equal(groups[0].keepId, 'h');
   assert.deepEqual(groups[0].notes.map((x) => x.id), ['h', 'ha']);
+});
+
+test('stesso titolo, accordi diversi: gruppi separati, ognuno con la sua anteprima', () => {
+  const t = "Don't Look Back in Anger";
+  const notes = [
+    n('a1', t, { sections: verse(['C', 'G', 'Am']) }), n('a2', `335 - ${t}`, { sections: verse(['C', 'G', 'Am']) }),
+    n('b1', `ACU - ${t}`, { sections: verse(['C', 'G', 'Am', 'E']) }), n('b2', `ACU - ${t} 2`, { sections: verse(['C', 'G', 'Am', 'E']) }),
+    n('c', `${t} live`, { sections: verse(['F', 'Fm']) }),
+  ];
+  const groups = findContentDuplicates(notes);
+  assert.deepEqual(groups.map((g) => g.notes.map((x) => x.id)), [['b1', 'b2'], ['a1', 'a2']]);
+  assert.deepEqual(groups.map((g) => contentPreview(g.notes[0])), ['Verse: C G Am E', 'Verse: C G Am']);
+});
+
+test('anteprima: salta gli a capo, usa il testo se mancano accordi, tronca', () => {
+  assert.equal(contentPreview(n('1', 'A', { sections: [{ id: 'x', type: 'Intro', text: '', chords: ['Em7', 'NEWLINE', 'G'] }, { id: 'y', type: 'Verse', text: 'Today is\n gonna be', chords: [] }] })), 'Intro: Em7 G · Verse: Today is gonna be');
+  assert.equal(contentPreview(n('2', 'B', { type: 'block', sections: [], blockContent: 'Pausa' })), 'Pausa');
+  assert.equal(contentPreview(n('3', 'C', { sections: verse(['C', 'G', 'Am', 'F']) }), 10), 'Verse: C…');
 });
 
 test('unione: la nota tenuta prende il posto con il preset di prima', () => {

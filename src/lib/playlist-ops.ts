@@ -168,6 +168,37 @@ export function getPlaylistAlphabetical(playlist: Playlist | null | undefined, n
     .sort((a, b) => (a.note.title || '').localeCompare(b.note.title || '', 'it', { sensitivity: 'base', numeric: true }));
 }
 
+const byTitle = (a: { note: SavedNote }, b: { note: SavedNote }) =>
+  (a.note.title || '').localeCompare(b.note.title || '', 'it', { sensitivity: 'base', numeric: true });
+
+/**
+ * Tutti i brani delle playlist della stessa band, in ordine alfabetico e senza doppioni (V11):
+ * dal vivo si può suonare anche un brano di un'altra scaletta. `position` è la posizione nella
+ * playlist corrente, null se il brano non ne fa parte.
+ */
+export function getBandAlphabetical(playlists: Playlist[], playlist: Playlist | null | undefined, notesById: Map<string, SavedNote>, noteId: string | null) {
+  if (!playlist) return [];
+  const positions = new Map(playlistEntries(playlist, notesById).map((entry) => [entry.note.id, entry.position]));
+  const notes = new Map<string, SavedNote>();
+  for (const p of playlists) {
+    if (p.bandId !== playlist.bandId) continue;
+    for (const entry of playlistEntries(p, notesById)) notes.set(entry.note.id, entry.note);
+  }
+  return [...notes.values()]
+    .map((note) => ({ note, position: positions.get(note.id) ?? null, isCurrent: note.id === noteId }))
+    .sort(byTitle);
+}
+
+/**
+ * Brano aperto dall'elenco della band ma fuori dalla playlist corrente: la playlist resta quella
+ * di partenza, Prec torna al brano da cui si è saltati (`anchorId`) e Succ prosegue la scaletta da lì.
+ */
+export function getOutsidePlaylistPosition(playlist: Playlist | null | undefined, notesById: Map<string, SavedNote>, anchorId: string | null): PlaylistPosition | null {
+  const anchor = getPlaylistPosition(playlist, notesById, anchorId);
+  if (!anchor || !anchorId) return null;
+  return { index: anchor.index, total: anchor.total, previous: notesById.get(anchorId) ?? null, next: anchor.next };
+}
+
 /** Come la playlist usa il preset del brano (PL12): predefinito, proprio o nessuno. */
 export type ItemPresetMode = 'default' | 'custom' | 'none';
 

@@ -33,7 +33,7 @@ import {
   noteSheetReducer,
 } from '@/components/notes/note-sheet-state';
 import type { NoteSection, SavedNote } from '@/types/note';
-import { getSetlistAlphabetical, getSetlistPosition } from '@/components/notes/note-navigation';
+import { getBandAlphabeticalLegacy, getSetlistAlphabetical, getSetlistPosition } from '@/components/notes/note-navigation';
 import { LiveNoteView } from '@/components/notes/LiveNoteView';
 import { SetlistNavBar } from '@/components/notes/setlist-nav-bar';
 import { GUARD_HISTORY_RESTORED_EVENT } from '@/hooks/use-unsaved-changes-guard';
@@ -50,7 +50,7 @@ import type { ContentMergePlan } from '@/lib/content-duplicates';
 import { ConversionBanner } from '@/components/notes/playlist/ConversionBanner';
 import { usePlaylistsCache } from '@/stores/use-playlists-cache';
 import { usePlaylistActions } from '@/hooks/use-playlist-actions';
-import { addNotes, effectivePreset, findItem, getPlaylistAlphabetical, getPlaylistPosition, indexNotes, moveItem, playlistEntries, playlistsContaining, removeNote, replaceNote, restoreItem } from '@/lib/playlist-ops';
+import { addNotes, effectivePreset, findItem, getBandAlphabetical, getOutsidePlaylistPosition, getPlaylistAlphabetical, getPlaylistPosition, indexNotes, moveItem, playlistEntries, playlistsContaining, removeNote, replaceNote, restoreItem } from '@/lib/playlist-ops';
 import { buildVersionNote, matchesQuery, nextVersionTitle, poolNotes } from '@/lib/playlist-view';
 import { nameKey } from '@/lib/playlist-migration';
 import { awaitWrite, isOnline } from '@/lib/firestore-write';
@@ -267,14 +267,33 @@ function NotesLibraryContent() {
 
   // Prec/Succ, posizione ed elenco alfabetico: dalla scaletta (modello vecchio) o
   // dalla playlist da cui è stato aperto il brano (PL10).
-  const setlistPosition = useMemo(
+  const inSetlistPosition = useMemo(
     () => (isPlaylistModel ? getPlaylistPosition(sheetPlaylist, notesById, selectedNoteId) : getSetlistPosition(cachedNotes, selectedNoteId)),
     [isPlaylistModel, sheetPlaylist, notesById, cachedNotes, selectedNoteId],
   );
+  // Ultimo brano aperto della playlist: se dall'elenco della band si apre un brano di
+  // un'altra scaletta, Prec torna qui e Succ prosegue la scaletta da qui.
+  const [playlistAnchorId, setPlaylistAnchorId] = useState<string | null>(null);
+  useEffect(() => {
+    if (inSetlistPosition && selectedNoteId) setPlaylistAnchorId(selectedNoteId);
+  }, [inSetlistPosition, selectedNoteId]);
+  const outsidePosition = isPlaylistModel && selectedNoteId && !inSetlistPosition
+    ? getOutsidePlaylistPosition(sheetPlaylist, notesById, playlistAnchorId)
+    : null;
+  const setlistPosition = inSetlistPosition ?? outsidePosition;
   const setlistEntries = useMemo(
     () => (isPlaylistModel ? getPlaylistAlphabetical(sheetPlaylist, notesById, selectedNoteId) : getSetlistAlphabetical(cachedNotes, selectedNoteId)),
     [isPlaylistModel, sheetPlaylist, notesById, cachedNotes, selectedNoteId],
   );
+  const bandEntries = useMemo(
+    () => (isPlaylistModel ? getBandAlphabetical(playlists, sheetPlaylist, notesById, selectedNoteId) : getBandAlphabeticalLegacy(cachedNotes, selectedNoteId)),
+    [isPlaylistModel, playlists, sheetPlaylist, notesById, cachedNotes, selectedNoteId],
+  );
+  const selectedNote = selectedNoteId ? notesById.get(selectedNoteId) : undefined;
+  const pickerSetlistName = isPlaylistModel ? sheetPlaylist?.name : selectedNote?.setlist;
+  const pickerBandName = isPlaylistModel
+    ? playlistBands.find((b) => b.id === sheetPlaylist?.bandId)?.name
+    : selectedNote?.band;
   const livePreset = isPlaylistModel && selectedNoteId && notesById.get(selectedNoteId)
     ? effectivePreset(notesById.get(selectedNoteId)!, findItem(sheetPlaylist, selectedNoteId))
     : null;
@@ -1104,9 +1123,13 @@ function NotesLibraryContent() {
             className={noteSheet.live ? 'border-zinc-800 bg-zinc-950' : undefined}
             index={setlistPosition.index}
             total={setlistPosition.total}
+            outside={!!outsidePosition}
             onPrevious={setlistPosition.previous ? () => openNoteInSheet(setlistPosition.previous) : undefined}
             onNext={setlistPosition.next ? () => openNoteInSheet(setlistPosition.next) : undefined}
             entries={setlistEntries}
+            bandEntries={bandEntries}
+            setlistName={pickerSetlistName}
+            bandName={pickerBandName}
             onPick={(note) => openNoteInSheet(note)}
           />
         ) : null}
@@ -1114,7 +1137,7 @@ function NotesLibraryContent() {
         {noteSheet.live && selectedNoteId ? (
           <LiveNoteView
             noteId={selectedNoteId}
-            position={setlistPosition ? { index: setlistPosition.index, total: setlistPosition.total } : null}
+            position={inSetlistPosition ? { index: inSetlistPosition.index, total: inSetlistPosition.total } : null}
             onExit={() => dispatchNoteSheet({ type: 'exit-live' })}
             preset={livePreset}
           />

@@ -4,7 +4,7 @@ import test from 'node:test';
 import type { SavedNote } from '@/types/note';
 import type { Playlist } from '@/types/playlist';
 import {
-  addNotes, effectivePreset, getPlaylistAlphabetical, getPlaylistPosition, indexNotes, moveItem, playlistEntries,
+  addNotes, effectivePreset, getBandAlphabetical, getOutsidePlaylistPosition, getPlaylistAlphabetical, getPlaylistPosition, indexNotes, moveItem, playlistEntries,
   itemPresetMode, playlistsContaining, presetFieldsFor, presetSlotForMode, removeNote, removeNoteFromAll, replaceNote, resolveNoteId, restoreItem, setItemPreset,
 } from './playlist-ops';
 
@@ -86,6 +86,22 @@ test('posizione e Prec/Succ seguono la playlist da cui si è aperto il brano', (
 test('scelta libera (V11): ordine alfabetico con la posizione reale', () => {
   const list = getPlaylistAlphabetical(pl(['a', 'b', 'c']), byId, 'b');
   assert.deepEqual(list.map((e) => [e.note.title, e.position, e.isCurrent]), [['Angels', 3, false], ['Creep', 2, true], ['Wonderwall', 1, false]]);
+});
+
+test('scelta libera (V11): tutti i brani della band, alfabetici e senza doppioni', () => {
+  const current = pl(['a', 'b'], 'p1');
+  const other = pl(['b', 'c', 'old'], 'p2');
+  const otherBand = { ...pl(['d'], 'p3'), bandId: 'b2' };
+  const list = getBandAlphabetical([current, other, otherBand], current, byId, 'c');
+  assert.deepEqual(list.map((e) => [e.note.title, e.position, e.isCurrent]), [['Angels', null, true], ['Creep', 2, false], ['Wonderwall', 1, false]]);
+  assert.deepEqual(getBandAlphabetical([current], null, byId, 'a'), []);
+});
+
+test('brano fuori scaletta: Prec torna al brano di partenza, Succ prosegue la scaletta', () => {
+  const live = pl(['a', 'b', 'd']);
+  assert.deepEqual(getOutsidePlaylistPosition(live, byId, 'b'), { index: 2, total: 3, previous: byId.get('b'), next: byId.get('d') });
+  assert.equal(getOutsidePlaylistPosition(live, byId, 'c'), null);
+  assert.equal(getOutsidePlaylistPosition(live, byId, null), null);
 });
 
 test('modalità del preset nella playlist e ritorno a setItemPreset', () => {

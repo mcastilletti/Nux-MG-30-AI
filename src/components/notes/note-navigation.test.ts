@@ -47,3 +47,12 @@ test('elenco alfabetico della scaletta con posizione reale (V11)', async () => {
   assert.equal(list.find((e) => e.isCurrent)?.note.id, 'c');
   assert.deepEqual(getSetlistAlphabetical(set, 'missing'), []);
 });
+
+test('modello vecchio: tutti i brani della band in ordine alfabetico (V11)', async () => {
+  const { getBandAlphabeticalLegacy } = await import('./note-navigation');
+  const list = getBandAlphabeticalLegacy(notes, 'second');
+  assert.deepEqual(list.map((e) => [e.note.id, e.position, e.isCurrent]), [
+    ['first', 1, false], ['other-set', null, false], ['second', 2, true], ['third', 3, false],
+  ]);
+  assert.deepEqual(getBandAlphabeticalLegacy(notes, 'missing'), []);
+});

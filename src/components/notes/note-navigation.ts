@@ -47,6 +47,25 @@ export interface SetlistEntry {
   isCurrent: boolean;
 }
 
+/** Brano della band nell'elenco di scelta libera: `position` solo se è anche nella scaletta corrente. */
+export interface BandEntry {
+  note: SavedNote;
+  position: number | null;
+  isCurrent: boolean;
+}
+
+/** Modello vecchio: tutti i brani della band della nota corrente, in ordine alfabetico (V11). */
+export function getBandAlphabeticalLegacy(notes: SavedNote[], currentNoteId: string | null): BandEntry[] {
+  const current = getSetlistAlphabetical(notes, currentNoteId);
+  if (!current.length) return [];
+  const band = notes.find((note) => note.id === currentNoteId)!.band;
+  const positions = new Map(current.map((entry) => [entry.note.id, entry.position]));
+  return notes
+    .filter((note) => note.band === band)
+    .map((note) => ({ note, position: positions.get(note.id) ?? null, isCurrent: note.id === currentNoteId }))
+    .sort((a, b) => (a.note.title || '').localeCompare(b.note.title || '', 'it', { sensitivity: 'base', numeric: true }));
+}
+
 /**
  * Brani della scaletta della nota corrente in ordine alfabetico (spec V11):
  * dal vivo si può scegliere un brano diverso dal successivo o rifarne uno.

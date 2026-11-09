@@ -1,22 +1,12 @@
 [
   {
-    "origin": ["*"],
-    "method": ["GET"],
-    "maxAgeSeconds": 3600
-  },
-  {
-    "origin": ["*"],
-    "method": ["PUT"],
-    "maxAgeSeconds": 3600
-  },
-  {
-    "origin": ["*"],
-    "method": ["POST"],
-    "maxAgeSeconds": 3600
-  },
-  {
-    "origin": ["*"],
-    "method": ["DELETE"],
+    "origin": [
+      "https://studio-3261187179-ec15d.firebaseapp.com",
+      "https://studio-3261187179-ec15d.web.app",
+      "http://localhost:9003"
+    ],
+    "method": ["GET", "HEAD", "POST", "PUT", "DELETE"],
+    "responseHeader": ["Content-Type", "Authorization", "Content-Length", "User-Agent", "x-goog-resumable"],
     "maxAgeSeconds": 3600
   }
 ]

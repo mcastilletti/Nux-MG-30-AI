@@ -6,10 +6,11 @@
  */
 
 import { ai, z } from '@/ai/genkit';
+import { authorizeAiCall } from '@/ai/guard';
 
 const AnalyzeSysExInputSchema = z.object({
-  sysexData: z.string().describe('Sequenza di messaggi SysEx in formato hex.'),
-  controlDescription: z.string().describe('Azione eseguita sull hardware (es: gain da 0 a 100).'),
+  sysexData: z.string().min(1).max(8000).describe('Sequenza di messaggi SysEx in formato hex.'),
+  controlDescription: z.string().min(1).max(500).describe('Azione eseguita sull hardware (es: gain da 0 a 100).'),
 });
 export type AnalyzeSysExInput = z.infer<typeof AnalyzeSysExInputSchema>;
 
@@ -44,6 +45,7 @@ export const analyzeSysExFlow = ai.defineFlow(
   }
 );
 
-export async function analyzeSysEx(input: AnalyzeSysExInput): Promise<AnalyzeSysExOutput> {
+export async function analyzeSysEx(input: AnalyzeSysExInput, idToken: string): Promise<AnalyzeSysExOutput> {
+  await authorizeAiCall(idToken);
   return analyzeSysExFlow(input);
 }

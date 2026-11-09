@@ -159,7 +159,10 @@ service cloud.firestore {
      * @allow (read, write) if the authenticated user's UID matches the document's userId field.
      */
     match /notes/{noteId} {
-      allow read, update, delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow read, delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+      // userId e' immutabile: impedisce di riassegnare un documento a un altro utente.
+      allow update: if isSignedIn() && resource.data.userId == request.auth.uid
+                    && request.resource.data.userId == resource.data.userId;
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
     }
 
@@ -169,17 +172,26 @@ service cloud.firestore {
      * @allow (read, write) if the authenticated user's UID matches the document's userId field.
      */
     match /bands/{bandId} {
-      allow read, update, delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow read, delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+      // userId e' immutabile: impedisce di riassegnare un documento a un altro utente.
+      allow update: if isSignedIn() && resource.data.userId == request.auth.uid
+                    && request.resource.data.userId == resource.data.userId;
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
     }
 
     match /guitars/{guitarId} {
-      allow read, update, delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow read, delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+      // userId e' immutabile: impedisce di riassegnare un documento a un altro utente.
+      allow update: if isSignedIn() && resource.data.userId == request.auth.uid
+                    && request.resource.data.userId == resource.data.userId;
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
     }
 
     match /amplifiers/{amplifierId} {
-      allow read, update, delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow read, delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+      // userId e' immutabile: impedisce di riassegnare un documento a un altro utente.
+      allow update: if isSignedIn() && resource.data.userId == request.auth.uid
+                    && request.resource.data.userId == resource.data.userId;
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
     }
 
@@ -189,7 +201,10 @@ service cloud.firestore {
      * @allow (read, write) if the authenticated user's UID matches the document's userId field.
      */
     match /setlists/{setlistId} {
-      allow read, update, delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow read, delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+      // userId e' immutabile: impedisce di riassegnare un documento a un altro utente.
+      allow update: if isSignedIn() && resource.data.userId == request.auth.uid
+                    && request.resource.data.userId == resource.data.userId;
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
     }
 

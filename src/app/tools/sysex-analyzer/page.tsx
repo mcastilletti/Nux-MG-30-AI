@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Zap, Play, Trash2, Copy, History, Loader2, Binary } from 'lucide-react';
+import { useUser } from '@/firebase';
 import { analyzeSysEx } from '@/ai/flows/sysex-analysis';
 
 export default function SysExAnalyzerPage() {
@@ -15,6 +16,7 @@ export default function SysExAnalyzerPage() {
   const [analyzing, setAnalyzing] = useState(false);
   const [result, setResult] = useState<string | null>(null);
   const { toast } = useToast();
+  const { user } = useUser();
 
   const handleAnalyze = async () => {
     if (!sysexData || !description) {
@@ -30,10 +32,12 @@ export default function SysExAnalyzerPage() {
     setResult(null);
 
     try {
+      if (!user) throw new Error('Accedi per usare le funzioni AI.');
+      const idToken = await user.getIdToken();
       const output = await analyzeSysEx({
         sysexData,
         controlDescription: description
-      });
+      }, idToken);
       setResult(output.parameterMapping);
       toast({
         title: "Analysis complete",
@@ -42,7 +46,7 @@ export default function SysExAnalyzerPage() {
     } catch (err) {
       toast({
         title: "Analysis failed",
-        description: "Something went wrong during AI processing.",
+        description: err instanceof Error && err.message ? err.message : "Something went wrong during AI processing.",
         variant: "destructive"
       });
     } finally {

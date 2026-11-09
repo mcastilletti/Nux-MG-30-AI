@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
+import { useUser } from '@/firebase';
 import { generateMG30Preset, MG30PresetOutput } from '@/ai/flows/mg30-preset-gen';
 import { formatValue, normalizePresetSuggestion, PresetNormalizationResult } from '@/lib/mg30-preset-normalizer';
 import { applyJsonToPreset, parseDirectJsonInput } from '@/lib/preset-json';
@@ -24,6 +25,7 @@ export function AiModeDialog({ open, onOpenChange, activePreset, setActivePreset
   setActivePreset: (preset: Preset) => void;
 }) {
   const { toast } = useToast();
+  const { user } = useUser();
   const setIsAiModalOpen = onOpenChange;
   const [aiPrompt, setAiPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
@@ -94,7 +96,9 @@ export function AiModeDialog({ open, onOpenChange, activePreset, setActivePreset
     setProposedNormalization(null);
     try {
       const instrumentation = buildInstrumentationContext(selectedGuitar, selectedAmplifier);
-      const result = await generateMG30Preset({ description: aiPrompt, instrumentation });
+      if (!user) throw new Error('Accedi per usare le funzioni AI.');
+      const idToken = await user.getIdToken();
+      const result = await generateMG30Preset({ description: aiPrompt.trim(), instrumentation }, idToken);
       setProposedPreset(result);
       setProposedNormalization(normalizePresetSuggestion(activePreset, result));
     } catch (error: any) {

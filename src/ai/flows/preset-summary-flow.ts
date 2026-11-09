@@ -6,11 +6,12 @@
  */
 
 import { ai, z } from '@/ai/genkit';
+import { authorizeAiCall } from '@/ai/guard';
 
 const PresetSummaryInputSchema = z.object({
-  presetName: z.string(),
-  ampModel: z.string(),
-  activeEffects: z.array(z.string()),
+  presetName: z.string().max(100),
+  ampModel: z.string().max(100),
+  activeEffects: z.array(z.string().max(100)).max(20),
 });
 export type PresetSummaryInput = z.infer<typeof PresetSummaryInputSchema>;
 
@@ -51,6 +52,7 @@ export const presetSummaryFlow = ai.defineFlow(
   }
 );
 
-export async function summarizePreset(input: PresetSummaryInput): Promise<PresetSummaryOutput> {
+export async function summarizePreset(input: PresetSummaryInput, idToken: string): Promise<PresetSummaryOutput> {
+  await authorizeAiCall(idToken);
   return presetSummaryFlow(input);
 }

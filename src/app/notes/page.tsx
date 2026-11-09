@@ -4,6 +4,7 @@ import React, { useState, useMemo, useEffect, useRef, useReducer, Suspense } fro
 import { useSearchParams } from 'next/navigation';
 import { Card, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { IconButton } from '@/components/common/icon-button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { NotebookPen, Plus, Trash2, GripVertical, Music2, Layers, Printer, Copy, ArrowRight, FileText, Search, X, Loader2, Play, MoreVertical, Download, CopyMinus } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -1239,8 +1240,8 @@ const SortableNoteCard = React.memo(React.forwardRef<HTMLDivElement, {
                 <CardTitle className="break-words text-[16px] font-black uppercase leading-tight text-primary">{note.title}</CardTitle>
               </div>
               <div className="flex items-center gap-1 shrink-0 no-print">
-                 <Button variant="ghost" size="icon" aria-label="Copia nota" className="h-9 w-9 text-primary opacity-30 transition-opacity group-hover:opacity-100" onClick={(e) => onCopy(e, note)}><Copy className="w-4 h-4" /></Button>
-                <Button variant="ghost" size="icon" aria-label="Elimina nota" className="h-9 w-9 text-destructive opacity-30 group-hover:opacity-100 transition-opacity" onClick={onDelete}><Trash2 className="w-4 h-4" /></Button>
+                 <IconButton label="Copia nota" className="text-primary" onClick={(e) => onCopy(e, note)}><Copy className="w-4 h-4" /></IconButton>
+                <IconButton label="Elimina nota" className="ml-2 text-destructive" onClick={onDelete}><Trash2 className="w-4 h-4" /></IconButton>
               </div>
             </div>
           ) : (
@@ -1250,8 +1251,8 @@ const SortableNoteCard = React.memo(React.forwardRef<HTMLDivElement, {
                   <CardTitle className="text-[16px] font-black uppercase leading-tight whitespace-pre-wrap">{note.title}</CardTitle>
                 </div>
                 <div className="flex items-center gap-1 shrink-0 no-print">
-                  <Button variant="ghost" size="icon" aria-label="Copia nota" className="h-9 w-9 text-primary opacity-30 transition-opacity group-hover:opacity-100" onClick={(e) => onCopy(e, note)}><Copy className="w-4 h-4" /></Button>
-                  <Button variant="ghost" size="icon" aria-label="Elimina nota" className="h-9 w-9 text-destructive opacity-30 group-hover:opacity-100 transition-opacity" onClick={onDelete}><Trash2 className="w-4 h-4" /></Button>
+                  <IconButton label="Copia nota" className="text-primary" onClick={(e) => onCopy(e, note)}><Copy className="w-4 h-4" /></IconButton>
+                  <IconButton label="Elimina nota" className="ml-2 text-destructive" onClick={onDelete}><Trash2 className="w-4 h-4" /></IconButton>
                 </div>
               </div>
               <div className="flex items-center gap-2 mt-2">
@@ -1280,7 +1281,7 @@ SortableNoteCard.displayName = 'SortableNoteCard';
 
 export default function NotesLibraryPage() {
     return (
-        <Suspense fallback={<div className="flex items-center justify-center h-screen"><Layers className="w-10 h-10 animate-spin text-primary" /></div>}>
+        <Suspense fallback={<div className="flex min-h-[100dvh] items-center justify-center"><Layers className="w-10 h-10 animate-spin text-primary" /></div>}>
             <NotesLibraryContent />
         </Suspense>
     );

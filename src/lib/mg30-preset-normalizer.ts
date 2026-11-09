@@ -184,12 +184,14 @@ export function normalizePresetState(preset: Preset): PresetStateNormalizationRe
   // 🔧 Fix 3: Post-processing vol.min/max sempre ≥ 50
   const volEffect = normalizedPreset.effects.find(e => e.type === 'vol');
   if (volEffect && volEffect.parameters) {
-    if (volEffect.parameters.min !== undefined && volEffect.parameters.min < 50) {
+    const volMin = Number(volEffect.parameters.min);
+    const volMax = Number(volEffect.parameters.max);
+    if (volEffect.parameters.min !== undefined && volMin < 50) {
       volEffect.parameters.min = 50;
       correctedCount++;
       warnings.push(`vol.min forzato a 50 (valore minimo consentito).`);
     }
-    if (volEffect.parameters.max !== undefined && volEffect.parameters.max < 50) {
+    if (volEffect.parameters.max !== undefined && volMax < 50) {
       volEffect.parameters.max = 100;
       correctedCount++;
       warnings.push(`vol.max forzato a 100 (valore < 50 non consentito).`);

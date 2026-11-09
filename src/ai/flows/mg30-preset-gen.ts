@@ -8,13 +8,14 @@
  */
 
 import { ai, z } from '@/ai/genkit';
+import { authorizeAiCall } from '@/ai/guard';
 import { MG30_MODELS, MG30Parameter } from '@/lib/mg30-data';
 import { DEFAULT_AMPLIFIER_DESCRIPTION, DEFAULT_GUITAR_DESCRIPTION } from '@/lib/instrumentation-context';
 import { EffectType } from '@/types/preset';
 
 const MG30PresetInputSchema = z.object({
-  description: z.string().describe('Richiesta timbrica dell’utente (band, artista, brano, genere o descrizione).'),
-  instrumentation: z.string().optional().describe('Chitarra e amplificazione dell’utente, da considerare sempre nella scelta del preset.'),
+  description: z.string().min(1).max(1000).describe('Richiesta timbrica dell’utente (band, artista, brano, genere o descrizione).'),
+  instrumentation: z.string().max(2000).optional().describe('Chitarra e amplificazione dell’utente, da considerare sempre nella scelta del preset.'),
 });
 export type MG30PresetInput = z.infer<typeof MG30PresetInputSchema>;
 
@@ -142,6 +143,7 @@ export const mg30PresetFlow = ai.defineFlow(
   }
 );
 
-export async function generateMG30Preset(input: MG30PresetInput): Promise<MG30PresetOutput> {
+export async function generateMG30Preset(input: MG30PresetInput, idToken: string): Promise<MG30PresetOutput> {
+  await authorizeAiCall(idToken);
   return mg30PresetFlow(input);
 }

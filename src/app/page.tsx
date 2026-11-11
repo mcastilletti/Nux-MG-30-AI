@@ -24,15 +24,15 @@ export default function HomePage() {
         </header>
 
         {/* Navigation Buttons - Bento Grid Layout */}
-        <div className="grid auto-rows-fr grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
-          <Link href="/library" className="group md:col-span-2">
+        <div className="grid auto-rows-fr grid-cols-2 gap-3 md:gap-4 lg:grid-cols-4">
+          <Link href="/library" className="group col-span-2 lg:row-span-2">
             <Card className="app-surface h-full border-primary/30 transition-colors hover:border-primary/70">
-              <CardContent className="flex flex-col items-start justify-between gap-5 p-5 md:flex-row md:items-center md:p-7">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary md:h-14 md:w-14">
+              <CardContent className="flex h-full flex-row items-center gap-5 p-5 lg:flex-col lg:justify-center lg:gap-6 lg:p-7 lg:text-center">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary lg:h-16 lg:w-16">
                   <Library className="w-8 h-8 text-accent" />
                 </div>
-                <div className="text-center md:text-left">
-                  <h3 className="font-bold md:text-xl">Libreria Preset</h3>
+                <div className="text-left lg:text-center">
+                  <h3 className="font-bold md:text-xl lg:text-2xl">Libreria Preset</h3>
                   <p className="text-xs text-muted-foreground md:text-sm">Sfoglia e gestisci i 128 slot</p>
                 </div>
               </CardContent>
@@ -97,14 +97,14 @@ export default function HomePage() {
         </div>
 
         {/* Secondary Features - Asymmetric Layout */}
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          <Link href="/library" className="group block rounded-xl md:col-span-2">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
+          <Link href="/library" className="group block rounded-xl lg:col-span-3">
             <Card className="app-surface h-full cursor-pointer transition-colors hover:border-primary/50">
-              <CardContent className="flex flex-col items-start gap-4 p-5 md:flex-row md:items-center md:p-6">
+              <CardContent className="flex h-full flex-col items-start gap-4 p-5 md:flex-row md:items-center md:p-6">
                 <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10 text-primary">
                   <Download className="h-8 w-8" />
                 </div>
-                <div className="text-center md:text-left">
+                <div className="text-left">
                   <h3 className="font-bold text-xl">Backup dei preset</h3>
                   <p className="text-sm text-muted-foreground">Esporta i 128 preset in un file JSON: Library → Backup</p>
                 </div>
@@ -114,11 +114,11 @@ export default function HomePage() {
 
           <Link href="/tools/sysex-analyzer" className="group">
             <Card className="app-surface h-full transition-colors hover:border-primary/50">
-              <CardContent className="flex flex-col items-start gap-4 p-5 md:items-center md:p-6 md:text-center">
+              <CardContent className="flex h-full flex-col items-start gap-4 p-5 md:items-center md:justify-center md:p-6 md:text-center">
                 <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10 text-primary">
                   <Zap className="h-7 w-7" />
                 </div>
-                <div className="text-center">
+                <div className="text-left md:text-center">
                   <h3 className="font-bold text-lg">AI Analyzer</h3>
                   <p className="text-sm text-muted-foreground">Reverse engineering</p>
                 </div>
@@ -128,8 +128,8 @@ export default function HomePage() {
         </div>
 
         {/* Connection Status */}
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-          <Card className="app-surface lg:col-span-2">
+        <div>
+          <Card className="app-surface">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>

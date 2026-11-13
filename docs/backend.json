@@ -708,6 +708,10 @@
           "type": "string",
           "description": "Data dell'ultima modifica (serverTimestamp).",
           "format": "date-time"
+        },
+        "genre": {
+          "type": "string",
+          "description": "Facoltativo. Genere del brano (lista di src/lib/genres.ts), scelto a mano o stimato dall'AI; serve per i preset di fabbrica consigliati."
         }
       },
       "required": [

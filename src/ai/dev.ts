@@ -5,3 +5,4 @@ import '@/ai/flows/sysex-analysis.ts';
 import '@/ai/flows/mg30-preset-gen.ts';
 import '@/ai/flows/preset-summary-flow.ts';
 import '@/ai/flows/factory-preset-notes.ts';
+import '@/ai/flows/song-genre.ts';

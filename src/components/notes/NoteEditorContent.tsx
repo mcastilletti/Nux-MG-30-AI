@@ -38,6 +38,7 @@ import { usePlaylistsCache } from '@/stores/use-playlists-cache';
 import { usePlaylistActions } from '@/hooks/use-playlist-actions';
 import { addNotes, effectivePreset, findItem, presetFieldsFor, presetSlotForMode, setItemPreset, type ItemPresetMode, type PresetFields } from '@/lib/playlist-ops';
 import { playlistLabelsFor } from '@/lib/playlist-view';
+import { FactorySuggestions } from '@/components/notes/FactorySuggestions';
 import { CopyPlus, ListPlus, Trash2 as TrashIcon } from 'lucide-react';
 
 
@@ -78,6 +79,7 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
   const [selectedPresetSlot, setSelectedPresetSlot] = useState<string>('');
   const [selectedPresetScene, setSelectedPresetScene] = useState<string>('');
   const [generalNotes, setGeneralNotes] = useState('');
+  const [genre, setGenre] = useState('');
   const [presetSearch, setPresetSearch] = useState('');
   const [isNotesOpen, setIsNotesOpen] = useState(true); 
   const [isDetailsOpen, setIsDetailsOpen] = useState(false); 
@@ -104,7 +106,7 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
   // Modifiche non salvate: confronto con l'ultima versione caricata o salvata.
   const savedDraftRef = useRef<string>('');
   const currentDraft = serializeDraft({
-    title, band, setlist, presetSlot: selectedPresetSlot, presetScene: selectedPresetScene, generalNotes, sections, presetMode,
+    title, band, setlist, presetSlot: selectedPresetSlot, presetScene: selectedPresetScene, generalNotes, sections, presetMode, genre,
   });
   const isDirty = editMode && currentDraft !== savedDraftRef.current;
   // NT17: un solo salvataggio alla volta e stato visibile.
@@ -193,6 +195,19 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [playlistItemKey]);
 
+  // Genere stimato dall'AI in lettura: la cache cambia ma la nota non viene ricaricata (né il preset
+  // reinviato). Si allinea solo il genere, anche nell'ultima versione salvata della bozza.
+  useEffect(() => {
+    if (editMode || !cachedNote || loadedNoteIdRef.current !== cachedNote.id) return;
+    const next = cachedNote.genre || '';
+    if (next === genre) return;
+    setGenre(next);
+    try {
+      savedDraftRef.current = serializeDraft({ ...JSON.parse(savedDraftRef.current), genre: next });
+    } catch { /* bozza non leggibile: verrà riscritta al prossimo caricamento */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cachedNote?.genre, editMode]);
+
   const uniqueBands = useMemo(() => {
     const allNotes = useNotesCache.getState().notes;
     const bands = new Set(allNotes.map(n => n.band).filter(Boolean));
@@ -231,6 +246,7 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
     setSelectedPresetSlot(slot);
     setSelectedPresetScene(scene);
     setGeneralNotes(note.generalNotes || '');
+    setGenre(note.genre || '');
     setCurrentOrder(note.order ?? 0);
     const loadedSections = (note.sections || []).map((s, idx) => ({
       ...s,
@@ -241,7 +257,7 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
     savedDraftRef.current = serializeDraft({
       title: note.title, band: note.band, setlist: note.setlist,
       presetSlot: slot, presetScene: scene,
-      generalNotes: note.generalNotes || '', sections: loadedSections, presetMode: mode,
+      generalNotes: note.generalNotes || '', sections: loadedSections, presetMode: mode, genre: note.genre || '',
     });
     setEditMode(false);
     setIsNotesOpen(true);
@@ -283,6 +299,7 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
       presetSlot: selectedPresetSlot,
       presetScene: selectedPresetScene,
       generalNotes,
+      genre,
       sections,
       order: orderToSave,
       updatedAt: serverTimestamp(),
@@ -324,6 +341,7 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
     const content: Record<string, unknown> = {
       title,
       generalNotes,
+      genre,
       sections,
       updatedAt: serverTimestamp(),
       userId: user?.uid,
@@ -370,11 +388,12 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
     setSelectedPresetSlot('');
     setSelectedPresetScene('');
     setGeneralNotes('');
+    setGenre('');
     const emptySections = [{ id: `new-${Date.now()}-${Math.random()}`, type: 'Verse', text: '', chords: [] }];
     setSections(emptySections);
     setPresetMode('default');
     savedDraftRef.current = serializeDraft({
-      title: '', band: '', setlist: '', presetSlot: '', presetScene: '', generalNotes: '', sections: emptySections, presetMode: 'default',
+      title: '', band: '', setlist: '', presetSlot: '', presetScene: '', generalNotes: '', sections: emptySections, presetMode: 'default', genre: '',
     });
     setEditMode(true);
     setIsDetailsOpen(true);
@@ -465,6 +484,7 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
     ...(cachedNote as SavedNote),
     title,
     generalNotes,
+    genre,
     sections,
     ...(editsPlaylistPreset ? {} : { presetSlot: selectedPresetSlot, presetScene: selectedPresetScene }),
   });
@@ -700,6 +720,7 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
                 </div>
               </div>
               )}
+              <FactorySuggestions genre={genre} editMode={editMode} onGenreChange={setGenre} note={cachedNote} />
               {!isPlaylistModel && (
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">

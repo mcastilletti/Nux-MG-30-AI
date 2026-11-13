@@ -20,6 +20,8 @@ export interface SavedNote {
   userId?: string;
   type?: 'song' | 'block';
   blockContent?: string;
+  /** Genere del brano (lista di src/lib/genres.ts), scelto a mano o stimato dall'AI: serve per i preset di fabbrica consigliati. */
+  genre?: string;
   /** Impostato dalla migrazione a playlist su un duplicato: la nota è nascosta e sostituita da quella indicata. */
   mergedInto?: string;
 }

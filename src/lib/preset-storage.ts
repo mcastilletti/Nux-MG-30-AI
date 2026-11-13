@@ -189,3 +189,38 @@ export function parsePresetImport(text: string): PresetImportResult {
   }
   return { ok: true, presets: [...bySlot.values()].sort((a, b) => a.slot - b.slot), skipped };
 }
+
+/** Nome di file sicuro per un preset: "mg30-01A-Clean-ES-335.json". */
+export function presetFileName(preset: Pick<Preset, 'slot' | 'name'>): string {
+  const label = `${String(Math.floor((preset.slot - 1) / 4) + 1).padStart(2, '0')}${['A', 'B', 'C', 'D'][(preset.slot - 1) % 4]}`;
+  const safe = preset.name
+    .normalize('NFKD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/[^A-Za-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 40);
+  return `mg30-${label}${safe ? `-${safe}` : ''}.json`;
+}
+
+/**
+ * Unisce più file letti (JSON singoli o estratti da uno ZIP). Se due file contengono lo stesso
+ * slot vince l'ultimo. Gli errori dei singoli file vengono riportati senza bloccare gli altri.
+ */
+export function mergePresetImports(files: Array<{ name: string; text: string }>): PresetImportResult & { errors?: string[] } {
+  const bySlot = new Map<number, Preset>();
+  let skipped = 0;
+  const errors: string[] = [];
+  for (const file of files) {
+    const result = parsePresetImport(file.text);
+    if (!result.ok) {
+      errors.push(`${file.name}: ${result.error}`);
+      continue;
+    }
+    skipped += result.skipped;
+    for (const preset of result.presets) bySlot.set(preset.slot, preset);
+  }
+  if (bySlot.size === 0) {
+    return { ok: false, error: errors.length === 1 ? errors[0] : 'Nessun preset valido nei file scelti.' };
+  }
+  return { ok: true, presets: [...bySlot.values()].sort((a, b) => a.slot - b.slot), skipped, errors };
+}

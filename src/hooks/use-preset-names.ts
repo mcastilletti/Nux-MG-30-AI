@@ -123,5 +123,29 @@ export function usePresetNames() {
     [user, firestore]
   );
 
-  return { savedNames, savePresetName, isLoading };
+  /** Come savePresetName, per più slot con una sola scrittura (es. importazione di un backup). */
+  const savePresetNames = useCallback(
+    (names: PresetNamesMap) => {
+      const entries = Object.entries(names)
+        .map(([slot, name]) => [Number(slot), name.trim()] as const)
+        .filter(([, name]) => name.length > 0);
+      if (entries.length === 0) return;
+
+      setSavedNames((prev) => {
+        const next = { ...prev, ...Object.fromEntries(entries) };
+        persistToLocalStorage(next);
+        return next;
+      });
+
+      if (user && firestore) {
+        const docRef = doc(firestore, 'users', user.uid, 'settings', 'presetNames');
+        setDoc(docRef, Object.fromEntries(entries.map(([slot, name]) => [`slot_${slot}`, name])), { merge: true }).catch((err) => {
+          console.warn('[usePresetNames] Firestore write error:', err.code);
+        });
+      }
+    },
+    [user, firestore]
+  );
+
+  return { savedNames, savePresetName, savePresetNames, isLoading };
 }

@@ -26,14 +26,21 @@ export interface MG30Model {
 }
 
 const P1 = (id: string, name: string, def = 50) => ({ id, name, min: 0, max: 100, step: 1, default: def });
-const SUBDIV_OPTIONS = ['1/4', '1/8D', '1/8', '1/4T', '1/16', '1/8T', '1/32'];
+/**
+ * Ordine della pedaliera (da sinistra a destra sul selettore). Verificati sul display della MG-30:
+ * indice 5 = 1/8D e indice 6 = 1/4. Gli indici 0-4 seguono l'ordine documentato al contrario (ipotesi).
+ * Prima di questa correzione l'elenco era invertito: i preset salvati con lo schema 1 vengono convertiti
+ * da migratePresetDoc (src/lib/preset-migration.ts).
+ */
+export const SUBDIV_OPTIONS = ['1/32', '1/8T', '1/16', '1/4T', '1/8', '1/8D', '1/4'];
+const SUBDIV_DEFAULT = SUBDIV_OPTIONS.indexOf('1/8');
 const SUBDIV: MG30Parameter = {
   id: 'subdiv',
   name: 'Sub Div',
   min: 0,
   max: 6,
   step: 1,
-  default: 2,
+  default: SUBDIV_DEFAULT,
   options: SUBDIV_OPTIONS,
 };
 
@@ -58,7 +65,17 @@ export const MG30_MODELS: Record<EffectType, MG30Model[]> = {
   'wah': [
     { id: 'clyde', name: 'CLYDE', fullName: 'Fulltone Clyde Wah', parameters: [P1('position', 'Position')] },
     { id: 'crybbn', name: 'CRY BBN', fullName: 'Dunlop Cry Baby', parameters: [P1('position', 'Position')] },
-    { id: 'v847', name: 'V847', fullName: 'VOX V847 Wah', parameters: [P1('position', 'Position')] }
+    { id: 'v847', name: 'V847', fullName: 'VOX V847 Wah', parameters: [P1('position', 'Position')] },
+    // Quarto wah della pedaliera (letto sul display): Contour a sinistra, Range a destra con 6 posizioni senza nome.
+    {
+      id: 'horsewah',
+      name: 'HORSE WAH',
+      fullName: 'HORSE WAH',
+      parameters: [
+        P1('contour', 'Contour'),
+        { id: 'range', name: 'Range', min: 0, max: 5, step: 1, default: 0, options: ['1', '2', '3', '4', '5', '6'] },
+      ],
+    }
   ],
   'noise-gate': [
     { 
@@ -164,11 +181,11 @@ export const MG30_MODELS: Record<EffectType, MG30Model[]> = {
     { id: 'mod-flanger', name: 'FLANGER', fullName: 'BOSS BF-2 Flanger', parameters: [P1('level', 'Level'), P1('rate', 'Rate'), P1('width', 'Width'), P1('fback', 'F.BACK'), SUBDIV] },
     { id: 'mod-ph90', name: 'PH 90', fullName: 'MXR PHASE 90', parameters: [P1('speed', 'SPEED'), SUBDIV] },
     { id: 'mod-ph100', name: 'PHASE 100', fullName: 'MXR PHASE 100', parameters: [P1('intensity', 'INTENSITY'), P1('speed', 'SPEED'), SUBDIV] },
-    { id: 'mod-scf', name: 'S.C.F.', fullName: 'TC CHORUS', parameters: [P1('speed', 'SPEED'), P1('width', 'WIDTH'), { id: 'mode', name: 'MODE', min: 0, max: 2, step: 1, default: 0, options: ['CHORUS', 'PITCH MODULATOR', 'FLANGER'] }, P1('intensity', 'INTENSITY'), SUBDIV] },
-    { id: 'mod-uvibe', name: 'U-VIBE', fullName: 'DUNLOP UNIVIBE', parameters: [P1('speed', 'SPEED'), P1('volume', 'VOLUME'), P1('intensity', 'INTENSITY'), { id: 'mode', name: 'MODE', min: 0, max: 1, step: 1, default: 0, options: ['CHORUS', 'VIBRATO'] }, SUBDIV] },
+    { id: 'mod-scf', name: 'S.C.F.', fullName: 'TC CHORUS', parameters: [P1('speed', 'SPEED'), P1('width', 'WIDTH'), { id: 'mode', name: 'CH/FL', min: 0, max: 2, step: 1, default: 1, options: ['PITCH MODULATOR', 'CHORUS', 'FLANGER'] }, P1('intensity', 'INTENSITY'), SUBDIV] },
+    { id: 'mod-uvibe', name: 'U-VIBE', fullName: 'DUNLOP UNIVIBE', parameters: [P1('speed', 'SPEED'), P1('volume', 'VOLUME'), P1('intensity', 'INTENSITY'), { id: 'mode', name: 'CH/VIB', min: 0, max: 1, step: 1, default: 1, options: ['VIBRATO', 'CHORUS'] }, SUBDIV] },
     { id: 'mod-tremolo', name: 'TREMOLO', fullName: 'BOSS TR-3 TREMOLO', parameters: [P1('rate', 'RATE'), P1('depth', 'DEPTH'), SUBDIV] },
     { id: 'mod-rty', name: 'RTY SPK', fullName: 'ROTARY SPEAKER', parameters: [P1('balance', 'BALANCE'), P1('speed', 'SPEED'), SUBDIV] },
-    { id: 'mod-harmony', name: 'HARMONY', fullName: 'MXR HARMONIZER', parameters: [{ id: 'key', name: 'KEY', min: 0, max: 11, step: 1, default: 0, options: ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'] }, { id: 'scale', name: 'SCALE', min: 0, max: 1, step: 1, default: 0, options: ['MINOR', 'MAJOR'] }, { id: 'harm', name: 'HARM', min: 0, max: 9, step: 1, default: 5, options: ['-8', '-6', '-5', '-4', '-3', '+3', '+4', '+5', '+6', '+8'] }, P1('blend', 'BLEND')] }
+    { id: 'mod-harmony', name: 'HARMONY', fullName: 'MXR HARMONIZER', parameters: [{ id: 'key', name: 'KEY', min: 0, max: 11, step: 1, default: 0, options: ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'] }, { id: 'scale', name: 'SCALE', min: 0, max: 1, step: 1, default: 1, options: ['MAJOR', 'MINOR'] }, { id: 'harm', name: 'HARM', min: 0, max: 9, step: 1, default: 5, options: ['-8', '-6', '-5', '-4', '-3', '+3', '+4', '+5', '+6', '+8'] }, P1('blend', 'BLEND')] }
   ],
   'delay': [
     { id: 'dly-analog', name: 'ANALOG DELAY', fullName: 'Boss DM-2 Analog Delay', parameters: [P1('repeat', 'REPEAT'), P1('echo', 'ECHO'), P1('intensity', 'INTENSITY'), SUBDIV] },
@@ -177,7 +194,7 @@ export const MG30_MODELS: Record<EffectType, MG30Model[]> = {
     { id: 'dly-tape', name: 'TAPE ECHO', fullName: 'Maestro EchoPlex EP-4', parameters: [P1('time', 'TIME'), P1('level', 'LEVEL'), P1('repeat', 'REPEAT'), SUBDIV] },
     { id: 'dly-reverse', name: 'REVERSE DELAY', fullName: 'Boss DD8 Reverse Delay', parameters: [P1('time', 'TIME'), P1('mix', 'MIX'), P1('feedback', 'FEEDBACK'), SUBDIV] },
     { id: 'dly-pan', name: 'PAN DELAY', fullName: 'Ibanez DPL10 Stereo Pan Delay', parameters: [P1('time', 'TIME'), P1('repeat', 'REPEAT'), P1('level', 'DELAY LEVEL'), SUBDIV] },
-    { id: 'dly-duo', name: 'DUOTIME', fullName: 'NUX DUOTIME', parameters: [P1('level', 'LEVEL'), P1('time1', 'TIME1'), { id: 'subdiv1', name: 'SUB DIV1', min: 0, max: 6, step: 1, default: 2, options: SUBDIV_OPTIONS }, P1('repeat1', 'REPEAT1'), P1('time2', 'TIME2'), { id: 'subdiv2', name: 'SUB DIV2', min: 0, max: 6, step: 1, default: 2, options: SUBDIV_OPTIONS }, P1('repeat2', 'REPEAT2'), P1('para', 'PARA')] }
+    { id: 'dly-duo', name: 'DUOTIME', fullName: 'NUX DUOTIME', parameters: [P1('level', 'LEVEL'), P1('time1', 'TIME1'), { id: 'subdiv1', name: 'SUB DIV1', min: 0, max: 6, step: 1, default: SUBDIV_DEFAULT, options: SUBDIV_OPTIONS }, P1('repeat1', 'REPEAT1'), P1('time2', 'TIME2'), { id: 'subdiv2', name: 'SUB DIV2', min: 0, max: 6, step: 1, default: SUBDIV_DEFAULT, options: SUBDIV_OPTIONS }, P1('repeat2', 'REPEAT2'), P1('para', 'PARA')] }
   ],
   'reverb': [
     { id: 'room', name: 'ROOM', fullName: 'T-Rex Room Mate Reverb', parameters: [P1('decay', 'DECAY'), P1('tone', 'TONE'), P1('level', 'LEVEL')] },
@@ -209,3 +226,13 @@ export const MG30_MODELS: Record<EffectType, MG30Model[]> = {
     ] }
   ]
 };
+
+/**
+ * Il blocco compressore può ospitare un secondo EFX (tenendo premuto il blocco sulla pedaliera):
+ * dopo i 3 compressori la pedaliera numera i 12 modelli EFX nello stesso ordine (indice 3 + n).
+ * Verificato sui preset di fabbrica 67 (RED DIRT) e 87 (T SCREAM).
+ */
+export const COMPRESSOR_OWN_MODEL_COUNT = MG30_MODELS.compressor.length;
+MG30_MODELS.compressor.push(
+  ...MG30_MODELS.efx.map((model) => ({ ...model, fullName: `${model.fullName} (EFX nel blocco COMP)` })),
+);

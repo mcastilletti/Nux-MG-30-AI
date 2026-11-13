@@ -1,9 +1,14 @@
 import { EffectState, EffectType, Preset } from '@/types/preset';
 import { ensurePresetScenes } from '@/stores/use-preset-store';
 import { normalizePresetState } from '@/lib/mg30-preset-normalizer';
+import { migrateEffectsFromSchema1 } from '@/lib/preset-migration';
 
-/** Versione dello schema dei preset salvati (Firestore, cache locale, file JSON). */
-export const PRESET_SCHEMA_VERSION = 1;
+/**
+ * Versione dello schema dei preset salvati (Firestore, cache locale, file JSON).
+ * 2: i selettori Sub Div, Harmony Scale, S.C.F. e U-Vibe Mode seguono l'ordine della pedaliera
+ *    (i documenti con schema 1 vengono convertiti in lettura da fromPresetDoc).
+ */
+export const PRESET_SCHEMA_VERSION = 2;
 export const PRESET_EXPORT_FORMAT = 'mg30-studio-presets';
 
 const EFFECT_TYPES: EffectType[] = ['wah', 'noise-gate', 'compressor', 'efx', 'amp', 'ir', 'sr', 'modulation', 'delay', 'reverb', 'vol', 'eq'];
@@ -105,14 +110,17 @@ export function fromPresetDoc(data: unknown): Preset | null {
   if (!isRecord(data)) return null;
   const slot = data.slot;
   if (typeof slot !== 'number' || !Number.isInteger(slot) || slot < 1 || slot > 128) return null;
-  const effects = parseEffects(data.effects);
+  // Documenti senza versione o con schema 1: selettori nell'ordine vecchio dell'app.
+  const fromSchema1 = typeof data.schemaVersion !== 'number' || data.schemaVersion < 2;
+  const migrate = (list: EffectState[] | null) => (list && fromSchema1 ? migrateEffectsFromSchema1(list) : list);
+  const effects = migrate(parseEffects(data.effects));
   if (!effects) return null;
 
   const scenes: Record<number, EffectState[]> = {};
   if (isRecord(data.scenes)) {
     for (const [key, value] of Object.entries(data.scenes)) {
       const index = Number(key);
-      const parsed = parseEffects(value);
+      const parsed = migrate(parseEffects(value));
       if ([0, 1, 2].includes(index) && parsed) scenes[index] = parsed;
     }
   }

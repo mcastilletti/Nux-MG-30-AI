@@ -159,8 +159,9 @@ export function normalizePresetState(preset: Preset): PresetStateNormalizationRe
       let processedValue = value;
 
       // 🔧 Fix 1: Scalatura proporzionale per valori fuori range ma dentro 0-100
-      // Se il valore è tra 0 e 100 ma fuori dal range del parametro, scala proporzionalmente
-      if (value >= 0 && value <= 100 && (value < parameter.min || value > parameter.max)) {
+      // Se il valore è tra 0 e 100 ma fuori dal range del parametro, scala proporzionalmente.
+      // Non vale per i selettori (options): il valore è un indice, va solo riportato nei limiti.
+      if (!parameter.options && value >= 0 && value <= 100 && (value < parameter.min || value > parameter.max)) {
         const percent = value / 100;
         processedValue = parameter.min + percent * (parameter.max - parameter.min);
         processedValue = Math.round(processedValue / parameter.step) * parameter.step;
@@ -181,22 +182,8 @@ export function normalizePresetState(preset: Preset): PresetStateNormalizationRe
     }
   }
 
-  // 🔧 Fix 3: Post-processing vol.min/max sempre ≥ 50
-  const volEffect = normalizedPreset.effects.find(e => e.type === 'vol');
-  if (volEffect && volEffect.parameters) {
-    const volMin = Number(volEffect.parameters.min);
-    const volMax = Number(volEffect.parameters.max);
-    if (volEffect.parameters.min !== undefined && volMin < 50) {
-      volEffect.parameters.min = 50;
-      correctedCount++;
-      warnings.push(`vol.min forzato a 50 (valore minimo consentito).`);
-    }
-    if (volEffect.parameters.max !== undefined && volMax < 50) {
-      volEffect.parameters.max = 100;
-      correctedCount++;
-      warnings.push(`vol.max forzato a 100 (valore < 50 non consentito).`);
-    }
-  }
+  // VOL MIN/MAX: bastano i limiti del modello (MIN 0..50, MAX 51..100). In passato MIN veniva forzato
+  // a 50, cancellando i valori di fabbrica (0) e quelli impostati dall'utente a ogni ricarica.
 
   return { preset: normalizedPreset, correctedCount, warnings };
 }

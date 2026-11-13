@@ -26,7 +26,7 @@ def convert(raw, p):
     if p['id'].startswith('subdiv'):
         return f'raw {raw} (codifica Sub Div non verificata)'
     if p['id'] == 'range':
-        return f'indice {raw & 0x0F} (raw {raw}, nomi da verificare)'
+        return (raw & 0x0F) + 1  # posizione 1-6 del selettore (indice 0-5 + 1; da verificare sul display)
     if p.get('options'):
         idx = raw & 0x0F if raw >= 128 else raw
         return p['options'][idx] if idx < len(p['options']) else idx

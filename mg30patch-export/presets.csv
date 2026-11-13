@@ -47,7 +47,7 @@ slot,name,block,on,model,params (nome=valore)
 4,CT-PlexiLead,ir,ON,USER IR CAB,Level=0; Lo Cut=20; Hi Cut=20000
 4,CT-PlexiLead,sr,off,SEND / RETURN,Send=64; Return=64
 4,CT-PlexiLead,vol,ON,PATCH VOLUME,VOL MIN=0; VOL MAX=100
-5,PeteT 80's Clean,wah,off,HORSE WAH (non presente nell'app),"Contour=33; Range=indice 3 (raw 227, nomi da verificare)"
+5,PeteT 80's Clean,wah,off,HORSE WAH (non presente nell'app),Contour=33; Range=4
 5,PeteT 80's Clean,compressor,ON,Studio Compressor,Threshold=58; Ratio=40; Gain=40; Release=36
 5,PeteT 80's Clean,efx,off,JHS Angry Charlie,Volume=11; Tone=79; Gain=56
 5,PeteT 80's Clean,amp,ON,2008 Fender Supersonic,Gain=39; Master=89; Bass=35; Middle=48; Treble=68; Bright SW=100; Bias=42; Level=40
@@ -83,7 +83,7 @@ slot,name,block,on,model,params (nome=valore)
 7,PeteT Raw BE,ir,ON,MARSHALL 4X12,Mic=U87; Axis=CENTER; Level=0; Lo Cut=20; Hi Cut=20000
 7,PeteT Raw BE,sr,off,SEND / RETURN,Send=64; Return=64
 7,PeteT Raw BE,vol,ON,PATCH VOLUME,VOL MIN=0; VOL MAX=100
-8,PeteT Rotorgrind,wah,off,HORSE WAH (non presente nell'app),"Contour=33; Range=indice 3 (raw 227, nomi da verificare)"
+8,PeteT Rotorgrind,wah,off,HORSE WAH (non presente nell'app),Contour=33; Range=4
 8,PeteT Rotorgrind,compressor,off,Ross Compressor,Sustain=19; Level=36
 8,PeteT Rotorgrind,efx,ON,Boss BLUES DRIVER,Level=33; Tone=37; Gain=37
 8,PeteT Rotorgrind,amp,ON,2008 Fender Supersonic,Gain=45; Master=78; Bass=33; Middle=46; Treble=55; Bright SW=100; Bias=50; Level=26
@@ -119,7 +119,7 @@ slot,name,block,on,model,params (nome=valore)
 10,LT BLUES DELUXE,ir,ON,USER IR CAB,Level=0; Lo Cut=422; Hi Cut=10550
 10,LT BLUES DELUXE,sr,off,SEND / RETURN,Send=64; Return=64
 10,LT BLUES DELUXE,vol,ON,PATCH VOLUME,VOL MIN=0; VOL MAX=100
-11,LT PLEXI CRUNCH,wah,off,HORSE WAH (non presente nell'app),"Contour=61; Range=indice 2 (raw 226, nomi da verificare)"
+11,LT PLEXI CRUNCH,wah,off,HORSE WAH (non presente nell'app),Contour=61; Range=3
 11,LT PLEXI CRUNCH,compressor,off,Ross Compressor,Sustain=81; Level=20
 11,LT PLEXI CRUNCH,efx,ON,Ibanez TUBE SCREAMER,Drive=36; Tone=77; Level=89
 11,LT PLEXI CRUNCH,amp,ON,68 Marshall Plexi 100W,Gain=18; Master=100; Bass=24; Middle=70; Treble=29; Presence=37; Bias=61; Level=69
@@ -167,7 +167,7 @@ slot,name,block,on,model,params (nome=valore)
 14,Hermans Cleanish,ir,ON,64 DELUXE REVERB,Mic=R122; Axis=MIDDLE; Level=0; Lo Cut=20; Hi Cut=20000
 14,Hermans Cleanish,sr,off,SEND / RETURN,Send=64; Return=64
 14,Hermans Cleanish,vol,ON,PATCH VOLUME,VOL MIN=0; VOL MAX=100
-15,Hermans Crunchy,wah,off,HORSE WAH (non presente nell'app),"Contour=33; Range=indice 3 (raw 227, nomi da verificare)"
+15,Hermans Crunchy,wah,off,HORSE WAH (non presente nell'app),Contour=33; Range=4
 15,Hermans Crunchy,compressor,ON,Keeley Compressor,Sustain=30; Level=66; Clipping=65
 15,Hermans Crunchy,efx,off,Xotic RC BOOSTER,Gain=18; Vol=48; Bass=36; Treble=57
 15,Hermans Crunchy,amp,ON,1967 Marshall JTM45,Gain=34; Master=71; Bass=68; Middle=63; Treble=61; Presence=66; Bias=59; Level=80
@@ -263,7 +263,7 @@ slot,name,block,on,model,params (nome=valore)
 22,A. Barrero Clean,ir,ON,64 DELUXE REVERB,Mic=U87; Axis=CENTER; Level=0; Lo Cut=20; Hi Cut=20000
 22,A. Barrero Clean,sr,off,SEND / RETURN,Send=64; Return=64
 22,A. Barrero Clean,vol,ON,PATCH VOLUME,VOL MIN=0; VOL MAX=100
-23,A. Barrero Lead,wah,off,HORSE WAH (non presente nell'app),"Contour=33; Range=indice 3 (raw 227, nomi da verificare)"
+23,A. Barrero Lead,wah,off,HORSE WAH (non presente nell'app),Contour=33; Range=4
 23,A. Barrero Lead,compressor,off,Ross Compressor,Sustain=81; Level=20
 23,A. Barrero Lead,efx,ON,Boss DS-1 DISTORTION,Level=39; Tone=11; Drive=52
 23,A. Barrero Lead,amp,ON,1989 Marshall 1987 X 50W,Gain=78; Master=61; Bass=62; Middle=54; Treble=51; Presence=68; Bias=49; Level=52
@@ -371,7 +371,7 @@ slot,name,block,on,model,params (nome=valore)
 31,SFHairNation-800,ir,ON,MARSHALL 4X12,Mic=R121; Axis=CENTER; Level=0; Lo Cut=20; Hi Cut=20000
 31,SFHairNation-800,sr,off,SEND / RETURN,Send=64; Return=79
 31,SFHairNation-800,vol,ON,PATCH VOLUME,VOL MIN=0; VOL MAX=100
-32,SF Space Ocean,wah,off,HORSE WAH (non presente nell'app),"Contour=33; Range=indice 3 (raw 227, nomi da verificare)"
+32,SF Space Ocean,wah,off,HORSE WAH (non presente nell'app),Contour=33; Range=4
 32,SF Space Ocean,compressor,off,Keeley Compressor,Sustain=35; Level=66; Clipping=69
 32,SF Space Ocean,efx,off,Xotic RC BOOSTER,Gain=19; Vol=56; Bass=31; Treble=67
 32,SF Space Ocean,amp,ON,2008 Fender Supersonic,Gain=27; Master=100; Bass=40; Middle=52; Treble=47; Bright SW=100; Bias=42; Level=92
@@ -419,7 +419,7 @@ slot,name,block,on,model,params (nome=valore)
 35,LeoGibson Crunch,ir,ON,MARSHALL 4X12,Mic=S57; Axis=CENTER; Level=0; Lo Cut=20; Hi Cut=20000
 35,LeoGibson Crunch,sr,off,SEND / RETURN,Send=64; Return=64
 35,LeoGibson Crunch,vol,ON,PATCH VOLUME,VOL MIN=0; VOL MAX=100
-36,LeoGibson Solo,wah,off,HORSE WAH (non presente nell'app),"Contour=33; Range=indice 3 (raw 227, nomi da verificare)"
+36,LeoGibson Solo,wah,off,HORSE WAH (non presente nell'app),Contour=33; Range=4
 36,LeoGibson Solo,compressor,off,Keeley Compressor,Sustain=35; Level=66; Clipping=69
 36,LeoGibson Solo,efx,off,Xotic RC BOOSTER,Gain=19; Vol=56; Bass=31; Treble=67
 36,LeoGibson Solo,amp,ON,1980 Soldano SLO 100,Gain=79; Master=61; Bass=55; Middle=51; Treble=61; Presence=68; Bias=59; Level=60
@@ -527,7 +527,7 @@ slot,name,block,on,model,params (nome=valore)
 44,Emir METAL,ir,ON,MARSHALL VINTAGE 30 4X12,Mic=U87; Axis=CENTER; Level=0; Lo Cut=20; Hi Cut=20000
 44,Emir METAL,sr,off,SEND / RETURN,Send=64; Return=64
 44,Emir METAL,vol,ON,PATCH VOLUME,VOL MIN=0; VOL MAX=100
-45,JL-Super RVD,wah,off,HORSE WAH (non presente nell'app),"Contour=100; Range=indice 2 (raw 226, nomi da verificare)"
+45,JL-Super RVD,wah,off,HORSE WAH (non presente nell'app),Contour=100; Range=3
 45,JL-Super RVD,compressor,ON,Keeley Compressor,Sustain=35; Level=80; Clipping=57
 45,JL-Super RVD,efx,off,JHS Morning Glory,Volume=50; Drive=85; Tone=50
 45,JL-Super RVD,amp,ON,2008 Fender Supersonic,Gain=50; Master=100; Bass=23; Middle=20; Treble=25; Bright SW=100; Bias=60; Level=100
@@ -539,7 +539,7 @@ slot,name,block,on,model,params (nome=valore)
 45,JL-Super RVD,ir,ON,65 TWIN REVERB,Mic=R121; Axis=EDGE; Level=-12; Lo Cut=20; Hi Cut=12650
 45,JL-Super RVD,sr,off,SEND / RETURN,Send=64; Return=64
 45,JL-Super RVD,vol,ON,PATCH VOLUME,VOL MIN=0; VOL MAX=100
-46,JL-Warm Lead,wah,off,HORSE WAH (non presente nell'app),"Contour=33; Range=indice 5 (raw 229, nomi da verificare)"
+46,JL-Warm Lead,wah,off,HORSE WAH (non presente nell'app),Contour=33; Range=6
 46,JL-Warm Lead,compressor,off,Ross Compressor,Sustain=35; Level=80
 46,JL-Warm Lead,efx,ON,Xotic AC BOOSTER,Gain=0; Vol=100; Bass=50; Treble=50
 46,JL-Warm Lead,amp,ON,1985 Mesa Dual Rectifier,Gain=5; Master=80; Bass=0; Middle=100; Treble=0; Presence=0; Bias=100; Level=62
@@ -551,7 +551,7 @@ slot,name,block,on,model,params (nome=valore)
 46,JL-Warm Lead,ir,ON,MARSHALL VINTAGE 30 4X12,Mic=U87; Axis=EDGE; Level=5; Lo Cut=598; Hi Cut=5000
 46,JL-Warm Lead,sr,off,SEND / RETURN,Send=64; Return=64
 46,JL-Warm Lead,vol,ON,PATCH VOLUME,VOL MIN=0; VOL MAX=100
-47,JL-PLEXI,wah,off,HORSE WAH (non presente nell'app),"Contour=100; Range=indice 5 (raw 229, nomi da verificare)"
+47,JL-PLEXI,wah,off,HORSE WAH (non presente nell'app),Contour=100; Range=6
 47,JL-PLEXI,compressor,off,Ross Compressor,Sustain=35; Level=80
 47,JL-PLEXI,efx,off,Ibanez TUBE SCREAMER,Drive=20; Tone=40; Level=100
 47,JL-PLEXI,amp,ON,68 Marshall Plexi 100W,Gain=26; Master=100; Bass=0; Middle=100; Treble=0; Presence=0; Bias=100; Level=60
@@ -563,7 +563,7 @@ slot,name,block,on,model,params (nome=valore)
 47,JL-PLEXI,ir,ON,MARSHALL VINTAGE 30 4X12,Mic=U87; Axis=CENTER; Level=2; Lo Cut=422; Hi Cut=5000
 47,JL-PLEXI,sr,off,SEND / RETURN,Send=64; Return=64
 47,JL-PLEXI,vol,ON,PATCH VOLUME,VOL MIN=0; VOL MAX=100
-48,JL-Heavy,wah,off,HORSE WAH (non presente nell'app),"Contour=100; Range=indice 5 (raw 229, nomi da verificare)"
+48,JL-Heavy,wah,off,HORSE WAH (non presente nell'app),Contour=100; Range=6
 48,JL-Heavy,compressor,off,Keeley Compressor,Sustain=30; Level=100; Clipping=65
 48,JL-Heavy,efx,ON,Ibanez TUBE SCREAMER,Drive=0; Tone=40; Level=100
 48,JL-Heavy,amp,ON,Bognar Uberschall,Gain=4; Master=81; Bass=40; Middle=80; Treble=60; Presence=39; Bias=100; Level=100
@@ -731,7 +731,7 @@ slot,name,block,on,model,params (nome=valore)
 61,Joko Bounce,ir,ON,MARSHALL VINTAGE 30 4X12,Mic=U87; Axis=CENTER; Level=0; Lo Cut=20; Hi Cut=20000
 61,Joko Bounce,sr,off,SEND / RETURN,Send=64; Return=64
 61,Joko Bounce,vol,ON,PATCH VOLUME,VOL MIN=0; VOL MAX=100
-62,Joko Funko,wah,off,HORSE WAH (non presente nell'app),"Contour=33; Range=indice 3 (raw 227, nomi da verificare)"
+62,Joko Funko,wah,off,HORSE WAH (non presente nell'app),Contour=33; Range=4
 62,Joko Funko,compressor,ON,Ross Compressor,Sustain=29; Level=40
 62,Joko Funko,efx,ON,Xotic RC BOOSTER,Gain=4; Vol=48; Bass=33; Treble=57
 62,Joko Funko,amp,ON,65 Fender Twin Reverb,Gain=55; Master=44; Bass=45; Middle=34; Treble=57; Bright SW=100; Bias=51; Level=69
@@ -791,7 +791,7 @@ slot,name,block,on,model,params (nome=valore)
 66,Joko Space Lead,ir,ON,MARSHALL VINTAGE 30 4X12,Mic=C3000; Axis=MIDDLE; Level=0; Lo Cut=20; Hi Cut=20000
 66,Joko Space Lead,sr,off,SEND / RETURN,Send=64; Return=64
 66,Joko Space Lead,vol,ON,PATCH VOLUME,VOL MIN=0; VOL MAX=100
-67,Joko Sunny Side,wah,off,HORSE WAH (non presente nell'app),"Contour=70; Range=indice 2 (raw 226, nomi da verificare)"
+67,Joko Sunny Side,wah,off,HORSE WAH (non presente nell'app),Contour=70; Range=3
 67,Joko Sunny Side,compressor,ON,(modello 12 non presente nell'app),Param 1=38; Param 2=55; Param 3=51
 67,Joko Sunny Side,efx,ON,Ibanez TUBE SCREAMER,Drive=55; Tone=40; Level=62
 67,Joko Sunny Side,amp,ON,67 Marshall Plexi 45W,Gain=61; Master=69; Bass=37; Middle=49; Treble=36; Presence=51; Bias=100; Level=64
@@ -851,7 +851,7 @@ slot,name,block,on,model,params (nome=valore)
 71,JonK's SemiClean,ir,ON,64 DELUXE REVERB,Mic=U87; Axis=MIDDLE; Level=0; Lo Cut=363; Hi Cut=17450
 71,JonK's SemiClean,sr,off,SEND / RETURN,Send=64; Return=64
 71,JonK's SemiClean,vol,ON,PATCH VOLUME,VOL MIN=0; VOL MAX=100
-72,JonK's Solo,wah,off,HORSE WAH (non presente nell'app),"Contour=33; Range=indice 3 (raw 227, nomi da verificare)"
+72,JonK's Solo,wah,off,HORSE WAH (non presente nell'app),Contour=33; Range=4
 72,JonK's Solo,compressor,off,Keeley Compressor,Sustain=13; Level=67; Clipping=69
 72,JonK's Solo,efx,off,Xotic RC BOOSTER,Gain=19; Vol=56; Bass=50; Treble=55
 72,JonK's Solo,amp,ON,1999 DEIZEL VH4,Gain=68; Master=55; Bass=58; Middle=70; Treble=70; Presence=70; Bias=59; Level=50

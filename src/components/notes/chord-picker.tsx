@@ -236,7 +236,7 @@ export function ChordChip({ chord, editMode, className, onInsertAfter, onInsertB
         <button
           type="button"
           aria-label={editMode ? `Accordo ${chord}: modifica` : (isRepeat(chord) ? `Ripetizione ${chord}` : `Accordo ${chord}: mostra le posizioni`)}
-          className={cn('inline-flex min-h-9 items-center rounded-full border px-3 font-black shadow-sm transition-colors', className)}
+          className={cn('inline-flex min-h-9 items-center rounded-full border px-3 font-bold shadow-sm transition-colors', className)}
         >
           {chord}
         </button>

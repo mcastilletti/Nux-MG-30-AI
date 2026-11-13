@@ -9,19 +9,14 @@ import { Sliders, Library, Zap, Download, RotateCw, Usb, NotebookPen, Users } fr
 import { ElectricGuitarIcon } from '@/components/icons/electric-guitar-icon';
 import Link from 'next/link';
 
+import { PageHeader } from '@/components/common/page-header';
 export default function HomePage() {
   const { status, refreshDevices, availableDevices } = useMidiStore(useShallow((s) => ({ status: s.status, refreshDevices: s.refreshDevices, availableDevices: s.availableDevices })));
 
   return (
     <>
       <div className="mx-auto max-w-7xl space-y-8 py-2 md:space-y-10 md:py-4">
-        <header className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="max-w-3xl">
-            <p className="section-kicker mb-2">MG30 Studio</p>
-            <h2 className="text-3xl font-bold tracking-tight md:text-4xl">Il tuo rig, sempre pronto.</h2>
-            <p className="mt-2 max-w-2xl text-sm text-muted-foreground md:text-base">Gestisci preset, scene ed effetti del tuo NUX MG-30 con controlli immediati.</p>
-          </div>
-        </header>
+        <PageHeader kicker="MG30 Studio" title="Il tuo rig, sempre pronto." description="Gestisci preset, scene ed effetti del tuo NUX MG-30 con controlli immediati." />
 
         {/* Navigation Buttons - Bento Grid Layout */}
         <div className="grid auto-rows-fr grid-cols-2 gap-3 md:gap-4 lg:grid-cols-4">
@@ -139,14 +134,14 @@ export default function HomePage() {
                   </CardTitle>
                   <CardDescription>Panoramica connettività hardware</CardDescription>
                 </div>
-                <Button variant="outline" size="sm" onClick={refreshDevices} className="border-white/10 hover:bg-white/5">
+                <Button variant="outline" size="sm" onClick={refreshDevices} className="">
                   <RotateCw className="w-4 h-4 mr-2" />
                   Aggiorna
                 </Button>
               </div>
             </CardHeader>
             <CardContent>
-              <div className="flex items-center gap-6 p-6 rounded-xl bg-card/50 border border-white/5 shadow-[0_4px_20px_-8px_rgba(0,0,0,0.3)]">
+              <div className="flex items-center gap-6 rounded-xl border border-border bg-inset p-6">
                 <div className={`p-4 rounded-full ${status === 'connected' ? 'bg-success/10 text-success border border-success/20' : 'bg-destructive/10 text-destructive border border-destructive/20'}`}>
                    <Usb className="w-8 h-8" />
                 </div>
@@ -164,13 +159,13 @@ export default function HomePage() {
                 <div className="mt-6 space-y-4">
                   <h3 className="text-sm font-semibold">Porte MIDI Disponibili</h3>
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="p-4 rounded-xl bg-card/50 border border-white/5 shadow-sm">
+                    <div className="rounded-xl border border-border bg-inset p-4">
                       <p className="text-label text-muted-foreground uppercase font-bold mb-2">Input</p>
                       {availableDevices.inputs.map(d => (
                         <div key={d.id} className="text-xs truncate">{d.name}</div>
                       ))}
                     </div>
-                    <div className="p-4 rounded-xl bg-card/50 border border-white/5 shadow-sm">
+                    <div className="rounded-xl border border-border bg-inset p-4">
                       <p className="text-label text-muted-foreground uppercase font-bold mb-2">Output</p>
                       {availableDevices.outputs.map(d => (
                         <div key={d.id} className="text-xs truncate">{d.name}</div>

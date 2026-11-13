@@ -46,7 +46,7 @@ export const PlaylistNoteRow = React.memo(function PlaylistNoteRow({
       className={cn(
         'flex items-stretch overflow-hidden rounded-xl border bg-card/60 transition-colors hover:border-primary/50',
         isBlock ? 'border-primary/30 bg-primary/10' : 'border-border',
-        isDragging && 'border-primary/50 shadow-2xl shadow-primary/30',
+        isDragging && 'border-primary/50 shadow-xl',
         isHighlighted && 'border-primary ring-2 ring-primary',
       )}
     >
@@ -59,10 +59,10 @@ export const PlaylistNoteRow = React.memo(function PlaylistNoteRow({
       )}
       <button type="button" onClick={() => onOpen(note)} className="flex min-h-16 min-w-0 flex-1 items-center gap-3 py-3 pl-1 pr-2 text-left">
         {position !== undefined && (
-          <span className="w-7 shrink-0 text-right text-caption font-black tabular-nums text-muted-foreground" aria-label={`Posizione ${position}`}>{position}</span>
+          <span className="w-7 shrink-0 text-right text-caption font-bold tabular-nums text-muted-foreground" aria-label={`Posizione ${position}`}>{position}</span>
         )}
         <span className="min-w-0 flex-1">
-          <span className={cn('block break-words text-[16px] font-black uppercase leading-tight', isBlock && 'text-primary')}>{note.title || 'Senza titolo'}</span>
+          <span className={cn('block break-words text-base font-bold uppercase leading-tight', isBlock && 'text-primary')}>{note.title || 'Senza titolo'}</span>
           {(presetText || (chips && chips.length > 0)) && (
             <span className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-label font-bold uppercase">
               {presetText && (

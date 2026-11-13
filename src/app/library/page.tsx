@@ -25,10 +25,12 @@ import { buildPresetZip, isZipFile, readPresetZip } from '@/lib/preset-zip';
 import { downloadBlob } from '@/lib/download';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { formatSlotLabel } from '@/lib/slot';
+import { PresetSummary } from '@/components/library/PresetSummary';
 import { LibraryTabs } from '@/components/library/LibraryTabs';
 import { SendToSlotDialog } from '@/components/library/SendToSlotDialog';
 
 
+import { PageHeader } from '@/components/common/page-header';
 export default function LibraryPage() {
   const router = useRouter();
   const [view, setView] = useState<'grid' | 'list'>('grid');
@@ -322,13 +324,11 @@ export default function LibraryPage() {
   return (
     <>
       <div className="mx-auto max-w-7xl space-y-5 py-1 md:space-y-7 md:py-2">
-        <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <p className="section-kicker mb-1">Preset manager</p>
-            <h2 className="text-2xl font-bold tracking-tight md:text-3xl">Libreria preset</h2>
-            <p className="mt-1 text-sm text-muted-foreground">Trova rapidamente il suono giusto e invialo alla pedaliera.</p>
-          </div>
-          <div className="flex w-full flex-wrap items-center gap-2 md:w-auto">
+        <PageHeader
+          kicker="Preset manager"
+          title="Libreria preset"
+          description="Trova rapidamente il suono giusto e invialo alla pedaliera."
+          actions={<>
             {/* Indicatore stato cloud */}
             <div className="flex items-center gap-1.5 text-caption text-muted-foreground">
               {namesLoading ? (
@@ -374,8 +374,8 @@ export default function LibraryPage() {
               </DropdownMenuContent>
             </DropdownMenu>
             <input ref={importInputRef} type="file" multiple accept="application/json,.json,application/zip,.zip" className="hidden" onChange={handleImportFile} aria-label="File di preset da importare" />
-          </div>
-        </header>
+          </>}
+        />
 
         <LibraryTabs />
 
@@ -569,7 +569,7 @@ export default function LibraryPage() {
                       </div>
                     ) : (
                       <CardTitle
-                        className={`text-lg mt-2 truncate font-bold ${!hasCustomName ? 'text-muted-foreground/80 font-mono text-base' : ''}`}
+                        className={`text-lg mt-2 truncate font-bold ${!hasCustomName ? 'text-muted-foreground text-base' : ''}`}
                         title={hasCustomName ? displayName : 'Clicca ⋮ → Rinomina per aggiungere un nome'}
                       >
                         {/* L4: pulsante vero esteso a tutta la scheda (gli altri comandi stanno sopra, z-10). */}
@@ -579,16 +579,13 @@ export default function LibraryPage() {
                           aria-label={isBulkMode ? `${isSelected ? 'Deseleziona' : 'Seleziona'} ${formatSlotLabel(preset.slot)} ${displayName}` : `Apri ${formatSlotLabel(preset.slot)} ${displayName}`}
                           className="max-w-full truncate text-left outline-none after:absolute after:inset-0 after:rounded-2xl after:content-[''] focus-visible:after:ring-2 focus-visible:after:ring-primary"
                         >
-                          {displayName}
+                          {hasCustomName ? displayName : 'Senza nome'}
                         </button>
                       </CardTitle>
                     )}
                   </CardHeader>
                   <CardContent className="pb-4">
-                    <div className="flex flex-col gap-1">
-                      <div className="text-label text-muted-foreground uppercase font-bold tracking-wider">Amplificatore</div>
-                      <div className="text-sm font-medium">{preset.ampModel}</div>
-                    </div>
+                    <PresetSummary effects={preset.effects} />
                   </CardContent>
                   <CardFooter className="flex items-center justify-between border-t border-border/30 bg-secondary/10 pt-2">
                     <span className="text-label text-muted-foreground font-mono">PC: {preset.slot - 1}</span>
@@ -695,7 +692,7 @@ export default function LibraryPage() {
                           )}
                         </td>
                         <td className="p-4">
-                          <Badge variant="secondary" className="text-label bg-secondary/50">{preset.ampModel}</Badge>
+                          <PresetSummary effects={preset.effects} compact />
                         </td>
                         <td className="p-4 text-right">
                           <div className="flex items-center justify-end gap-2">

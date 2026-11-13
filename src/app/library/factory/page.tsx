@@ -10,6 +10,7 @@ import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { EmptyState } from '@/components/common/empty-state';
 import { LibraryTabs } from '@/components/library/LibraryTabs';
+import { PresetSummary } from '@/components/library/PresetSummary';
 import { SendToSlotDialog } from '@/components/library/SendToSlotDialog';
 import { useFactoryNotes } from '@/hooks/use-factory-notes';
 import { useToast } from '@/hooks/use-toast';
@@ -18,19 +19,14 @@ import { describeFactoryPresets } from '@/ai/flows/factory-preset-notes';
 import { FACTORY_PRESETS, factoryPresetToPreset, type FactoryPreset } from '@/lib/factory-presets';
 import { factoryNoteId, parseFactoryNote, pendingFactoryBatches, type FactoryPresetNote } from '@/lib/factory-notes';
 import { GENRES, type Genre } from '@/lib/genres';
-import { MG30_MODELS } from '@/lib/mg30-data';
 import { formatSlotLabel } from '@/lib/slot';
 import { songsForFactoryNote, songsWithoutGenre } from '@/lib/factory-suggestions';
 import { useEstimateSongGenres } from '@/hooks/use-song-genres';
 import { useNotesCache } from '@/stores/use-notes-cache';
 
+import { PageHeader } from '@/components/common/page-header';
 const ALL = 'all';
 const ALL_SLOTS = FACTORY_PRESETS.map((p) => p.slot);
-
-const ampOf = (preset: FactoryPreset) => {
-  const amp = preset.effects.find((e) => e.type === 'amp');
-  return amp ? MG30_MODELS.amp.find((m) => m.id === amp.model)?.fullName ?? amp.model : '';
-};
 
 export default function FactoryPresetsPage() {
   const { notesBySlot, hydrated, saveMany } = useFactoryNotes();
@@ -116,14 +112,10 @@ export default function FactoryPresetsPage() {
 
   return (
     <div className="mx-auto max-w-7xl space-y-5 py-1 md:space-y-7 md:py-2">
-      <header className="space-y-4">
-        <div>
-          <p className="section-kicker mb-1">Preset manager</p>
-          <h2 className="text-2xl font-bold tracking-tight md:text-3xl">Preset di fabbrica</h2>
-          <p className="mt-1 text-sm text-muted-foreground">I 128 preset originali della MG-30, con numero e nome di fabbrica. Puoi inserirne uno in qualsiasi slot.</p>
-        </div>
+      <div className="space-y-4">
+        <PageHeader kicker="Preset manager" title="Preset di fabbrica" description="I 128 preset originali della MG-30, con numero e nome di fabbrica. Puoi inserirne uno in qualsiasi slot." />
         <LibraryTabs />
-      </header>
+      </div>
 
       <Card className="app-surface rounded-2xl">
         <CardContent className="flex flex-col gap-3 p-4 md:flex-row md:items-center md:justify-between">
@@ -210,9 +202,10 @@ export default function FactoryPresetsPage() {
                     {note && <Badge variant="secondary" className="ml-auto text-label">{note.soundType}</Badge>}
                   </div>
                   <CardTitle className="mt-2 truncate text-lg font-bold" title={preset.name}>{preset.name}</CardTitle>
-                  <p className="truncate text-caption text-muted-foreground">{ampOf(preset)}{preset.userIR ? ` · IR ${preset.userIR}` : ''}</p>
+                  {preset.userIR && <p className="truncate text-caption text-muted-foreground">IR {preset.userIR}</p>}
                 </CardHeader>
-                <CardContent className="flex-1 space-y-2 pb-4 text-sm">
+                <CardContent className="flex-1 space-y-3 pb-4 text-sm">
+                  <PresetSummary effects={preset.effects} />
                   {note ? (
                     <>
                       <div className="flex flex-wrap gap-1">

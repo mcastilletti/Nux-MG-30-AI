@@ -248,6 +248,7 @@ export default function EditorPage() {
   return (
     <>
       <div className="relative mx-auto max-w-[1440px] space-y-3 py-1 md:space-y-4 md:py-2">
+        <h1 className="sr-only">Editor</h1>
         {isEditorSyncing && (
           <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/60 backdrop-blur-sm rounded-xl">
             <Card role="status" aria-live="polite" className="p-8 flex flex-col items-center gap-4 shadow-2xl border-primary/40 bg-card">

@@ -9,6 +9,7 @@ import { Database, ShieldCheck, ExternalLink, AlertCircle, Globe, HelpCircle, Te
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useMidiLogStore } from '@/stores/use-midi-log-store';
 
+import { PageHeader } from '@/components/common/page-header';
 // ── MIDI Monitor (componente separato per evitare re-render pesanti) ────────
 function MidiMonitorCard() {
   const midiLog = useMidiLogStore(s => s.midiLog);
@@ -70,10 +71,7 @@ export default function SettingsPage() {
   return (
     <>
       <div className="max-w-4xl mx-auto space-y-8 pb-20">
-        <header>
-          <h2 className="text-3xl font-bold tracking-tight">Impostazioni</h2>
-          <p className="text-muted-foreground">Gestione account, cloud storage e preferenze hardware.</p>
-        </header>
+        <PageHeader title="Impostazioni" description="Gestione account, cloud storage e preferenze hardware." />
 
         {!user && (
           <Alert variant="destructive" className="border-warning/50 bg-warning/5">

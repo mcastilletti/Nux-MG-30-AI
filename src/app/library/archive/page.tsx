@@ -11,18 +11,14 @@ import { IconButton } from '@/components/common/icon-button';
 import { ConfirmDialog } from '@/components/common/confirm-dialog';
 import { EmptyState } from '@/components/common/empty-state';
 import { LibraryTabs } from '@/components/library/LibraryTabs';
+import { PresetSummary } from '@/components/library/PresetSummary';
 import { SendToSlotDialog } from '@/components/library/SendToSlotDialog';
 import { useSoundArchive } from '@/hooks/use-sound-archive';
 import { useToast } from '@/hooks/use-toast';
-import { MG30_MODELS } from '@/lib/mg30-data';
 import { formatSlotLabel } from '@/lib/slot';
 import { SOUND_ARCHIVE_SOURCE_LABEL, archivedSoundToPreset, renameArchivedSound, type ArchivedSound } from '@/lib/sound-archive';
 
-const ampName = (sound: ArchivedSound) => {
-  const amp = sound.preset.effects.find((e) => e.type === 'amp');
-  return amp ? MG30_MODELS.amp.find((m) => m.id === amp.model)?.name ?? amp.model : '—';
-};
-
+import { PageHeader } from '@/components/common/page-header';
 const formatDate = (iso: string) => {
   const d = new Date(iso);
   return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' });
@@ -61,17 +57,14 @@ export default function SoundArchivePage() {
 
   return (
     <div className="mx-auto max-w-7xl space-y-5 py-1 md:space-y-7 md:py-2">
-      <header className="space-y-4">
-        <div>
-          <p className="section-kicker mb-1">Preset manager</p>
-          <h2 className="text-2xl font-bold tracking-tight md:text-3xl">Archivio suoni</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            I suoni messi da parte dall&apos;editor o tolti da uno slot. Puoi rimetterli in qualsiasi slot.
-            {!signedIn && ' Sono salvati su questo dispositivo: accedi per averli nel tuo account.'}
-          </p>
-        </div>
+      <div className="space-y-4">
+        <PageHeader
+          kicker="Preset manager"
+          title="Archivio suoni"
+          description={<>I suoni messi da parte dall&apos;editor o tolti da uno slot. Puoi rimetterli in qualsiasi slot.{!signedIn && ' Sono salvati su questo dispositivo: accedi per averli nel tuo account.'}</>}
+        />
         <LibraryTabs />
-      </header>
+      </div>
 
       {!hydrated ? (
         <div role="status" className="flex items-center justify-center gap-2 py-12 text-muted-foreground"><Loader2 className="h-5 w-5 animate-spin" /> Caricamento…</div>
@@ -116,9 +109,8 @@ export default function SoundArchivePage() {
                     )}
                   </CardHeader>
                   <CardContent className="pb-4 text-sm">
-                    <div className="text-label font-bold uppercase tracking-wider text-muted-foreground">Amplificatore</div>
-                    <div className="font-medium">{ampName(sound)}</div>
-                    <div className="mt-2 text-caption text-muted-foreground">Archiviato il {formatDate(sound.createdAt)}</div>
+                    <PresetSummary effects={sound.preset.effects} />
+                    <div className="mt-3 text-caption text-muted-foreground">Archiviato il {formatDate(sound.createdAt)}</div>
                   </CardContent>
                   <CardFooter className="border-t border-border/30 pt-3">
                     <Button variant="outline" className="min-h-11 w-full gap-2" onClick={() => setToSend(sound)}>

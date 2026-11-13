@@ -20,6 +20,7 @@ import { IconButton } from '@/components/common/icon-button';
 import { ConfirmDialog } from '@/components/common/confirm-dialog';
 import { EmptyState } from '@/components/common/empty-state';
 
+import { PageHeader } from '@/components/common/page-header';
 const newPickup = (): GuitarPickup => ({ id: crypto.randomUUID(), position: 'bridge', type: 'humbucker', model: '' });
 
 const ampInputLabels: Record<AmpInputPosition, string> = {
@@ -135,7 +136,7 @@ export default function InstrumentationPage() {
   };
 
   return <><div className="mx-auto max-w-[1200px] space-y-6 py-2">
-    <div><p className="section-kicker">Setup personale</p><h2 className="mt-2 text-3xl font-black tracking-tight">Strumentazione</h2><p className="mt-2 max-w-2xl text-sm text-muted-foreground">Configura chitarre e amplificatori. La strumentazione selezionata verrà usata automaticamente dall’AI Mode.</p></div>
+    <PageHeader kicker="Setup personale" title="Strumentazione" description="Configura chitarre e amplificatori. La strumentazione selezionata verrà usata automaticamente dall’AI Mode." />
     <div className="grid gap-5 lg:grid-cols-2">
       <Card><CardHeader className="flex flex-row items-center justify-between"><CardTitle className="flex items-center gap-2"><ElectricGuitarIcon className="h-5 w-5 text-primary" /> Chitarre</CardTitle><Button onClick={() => openGuitar()} size="sm"><Plus className="mr-2 h-4 w-4" /> Aggiungi</Button></CardHeader><CardContent className="space-y-3">
         {guitars.length === 0 && <EmptyState className="py-8" title="Nessuna chitarra inserita" description="Aggiungi la tua chitarra: l'AI Mode userà modello e pickup per i suggerimenti." />}

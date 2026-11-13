@@ -70,7 +70,7 @@ export function FactorySuggestions({ genre, editMode, onGenreChange, note }: {
   return (
     <div className="space-y-3">
       <div className="space-y-2">
-        <label htmlFor="song-genre" className="text-caption font-black uppercase tracking-tighter text-muted-foreground">Genere</label>
+        <label htmlFor="song-genre" className="text-caption font-bold uppercase tracking-tighter text-muted-foreground">Genere</label>
         <div className="flex gap-2">
           <Select value={isGenre(genre) ? genre : NO_GENRE} onValueChange={(v) => onGenreChange(v === NO_GENRE ? '' : v)} disabled={!editMode}>
             <SelectTrigger id="song-genre" className="h-11 flex-1 border-border bg-background/50 text-body-sm"><SelectValue /></SelectTrigger>
@@ -88,7 +88,7 @@ export function FactorySuggestions({ genre, editMode, onGenreChange, note }: {
       </div>
 
       <div className="space-y-2">
-        <span className="text-caption font-black uppercase tracking-tighter text-muted-foreground">Preset di fabbrica consigliati</span>
+        <span className="text-caption font-bold uppercase tracking-tighter text-muted-foreground">Preset di fabbrica consigliati</span>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" className="h-11 w-full justify-between gap-2 bg-background/50 text-body-sm font-normal" disabled={!isGenre(genre)}>

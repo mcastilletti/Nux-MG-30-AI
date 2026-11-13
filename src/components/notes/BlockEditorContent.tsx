@@ -196,11 +196,11 @@ export function BlockEditorContent({ noteId, initialBand, initialSetlist, onClos
                 placeholder="Titolo Blocco..." 
                 value={title} 
                 onChange={(e) => setTitle(e.target.value)} 
-                className="h-11 border-none bg-transparent p-0 text-2xl font-black text-primary shadow-none focus-visible:ring-0 lg:text-3xl"
+                className="h-11 border-none bg-transparent p-0 text-2xl font-bold text-primary shadow-none focus-visible:ring-0 lg:text-3xl"
                 autoFocus
               />
             ) : (
-              <h2 className="line-clamp-2 break-words text-2xl font-black text-primary lg:text-3xl" title={title || undefined}>
+              <h2 className="line-clamp-2 break-words text-2xl font-bold text-primary lg:text-3xl" title={title || undefined}>
                 {isNoteMissing ? "Blocco non trovato" : (title || "Blocco senza titolo")}
               </h2>
             )}
@@ -237,7 +237,7 @@ export function BlockEditorContent({ noteId, initialBand, initialSetlist, onClos
               <button onClick={() => (isDirty ? setPendingExit('cancel') : discardChanges())} aria-label="Annulla modifiche" className="h-9 w-9 lg:h-11 lg:w-11 text-muted-foreground rounded-full hover:bg-destructive/10 hover:text-destructive flex items-center justify-center" title="Annulla">
                 <X className="w-5 h-5 lg:w-7 lg:h-7" />
               </button>
-              <button onClick={handleSaveBlock} disabled={isSaving} aria-busy={isSaving} aria-label="Salva blocco" className="h-9 w-9 lg:h-11 lg:w-11 bg-primary text-primary-foreground shadow-lg rounded-full flex items-center justify-center disabled:opacity-60" title="Salva">
+              <button onClick={handleSaveBlock} disabled={isSaving} aria-busy={isSaving} aria-label="Salva blocco" className="h-9 w-9 lg:h-11 lg:w-11 bg-primary text-primary-foreground rounded-full flex items-center justify-center disabled:opacity-60" title="Salva">
                 <Save className="w-5 h-5 lg:w-7 lg:h-7" />
               </button>
             </div>
@@ -256,7 +256,7 @@ export function BlockEditorContent({ noteId, initialBand, initialSetlist, onClos
           placeholder="Scrivi qui il contenuto del blocco..." 
           className={cn(
             "w-full min-h-[400px] bg-card/30 border-border/50 resize-none leading-relaxed p-4",
-            editMode ? "text-[16px]" : "bg-transparent border-none text-[length:calc(16px*var(--note-scale,1))]"
+            editMode ? "text-base" : "bg-transparent border-none text-[length:calc(16px*var(--note-scale,1))]"
           )}
           value={blockContent}
           onChange={(e) => setBlockContent(e.target.value)}

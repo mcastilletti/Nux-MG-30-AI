@@ -22,6 +22,7 @@ import { nameKey } from '@/lib/playlist-migration';
 import { cn } from '@/lib/utils';
 import type { Band, Playlist } from '@/types/playlist';
 
+import { PageHeader } from '@/components/common/page-header';
 /**
  * Pagina Band (spec playlist §5): band e playlist reali, create, rinominate ed
  * eliminate qui; i brani stanno nel serbatoio e si gestiscono dalla pagina Note.
@@ -89,20 +90,15 @@ export default function BandsPage() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-6 px-2 pb-20 md:px-0">
-      <header className="flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <div className="rounded-xl border border-primary/30 bg-primary/10 p-3">
-            <Users className="h-6 w-6 text-primary" aria-hidden="true" />
-          </div>
-          <div>
-            <h2 className="text-2xl font-bold tracking-tight">Band e playlist</h2>
-            <p className="text-sm text-muted-foreground">I brani si aggiungono alle playlist dalla pagina Note.</p>
-          </div>
-        </div>
-        <Button onClick={() => setBandDialog({ band: null })} className="min-h-11 gap-2 font-semibold">
-          <Plus className="h-4 w-4" aria-hidden="true" /> Nuova band
-        </Button>
-      </header>
+      <PageHeader
+        title="Band e playlist"
+        description="I brani si aggiungono alle playlist dalla pagina Note."
+        actions={
+          <Button onClick={() => setBandDialog({ band: null })} className="gap-2">
+            <Plus className="h-4 w-4" aria-hidden="true" /> Nuova band
+          </Button>
+        }
+      />
 
       {sortedBands.length === 0 ? (
         <EmptyState icon={<Users className="h-10 w-10" />} title="Nessuna band" description="Crea la prima band, poi aggiungi le sue playlist." />

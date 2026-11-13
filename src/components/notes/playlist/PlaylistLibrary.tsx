@@ -102,14 +102,14 @@ export function PlaylistLibrary({
     <div className="space-y-4">
       <div className="grid grid-cols-1 gap-3 rounded-2xl border border-border bg-card/40 p-3 shadow-sm md:grid-cols-2">
         <Select value={bandId ?? 'all'} onValueChange={(v) => { onBandChange(v === 'all' ? null : v); onPlaylistChange(null); }}>
-          <SelectTrigger aria-label="Filtra per band" className="h-11 border-border bg-background/50 text-[14px] font-bold"><SelectValue placeholder="Tutte le band" /></SelectTrigger>
+          <SelectTrigger aria-label="Filtra per band" className="h-11 border-border bg-background/50 text-sm font-bold"><SelectValue placeholder="Tutte le band" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Tutte le band</SelectItem>
             {sortedBands.map((band) => <SelectItem key={band.id} value={band.id}>{band.name}</SelectItem>)}
           </SelectContent>
         </Select>
         <Select value={playlist?.id ?? POOL_VALUE} onValueChange={(v) => onPlaylistChange(v === POOL_VALUE ? null : v)}>
-          <SelectTrigger aria-label="Scegli playlist" className="h-11 border-border bg-background/50 text-[14px] font-bold"><SelectValue placeholder="Tutti i brani" /></SelectTrigger>
+          <SelectTrigger aria-label="Scegli playlist" className="h-11 border-border bg-background/50 text-sm font-bold"><SelectValue placeholder="Tutti i brani" /></SelectTrigger>
           <SelectContent>
             <SelectItem value={POOL_VALUE}>{bandId ? 'Tutti i brani della band' : 'Tutti i brani'}</SelectItem>
             {visiblePlaylists.map((p) => (

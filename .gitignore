@@ -26,3 +26,7 @@ docs/extracted_images/
 docs/organized_images/
 docs/parameter_schema.md
 tsconfig.tsbuildinfo
+
+# Cache create dalle skill di terze parti (motore di impeccable, bytecode Python di ui-ux-pro-max)
+.agents/skills/impeccable/scripts/bin/
+.agents/skills/**/__pycache__/

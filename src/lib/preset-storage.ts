@@ -1,9 +1,14 @@
 import { EffectState, EffectType, Preset } from '@/types/preset';
 import { ensurePresetScenes } from '@/stores/use-preset-store';
 import { normalizePresetState } from '@/lib/mg30-preset-normalizer';
+import { migrateEffectsFromSchema1 } from '@/lib/preset-migration';
 
-/** Versione dello schema dei preset salvati (Firestore, cache locale, file JSON). */
-export const PRESET_SCHEMA_VERSION = 1;
+/**
+ * Versione dello schema dei preset salvati (Firestore, cache locale, file JSON).
+ * 2: i selettori Sub Div, Harmony Scale, S.C.F. e U-Vibe Mode seguono l'ordine della pedaliera
+ *    (i documenti con schema 1 vengono convertiti in lettura da fromPresetDoc).
+ */
+export const PRESET_SCHEMA_VERSION = 2;
 export const PRESET_EXPORT_FORMAT = 'mg30-studio-presets';
 
 const EFFECT_TYPES: EffectType[] = ['wah', 'noise-gate', 'compressor', 'efx', 'amp', 'ir', 'sr', 'modulation', 'delay', 'reverb', 'vol', 'eq'];
@@ -105,14 +110,17 @@ export function fromPresetDoc(data: unknown): Preset | null {
   if (!isRecord(data)) return null;
   const slot = data.slot;
   if (typeof slot !== 'number' || !Number.isInteger(slot) || slot < 1 || slot > 128) return null;
-  const effects = parseEffects(data.effects);
+  // Documenti senza versione o con schema 1: selettori nell'ordine vecchio dell'app.
+  const fromSchema1 = typeof data.schemaVersion !== 'number' || data.schemaVersion < 2;
+  const migrate = (list: EffectState[] | null) => (list && fromSchema1 ? migrateEffectsFromSchema1(list) : list);
+  const effects = migrate(parseEffects(data.effects));
   if (!effects) return null;
 
   const scenes: Record<number, EffectState[]> = {};
   if (isRecord(data.scenes)) {
     for (const [key, value] of Object.entries(data.scenes)) {
       const index = Number(key);
-      const parsed = parseEffects(value);
+      const parsed = migrate(parseEffects(value));
       if ([0, 1, 2].includes(index) && parsed) scenes[index] = parsed;
     }
   }
@@ -180,4 +188,39 @@ export function parsePresetImport(text: string): PresetImportResult {
     return { ok: false, error: 'Nessun preset valido nel file.' };
   }
   return { ok: true, presets: [...bySlot.values()].sort((a, b) => a.slot - b.slot), skipped };
+}
+
+/** Nome di file sicuro per un preset: "mg30-01A-Clean-ES-335.json". */
+export function presetFileName(preset: Pick<Preset, 'slot' | 'name'>): string {
+  const label = `${String(Math.floor((preset.slot - 1) / 4) + 1).padStart(2, '0')}${['A', 'B', 'C', 'D'][(preset.slot - 1) % 4]}`;
+  const safe = preset.name
+    .normalize('NFKD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/[^A-Za-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 40);
+  return `mg30-${label}${safe ? `-${safe}` : ''}.json`;
+}
+
+/**
+ * Unisce più file letti (JSON singoli o estratti da uno ZIP). Se due file contengono lo stesso
+ * slot vince l'ultimo. Gli errori dei singoli file vengono riportati senza bloccare gli altri.
+ */
+export function mergePresetImports(files: Array<{ name: string; text: string }>): PresetImportResult & { errors?: string[] } {
+  const bySlot = new Map<number, Preset>();
+  let skipped = 0;
+  const errors: string[] = [];
+  for (const file of files) {
+    const result = parsePresetImport(file.text);
+    if (!result.ok) {
+      errors.push(`${file.name}: ${result.error}`);
+      continue;
+    }
+    skipped += result.skipped;
+    for (const preset of result.presets) bySlot.set(preset.slot, preset);
+  }
+  if (bySlot.size === 0) {
+    return { ok: false, error: errors.length === 1 ? errors[0] : 'Nessun preset valido nei file scelti.' };
+  }
+  return { ok: true, presets: [...bySlot.values()].sort((a, b) => a.slot - b.slot), skipped, errors };
 }

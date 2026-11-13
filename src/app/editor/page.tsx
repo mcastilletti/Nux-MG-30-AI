@@ -10,6 +10,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Preset } from '@/types/preset';
 import { usePresetNames } from '@/hooks/use-preset-names';
 import { useSavePreset } from '@/hooks/use-preset-persistence';
+import { useSoundArchive } from '@/hooks/use-sound-archive';
+import { createArchivedSound } from '@/lib/sound-archive';
 import { useDeferredPresetCommit } from '@/hooks/use-deferred-preset-commit';
 import { useStableCallback } from '@/hooks/use-stable-callback';
 import { formatSlotLabel } from '@/lib/slot';
@@ -47,6 +49,7 @@ export default function EditorPage() {
   const { toast } = useToast();
   const { savedNames, savePresetName } = usePresetNames();
   const savePreset = useSavePreset();
+  const { save: saveToArchive } = useSoundArchive();
 
   const [selectedBlockId, setSelectedBlockId] = useState<string>('amp');
 
@@ -209,6 +212,21 @@ export default function EditorPage() {
     });
   });
 
+  const handleArchive = useStableCallback(async () => {
+    const name = getPresetDisplayName(activePreset);
+    const result = await saveToArchive(createArchivedSound({ ...activePreset, name }, 'editor', { originSlot: activePreset.slot }));
+    toast({
+      title: 'Salvato in Archivio suoni',
+      description: {
+        cloud: `'${name}' (3 scene) è nell'Archivio suoni del tuo account. Lo trovi nella Libreria.`,
+        queued: `'${name}' è nell'Archivio suoni: verrà sincronizzato appena torni online.`,
+        local: `'${name}' è nell'Archivio suoni su questo dispositivo. Accedi per averlo anche negli altri.`,
+        'local-error': `'${name}' è nell'Archivio solo su questo dispositivo: il salvataggio nel tuo account non è riuscito.`,
+      }[result],
+      variant: result === 'local-error' ? 'destructive' : undefined,
+    });
+  });
+
   const handleSyncFromHardware = useStableCallback(() => {
     if (status !== 'connected') {
       toast({
@@ -259,6 +277,7 @@ export default function EditorPage() {
           undo={undo}
           redo={redo}
           handleSave={handleSave}
+          onArchive={handleArchive}
         />
 
         <SignalChain

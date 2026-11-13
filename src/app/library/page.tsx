@@ -6,10 +6,10 @@ import React, { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, Plus, RefreshCw, Loader2, Check, MoreVertical, LayoutGrid, List, Settings2, CloudOff, Cloud, CheckSquare, Square, X, Download, Upload, HardDriveDownload } from 'lucide-react';
+import { Search, Plus, RefreshCw, Loader2, Check, MoreVertical, LayoutGrid, List, Settings2, CloudOff, Cloud, CheckSquare, Square, X, Download, Upload, HardDriveDownload, FileArchive } from 'lucide-react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Progress } from '@/components/ui/progress';
 import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
@@ -20,9 +20,13 @@ import { usePresetNames } from '@/hooks/use-preset-names';
 import { useSavePreset } from '@/hooks/use-preset-persistence';
 import { useUser } from '@/firebase';
 import { Preset, EffectState } from '@/types/preset';
-import { buildPresetExport, parsePresetImport } from '@/lib/preset-storage';
+import { buildPresetExport, mergePresetImports } from '@/lib/preset-storage';
+import { buildPresetZip, isZipFile, readPresetZip } from '@/lib/preset-zip';
+import { downloadBlob } from '@/lib/download';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { formatSlotLabel } from '@/lib/slot';
+import { LibraryTabs } from '@/components/library/LibraryTabs';
+import { SendToSlotDialog } from '@/components/library/SendToSlotDialog';
 
 
 export default function LibraryPage() {
@@ -53,36 +57,69 @@ export default function LibraryPage() {
   const { user } = useUser();
 
   // Nomi salvati su Firestore (o localStorage se non loggato)
-  const { savedNames, savePresetName, isLoading: namesLoading } = usePresetNames();
+  const { savedNames, savePresetName, savePresetNames, isLoading: namesLoading } = usePresetNames();
   const savePreset = useSavePreset();
   const importInputRef = useRef<HTMLInputElement>(null);
   const [pendingImport, setPendingImport] = useState<{ presets: Preset[]; skipped: number; fileName: string } | null>(null);
   const [isImporting, setIsImporting] = useState(false);
 
-  const handleExport = () => {
-    const file = buildPresetExport(useMidiStore.getState().devicePresets);
-    const blob = new Blob([JSON.stringify(file, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `mg30-preset-${file.exportedAt.slice(0, 10)}.json`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-    toast({ title: 'Preset esportati', description: `${file.presets.length} preset nel file ${a.download}.` });
+  const [isExporting, setIsExporting] = useState(false);
+  const [copySource, setCopySource] = useState<Preset | null>(null);
+
+  /** Preset con il nome mostrato nella libreria (i nomi rinominati sono salvati a parte). */
+  const presetsForExport = (scope: 'all' | 'selected') =>
+    useMidiStore.getState().devicePresets
+      .filter(p => scope === 'all' || selectedSlots.has(p.slot))
+      .map(p => ({ ...p, name: savedNames[p.slot] || p.name }));
+
+  const handleExport = async (scope: 'all' | 'selected', format: 'file' | 'zip') => {
+    const presets = presetsForExport(scope);
+    if (presets.length === 0) {
+      toast({ title: 'Nessun preset selezionato', description: 'Seleziona almeno un preset da esportare.', variant: 'destructive' });
+      return;
+    }
+    const day = new Date().toISOString().slice(0, 10);
+    const suffix = scope === 'all' ? 'tutti' : `${presets.length}-selezionati`;
+    try {
+      setIsExporting(true);
+      if (format === 'file') {
+        const file = buildPresetExport(presets);
+        const fileName = `mg30-preset-${suffix}-${day}.json`;
+        downloadBlob(new Blob([JSON.stringify(file, null, 2)], { type: 'application/json' }), fileName);
+        toast({ title: 'Preset esportati', description: `${presets.length} preset nel file ${fileName}.` });
+      } else {
+        const fileName = `mg30-preset-${suffix}-${day}.zip`;
+        downloadBlob(await buildPresetZip(presets), fileName);
+        toast({ title: 'Preset esportati', description: `${presets.length} file, uno per preset, nell'archivio ${fileName}.` });
+      }
+    } catch {
+      toast({ title: 'Esportazione non riuscita', description: 'Non è stato possibile creare il file. Riprova.', variant: 'destructive' });
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   const handleImportFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
+    const chosen = Array.from(event.target.files ?? []);
     event.target.value = '';
-    if (!file) return;
-    const result = parsePresetImport(await file.text());
+    if (chosen.length === 0) return;
+    const texts: Array<{ name: string; text: string }> = [];
+    for (const file of chosen) {
+      try {
+        if (isZipFile(file)) texts.push(...await readPresetZip(file));
+        else texts.push({ name: file.name, text: await file.text() });
+      } catch {
+        toast({ title: 'File non leggibile', description: `${file.name} non è uno ZIP o un JSON valido.`, variant: 'destructive' });
+        return;
+      }
+    }
+    const result = mergePresetImports(texts);
     if (!result.ok) {
       toast({ title: 'Importazione non riuscita', description: result.error, variant: 'destructive' });
       return;
     }
-    setPendingImport({ presets: result.presets, skipped: result.skipped, fileName: file.name });
+    const fileName = chosen.length === 1 ? chosen[0].name : `${chosen.length} file`;
+    setPendingImport({ presets: result.presets, skipped: result.skipped + (result.errors?.length ?? 0), fileName });
   };
 
   const confirmImport = async () => {
@@ -95,6 +132,9 @@ export default function LibraryPage() {
     const importedActive = bySlot.get(active.slot);
     if (importedActive) usePresetStore.setState({ activePreset: importedActive, history: [importedActive], historyIndex: 0 });
     const results = await Promise.all(imported.map(p => savePreset(p)));
+    // Il nome mostrato nella libreria viene dai nomi salvati: senza questo un nome importato
+    // resterebbe nascosto dietro il nome precedente dello slot.
+    savePresetNames(Object.fromEntries(imported.filter(p => !/^Preset \d+$/.test(p.name)).map(p => [p.slot, p.name])));
     setIsImporting(false);
     setPendingImport(null);
     toast({
@@ -317,17 +357,27 @@ export default function LibraryPage() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onSelect={handleExport}>
-                  <Download className="mr-2 h-4 w-4" /> Esporta preset (JSON)
+                <DropdownMenuLabel className="text-caption text-muted-foreground">Esporta tutti i {devicePresets.length} preset</DropdownMenuLabel>
+                <DropdownMenuItem className="min-h-11" disabled={isExporting} onSelect={() => handleExport('all', 'file')}>
+                  <Download className="mr-2 h-4 w-4" /> In un unico file (JSON)
                 </DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => importInputRef.current?.click()}>
-                  <Upload className="mr-2 h-4 w-4" /> Importa preset…
+                <DropdownMenuItem className="min-h-11" disabled={isExporting} onSelect={() => handleExport('all', 'zip')}>
+                  <FileArchive className="mr-2 h-4 w-4" /> Un file per preset (ZIP)
+                </DropdownMenuItem>
+                <DropdownMenuItem className="min-h-11" onSelect={() => { setIsBulkMode(true); toast({ title: 'Scegli i preset', description: 'Seleziona i preset da esportare, poi usa i pulsanti di esportazione nel riquadro della selezione.' }); }}>
+                  <CheckSquare className="mr-2 h-4 w-4" /> Solo alcuni preset…
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="min-h-11" onSelect={() => importInputRef.current?.click()}>
+                  <Upload className="mr-2 h-4 w-4" /> Importa (JSON o ZIP)…
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <input ref={importInputRef} type="file" accept="application/json,.json" className="hidden" onChange={handleImportFile} aria-label="File di preset da importare" />
+            <input ref={importInputRef} type="file" multiple accept="application/json,.json,application/zip,.zip" className="hidden" onChange={handleImportFile} aria-label="File di preset da importare" />
           </div>
         </header>
+
+        <LibraryTabs />
 
         {isSyncing && (
           <div className="space-y-2">
@@ -430,6 +480,14 @@ export default function LibraryPage() {
                   >
                     Applica Volume a {selectedSlots.size} Preset
                   </Button>
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                    <Button variant="outline" className="h-11 gap-2" disabled={selectedSlots.size === 0 || isExporting} onClick={() => handleExport('selected', 'file')}>
+                      <Download className="h-4 w-4" /> Esporta in un file
+                    </Button>
+                    <Button variant="outline" className="h-11 gap-2" disabled={selectedSlots.size === 0 || isExporting} onClick={() => handleExport('selected', 'zip')}>
+                      <FileArchive className="h-4 w-4" /> Un file per preset (ZIP)
+                    </Button>
+                  </div>
                 </div>
               </div>
             </CardContent>
@@ -488,6 +546,7 @@ export default function LibraryPage() {
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={(e) => handleConfigurePreset(e as any, preset)}>Modifica</DropdownMenuItem>
                             <DropdownMenuItem onClick={(e) => startEditingName(e as any, preset)}>Rinomina</DropdownMenuItem>
+                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setCopySource({ ...preset, name: displayName }); }}>Copia in un altro slot…</DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </div>
@@ -648,6 +707,12 @@ export default function LibraryPage() {
                             </Button>
                             <Button
                               variant="ghost" size="sm" className="h-8 text-xs font-bold uppercase gap-1"
+                              onClick={(e) => { e.stopPropagation(); setCopySource({ ...preset, name: displayName }); }}
+                            >
+                              Copia
+                            </Button>
+                            <Button
+                              variant="ghost" size="sm" className="h-8 text-xs font-bold uppercase gap-1"
                               onClick={(e) => handleConfigurePreset(e, preset)}
                             >
                               <Settings2 className="w-3 h-3" /> Modifica
@@ -663,6 +728,13 @@ export default function LibraryPage() {
           </Card>
         )}
       </div>
+      <SendToSlotDialog
+        open={!!copySource}
+        onOpenChange={(open) => { if (!open) setCopySource(null); }}
+        preset={copySource}
+        sourceLabel={copySource ? `Copia di ${formatSlotLabel(copySource.slot)} · ${copySource.name}` : ''}
+        excludeSlot={copySource?.slot}
+      />
       <AlertDialog open={!!pendingImport} onOpenChange={(open) => { if (!open && !isImporting) setPendingImport(null); }}>
         <AlertDialogContent>
           <AlertDialogHeader>

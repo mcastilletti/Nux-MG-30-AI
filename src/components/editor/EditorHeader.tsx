@@ -1,7 +1,7 @@
 'use client';
 
 import React, { memo, useState } from 'react';
-import { ChevronLeft, ChevronRight, Copy, Download, Layers, MoreVertical, Pencil, Redo2, RefreshCw, Save, Sparkles, Undo2 } from 'lucide-react';
+import { Archive, ChevronLeft, ChevronRight, Copy, Download, Layers, MoreVertical, Pencil, Redo2, RefreshCw, Save, Sparkles, Undo2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -21,7 +21,7 @@ import { CopySceneDialog } from './CopySceneDialog';
 export const EditorHeader = memo(function EditorHeader({
   activePreset, devicePresets, status, isEditorSyncing, getPresetDisplayName,
   handleSlotChange, handlePresetSelect, onRenamePreset, handleSceneChange, onCopyScene,
-  setActivePreset, handleSyncFromHardware, syncFullPreset, undo, redo, handleSave,
+  setActivePreset, handleSyncFromHardware, syncFullPreset, undo, redo, handleSave, onArchive,
 }: {
   activePreset: Preset;
   devicePresets: Preset[];
@@ -39,6 +39,8 @@ export const EditorHeader = memo(function EditorHeader({
   undo: () => void;
   redo: () => void;
   handleSave: () => void;
+  /** Mette una copia del preset (3 scene) nell'Archivio suoni. */
+  onArchive: () => void;
 }) {
   const [isEditingPresetName, setIsEditingPresetName] = useState(false);
   const [presetNameDraft, setPresetNameDraft] = useState('');
@@ -119,6 +121,9 @@ export const EditorHeader = memo(function EditorHeader({
             <DropdownMenuItem className="min-h-11 gap-2" onSelect={() => setCopyOpen(true)}>
               <Copy className="h-4 w-4" /> Copia scena
             </DropdownMenuItem>
+            <DropdownMenuItem className="min-h-11 gap-2" onSelect={onArchive}>
+              <Archive className="h-4 w-4" /> Salva in Archivio suoni
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem className="min-h-11 gap-2" onSelect={undo}>
               <Undo2 className="h-4 w-4" /> Annulla ultima modifica
@@ -163,6 +168,9 @@ export const EditorHeader = memo(function EditorHeader({
           <Button variant="outline" className="min-h-11 gap-2" onClick={() => setCopyOpen(true)}>
             <Copy className="h-4 w-4" /> Copia scena
           </Button>
+          <IconButton label="Salva in Archivio suoni" variant="outline" onClick={onArchive}>
+            <Archive className="h-4 w-4" />
+          </IconButton>
           <Button variant="outline" className="min-h-11 gap-2 border-primary/50 text-primary" onClick={() => setAiOpen(true)}>
             <Sparkles className="h-4 w-4" /> AI Mode
           </Button>

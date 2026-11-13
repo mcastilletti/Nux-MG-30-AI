@@ -31,3 +31,24 @@ Per aggiornarle, ricopiare i file dai commit più recenti dei repository sorgent
   - `deploy-to-vercel`, `vercel-cli-with-tokens`, `vercel-optimize`: piattaforma Vercel; `deploy-to-vercel` caricherebbe il progetto sul servizio di Vercel
   - `react-native-skills`: React Native/Expo
   - `writing-guidelines`: manuale di stile della documentazione Vercel
+
+## pbakaus/impeccable
+
+- Sorgente: https://github.com/pbakaus/impeccable
+- Commit: `c4cd1924c389f68d37c687d9c2bbf13f12547c41` (2026-11-12, skill v4.9.0)
+- Licenza: Apache 2.0 — testo in `.agents/licenses/pbakaus-impeccable.LICENSE`, avvisi in `.agents/licenses/pbakaus-impeccable.NOTICE.md`
+- Copiato:
+  - la skill già compilata per Claude Code (`.claude/skills/impeccable/` del repository) in `.agents/skills/impeccable`
+  - i 4 subagent `impeccable-*` di `.claude/agents/` in `.claude/agents/` (la skill li richiama)
+- Al primo uso `scripts/impeccable` scarica il motore dalle release GitHub del progetto, lo verifica con `scripts/engine-checksums.txt` e lo conserva in `~/.impeccable` (fuori dal repository).
+- Non copiato:
+  - gli hook di `.claude/settings.json` (eseguirebbero il motore a ogni Edit/Write e a ogni fine turno): si possono aggiungere su richiesta
+  - CLI, estensioni, plugin per altri editor, test, demo
+
+## nextlevelbuilder/ui-ux-pro-max-skill
+
+- Sorgente: https://github.com/nextlevelbuilder/ui-ux-pro-max-skill
+- Commit: `6ae86f61f520d6ca229d2f40e070410638c908c5` (2026-11-10, v2.15.0)
+- Licenza: MIT, Copyright (c) 2024 Next Level Builder — testo in `.agents/licenses/nextlevelbuilder-ui-ux-pro-max.LICENSE`
+- Copiato: `.claude/skills/ui-ux-pro-max/` (SKILL.md, `references/`, `data/`, `scripts/` senza `scripts/tests/`) in `.agents/skills/ui-ux-pro-max`. Gli script Python lavorano solo sui CSV locali, senza rete.
+- Non copiato: le skill aggiuntive del repository (`banner-design`, `brand`, `design`, `design-system`, `slides`, `ui-styling`), la CLI `uipro` e il resto del progetto

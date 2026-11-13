@@ -1741,23 +1741,21 @@
    "wah": {
     "enabled": false,
     "modelIndex": 3,
-    "model": null,
-    "modelName": "(modello 4 non presente nell'app)",
+    "model": "horsewah",
+    "modelName": "HORSE WAH (non presente nell'app)",
     "stateByte": 68,
     "params": [
      {
-      "id": "p1",
-      "name": "Param 1",
+      "id": "contour",
+      "name": "Contour",
       "raw": 33,
-      "value": 33,
-      "note": "modello non presente nell'app"
+      "value": 33
      },
      {
-      "id": "p2",
-      "name": "Param 2",
+      "id": "range",
+      "name": "Range",
       "raw": 227,
-      "value": 227,
-      "note": "modello non presente nell'app"
+      "value": "indice 3 (raw 227, nomi da verificare)"
      }
     ]
    },
@@ -3060,23 +3058,21 @@
    "wah": {
     "enabled": false,
     "modelIndex": 3,
-    "model": null,
-    "modelName": "(modello 4 non presente nell'app)",
+    "model": "horsewah",
+    "modelName": "HORSE WAH (non presente nell'app)",
     "stateByte": 68,
     "params": [
      {
-      "id": "p1",
-      "name": "Param 1",
+      "id": "contour",
+      "name": "Contour",
       "raw": 33,
-      "value": 33,
-      "note": "modello non presente nell'app"
+      "value": 33
      },
      {
-      "id": "p2",
-      "name": "Param 2",
+      "id": "range",
+      "name": "Range",
       "raw": 227,
-      "value": 227,
-      "note": "modello non presente nell'app"
+      "value": "indice 3 (raw 227, nomi da verificare)"
      }
     ]
    },
@@ -4315,23 +4311,21 @@
    "wah": {
     "enabled": false,
     "modelIndex": 3,
-    "model": null,
-    "modelName": "(modello 4 non presente nell'app)",
+    "model": "horsewah",
+    "modelName": "HORSE WAH (non presente nell'app)",
     "stateByte": 68,
     "params": [
      {
-      "id": "p1",
-      "name": "Param 1",
+      "id": "contour",
+      "name": "Contour",
       "raw": 61,
-      "value": 61,
-      "note": "modello non presente nell'app"
+      "value": 61
      },
      {
-      "id": "p2",
-      "name": "Param 2",
+      "id": "range",
+      "name": "Range",
       "raw": 226,
-      "value": 226,
-      "note": "modello non presente nell'app"
+      "value": "indice 2 (raw 226, nomi da verificare)"
      }
     ]
    },
@@ -6017,23 +6011,21 @@
    "wah": {
     "enabled": false,
     "modelIndex": 3,
-    "model": null,
-    "modelName": "(modello 4 non presente nell'app)",
+    "model": "horsewah",
+    "modelName": "HORSE WAH (non presente nell'app)",
     "stateByte": 68,
     "params": [
      {
-      "id": "p1",
-      "name": "Param 1",
+      "id": "contour",
+      "name": "Contour",
       "raw": 33,
-      "value": 33,
-      "note": "modello non presente nell'app"
+      "value": 33
      },
      {
-      "id": "p2",
-      "name": "Param 2",
+      "id": "range",
+      "name": "Range",
       "raw": 227,
-      "value": 227,
-      "note": "modello non presente nell'app"
+      "value": "indice 3 (raw 227, nomi da verificare)"
      }
     ]
    },
@@ -9415,23 +9407,21 @@
    "wah": {
     "enabled": false,
     "modelIndex": 3,
-    "model": null,
-    "modelName": "(modello 4 non presente nell'app)",
+    "model": "horsewah",
+    "modelName": "HORSE WAH (non presente nell'app)",
     "stateByte": 68,
     "params": [
      {
-      "id": "p1",
-      "name": "Param 1",
+      "id": "contour",
+      "name": "Contour",
       "raw": 33,
-      "value": 33,
-      "note": "modello non presente nell'app"
+      "value": 33
      },
      {
-      "id": "p2",
-      "name": "Param 2",
+      "id": "range",
+      "name": "Range",
       "raw": 227,
-      "value": 227,
-      "note": "modello non presente nell'app"
+      "value": "indice 3 (raw 227, nomi da verificare)"
      }
     ]
    },
@@ -13246,23 +13236,21 @@
    "wah": {
     "enabled": false,
     "modelIndex": 3,
-    "model": null,
-    "modelName": "(modello 4 non presente nell'app)",
+    "model": "horsewah",
+    "modelName": "HORSE WAH (non presente nell'app)",
     "stateByte": 68,
     "params": [
      {
-      "id": "p1",
-      "name": "Param 1",
+      "id": "contour",
+      "name": "Contour",
       "raw": 33,
-      "value": 33,
-      "note": "modello non presente nell'app"
+      "value": 33
      },
      {
-      "id": "p2",
-      "name": "Param 2",
+      "id": "range",
+      "name": "Range",
       "raw": 227,
-      "value": 227,
-      "note": "modello non presente nell'app"
+      "value": "indice 3 (raw 227, nomi da verificare)"
      }
     ]
    },
@@ -14958,23 +14946,21 @@
    "wah": {
     "enabled": false,
     "modelIndex": 3,
-    "model": null,
-    "modelName": "(modello 4 non presente nell'app)",
+    "model": "horsewah",
+    "modelName": "HORSE WAH (non presente nell'app)",
     "stateByte": 68,
     "params": [
      {
-      "id": "p1",
-      "name": "Param 1",
+      "id": "contour",
+      "name": "Contour",
       "raw": 33,
-      "value": 33,
-      "note": "modello non presente nell'app"
+      "value": 33
      },
      {
-      "id": "p2",
-      "name": "Param 2",
+      "id": "range",
+      "name": "Range",
       "raw": 227,
-      "value": 227,
-      "note": "modello non presente nell'app"
+      "value": "indice 3 (raw 227, nomi da verificare)"
      }
     ]
    },
@@ -19043,23 +19029,21 @@
    "wah": {
     "enabled": false,
     "modelIndex": 3,
-    "model": null,
-    "modelName": "(modello 4 non presente nell'app)",
+    "model": "horsewah",
+    "modelName": "HORSE WAH (non presente nell'app)",
     "stateByte": 68,
     "params": [
      {
-      "id": "p1",
-      "name": "Param 1",
+      "id": "contour",
+      "name": "Contour",
       "raw": 100,
-      "value": 100,
-      "note": "modello non presente nell'app"
+      "value": 100
      },
      {
-      "id": "p2",
-      "name": "Param 2",
+      "id": "range",
+      "name": "Range",
       "raw": 226,
-      "value": 226,
-      "note": "modello non presente nell'app"
+      "value": "indice 2 (raw 226, nomi da verificare)"
      }
     ]
    },
@@ -19480,23 +19464,21 @@
    "wah": {
     "enabled": false,
     "modelIndex": 3,
-    "model": null,
-    "modelName": "(modello 4 non presente nell'app)",
+    "model": "horsewah",
+    "modelName": "HORSE WAH (non presente nell'app)",
     "stateByte": 68,
     "params": [
      {
-      "id": "p1",
-      "name": "Param 1",
+      "id": "contour",
+      "name": "Contour",
       "raw": 33,
-      "value": 33,
-      "note": "modello non presente nell'app"
+      "value": 33
      },
      {
-      "id": "p2",
-      "name": "Param 2",
+      "id": "range",
+      "name": "Range",
       "raw": 229,
-      "value": 229,
-      "note": "modello non presente nell'app"
+      "value": "indice 5 (raw 229, nomi da verificare)"
      }
     ]
    },
@@ -19923,23 +19905,21 @@
    "wah": {
     "enabled": false,
     "modelIndex": 3,
-    "model": null,
-    "modelName": "(modello 4 non presente nell'app)",
+    "model": "horsewah",
+    "modelName": "HORSE WAH (non presente nell'app)",
     "stateByte": 68,
     "params": [
      {
-      "id": "p1",
-      "name": "Param 1",
+      "id": "contour",
+      "name": "Contour",
       "raw": 100,
-      "value": 100,
-      "note": "modello non presente nell'app"
+      "value": 100
      },
      {
-      "id": "p2",
-      "name": "Param 2",
+      "id": "range",
+      "name": "Range",
       "raw": 229,
-      "value": 229,
-      "note": "modello non presente nell'app"
+      "value": "indice 5 (raw 229, nomi da verificare)"
      }
     ]
    },
@@ -20354,23 +20334,21 @@
    "wah": {
     "enabled": false,
     "modelIndex": 3,
-    "model": null,
-    "modelName": "(modello 4 non presente nell'app)",
+    "model": "horsewah",
+    "modelName": "HORSE WAH (non presente nell'app)",
     "stateByte": 68,
     "params": [
      {
-      "id": "p1",
-      "name": "Param 1",
+      "id": "contour",
+      "name": "Contour",
       "raw": 100,
-      "value": 100,
-      "note": "modello non presente nell'app"
+      "value": 100
      },
      {
-      "id": "p2",
-      "name": "Param 2",
+      "id": "range",
+      "name": "Range",
       "raw": 229,
-      "value": 229,
-      "note": "modello non presente nell'app"
+      "value": "indice 5 (raw 229, nomi da verificare)"
      }
     ]
    },
@@ -26500,23 +26478,21 @@
    "wah": {
     "enabled": false,
     "modelIndex": 3,
-    "model": null,
-    "modelName": "(modello 4 non presente nell'app)",
+    "model": "horsewah",
+    "modelName": "HORSE WAH (non presente nell'app)",
     "stateByte": 68,
     "params": [
      {
-      "id": "p1",
-      "name": "Param 1",
+      "id": "contour",
+      "name": "Contour",
       "raw": 33,
-      "value": 33,
-      "note": "modello non presente nell'app"
+      "value": 33
      },
      {
-      "id": "p2",
-      "name": "Param 2",
+      "id": "range",
+      "name": "Range",
       "raw": 227,
-      "value": 227,
-      "note": "modello non presente nell'app"
+      "value": "indice 3 (raw 227, nomi da verificare)"
      }
     ]
    },
@@ -28701,23 +28677,21 @@
    "wah": {
     "enabled": false,
     "modelIndex": 3,
-    "model": null,
-    "modelName": "(modello 4 non presente nell'app)",
+    "model": "horsewah",
+    "modelName": "HORSE WAH (non presente nell'app)",
     "stateByte": 68,
     "params": [
      {
-      "id": "p1",
-      "name": "Param 1",
+      "id": "contour",
+      "name": "Contour",
       "raw": 70,
-      "value": 70,
-      "note": "modello non presente nell'app"
+      "value": 70
      },
      {
-      "id": "p2",
-      "name": "Param 2",
+      "id": "range",
+      "name": "Range",
       "raw": 226,
-      "value": 226,
-      "note": "modello non presente nell'app"
+      "value": "indice 2 (raw 226, nomi da verificare)"
      }
     ]
    },
@@ -30851,23 +30825,21 @@
    "wah": {
     "enabled": false,
     "modelIndex": 3,
-    "model": null,
-    "modelName": "(modello 4 non presente nell'app)",
+    "model": "horsewah",
+    "modelName": "HORSE WAH (non presente nell'app)",
     "stateByte": 68,
     "params": [
      {
-      "id": "p1",
-      "name": "Param 1",
+      "id": "contour",
+      "name": "Contour",
       "raw": 33,
-      "value": 33,
-      "note": "modello non presente nell'app"
+      "value": 33
      },
      {
-      "id": "p2",
-      "name": "Param 2",
+      "id": "range",
+      "name": "Range",
       "raw": 227,
-      "value": 227,
-      "note": "modello non presente nell'app"
+      "value": "indice 3 (raw 227, nomi da verificare)"
      }
     ]
    },

@@ -25,6 +25,8 @@ def convert(raw, p):
         return raw
     if p['id'].startswith('subdiv'):
         return f'raw {raw} (codifica Sub Div non verificata)'
+    if p['id'] == 'range':
+        return f'indice {raw & 0x0F} (raw {raw}, nomi da verificare)'
     if p.get('options'):
         idx = raw & 0x0F if raw >= 128 else raw
         return p['options'][idx] if idx < len(p['options']) else idx
@@ -44,7 +46,7 @@ def decode_scene(s):
         start, cnt = LAYOUT[t]
         n = s[cnt]
         raws = list(s[start:start + n])
-        if t == 'wah' and m:
+        if t == 'wah' and m and m['id'] != 'horsewah':
             raws = [s[13]]  # posizione: vedi nota nel README (modello wah con count 0 = 1 sola manopola)
         params = []
         if m and t == 'ir':

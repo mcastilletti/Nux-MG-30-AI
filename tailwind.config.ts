@@ -70,7 +70,7 @@ export default {
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',
         inset: 'hsl(var(--inset))',
-        'text-soft': 'hsl(var(--text-soft))',
+        soft: 'hsl(var(--text-soft))',
         block: {
           wah: 'hsl(var(--block-wah))',
           'noise-gate': 'hsl(var(--block-noise-gate))',

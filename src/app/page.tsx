@@ -29,7 +29,7 @@ export default function HomePage() {
             <Card className="app-surface h-full border-primary/30 transition-colors hover:border-primary/70">
               <CardContent className="flex h-full flex-row items-center gap-5 p-5 lg:flex-col lg:justify-center lg:gap-6 lg:p-7 lg:text-center">
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary lg:h-16 lg:w-16">
-                  <Library className="w-8 h-8 text-accent" />
+                  <Library className="w-8 h-8 text-primary" />
                 </div>
                 <div className="text-left lg:text-center">
                   <h3 className="font-bold md:text-xl lg:text-2xl">Libreria Preset</h3>

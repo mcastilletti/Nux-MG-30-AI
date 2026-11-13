@@ -38,7 +38,7 @@ npm run build      # build di produzione
 
 - **AI Mode:** serve una chiave in `.env`, alla voce `GOOGLE_GENAI_API_KEY`. La chiave si ottiene su [Google AI Studio](https://aistudio.google.com/app/apikey).
 - **Firebase** (autenticazione Google, Firestore, Storage per i loghi): la configurazione è in `src/firebase/`, le regole di sicurezza in `firestore.rules`.
-- **Font:** Outfit e Source Code Pro sono inclusi nel progetto (`src/fonts/`, licenza OFL) e caricati con `next/font/local`. La build non scarica nulla da Google, ed è necessario per il deploy su Firebase App Hosting.
+- **Font:** Space Grotesk e Space Mono sono inclusi nel progetto (`src/fonts/`, licenza OFL) e caricati con `next/font/local`. La build non scarica nulla da Google, ed è necessario per il deploy su Firebase App Hosting.
 
 ## Deploy
 - **Produzione:** Firebase App Hosting (`apphosting.yaml`), che pubblica dal branch `main`.

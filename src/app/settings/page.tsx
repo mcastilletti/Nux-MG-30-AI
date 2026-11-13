@@ -107,7 +107,7 @@ export default function SettingsPage() {
           <Card className="border-border">
             <CardHeader>
               <CardTitle className="text-sm flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-accent" /> Privacy & Dati
+                <ShieldCheck className="w-4 h-4 text-primary" /> Privacy & Dati
               </CardTitle>
               <CardDescription>Protezione dei tuoi preset</CardDescription>
             </CardHeader>

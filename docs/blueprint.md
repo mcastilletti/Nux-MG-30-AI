@@ -28,7 +28,7 @@ Sintesi di cosa fa l'app e di come appare. Dettagli e decisioni sono in `docs/au
 ## Linee guida di stile
 
 - **Tema:** scuro, tema "strumento da palco"; colori come token in `src/app/globals.css` (`primary`, `success`, `warning`, `destructive`, colori dei blocchi `--block-*`).
-- **Font:** Outfit per testo e titoli, Source Code Pro per valori e dati MIDI; inclusi nel progetto (`next/font/local`).
+- **Font:** Space Grotesk per testo e titoli, Space Mono per valori, slot e dati MIDI (prima Outfit e Source Code Pro); inclusi nel progetto (`next/font/local`).
 - **Lingua:** l'interfaccia è in italiano (`lang="it"`).
 - **Mobile prima di tutto:**
   - comandi di almeno 44px (64px in Live);

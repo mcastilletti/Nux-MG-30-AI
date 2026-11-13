@@ -4,57 +4,63 @@
 
 @layer base {
   :root {
-    --background: 240 10% 3%;
-    --foreground: 0 0% 99%;
-    --card: 240 10% 5%;
-    --card-foreground: 0 0% 99%;
-    --popover: 240 10% 5%;
-    --popover-foreground: 0 0% 99%;
-    --primary: 261 43% 65%;
-    --primary-foreground: 240 10% 6%; /* scuro: 6:1 sul viola (Fase 1, contrasti) */
-    --secondary: 240 10% 10%;
-    --secondary-foreground: 0 0% 99%;
-    --muted: 240 10% 8%;
-    --muted-foreground: 0 0% 75%;
-    --accent: 282 75% 70%;
-    --accent-foreground: 240 10% 6%; /* scuro: il bianco sul viola chiaro era 2,8:1 (Fase 6.3, axe) */
+    /* Pedaliera illustrata: antracite caldo a livelli, accento giallo, LED verde. */
+    --background: 30 9.5% 8.2%;
+    --foreground: 39 39% 93%;
+    --card: 30 10% 11.8%;
+    --card-foreground: 39 39% 93%;
+    --popover: 30 10% 11.8%;
+    --popover-foreground: 39 39% 93%;
+    --primary: 42 89% 64%;
+    --primary-foreground: 30 9.5% 8.2%; /* scuro sul giallo: oltre 10:1 */
+    --secondary: 30 10.5% 14.9%;
+    --secondary-foreground: 39 39% 93%;
+    --muted: 30 11.5% 10.2%;
+    --muted-foreground: 35 11% 61.6%;
+    --accent: 30 10.5% 14.9%; /* sfondo al passaggio su menu e liste; non è un colore di testo */
+    --accent-foreground: 39 39% 93%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    --border: 240 10% 12%;
-    --input: 240 10% 12%;
-    --ring: 261 43% 65%;
+    --border: 33 9.5% 18.6%;
+    --input: 33 9.5% 18.6%;
+    --ring: 42 89% 64%;
     --radius: 0.75rem;
 
-    /* Stati (stessi valori di green-500, amber-500, blue-500 usati finora). */
-    --success: 142.1 70.6% 45.3%;
-    --success-foreground: 240 10% 4%;
+    /* Superficie incassata (fascia della catena, fondo delle immagini dei dispositivi). */
+    --inset: 30 7% 5.9%;
+    --text-soft: 35 16% 72.5%;
+
+    /* Stati. Il successo è il verde del LED: acceso, collegato, inviato. */
+    --success: 137 63% 60%;
+    --success-foreground: 30 9.5% 8.2%;
     --warning: 37.7 92.1% 50.2%;
-    --warning-foreground: 240 10% 4%;
+    --warning-foreground: 30 9.5% 8.2%;
     --info: 217.2 91.2% 59.8%;
     --info-foreground: 0 0% 100%;
 
-    /* Colori dei blocchi della catena effetti (prima in getBlockColorVar). */
-    --block-wah: 300 100% 75%;
-    --block-noise-gate: 70 100% 50%;
-    --block-compressor: 60 100% 50%;
-    --block-efx: 32 100% 50%;
-    --block-amp: 0 100% 50%;
-    --block-ir: 192 100% 50%;
-    --block-sr: 120 100% 50%;
-    --block-modulation: 220 100% 50%;
-    --block-delay: 180 100% 50%;
-    --block-reverb: 288 100% 50%;
-    --block-vol: 0 0% 80%;
-    --block-eq: 0 0% 100%;
+    /* Colori di categoria dei blocchi: identificano il blocco, non decorano. */
+    --block-wah: 337 47% 55%;
+    --block-noise-gate: 135 32% 46%;
+    --block-compressor: 43 73% 55%;
+    --block-efx: 21 74% 56%;
+    --block-amp: 6 58% 50%;
+    --block-ir: 203 47% 53%;
+    --block-sr: 198 9% 48%;
+    --block-modulation: 217 56% 52%;
+    --block-delay: 183 57% 42%;
+    --block-reverb: 266 41% 56%;
+    --block-vol: 35 17% 55%;
+    --block-eq: 39 6.5% 58%;
+    --block-off: 30 9% 20%; /* blocco spento: stesso corpo, senza colore */
 
-    --sidebar-background: 240 10% 2%;
-    --sidebar-foreground: 0 0% 94%;
-    --sidebar-primary: 261 43% 65%;
-    --sidebar-primary-foreground: 240 10% 6%;
-    --sidebar-accent: 282 65% 55%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 240 10% 8%;
-    --sidebar-ring: 261 43% 65%;
+    --sidebar-background: 30 7% 5.9%;
+    --sidebar-foreground: 39 39% 93%;
+    --sidebar-primary: 42 89% 64%;
+    --sidebar-primary-foreground: 30 9.5% 8.2%;
+    --sidebar-accent: 30 10.5% 14.9%;
+    --sidebar-accent-foreground: 39 39% 93%;
+    --sidebar-border: 33 9.5% 14%;
+    --sidebar-ring: 42 89% 64%;
   }
 }
 
@@ -103,8 +109,9 @@
 }
 
 @layer components {
+  /* Stessa superficie di <Card>/<Panel>: tenuta per i file che la usano ancora. */
   .app-surface {
-    @apply border border-border/80 bg-card;
+    @apply rounded-lg border border-border bg-card;
   }
 
   .touch-target {
@@ -112,7 +119,12 @@
   }
 
   .section-kicker {
-    @apply text-caption font-semibold uppercase tracking-[0.16em] text-muted-foreground;
+    @apply text-caption font-semibold uppercase tracking-[0.14em] text-muted-foreground;
+  }
+
+  /* Valori e numeri di slot: monospazio, cifre tabulari. */
+  .value-mono {
+    @apply font-code font-bold tabular-nums;
   }
 }
 

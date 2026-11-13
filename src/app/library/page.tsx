@@ -25,6 +25,8 @@ import { buildPresetZip, isZipFile, readPresetZip } from '@/lib/preset-zip';
 import { downloadBlob } from '@/lib/download';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { formatSlotLabel } from '@/lib/slot';
+import { LibraryTabs } from '@/components/library/LibraryTabs';
+import { SendToSlotDialog } from '@/components/library/SendToSlotDialog';
 
 
 export default function LibraryPage() {
@@ -62,6 +64,7 @@ export default function LibraryPage() {
   const [isImporting, setIsImporting] = useState(false);
 
   const [isExporting, setIsExporting] = useState(false);
+  const [copySource, setCopySource] = useState<Preset | null>(null);
 
   /** Preset con il nome mostrato nella libreria (i nomi rinominati sono salvati a parte). */
   const presetsForExport = (scope: 'all' | 'selected') =>
@@ -374,6 +377,8 @@ export default function LibraryPage() {
           </div>
         </header>
 
+        <LibraryTabs />
+
         {isSyncing && (
           <div className="space-y-2">
             <div className="flex justify-between text-xs font-medium text-muted-foreground">
@@ -541,6 +546,7 @@ export default function LibraryPage() {
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={(e) => handleConfigurePreset(e as any, preset)}>Modifica</DropdownMenuItem>
                             <DropdownMenuItem onClick={(e) => startEditingName(e as any, preset)}>Rinomina</DropdownMenuItem>
+                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setCopySource({ ...preset, name: displayName }); }}>Copia in un altro slot…</DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </div>
@@ -701,6 +707,12 @@ export default function LibraryPage() {
                             </Button>
                             <Button
                               variant="ghost" size="sm" className="h-8 text-xs font-bold uppercase gap-1"
+                              onClick={(e) => { e.stopPropagation(); setCopySource({ ...preset, name: displayName }); }}
+                            >
+                              Copia
+                            </Button>
+                            <Button
+                              variant="ghost" size="sm" className="h-8 text-xs font-bold uppercase gap-1"
                               onClick={(e) => handleConfigurePreset(e, preset)}
                             >
                               <Settings2 className="w-3 h-3" /> Modifica
@@ -716,6 +728,13 @@ export default function LibraryPage() {
           </Card>
         )}
       </div>
+      <SendToSlotDialog
+        open={!!copySource}
+        onOpenChange={(open) => { if (!open) setCopySource(null); }}
+        preset={copySource}
+        sourceLabel={copySource ? `Copia di ${formatSlotLabel(copySource.slot)} · ${copySource.name}` : ''}
+        excludeSlot={copySource?.slot}
+      />
       <AlertDialog open={!!pendingImport} onOpenChange={(open) => { if (!open && !isImporting) setPendingImport(null); }}>
         <AlertDialogContent>
           <AlertDialogHeader>

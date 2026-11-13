@@ -829,6 +829,105 @@
       "required": [
         "version"
       ]
+    },
+    "ArchivedSound": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "ArchivedSound",
+      "type": "object",
+      "description": "Suono dell'Archivio suoni: preset completo (3 scene) messo da parte dall'editor o prima di sostituire uno slot. Non è legato a uno slot.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Id del documento (snd_…), uguale all'id nel percorso."
+        },
+        "schemaVersion": {
+          "type": "number",
+          "description": "Versione del formato (1)."
+        },
+        "name": {
+          "type": "string",
+          "description": "Nome del suono."
+        },
+        "source": {
+          "type": "string",
+          "enum": [
+            "editor",
+            "slot",
+            "import"
+          ],
+          "description": "Da dove arriva: editor, slot sostituito, importazione."
+        },
+        "originSlot": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "Slot da cui è stato preso (1-128), se c'era."
+        },
+        "preset": {
+          "$ref": "#/backend/entities/Preset",
+          "description": "Preset completo (stesso formato di users/{uid}/presets)."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "source",
+        "preset",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "FactoryPresetNote": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "FactoryPresetNote",
+      "type": "object",
+      "description": "Scheda generata dall'AI per un preset di fabbrica della MG-30: tipo di suono, generi e note.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "slot_N, uguale all'id nel percorso."
+        },
+        "slot": {
+          "type": "number",
+          "description": "Slot di fabbrica (1-128)."
+        },
+        "soundType": {
+          "type": "string",
+          "description": "Tipo di suono (es. clean, crunch, high gain)."
+        },
+        "genres": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Generi consigliati, dalla lista chiusa dell'app (src/lib/genres.ts)."
+        },
+        "notes": {
+          "type": "string",
+          "description": "Note brevi sull'uso."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "slot",
+        "soundType",
+        "genres",
+        "notes",
+        "updatedAt"
+      ]
     }
   },
   "auth": {
@@ -934,6 +1033,46 @@
             {
               "name": "presetId",
               "description": "The unique identifier for the preset."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/soundArchive/{soundId}",
+        "definition": {
+          "entityName": "ArchivedSound",
+          "schema": {
+            "$ref": "#/backend/entities/ArchivedSound"
+          },
+          "description": "Archivio suoni dell'utente. Copia locale in localStorage 'mg30-sound-archive' per chi non ha fatto l'accesso.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "UID del proprietario."
+            },
+            {
+              "name": "soundId",
+              "description": "Id del suono (snd_…)."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/factoryNotes/{noteId}",
+        "definition": {
+          "entityName": "FactoryPresetNote",
+          "schema": {
+            "$ref": "#/backend/entities/FactoryPresetNote"
+          },
+          "description": "Schede AI dei preset di fabbrica. Copia locale in localStorage 'mg30-factory-notes'.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "UID del proprietario."
+            },
+            {
+              "name": "noteId",
+              "description": "slot_N."
             }
           ]
         }

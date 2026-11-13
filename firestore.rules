@@ -86,6 +86,34 @@ service cloud.firestore {
       }
 
       /**
+       * @description Archivio suoni: preset messi da parte (dall'editor o prima di sovrascrivere uno slot).
+       * @path /users/{userId}/soundArchive/{soundId}
+       * @allow (create) owner matches path AND data.id matches soundId
+       * @deny (list) requested by a different user
+       * @principle Path-based ownership and relational integrity.
+       */
+      match /soundArchive/{soundId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && matchesPathId('id', soundId);
+        allow update: if isExistingOwner(userId) && isImmutable('id');
+        allow delete: if isExistingOwner(userId);
+      }
+
+      /**
+       * @description Schede AI dei preset di fabbrica (tipo di suono, generi, note), una per slot.
+       * @path /users/{userId}/factoryNotes/{noteId}
+       * @allow (create) owner matches path AND data.id matches noteId
+       * @deny (list) requested by a different user
+       * @principle Path-based ownership and relational integrity.
+       */
+      match /factoryNotes/{noteId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && matchesPathId('id', noteId);
+        allow update: if isExistingOwner(userId) && isImmutable('id');
+        allow delete: if isExistingOwner(userId);
+      }
+
+      /**
        * @description User-defined tags for organization.
        * @path /users/{userId}/tags/{tagId}
        * @allow (get) owner matches path

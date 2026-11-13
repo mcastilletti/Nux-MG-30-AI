@@ -17,7 +17,8 @@ export interface FactoryPreset {
   effects: EffectState[];
 }
 
-export const FACTORY_PRESETS: FactoryPreset[] = data as FactoryPreset[];
+// Il JSON è generato dallo script e verificato dai test: TypeScript ne inferisce un tipo troppo stretto.
+export const FACTORY_PRESETS: FactoryPreset[] = data as unknown as FactoryPreset[];
 
 export const getFactoryPreset = (slot: number) => FACTORY_PRESETS.find((p) => p.slot === slot);
 

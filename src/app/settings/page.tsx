@@ -27,7 +27,7 @@ function MidiMonitorCard() {
           <div className="flex items-center gap-2">
             <Badge variant="outline" className="text-label">IN: {midiLog.length}</Badge>
             <Badge variant="outline" className="text-label text-success border-success/30">OUT: {midiOutLog.length}</Badge>
-            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { clearMidiLog(); clearMidiOutLog(); }} title="Cancella log">
+            <Button variant="ghost" size="icon" aria-label="Cancella log" onClick={() => { clearMidiLog(); clearMidiOutLog(); }} title="Cancella log">
               <Trash2 className="w-3.5 h-3.5" />
             </Button>
           </div>
@@ -152,7 +152,7 @@ export default function SettingsPage() {
             </div>
 
             <div className="pt-2">
-              <Button variant="outline" size="sm" className="h-8 text-label font-bold" asChild>
+              <Button variant="outline" size="sm" className="min-h-11 text-label font-bold" asChild>
                 <a href="https://console.firebase.google.com/" target="_blank" rel="noreferrer">
                   APRI CONSOLE FIREBASE <ExternalLink className="w-3 h-3 ml-2" />
                 </a>

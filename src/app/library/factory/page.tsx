@@ -171,7 +171,7 @@ export default function FactoryPresetsPage() {
       )}
 
       <div className="flex flex-col gap-2 sm:flex-row">
-        <Input placeholder="Cerca per nome, numero o descrizione…" className="h-11 flex-1" value={search} onChange={(e) => setSearch(e.target.value)} aria-label="Cerca tra i preset di fabbrica" />
+        <Input placeholder="Cerca per nome, numero o descrizione…" className="h-11 min-h-11 flex-1" value={search} onChange={(e) => setSearch(e.target.value)} aria-label="Cerca tra i preset di fabbrica" />
         <Select value={genre} onValueChange={(v) => setGenre(v as Genre | typeof ALL)}>
           <SelectTrigger className="h-11 sm:w-64" aria-label="Filtra per genere"><SelectValue /></SelectTrigger>
           <SelectContent>

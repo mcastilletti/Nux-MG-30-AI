@@ -65,26 +65,37 @@ export default function BandsPage() {
   // Senza account si mostra solo una copia locale già convertita (al logout la cache viene svuotata).
   if (!isUserLoading && !user && !converted) {
     return (
-      <EmptyState
-        icon={<Users className="h-10 w-10" />}
-        title="Accedi per gestire band e playlist"
-        description="Band e playlist sono salvate nel tuo account. Accedi con Google dal menu laterale."
-      />
+      <>
+        <h1 className="sr-only">Band e playlist</h1>
+        <EmptyState
+          icon={<Users className="h-10 w-10" />}
+          title="Accedi per gestire band e playlist"
+          description="Band e playlist sono salvate nel tuo account. Accedi con Google dal menu laterale."
+        />
+      </>
     );
   }
 
   if (loading && bands.length === 0) {
-    return <EmptyState icon={<Loader2 className="h-10 w-10 animate-spin" />} title="Caricamento band e playlist…" />;
+    return (
+      <>
+        <h1 className="sr-only">Band e playlist</h1>
+        <EmptyState icon={<Loader2 className="h-10 w-10 animate-spin" />} title="Caricamento band e playlist…" />
+      </>
+    );
   }
 
   if (!converted) {
     return (
-      <EmptyState
-        icon={<ListMusic className="h-10 w-10" />}
-        title="Prima converti le scalette in playlist"
-        description="Band e playlist si gestiscono qui dopo la conversione. Apri la pagina Note e usa l'avviso «Nuova organizzazione a playlist»."
-        action={<Button asChild className="min-h-11"><Link href="/notes">Vai alle Note</Link></Button>}
-      />
+      <>
+        <h1 className="sr-only">Band e playlist</h1>
+        <EmptyState
+          icon={<ListMusic className="h-10 w-10" />}
+          title="Prima converti le scalette in playlist"
+          description="Band e playlist si gestiscono qui dopo la conversione. Apri la pagina Note e usa l'avviso «Nuova organizzazione a playlist»."
+          action={<Button asChild className="min-h-11"><Link href="/notes">Vai alle Note</Link></Button>}
+        />
+      </>
     );
   }
 

@@ -592,7 +592,7 @@ export default function LibraryPage() {
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="relative z-10 h-7 text-label font-bold uppercase tracking-widest hover:text-primary gap-1"
+                      className="relative z-10 min-h-11 text-label font-bold uppercase tracking-widest hover:text-primary gap-1"
                       onClick={(e) => handleConfigurePreset(e, preset)}
                     >
                       <Settings2 className="w-3 h-3" /> Configura

@@ -24,7 +24,7 @@ def convert(raw, p):
     if p is None:
         return raw
     if p['id'].startswith('subdiv'):
-        # ordine della pedaliera = lista dell'app al contrario (214 = indice 6 = 1/4, verificato sul preset 18); gli altri indici sono ipotesi
+        # ordine della pedaliera = lista dell'app al contrario (verificati 214 = 1/4 e 213 = 1/8D); gli indici 0-4 sono ipotesi
         order = list(reversed(['1/4', '1/8D', '1/8', '1/4T', '1/16', '1/8T', '1/32']))
         idx = raw & 0x0F
         return order[idx] if idx < len(order) else f'raw {raw}'

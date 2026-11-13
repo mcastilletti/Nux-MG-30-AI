@@ -5,8 +5,8 @@ slot,name,block,on,model,params (nome=valore)
 1,CT-RectoBeast,amp,ON,1985 Mesa Dual Rectifier,Gain=15; Master=56; Bass=62; Middle=59; Treble=61; Presence=51; Bias=52; Level=50
 1,CT-RectoBeast,eq,ON,BOSS GE-6,100Hz=63; 220Hz=50; 500Hz=32; 1.2kHz=50; 2.6kHz=49; 6.4kHz=47; Level=50
 1,CT-RectoBeast,noise-gate,ON,NUX Noise Gate,Threshold=20; Decay=50
-1,CT-RectoBeast,modulation,off,ROLAND CE-1 CHORUS,Intensity=59; Depth=63; Rate=36; Sub Div=raw 214 (codifica Sub Div non verificata)
-1,CT-RectoBeast,delay,off,Boss DD-2 Digital Delay,EFFECT LEVEL=20; FEEDBACK=40; DELAY TIME=39; Sub Div=raw 213 (codifica Sub Div non verificata)
+1,CT-RectoBeast,modulation,off,ROLAND CE-1 CHORUS,Intensity=59; Depth=63; Rate=36; Sub Div=1/4
+1,CT-RectoBeast,delay,off,Boss DD-2 Digital Delay,EFFECT LEVEL=20; FEEDBACK=40; DELAY TIME=39; Sub Div=1/8D
 1,CT-RectoBeast,reverb,off,Lexicon 224 Hall Reverb,DECAY=56; PRE DELAY=22; LIVELINESS=64; LEVEL=21
 1,CT-RectoBeast,ir,ON,USER IR CAB,Level=0; Lo Cut=20; Hi Cut=6950
 1,CT-RectoBeast,sr,off,SEND / RETURN,Send=64; Return=64
@@ -17,8 +17,8 @@ slot,name,block,on,model,params (nome=valore)
 2,CT-DriveJCM,amp,ON,1977 Marshall JCM800,Gain=71; Master=33; Bass=50; Middle=60; Treble=67; Presence=49; Bias=67; Level=40
 2,CT-DriveJCM,eq,ON,ALIGN EQ,Band1 Freq=46; Band1 Gain=50; Band1 Q=30; Band2 Freq=0; Band2 Gain=53; Band2 Q=34; Band3 Freq=75; Band3 Gain=41; Band3 Q=43
 2,CT-DriveJCM,noise-gate,ON,NUX Noise Gate,Threshold=20; Decay=50
-2,CT-DriveJCM,modulation,off,ROLAND CE-1 CHORUS,Intensity=59; Depth=63; Rate=36; Sub Div=raw 214 (codifica Sub Div non verificata)
-2,CT-DriveJCM,delay,off,Boss DD-2 Digital Delay,EFFECT LEVEL=20; FEEDBACK=40; DELAY TIME=39; Sub Div=raw 213 (codifica Sub Div non verificata)
+2,CT-DriveJCM,modulation,off,ROLAND CE-1 CHORUS,Intensity=59; Depth=63; Rate=36; Sub Div=1/4
+2,CT-DriveJCM,delay,off,Boss DD-2 Digital Delay,EFFECT LEVEL=20; FEEDBACK=40; DELAY TIME=39; Sub Div=1/8D
 2,CT-DriveJCM,reverb,ON,Lexicon 224 Hall Reverb,DECAY=56; PRE DELAY=22; LIVELINESS=64; LEVEL=21
 2,CT-DriveJCM,ir,ON,USER IR CAB,Level=0; Lo Cut=20; Hi Cut=7400
 2,CT-DriveJCM,sr,off,SEND / RETURN,Send=64; Return=64
@@ -29,8 +29,8 @@ slot,name,block,on,model,params (nome=valore)
 3,CT-AmbientClean,amp,ON,64 Fender Deluxe Reverb,Gain=14; Master=65; Bass=36; Middle=51; Treble=59; Bias=41; Level=70
 3,CT-AmbientClean,eq,ON,MXR 10 BAND,VOL=1; 31.25Hz=43; 62.5Hz=56; 125Hz=58; 250Hz=50; 500Hz=44; 1KHz=52; 2KHz=48; 4KHz=47; 8KHz=48; 16KHz=47; GAIN=-1
 3,CT-AmbientClean,noise-gate,ON,NUX Noise Gate,Threshold=20; Decay=50
-3,CT-AmbientClean,modulation,ON,ROLAND CE-2 CHORUS,Rate=69; Depth=21; Sub Div=raw 214 (codifica Sub Div non verificata)
-3,CT-AmbientClean,delay,ON,NUX DUOTIME,LEVEL=19; TIME1=49; SUB DIV1=raw 214 (codifica Sub Div non verificata); REPEAT1=69; TIME2=76; SUB DIV2=raw 213 (codifica Sub Div non verificata); REPEAT2=70; PARA=52
+3,CT-AmbientClean,modulation,ON,ROLAND CE-2 CHORUS,Rate=69; Depth=21; Sub Div=1/4
+3,CT-AmbientClean,delay,ON,NUX DUOTIME,LEVEL=19; TIME1=49; SUB DIV1=1/4; REPEAT1=69; TIME2=76; SUB DIV2=1/8D; REPEAT2=70; PARA=52
 3,CT-AmbientClean,reverb,ON,SHIMMER REVERB,MIX=13; DECAY=72; SHIM=13
 3,CT-AmbientClean,ir,ON,USER IR CAB,Level=0; Lo Cut=383; Hi Cut=20000
 3,CT-AmbientClean,sr,off,SEND / RETURN,Send=64; Return=64
@@ -41,8 +41,8 @@ slot,name,block,on,model,params (nome=valore)
 4,CT-PlexiLead,amp,ON,68 Marshall Plexi 100W,Gain=33; Master=57; Bass=43; Middle=50; Treble=65; Presence=78; Bias=51; Level=40
 4,CT-PlexiLead,eq,ON,ALIGN EQ,HPF=80Hz; 110Hz=61; 340Hz=49; 660Hz=64; 1300Hz=50; 2600Hz=57; 5000Hz=36; Volume=56
 4,CT-PlexiLead,noise-gate,ON,NUX Noise Gate,Threshold=20; Decay=50
-4,CT-PlexiLead,modulation,off,DUNLOP UNIVIBE,SPEED=66; VOLUME=78; INTENSITY=40; MODE=CHORUS; Sub Div=raw 214 (codifica Sub Div non verificata)
-4,CT-PlexiLead,delay,ON,Ibanez DPL10 Stereo Pan Delay,TIME=34; REPEAT=30; DELAY LEVEL=23; Sub Div=raw 214 (codifica Sub Div non verificata)
+4,CT-PlexiLead,modulation,off,DUNLOP UNIVIBE,SPEED=66; VOLUME=78; INTENSITY=40; MODE=CHORUS; Sub Div=1/4
+4,CT-PlexiLead,delay,ON,Ibanez DPL10 Stereo Pan Delay,TIME=34; REPEAT=30; DELAY LEVEL=23; Sub Div=1/4
 4,CT-PlexiLead,reverb,ON,Lexicon 224 Hall Reverb,DECAY=75; PRE DELAY=22; LIVELINESS=64; LEVEL=22
 4,CT-PlexiLead,ir,ON,USER IR CAB,Level=0; Lo Cut=20; Hi Cut=20000
 4,CT-PlexiLead,sr,off,SEND / RETURN,Send=64; Return=64
@@ -53,8 +53,8 @@ slot,name,block,on,model,params (nome=valore)
 5,PeteT 80's Clean,amp,ON,2008 Fender Supersonic,Gain=39; Master=89; Bass=35; Middle=48; Treble=68; Bright SW=100; Bias=42; Level=40
 5,PeteT 80's Clean,eq,ON,BOSS GE-6,100Hz=50; 220Hz=50; 500Hz=43; 1.2kHz=47; 2.6kHz=54; 6.4kHz=54; Level=50
 5,PeteT 80's Clean,noise-gate,off,NUX Noise Gate,Threshold=20; Decay=50
-5,PeteT 80's Clean,modulation,ON,ROLAND CE-2 CHORUS,Rate=69; Depth=41; Sub Div=raw 214 (codifica Sub Div non verificata)
-5,PeteT 80's Clean,delay,ON,NUX DUOTIME,LEVEL=24; TIME1=100; SUB DIV1=raw 214 (codifica Sub Div non verificata); REPEAT1=49; TIME2=75; SUB DIV2=raw 213 (codifica Sub Div non verificata); REPEAT2=44; PARA=38
+5,PeteT 80's Clean,modulation,ON,ROLAND CE-2 CHORUS,Rate=69; Depth=41; Sub Div=1/4
+5,PeteT 80's Clean,delay,ON,NUX DUOTIME,LEVEL=24; TIME1=100; SUB DIV1=1/4; REPEAT1=49; TIME2=75; SUB DIV2=1/8D; REPEAT2=44; PARA=38
 5,PeteT 80's Clean,reverb,ON,EMT 140 Plate Reverb,DECAY=16; LEVEL=63
 5,PeteT 80's Clean,ir,ON,59 BASSMAN,Mic=U87; Axis=MIDDLE; Level=0; Lo Cut=20; Hi Cut=20000
 5,PeteT 80's Clean,sr,off,SEND / RETURN,Send=64; Return=64
@@ -65,8 +65,8 @@ slot,name,block,on,model,params (nome=valore)
 6,PeteT Plexi Lead,amp,ON,1989 Marshall 1987 X 50W,Gain=63; Master=57; Bass=29; Middle=87; Treble=62; Presence=60; Bias=58; Level=63
 6,PeteT Plexi Lead,eq,ON,BOSS GE-6,100Hz=50; 220Hz=50; 500Hz=37; 1.2kHz=43; 2.6kHz=50; 6.4kHz=50; Level=50
 6,PeteT Plexi Lead,noise-gate,ON,NUX Noise Gate,Threshold=30; Decay=15
-6,PeteT Plexi Lead,modulation,off,BOSS BF-2 Flanger,Level=50; Rate=50; Width=50; F.BACK=50; Sub Div=raw 214 (codifica Sub Div non verificata)
-6,PeteT Plexi Lead,delay,ON,NUX DUOTIME,LEVEL=12; TIME1=50; SUB DIV1=raw 214 (codifica Sub Div non verificata); REPEAT1=59; TIME2=100; SUB DIV2=raw 213 (codifica Sub Div non verificata); REPEAT2=33; PARA=25
+6,PeteT Plexi Lead,modulation,off,BOSS BF-2 Flanger,Level=50; Rate=50; Width=50; F.BACK=50; Sub Div=1/4
+6,PeteT Plexi Lead,delay,ON,NUX DUOTIME,LEVEL=12; TIME1=50; SUB DIV1=1/4; REPEAT1=59; TIME2=100; SUB DIV2=1/8D; REPEAT2=33; PARA=25
 6,PeteT Plexi Lead,reverb,off,T-Rex Room Mate Reverb,DECAY=40; TONE=71; LEVEL=36
 6,PeteT Plexi Lead,ir,ON,MARSHALL GREENBACK 4X12,Mic=U87; Axis=MIDDLE; Level=0; Lo Cut=20; Hi Cut=20000
 6,PeteT Plexi Lead,sr,off,SEND / RETURN,Send=64; Return=64
@@ -77,8 +77,8 @@ slot,name,block,on,model,params (nome=valore)
 7,PeteT Raw BE,amp,ON,2005 Friedman HBE,Gain=28; Master=39; Bass=53; Middle=35; Treble=57; Presence=69; Bias=40; Level=60
 7,PeteT Raw BE,eq,ON,BOSS GE-6,100Hz=54; 220Hz=47; 500Hz=47; 1.2kHz=45; 2.6kHz=50; 6.4kHz=52; Level=53
 7,PeteT Raw BE,noise-gate,ON,NUX Noise Gate,Threshold=42; Decay=25
-7,PeteT Raw BE,modulation,off,MXR STEREO CHORUS,Intensity=71; Width=50; Rate=72; Sub Div=raw 214 (codifica Sub Div non verificata)
-7,PeteT Raw BE,delay,off,Maestro EchoPlex EP-4,TIME=34; LEVEL=37; REPEAT=16; Sub Div=raw 213 (codifica Sub Div non verificata)
+7,PeteT Raw BE,modulation,off,MXR STEREO CHORUS,Intensity=71; Width=50; Rate=72; Sub Div=1/4
+7,PeteT Raw BE,delay,off,Maestro EchoPlex EP-4,TIME=34; LEVEL=37; REPEAT=16; Sub Div=1/8D
 7,PeteT Raw BE,reverb,ON,EMT 140 Plate Reverb,DECAY=23; LEVEL=16
 7,PeteT Raw BE,ir,ON,MARSHALL 4X12,Mic=U87; Axis=CENTER; Level=0; Lo Cut=20; Hi Cut=20000
 7,PeteT Raw BE,sr,off,SEND / RETURN,Send=64; Return=64
@@ -89,8 +89,8 @@ slot,name,block,on,model,params (nome=valore)
 8,PeteT Rotorgrind,amp,ON,2008 Fender Supersonic,Gain=45; Master=78; Bass=33; Middle=46; Treble=55; Bright SW=100; Bias=50; Level=26
 8,PeteT Rotorgrind,eq,off,BOSS GE-6,100Hz=50; 220Hz=50; 500Hz=50; 1.2kHz=50; 2.6kHz=50; 6.4kHz=50; Level=50
 8,PeteT Rotorgrind,noise-gate,ON,NUX Noise Gate,Threshold=35; Decay=50
-8,PeteT Rotorgrind,modulation,ON,ROTARY SPEAKER,BALANCE=37; SPEED=11; Sub Div=raw 214 (codifica Sub Div non verificata)
-8,PeteT Rotorgrind,delay,ON,Boss DM-2 Analog Delay,REPEAT=88; ECHO=32; INTENSITY=36; Sub Div=raw 213 (codifica Sub Div non verificata)
+8,PeteT Rotorgrind,modulation,ON,ROTARY SPEAKER,BALANCE=37; SPEED=11; Sub Div=1/4
+8,PeteT Rotorgrind,delay,ON,Boss DM-2 Analog Delay,REPEAT=88; ECHO=32; INTENSITY=36; Sub Div=1/8D
 8,PeteT Rotorgrind,reverb,ON,Lexicon 224 Hall Reverb,DECAY=77; PRE DELAY=59; LIVELINESS=55; LEVEL=33
 8,PeteT Rotorgrind,ir,ON,59 BASSMAN,Mic=U87; Axis=MIDDLE; Level=0; Lo Cut=20; Hi Cut=20000
 8,PeteT Rotorgrind,sr,off,SEND / RETURN,Send=64; Return=64
@@ -102,7 +102,7 @@ slot,name,block,on,model,params (nome=valore)
 9,LT 80's CLEAN,eq,ON,BOSS GE-6,100Hz=28; 220Hz=40; 500Hz=49; 1.2kHz=50; 2.6kHz=47; 6.4kHz=47; Level=56
 9,LT 80's CLEAN,noise-gate,ON,NUX Noise Gate,Threshold=47; Decay=50
 9,LT 80's CLEAN,modulation,ON,Stereo DETUNE,SHIFT LEFT OUT=26; MIX=72; SHIFT RIGHT OUT=70
-9,LT 80's CLEAN,delay,ON,Ibanez DPL10 Stereo Pan Delay,TIME=34; REPEAT=30; DELAY LEVEL=28; Sub Div=raw 213 (codifica Sub Div non verificata)
+9,LT 80's CLEAN,delay,ON,Ibanez DPL10 Stereo Pan Delay,TIME=34; REPEAT=30; DELAY LEVEL=28; Sub Div=1/8D
 9,LT 80's CLEAN,reverb,ON,Lexicon 224 Hall Reverb,DECAY=73; PRE DELAY=57; LIVELINESS=96; LEVEL=61
 9,LT 80's CLEAN,ir,ON,USER IR CAB,Level=0; Lo Cut=373; Hi Cut=11450
 9,LT 80's CLEAN,sr,off,SEND / RETURN,Send=64; Return=64
@@ -113,8 +113,8 @@ slot,name,block,on,model,params (nome=valore)
 10,LT BLUES DELUXE,amp,ON,64 Fender Deluxe Reverb,Gain=45; Master=36; Bass=55; Middle=40; Treble=36; Bias=58; Level=30
 10,LT BLUES DELUXE,eq,off,BOSS GE-6,100Hz=0; 220Hz=38; 500Hz=70; 1.2kHz=77; 2.6kHz=57; 6.4kHz=11; Level=81
 10,LT BLUES DELUXE,noise-gate,off,NUX Noise Gate,Threshold=20; Decay=50
-10,LT BLUES DELUXE,modulation,ON,DUNLOP UNIVIBE,SPEED=74; VOLUME=100; INTENSITY=61; MODE=VIBRATO; Sub Div=raw 214 (codifica Sub Div non verificata)
-10,LT BLUES DELUXE,delay,off,Boss DM-2 Analog Delay,REPEAT=100; ECHO=26; INTENSITY=36; Sub Div=raw 213 (codifica Sub Div non verificata)
+10,LT BLUES DELUXE,modulation,ON,DUNLOP UNIVIBE,SPEED=74; VOLUME=100; INTENSITY=61; MODE=VIBRATO; Sub Div=1/4
+10,LT BLUES DELUXE,delay,off,Boss DM-2 Analog Delay,REPEAT=100; ECHO=26; INTENSITY=36; Sub Div=1/8D
 10,LT BLUES DELUXE,reverb,ON,EMT 140 Plate Reverb,DECAY=20; LEVEL=12
 10,LT BLUES DELUXE,ir,ON,USER IR CAB,Level=0; Lo Cut=422; Hi Cut=10550
 10,LT BLUES DELUXE,sr,off,SEND / RETURN,Send=64; Return=64
@@ -125,8 +125,8 @@ slot,name,block,on,model,params (nome=valore)
 11,LT PLEXI CRUNCH,amp,ON,68 Marshall Plexi 100W,Gain=18; Master=100; Bass=24; Middle=70; Treble=29; Presence=37; Bias=61; Level=69
 11,LT PLEXI CRUNCH,eq,off,BOSS GE-6,100Hz=46; 220Hz=43; 500Hz=43; 1.2kHz=54; 2.6kHz=51; 6.4kHz=51; Level=59
 11,LT PLEXI CRUNCH,noise-gate,off,NUX Noise Gate,Threshold=20; Decay=50
-11,LT PLEXI CRUNCH,modulation,ON,MXR PHASE 90,SPEED=31; Sub Div=raw 214 (codifica Sub Div non verificata)
-11,LT PLEXI CRUNCH,delay,off,NUX DUOTIME,LEVEL=24; TIME1=100; SUB DIV1=raw 213 (codifica Sub Div non verificata); REPEAT1=23; TIME2=75; SUB DIV2=raw 214 (codifica Sub Div non verificata); REPEAT2=28; PARA=0
+11,LT PLEXI CRUNCH,modulation,ON,MXR PHASE 90,SPEED=31; Sub Div=1/4
+11,LT PLEXI CRUNCH,delay,off,NUX DUOTIME,LEVEL=24; TIME1=100; SUB DIV1=1/8D; REPEAT1=23; TIME2=75; SUB DIV2=1/4; REPEAT2=28; PARA=0
 11,LT PLEXI CRUNCH,reverb,ON,Lexicon 224 Hall Reverb,DECAY=66; PRE DELAY=14; LIVELINESS=85; LEVEL=18
 11,LT PLEXI CRUNCH,ir,ON,USER IR CAB,Level=0; Lo Cut=275; Hi Cut=11600
 11,LT PLEXI CRUNCH,sr,off,SEND / RETURN,Send=64; Return=64
@@ -138,7 +138,7 @@ slot,name,block,on,model,params (nome=valore)
 12,LT UBER CHUNK,eq,off,BOSS GE-6,100Hz=18; 220Hz=47; 500Hz=50; 1.2kHz=67; 2.6kHz=57; 6.4kHz=42; Level=68
 12,LT UBER CHUNK,noise-gate,ON,NUX Noise Gate,Threshold=47; Decay=18
 12,LT UBER CHUNK,modulation,off,Stereo DETUNE,SHIFT LEFT OUT=40; MIX=41; SHIFT RIGHT OUT=60
-12,LT UBER CHUNK,delay,off,NUX DUOTIME,LEVEL=45; TIME1=100; SUB DIV1=raw 213 (codifica Sub Div non verificata); REPEAT1=57; TIME2=75; SUB DIV2=raw 214 (codifica Sub Div non verificata); REPEAT2=24; PARA=0
+12,LT UBER CHUNK,delay,off,NUX DUOTIME,LEVEL=45; TIME1=100; SUB DIV1=1/8D; REPEAT1=57; TIME2=75; SUB DIV2=1/4; REPEAT2=24; PARA=0
 12,LT UBER CHUNK,reverb,ON,Lexicon 224 Hall Reverb,DECAY=11; PRE DELAY=0; LIVELINESS=0; LEVEL=18
 12,LT UBER CHUNK,ir,ON,USER IR CAB,Level=0; Lo Cut=383; Hi Cut=9500
 12,LT UBER CHUNK,sr,off,SEND / RETURN,Send=64; Return=64
@@ -149,8 +149,8 @@ slot,name,block,on,model,params (nome=valore)
 13,Hermans Clean An,amp,ON,64 Fender Deluxe Reverb,Gain=29; Master=76; Bass=71; Middle=57; Treble=38; Bias=60; Level=46
 13,Hermans Clean An,eq,off,BOSS GE-6,100Hz=50; 220Hz=50; 500Hz=50; 1.2kHz=50; 2.6kHz=50; 6.4kHz=50; Level=50
 13,Hermans Clean An,noise-gate,off,NUX Noise Gate,Threshold=20; Decay=50
-13,Hermans Clean An,modulation,off,BOSS TR-3 TREMOLO,RATE=65; DEPTH=11; Sub Div=raw 214 (codifica Sub Div non verificata)
-13,Hermans Clean An,delay,ON,Boss DM-2 Analog Delay,REPEAT=71; ECHO=38; INTENSITY=27; Sub Div=raw 213 (codifica Sub Div non verificata)
+13,Hermans Clean An,modulation,off,BOSS TR-3 TREMOLO,RATE=65; DEPTH=11; Sub Div=1/4
+13,Hermans Clean An,delay,ON,Boss DM-2 Analog Delay,REPEAT=71; ECHO=38; INTENSITY=27; Sub Div=1/8D
 13,Hermans Clean An,reverb,ON,Lexicon 224 Hall Reverb,DECAY=77; PRE DELAY=59; LIVELINESS=85; LEVEL=45
 13,Hermans Clean An,ir,ON,64 DELUXE REVERB,Mic=R122; Axis=MIDDLE; Level=0; Lo Cut=20; Hi Cut=20000
 13,Hermans Clean An,sr,off,SEND / RETURN,Send=64; Return=64
@@ -161,8 +161,8 @@ slot,name,block,on,model,params (nome=valore)
 14,Hermans Cleanish,amp,ON,64 Fender Deluxe Reverb,Gain=39; Master=49; Bass=71; Middle=52; Treble=37; Bias=58; Level=50
 14,Hermans Cleanish,eq,off,BOSS GE-6,100Hz=50; 220Hz=50; 500Hz=50; 1.2kHz=50; 2.6kHz=50; 6.4kHz=50; Level=50
 14,Hermans Cleanish,noise-gate,off,NUX Noise Gate,Threshold=20; Decay=50
-14,Hermans Cleanish,modulation,off,ROLAND CE-1 CHORUS,Intensity=50; Depth=50; Rate=20; Sub Div=raw 214 (codifica Sub Div non verificata)
-14,Hermans Cleanish,delay,off,Boss DM-2 Analog Delay,REPEAT=21; ECHO=28; INTENSITY=17; Sub Div=raw 214 (codifica Sub Div non verificata)
+14,Hermans Cleanish,modulation,off,ROLAND CE-1 CHORUS,Intensity=50; Depth=50; Rate=20; Sub Div=1/4
+14,Hermans Cleanish,delay,off,Boss DM-2 Analog Delay,REPEAT=21; ECHO=28; INTENSITY=17; Sub Div=1/4
 14,Hermans Cleanish,reverb,ON,Vintage Spring Reverb,DECAY=25; LEVEL=31
 14,Hermans Cleanish,ir,ON,64 DELUXE REVERB,Mic=R122; Axis=MIDDLE; Level=0; Lo Cut=20; Hi Cut=20000
 14,Hermans Cleanish,sr,off,SEND / RETURN,Send=64; Return=64
@@ -173,8 +173,8 @@ slot,name,block,on,model,params (nome=valore)
 15,Hermans Crunchy,amp,ON,1967 Marshall JTM45,Gain=34; Master=71; Bass=68; Middle=63; Treble=61; Presence=66; Bias=59; Level=80
 15,Hermans Crunchy,eq,off,BOSS GE-6,100Hz=50; 220Hz=50; 500Hz=50; 1.2kHz=50; 2.6kHz=50; 6.4kHz=50; Level=50
 15,Hermans Crunchy,noise-gate,off,NUX Noise Gate,Threshold=20; Decay=50
-15,Hermans Crunchy,modulation,off,MXR STEREO CHORUS,Intensity=71; Width=50; Rate=72; Sub Div=raw 214 (codifica Sub Div non verificata)
-15,Hermans Crunchy,delay,off,Maestro EchoPlex EP-4,TIME=100; LEVEL=37; REPEAT=49; Sub Div=raw 213 (codifica Sub Div non verificata)
+15,Hermans Crunchy,modulation,off,MXR STEREO CHORUS,Intensity=71; Width=50; Rate=72; Sub Div=1/4
+15,Hermans Crunchy,delay,off,Maestro EchoPlex EP-4,TIME=100; LEVEL=37; REPEAT=49; Sub Div=1/8D
 15,Hermans Crunchy,reverb,ON,Vintage Spring Reverb,DECAY=18; LEVEL=17
 15,Hermans Crunchy,ir,ON,VOX AC30,Mic=R122; Axis=MIDDLE; Level=0; Lo Cut=20; Hi Cut=20000
 15,Hermans Crunchy,sr,off,SEND / RETURN,Send=64; Return=64
@@ -185,8 +185,8 @@ slot,name,block,on,model,params (nome=valore)
 16,Hermans Lead,amp,ON,68 Marshall Plexi 100W,Gain=66; Master=29; Bass=55; Middle=56; Treble=45; Presence=27; Bias=51; Level=65
 16,Hermans Lead,eq,off,BOSS GE-6,100Hz=50; 220Hz=50; 500Hz=50; 1.2kHz=50; 2.6kHz=50; 6.4kHz=50; Level=50
 16,Hermans Lead,noise-gate,off,NUX Noise Gate,Threshold=20; Decay=50
-16,Hermans Lead,modulation,off,ROLAND CE-1 CHORUS,Intensity=50; Depth=50; Rate=20; Sub Div=raw 214 (codifica Sub Div non verificata)
-16,Hermans Lead,delay,ON,Boss DM-2 Analog Delay,REPEAT=66; ECHO=27; INTENSITY=13; Sub Div=raw 213 (codifica Sub Div non verificata)
+16,Hermans Lead,modulation,off,ROLAND CE-1 CHORUS,Intensity=50; Depth=50; Rate=20; Sub Div=1/4
+16,Hermans Lead,delay,ON,Boss DM-2 Analog Delay,REPEAT=66; ECHO=27; INTENSITY=13; Sub Div=1/8D
 16,Hermans Lead,reverb,ON,Lexicon 224 Hall Reverb,DECAY=56; PRE DELAY=45; LIVELINESS=48; LEVEL=34
 16,Hermans Lead,ir,ON,MARSHALL GREENBACK 4X12,Mic=S57; Axis=CENTER; Level=0; Lo Cut=20; Hi Cut=20000
 16,Hermans Lead,sr,off,SEND / RETURN,Send=64; Return=64
@@ -197,8 +197,8 @@ slot,name,block,on,model,params (nome=valore)
 17,VT Blues Lead,amp,ON,1990 Fender Vibro King,Gain=61; Master=39; Bass=33; Middle=61; Treble=66; Presence=64; Bias=57; Level=50
 17,VT Blues Lead,eq,off,BOSS GE-6,100Hz=50; 220Hz=50; 500Hz=50; 1.2kHz=50; 2.6kHz=50; 6.4kHz=50; Level=50
 17,VT Blues Lead,noise-gate,off,NUX Noise Gate,Threshold=20; Decay=50
-17,VT Blues Lead,modulation,off,TC CHORUS,SPEED=58; WIDTH=46; MODE=CHORUS; INTENSITY=58; Sub Div=raw 214 (codifica Sub Div non verificata)
-17,VT Blues Lead,delay,ON,Boss DM-2 Analog Delay,REPEAT=29; ECHO=20; INTENSITY=14; Sub Div=raw 213 (codifica Sub Div non verificata)
+17,VT Blues Lead,modulation,off,TC CHORUS,SPEED=58; WIDTH=46; MODE=PITCH MODULATOR; INTENSITY=58; Sub Div=1/4
+17,VT Blues Lead,delay,ON,Boss DM-2 Analog Delay,REPEAT=29; ECHO=20; INTENSITY=14; Sub Div=1/8D
 17,VT Blues Lead,reverb,ON,Vintage Spring Reverb,DECAY=27; LEVEL=35
 17,VT Blues Lead,ir,ON,59 BASSMAN,Mic=R122; Axis=MIDDLE; Level=2; Lo Cut=20; Hi Cut=20000
 17,VT Blues Lead,sr,off,SEND / RETURN,Send=64; Return=64
@@ -209,8 +209,8 @@ slot,name,block,on,model,params (nome=valore)
 18,VT Clean Chorus,amp,ON,2008 Fender Supersonic,Gain=39; Master=28; Bass=40; Middle=65; Treble=47; Bright SW=100; Bias=62; Level=50
 18,VT Clean Chorus,eq,off,BOSS GE-6,100Hz=50; 220Hz=50; 500Hz=50; 1.2kHz=50; 2.6kHz=50; 6.4kHz=50; Level=50
 18,VT Clean Chorus,noise-gate,off,NUX Noise Gate,Threshold=20; Decay=50
-18,VT Clean Chorus,modulation,ON,TC CHORUS,SPEED=31; WIDTH=65; MODE=PITCH MODULATOR; INTENSITY=32; Sub Div=raw 214 (codifica Sub Div non verificata)
-18,VT Clean Chorus,delay,ON,Ibanez DPL10 Stereo Pan Delay,TIME=37; REPEAT=51; DELAY LEVEL=27; Sub Div=raw 214 (codifica Sub Div non verificata)
+18,VT Clean Chorus,modulation,ON,TC CHORUS,SPEED=31; WIDTH=65; MODE=CHORUS; INTENSITY=32; Sub Div=1/4
+18,VT Clean Chorus,delay,ON,Ibanez DPL10 Stereo Pan Delay,TIME=37; REPEAT=51; DELAY LEVEL=27; Sub Div=1/4
 18,VT Clean Chorus,reverb,ON,EMT 140 Plate Reverb,DECAY=42; LEVEL=29
 18,VT Clean Chorus,ir,ON,59 BASSMAN,Mic=R122; Axis=MIDDLE; Level=0; Lo Cut=20; Hi Cut=20000
 18,VT Clean Chorus,sr,off,SEND / RETURN,Send=64; Return=64
@@ -221,8 +221,8 @@ slot,name,block,on,model,params (nome=valore)
 19,VT Clean,amp,ON,2008 Fender Supersonic,Gain=39; Master=59; Bass=40; Middle=65; Treble=47; Bright SW=100; Bias=62; Level=50
 19,VT Clean,eq,off,BOSS GE-6,100Hz=50; 220Hz=50; 500Hz=50; 1.2kHz=50; 2.6kHz=50; 6.4kHz=50; Level=50
 19,VT Clean,noise-gate,off,NUX Noise Gate,Threshold=20; Decay=50
-19,VT Clean,modulation,off,TC CHORUS,SPEED=58; WIDTH=46; MODE=CHORUS; INTENSITY=58; Sub Div=raw 214 (codifica Sub Div non verificata)
-19,VT Clean,delay,ON,Ibanez DPL10 Stereo Pan Delay,TIME=37; REPEAT=51; DELAY LEVEL=27; Sub Div=raw 214 (codifica Sub Div non verificata)
+19,VT Clean,modulation,off,TC CHORUS,SPEED=58; WIDTH=46; MODE=PITCH MODULATOR; INTENSITY=58; Sub Div=1/4
+19,VT Clean,delay,ON,Ibanez DPL10 Stereo Pan Delay,TIME=37; REPEAT=51; DELAY LEVEL=27; Sub Div=1/4
 19,VT Clean,reverb,ON,Lexicon 224 Hall Reverb,DECAY=77; PRE DELAY=59; LIVELINESS=85; LEVEL=45
 19,VT Clean,ir,ON,VOX AC30,Mic=C3000; Axis=MIDDLE; Level=0; Lo Cut=20; Hi Cut=20000
 19,VT Clean,sr,off,SEND / RETURN,Send=64; Return=64
@@ -233,8 +233,8 @@ slot,name,block,on,model,params (nome=valore)
 20,VT Dist Lead,amp,ON,1985 Mesa Dual Rectifier,Gain=25; Master=36; Bass=31; Middle=54; Treble=43; Presence=43; Bias=58; Level=50
 20,VT Dist Lead,eq,off,BOSS GE-6,100Hz=50; 220Hz=50; 500Hz=50; 1.2kHz=50; 2.6kHz=50; 6.4kHz=50; Level=50
 20,VT Dist Lead,noise-gate,off,NUX Noise Gate,Threshold=20; Decay=50
-20,VT Dist Lead,modulation,off,TC CHORUS,SPEED=58; WIDTH=46; MODE=CHORUS; INTENSITY=58; Sub Div=raw 214 (codifica Sub Div non verificata)
-20,VT Dist Lead,delay,ON,Ibanez DPL10 Stereo Pan Delay,TIME=47; REPEAT=51; DELAY LEVEL=28; Sub Div=raw 214 (codifica Sub Div non verificata)
+20,VT Dist Lead,modulation,off,TC CHORUS,SPEED=58; WIDTH=46; MODE=PITCH MODULATOR; INTENSITY=58; Sub Div=1/4
+20,VT Dist Lead,delay,ON,Ibanez DPL10 Stereo Pan Delay,TIME=47; REPEAT=51; DELAY LEVEL=28; Sub Div=1/4
 20,VT Dist Lead,reverb,ON,Lexicon 224 Hall Reverb,DECAY=77; PRE DELAY=59; LIVELINESS=85; LEVEL=43
 20,VT Dist Lead,ir,ON,MARSHALL VINTAGE 30 4X12,Mic=C3000; Axis=CENTER; Level=2; Lo Cut=20; Hi Cut=9500
 20,VT Dist Lead,sr,off,SEND / RETURN,Send=64; Return=64
@@ -245,8 +245,8 @@ slot,name,block,on,model,params (nome=valore)
 21,A. Barrero Atmos,amp,ON,64 Fender Deluxe Reverb,Gain=29; Master=66; Bass=68; Middle=44; Treble=48; Bias=58; Level=50
 21,A. Barrero Atmos,eq,ON,BOSS GE-6,100Hz=57; 220Hz=50; 500Hz=47; 1.2kHz=49; 2.6kHz=52; 6.4kHz=50; Level=50
 21,A. Barrero Atmos,noise-gate,off,NUX Noise Gate,Threshold=20; Decay=50
-21,A. Barrero Atmos,modulation,ON,ROLAND CE-1 CHORUS,Intensity=50; Depth=50; Rate=20; Sub Div=raw 214 (codifica Sub Div non verificata)
-21,A. Barrero Atmos,delay,ON,NUX DUOTIME,LEVEL=24; TIME1=86; SUB DIV1=raw 214 (codifica Sub Div non verificata); REPEAT1=70; TIME2=70; SUB DIV2=raw 213 (codifica Sub Div non verificata); REPEAT2=90; PARA=38
+21,A. Barrero Atmos,modulation,ON,ROLAND CE-1 CHORUS,Intensity=50; Depth=50; Rate=20; Sub Div=1/4
+21,A. Barrero Atmos,delay,ON,NUX DUOTIME,LEVEL=24; TIME1=86; SUB DIV1=1/4; REPEAT1=70; TIME2=70; SUB DIV2=1/8D; REPEAT2=90; PARA=38
 21,A. Barrero Atmos,reverb,ON,Lexicon 224 Hall Reverb,DECAY=95; PRE DELAY=59; LIVELINESS=85; LEVEL=50
 21,A. Barrero Atmos,ir,ON,64 DELUXE REVERB,Mic=R122; Axis=CENTER; Level=0; Lo Cut=20; Hi Cut=20000
 21,A. Barrero Atmos,sr,off,SEND / RETURN,Send=64; Return=64
@@ -257,8 +257,8 @@ slot,name,block,on,model,params (nome=valore)
 22,A. Barrero Clean,amp,ON,64 Fender Deluxe Reverb,Gain=45; Master=42; Bass=55; Middle=46; Treble=45; Bias=76; Level=51
 22,A. Barrero Clean,eq,off,BOSS GE-6,100Hz=50; 220Hz=50; 500Hz=50; 1.2kHz=50; 2.6kHz=50; 6.4kHz=50; Level=50
 22,A. Barrero Clean,noise-gate,ON,NUX Noise Gate,Threshold=52; Decay=50
-22,A. Barrero Clean,modulation,ON,ROLAND CE-2 CHORUS,Rate=69; Depth=22; Sub Div=raw 214 (codifica Sub Div non verificata)
-22,A. Barrero Clean,delay,ON,Boss DM-2 Analog Delay,REPEAT=62; ECHO=12; INTENSITY=13; Sub Div=raw 213 (codifica Sub Div non verificata)
+22,A. Barrero Clean,modulation,ON,ROLAND CE-2 CHORUS,Rate=69; Depth=22; Sub Div=1/4
+22,A. Barrero Clean,delay,ON,Boss DM-2 Analog Delay,REPEAT=62; ECHO=12; INTENSITY=13; Sub Div=1/8D
 22,A. Barrero Clean,reverb,ON,Lexicon 224 Hall Reverb,DECAY=50; PRE DELAY=49; LIVELINESS=59; LEVEL=20
 22,A. Barrero Clean,ir,ON,64 DELUXE REVERB,Mic=U87; Axis=CENTER; Level=0; Lo Cut=20; Hi Cut=20000
 22,A. Barrero Clean,sr,off,SEND / RETURN,Send=64; Return=64
@@ -269,8 +269,8 @@ slot,name,block,on,model,params (nome=valore)
 23,A. Barrero Lead,amp,ON,1989 Marshall 1987 X 50W,Gain=78; Master=61; Bass=62; Middle=54; Treble=51; Presence=68; Bias=49; Level=52
 23,A. Barrero Lead,eq,off,BOSS GE-6,100Hz=50; 220Hz=50; 500Hz=50; 1.2kHz=50; 2.6kHz=50; 6.4kHz=50; Level=50
 23,A. Barrero Lead,noise-gate,ON,NUX Noise Gate,Threshold=35; Decay=50
-23,A. Barrero Lead,modulation,off,ROLAND CE-1 CHORUS,Intensity=50; Depth=50; Rate=20; Sub Div=raw 214 (codifica Sub Div non verificata)
-23,A. Barrero Lead,delay,ON,Boss DD-2 Digital Delay,EFFECT LEVEL=10; FEEDBACK=10; DELAY TIME=41; Sub Div=raw 213 (codifica Sub Div non verificata)
+23,A. Barrero Lead,modulation,off,ROLAND CE-1 CHORUS,Intensity=50; Depth=50; Rate=20; Sub Div=1/4
+23,A. Barrero Lead,delay,ON,Boss DD-2 Digital Delay,EFFECT LEVEL=10; FEEDBACK=10; DELAY TIME=41; Sub Div=1/8D
 23,A. Barrero Lead,reverb,ON,T-Rex Room Mate Reverb,DECAY=55; TONE=87; LEVEL=22
 23,A. Barrero Lead,ir,ON,MARSHALL VINTAGE 30 4X12,Mic=U87; Axis=MIDDLE; Level=0; Lo Cut=20; Hi Cut=20000
 23,A. Barrero Lead,sr,off,SEND / RETURN,Send=64; Return=64
@@ -281,8 +281,8 @@ slot,name,block,on,model,params (nome=valore)
 24,A. Barrero Tweed,amp,ON,57 Fender Tweed Deluxe,Gain=100; Tone=79; Master=100; Level=76
 24,A. Barrero Tweed,eq,off,BOSS GE-6,100Hz=50; 220Hz=50; 500Hz=50; 1.2kHz=50; 2.6kHz=50; 6.4kHz=50; Level=50
 24,A. Barrero Tweed,noise-gate,ON,NUX Noise Gate,Threshold=20; Decay=50
-24,A. Barrero Tweed,modulation,off,ROLAND CE-1 CHORUS,Intensity=50; Depth=50; Rate=20; Sub Div=raw 214 (codifica Sub Div non verificata)
-24,A. Barrero Tweed,delay,ON,Boss DD-2 Digital Delay,EFFECT LEVEL=10; FEEDBACK=10; DELAY TIME=41; Sub Div=raw 213 (codifica Sub Div non verificata)
+24,A. Barrero Tweed,modulation,off,ROLAND CE-1 CHORUS,Intensity=50; Depth=50; Rate=20; Sub Div=1/4
+24,A. Barrero Tweed,delay,ON,Boss DD-2 Digital Delay,EFFECT LEVEL=10; FEEDBACK=10; DELAY TIME=41; Sub Div=1/8D
 24,A. Barrero Tweed,reverb,ON,Vintage Spring Reverb,DECAY=17; LEVEL=25
 24,A. Barrero Tweed,ir,ON,64 DELUXE REVERB,Mic=U87; Axis=EDGE; Level=0; Lo Cut=20; Hi Cut=20000
 24,A. Barrero Tweed,sr,off,SEND / RETURN,Send=64; Return=64
@@ -293,8 +293,8 @@ slot,name,block,on,model,params (nome=valore)
 25,KitTang Lead,amp,ON,68 Marshall Plexi 100W,Gain=82; Master=41; Bass=69; Middle=63; Treble=80; Presence=79; Bias=54; Level=39
 25,KitTang Lead,eq,ON,BOSS GE-6,100Hz=59; 220Hz=56; 500Hz=52; 1.2kHz=46; 2.6kHz=52; 6.4kHz=61; Level=47
 25,KitTang Lead,noise-gate,off,NUX Noise Gate,Threshold=20; Decay=50
-25,KitTang Lead,modulation,off,BOSS BF-2 Flanger,Level=50; Rate=50; Width=50; F.BACK=50; Sub Div=raw 214 (codifica Sub Div non verificata)
-25,KitTang Lead,delay,ON,NUX DUOTIME,LEVEL=26; TIME1=41; SUB DIV1=raw 214 (codifica Sub Div non verificata); REPEAT1=66; TIME2=59; SUB DIV2=raw 213 (codifica Sub Div non verificata); REPEAT2=55; PARA=0
+25,KitTang Lead,modulation,off,BOSS BF-2 Flanger,Level=50; Rate=50; Width=50; F.BACK=50; Sub Div=1/4
+25,KitTang Lead,delay,ON,NUX DUOTIME,LEVEL=26; TIME1=41; SUB DIV1=1/4; REPEAT1=66; TIME2=59; SUB DIV2=1/8D; REPEAT2=55; PARA=0
 25,KitTang Lead,reverb,ON,Vintage Spring Reverb,DECAY=27; LEVEL=32
 25,KitTang Lead,ir,ON,AMPEG SVT 2X12,Level=0; Lo Cut=20; Hi Cut=20000
 25,KitTang Lead,sr,off,SEND / RETURN,Send=64; Return=64
@@ -305,8 +305,8 @@ slot,name,block,on,model,params (nome=valore)
 26,KitTang Mid Gain,amp,ON,68 Marshall Plexi 100W,Gain=69; Master=37; Bass=69; Middle=63; Treble=80; Presence=79; Bias=54; Level=39
 26,KitTang Mid Gain,eq,ON,BOSS GE-6,100Hz=59; 220Hz=61; 500Hz=63; 1.2kHz=46; 2.6kHz=52; 6.4kHz=53; Level=47
 26,KitTang Mid Gain,noise-gate,off,NUX Noise Gate,Threshold=20; Decay=50
-26,KitTang Mid Gain,modulation,off,BOSS BF-2 Flanger,Level=50; Rate=50; Width=50; F.BACK=50; Sub Div=raw 214 (codifica Sub Div non verificata)
-26,KitTang Mid Gain,delay,ON,NUX DUOTIME,LEVEL=18; TIME1=41; SUB DIV1=raw 214 (codifica Sub Div non verificata); REPEAT1=66; TIME2=59; SUB DIV2=raw 213 (codifica Sub Div non verificata); REPEAT2=55; PARA=0
+26,KitTang Mid Gain,modulation,off,BOSS BF-2 Flanger,Level=50; Rate=50; Width=50; F.BACK=50; Sub Div=1/4
+26,KitTang Mid Gain,delay,ON,NUX DUOTIME,LEVEL=18; TIME1=41; SUB DIV1=1/4; REPEAT1=66; TIME2=59; SUB DIV2=1/8D; REPEAT2=55; PARA=0
 26,KitTang Mid Gain,reverb,ON,Vintage Spring Reverb,DECAY=27; LEVEL=18
 26,KitTang Mid Gain,ir,ON,AMPEG SVT 2X12,Level=0; Lo Cut=20; Hi Cut=20000
 26,KitTang Mid Gain,sr,off,SEND / RETURN,Send=64; Return=64
@@ -317,8 +317,8 @@ slot,name,block,on,model,params (nome=valore)
 27,AG Sim S.Coil,amp,ON,NUX OPTIMA AIR,Gain=21; Master=80; Bass=64; Middle=41; Treble=66; Level=81
 27,AG Sim S.Coil,eq,ON,ALIGN EQ,HPF=160Hz; 110Hz=58; 340Hz=35; 660Hz=64; 1300Hz=44; 2600Hz=61; 5000Hz=67; Volume=56
 27,AG Sim S.Coil,noise-gate,ON,NUX Noise Gate,Threshold=34; Decay=45
-27,AG Sim S.Coil,modulation,off,TC CHORUS,SPEED=59; WIDTH=45; MODE=PITCH MODULATOR; INTENSITY=80; Sub Div=raw 214 (codifica Sub Div non verificata)
-27,AG Sim S.Coil,delay,off,Ibanez DML Modulation Delay,TIME=48; LEVEL=28; MODULATION=59; REPEAT=25; Sub Div=raw 213 (codifica Sub Div non verificata)
+27,AG Sim S.Coil,modulation,off,TC CHORUS,SPEED=59; WIDTH=45; MODE=CHORUS; INTENSITY=80; Sub Div=1/4
+27,AG Sim S.Coil,delay,off,Ibanez DML Modulation Delay,TIME=48; LEVEL=28; MODULATION=59; REPEAT=25; Sub Div=1/8D
 27,AG Sim S.Coil,reverb,ON,Lexicon 224 Hall Reverb,DECAY=59; PRE DELAY=50; LIVELINESS=81; LEVEL=28
 27,AG Sim S.Coil,ir,ON,MARTIN D45 (ACOUSTIC),Level=0; Lo Cut=20; Hi Cut=20000
 27,AG Sim S.Coil,sr,off,SEND / RETURN,Send=64; Return=64
@@ -329,8 +329,8 @@ slot,name,block,on,model,params (nome=valore)
 28,British Clean,amp,ON,VOX AC30,Gain=26; Master=78; Cut=40; Bass=61; Treble=61; Level=53
 28,British Clean,eq,ON,MXR 10 BAND,VOL=0; 31.25Hz=36; 62.5Hz=52; 125Hz=59; 250Hz=36; 500Hz=55; 1KHz=41; 2KHz=68; 4KHz=48; 8KHz=49; 16KHz=41; GAIN=2
 28,British Clean,noise-gate,ON,NUX Noise Gate,Threshold=32; Decay=39
-28,British Clean,modulation,ON,ROLAND CE-2 CHORUS,Rate=69; Depth=30; Sub Div=raw 214 (codifica Sub Div non verificata)
-28,British Clean,delay,off,Boss DM-2 Analog Delay,REPEAT=50; ECHO=50; INTENSITY=50; Sub Div=raw 214 (codifica Sub Div non verificata)
+28,British Clean,modulation,ON,ROLAND CE-2 CHORUS,Rate=69; Depth=30; Sub Div=1/4
+28,British Clean,delay,off,Boss DM-2 Analog Delay,REPEAT=50; ECHO=50; INTENSITY=50; Sub Div=1/4
 28,British Clean,reverb,ON,T-Rex Room Mate Reverb,DECAY=50; TONE=50; LEVEL=28
 28,British Clean,ir,ON,VOX AC30,Mic=R122; Axis=MIDDLE; Level=0; Lo Cut=20; Hi Cut=20000
 28,British Clean,sr,off,SEND / RETURN,Send=64; Return=64
@@ -341,8 +341,8 @@ slot,name,block,on,model,params (nome=valore)
 29,SF Chug Monster,amp,ON,Bognar Uberschall,Gain=31; Master=36; Bass=100; Middle=38; Treble=66; Presence=74; Bias=64; Level=90
 29,SF Chug Monster,eq,ON,BOSS GE-6,100Hz=22; 220Hz=47; 500Hz=49; 1.2kHz=50; 2.6kHz=50; 6.4kHz=50; Level=57
 29,SF Chug Monster,noise-gate,ON,NUX Noise Gate,Threshold=25; Decay=0
-29,SF Chug Monster,modulation,off,TC CHORUS,SPEED=58; WIDTH=46; MODE=CHORUS; INTENSITY=58; Sub Div=raw 214 (codifica Sub Div non verificata)
-29,SF Chug Monster,delay,off,Boss DD-2 Digital Delay,EFFECT LEVEL=37; FEEDBACK=61; DELAY TIME=68; Sub Div=raw 214 (codifica Sub Div non verificata)
+29,SF Chug Monster,modulation,off,TC CHORUS,SPEED=58; WIDTH=46; MODE=PITCH MODULATOR; INTENSITY=58; Sub Div=1/4
+29,SF Chug Monster,delay,off,Boss DD-2 Digital Delay,EFFECT LEVEL=37; FEEDBACK=61; DELAY TIME=68; Sub Div=1/4
 29,SF Chug Monster,reverb,ON,T-Rex Room Mate Reverb,DECAY=50; TONE=100; LEVEL=19
 29,SF Chug Monster,ir,ON,MARSHALL VINTAGE 30 4X12,Mic=C3000; Axis=CENTER; Level=0; Lo Cut=20; Hi Cut=14600
 29,SF Chug Monster,sr,off,SEND / RETURN,Send=64; Return=64
@@ -353,8 +353,8 @@ slot,name,block,on,model,params (nome=valore)
 30,SF Shred or Die,amp,ON,1985 Mesa Dual Rectifier,Gain=50; Master=51; Bass=33; Middle=58; Treble=45; Presence=42; Bias=52; Level=65
 30,SF Shred or Die,eq,off,BOSS GE-6,100Hz=50; 220Hz=50; 500Hz=47; 1.2kHz=52; 2.6kHz=54; 6.4kHz=54; Level=35
 30,SF Shred or Die,noise-gate,ON,NUX Noise Gate,Threshold=38; Decay=21
-30,SF Shred or Die,modulation,off,TC CHORUS,SPEED=58; WIDTH=46; MODE=CHORUS; INTENSITY=58; Sub Div=raw 214 (codifica Sub Div non verificata)
-30,SF Shred or Die,delay,ON,Boss DM-2 Analog Delay,REPEAT=41; ECHO=13; INTENSITY=10; Sub Div=raw 213 (codifica Sub Div non verificata)
+30,SF Shred or Die,modulation,off,TC CHORUS,SPEED=58; WIDTH=46; MODE=PITCH MODULATOR; INTENSITY=58; Sub Div=1/4
+30,SF Shred or Die,delay,ON,Boss DM-2 Analog Delay,REPEAT=41; ECHO=13; INTENSITY=10; Sub Div=1/8D
 30,SF Shred or Die,reverb,off,Vintage Spring Reverb,DECAY=27; LEVEL=35
 30,SF Shred or Die,ir,ON,MARSHALL VINTAGE 30 4X12,Mic=DYN421; Axis=MIDDLE; Level=0; Lo Cut=20; Hi Cut=20000
 30,SF Shred or Die,sr,off,SEND / RETURN,Send=64; Return=64
@@ -365,8 +365,8 @@ slot,name,block,on,model,params (nome=valore)
 31,SFHairNation-800,amp,ON,1977 Marshall JCM800,Gain=71; Master=29; Bass=23; Middle=66; Treble=53; Presence=29; Bias=50; Level=31
 31,SFHairNation-800,eq,ON,BOSS GE-6,100Hz=45; 220Hz=52; 500Hz=50; 1.2kHz=50; 2.6kHz=53; 6.4kHz=57; Level=38
 31,SFHairNation-800,noise-gate,off,NUX Noise Gate,Threshold=20; Decay=50
-31,SFHairNation-800,modulation,off,DUNLOP UNIVIBE,SPEED=54; VOLUME=61; INTENSITY=71; MODE=VIBRATO; Sub Div=raw 214 (codifica Sub Div non verificata)
-31,SFHairNation-800,delay,off,Boss DD-2 Digital Delay,EFFECT LEVEL=33; FEEDBACK=36; DELAY TIME=68; Sub Div=raw 213 (codifica Sub Div non verificata)
+31,SFHairNation-800,modulation,off,DUNLOP UNIVIBE,SPEED=54; VOLUME=61; INTENSITY=71; MODE=VIBRATO; Sub Div=1/4
+31,SFHairNation-800,delay,off,Boss DD-2 Digital Delay,EFFECT LEVEL=33; FEEDBACK=36; DELAY TIME=68; Sub Div=1/8D
 31,SFHairNation-800,reverb,ON,T-Rex Room Mate Reverb,DECAY=58; TONE=58; LEVEL=30
 31,SFHairNation-800,ir,ON,MARSHALL 4X12,Mic=R121; Axis=CENTER; Level=0; Lo Cut=20; Hi Cut=20000
 31,SFHairNation-800,sr,off,SEND / RETURN,Send=64; Return=79
@@ -378,7 +378,7 @@ slot,name,block,on,model,params (nome=valore)
 32,SF Space Ocean,eq,off,BOSS GE-6,100Hz=50; 220Hz=50; 500Hz=50; 1.2kHz=50; 2.6kHz=50; 6.4kHz=50; Level=50
 32,SF Space Ocean,noise-gate,off,NUX Noise Gate,Threshold=20; Decay=50
 32,SF Space Ocean,modulation,ON,Stereo DETUNE,SHIFT LEFT OUT=20; MIX=72; SHIFT RIGHT OUT=74
-32,SF Space Ocean,delay,ON,Ibanez DML Modulation Delay,TIME=48; LEVEL=28; MODULATION=59; REPEAT=25; Sub Div=raw 213 (codifica Sub Div non verificata)
+32,SF Space Ocean,delay,ON,Ibanez DML Modulation Delay,TIME=48; LEVEL=28; MODULATION=59; REPEAT=25; Sub Div=1/8D
 32,SF Space Ocean,reverb,ON,Lexicon 224 Hall Reverb,DECAY=26; PRE DELAY=98; LIVELINESS=76; LEVEL=56
 32,SF Space Ocean,ir,off,59 BASSMAN,Mic=B52; Axis=MIDDLE; Level=0; Lo Cut=20; Hi Cut=20000
 32,SF Space Ocean,sr,off,SEND / RETURN,Send=64; Return=64
@@ -389,8 +389,8 @@ slot,name,block,on,model,params (nome=valore)
 33,LeoGibson Bass,amp,ON,Aguilar Tone Hammer AMP,Gain=44; Master=41; Bass=50; Middle=50; M FREQ=43; Treble=59; Level=51
 33,LeoGibson Bass,eq,off,MXR 10 BAND,VOL=1; 31.25Hz=50; 62.5Hz=69; 125Hz=54; 250Hz=39; 500Hz=35; 1KHz=41; 2KHz=57; 4KHz=66; 8KHz=68; 16KHz=81; GAIN=2
 33,LeoGibson Bass,noise-gate,off,NUX Noise Gate,Threshold=20; Decay=50
-33,LeoGibson Bass,modulation,off,MXR STEREO CHORUS,Intensity=71; Width=50; Rate=72; Sub Div=raw 214 (codifica Sub Div non verificata)
-33,LeoGibson Bass,delay,off,Boss DD-2 Digital Delay,EFFECT LEVEL=33; FEEDBACK=36; DELAY TIME=68; Sub Div=raw 213 (codifica Sub Div non verificata)
+33,LeoGibson Bass,modulation,off,MXR STEREO CHORUS,Intensity=71; Width=50; Rate=72; Sub Div=1/4
+33,LeoGibson Bass,delay,off,Boss DD-2 Digital Delay,EFFECT LEVEL=33; FEEDBACK=36; DELAY TIME=68; Sub Div=1/8D
 33,LeoGibson Bass,reverb,off,T-Rex Room Mate Reverb,DECAY=74; TONE=57; LEVEL=50
 33,LeoGibson Bass,ir,ON,AMPEG SVT 8X10,Level=0; Lo Cut=20; Hi Cut=20000
 33,LeoGibson Bass,sr,off,SEND / RETURN,Send=64; Return=64
@@ -401,8 +401,8 @@ slot,name,block,on,model,params (nome=valore)
 34,LeoGibson Clean,amp,ON,64 Fender Deluxe Reverb,Gain=29; Master=76; Bass=71; Middle=51; Treble=59; Bias=58; Level=50
 34,LeoGibson Clean,eq,ON,BOSS GE-6,100Hz=50; 220Hz=50; 500Hz=50; 1.2kHz=57; 2.6kHz=50; 6.4kHz=67; Level=53
 34,LeoGibson Clean,noise-gate,off,NUX Noise Gate,Threshold=20; Decay=50
-34,LeoGibson Clean,modulation,ON,ROLAND CE-2 CHORUS,Rate=69; Depth=41; Sub Div=raw 214 (codifica Sub Div non verificata)
-34,LeoGibson Clean,delay,ON,Ibanez DPL10 Stereo Pan Delay,TIME=47; REPEAT=32; DELAY LEVEL=44; Sub Div=raw 214 (codifica Sub Div non verificata)
+34,LeoGibson Clean,modulation,ON,ROLAND CE-2 CHORUS,Rate=69; Depth=41; Sub Div=1/4
+34,LeoGibson Clean,delay,ON,Ibanez DPL10 Stereo Pan Delay,TIME=47; REPEAT=32; DELAY LEVEL=44; Sub Div=1/4
 34,LeoGibson Clean,reverb,off,Vintage Spring Reverb,DECAY=27; LEVEL=35
 34,LeoGibson Clean,ir,ON,64 DELUXE REVERB,Mic=R122; Axis=MIDDLE; Level=0; Lo Cut=20; Hi Cut=20000
 34,LeoGibson Clean,sr,off,SEND / RETURN,Send=64; Return=64
@@ -413,8 +413,8 @@ slot,name,block,on,model,params (nome=valore)
 35,LeoGibson Crunch,amp,ON,1977 Marshall JCM800,Gain=69; Master=29; Bass=60; Middle=60; Treble=67; Presence=65; Bias=50; Level=30
 35,LeoGibson Crunch,eq,off,BOSS GE-6,100Hz=50; 220Hz=50; 500Hz=50; 1.2kHz=50; 2.6kHz=50; 6.4kHz=50; Level=50
 35,LeoGibson Crunch,noise-gate,off,NUX Noise Gate,Threshold=20; Decay=50
-35,LeoGibson Crunch,modulation,off,DUNLOP UNIVIBE,SPEED=74; VOLUME=76; INTENSITY=71; MODE=CHORUS; Sub Div=raw 214 (codifica Sub Div non verificata)
-35,LeoGibson Crunch,delay,off,Ibanez DPL10 Stereo Pan Delay,TIME=47; REPEAT=29; DELAY LEVEL=34; Sub Div=raw 214 (codifica Sub Div non verificata)
+35,LeoGibson Crunch,modulation,off,DUNLOP UNIVIBE,SPEED=74; VOLUME=76; INTENSITY=71; MODE=CHORUS; Sub Div=1/4
+35,LeoGibson Crunch,delay,off,Ibanez DPL10 Stereo Pan Delay,TIME=47; REPEAT=29; DELAY LEVEL=34; Sub Div=1/4
 35,LeoGibson Crunch,reverb,off,Lexicon 224 Hall Reverb,DECAY=77; PRE DELAY=59; LIVELINESS=85; LEVEL=62
 35,LeoGibson Crunch,ir,ON,MARSHALL 4X12,Mic=S57; Axis=CENTER; Level=0; Lo Cut=20; Hi Cut=20000
 35,LeoGibson Crunch,sr,off,SEND / RETURN,Send=64; Return=64
@@ -425,8 +425,8 @@ slot,name,block,on,model,params (nome=valore)
 36,LeoGibson Solo,amp,ON,1980 Soldano SLO 100,Gain=79; Master=61; Bass=55; Middle=51; Treble=61; Presence=68; Bias=59; Level=60
 36,LeoGibson Solo,eq,off,BOSS GE-6,100Hz=50; 220Hz=50; 500Hz=50; 1.2kHz=50; 2.6kHz=50; 6.4kHz=50; Level=50
 36,LeoGibson Solo,noise-gate,off,NUX Noise Gate,Threshold=20; Decay=50
-36,LeoGibson Solo,modulation,off,ROLAND CE-2 CHORUS,Rate=65; Depth=41; Sub Div=raw 214 (codifica Sub Div non verificata)
-36,LeoGibson Solo,delay,ON,Ibanez DPL10 Stereo Pan Delay,TIME=47; REPEAT=25; DELAY LEVEL=31; Sub Div=raw 213 (codifica Sub Div non verificata)
+36,LeoGibson Solo,modulation,off,ROLAND CE-2 CHORUS,Rate=65; Depth=41; Sub Div=1/4
+36,LeoGibson Solo,delay,ON,Ibanez DPL10 Stereo Pan Delay,TIME=47; REPEAT=25; DELAY LEVEL=31; Sub Div=1/8D
 36,LeoGibson Solo,reverb,off,Vintage Spring Reverb,DECAY=27; LEVEL=35
 36,LeoGibson Solo,ir,ON,MARSHALL VINTAGE 30 4X12,Mic=S57; Axis=MIDDLE; Level=0; Lo Cut=20; Hi Cut=20000
 36,LeoGibson Solo,sr,off,SEND / RETURN,Send=64; Return=64
@@ -438,7 +438,7 @@ slot,name,block,on,model,params (nome=valore)
 37,MAY P CLEAN SOLO,eq,ON,MXR 10 BAND,VOL=0; 31.25Hz=49; 62.5Hz=46; 125Hz=47; 250Hz=28; 500Hz=50; 1KHz=49; 2KHz=59; 4KHz=59; 8KHz=75; 16KHz=75; GAIN=2
 37,MAY P CLEAN SOLO,noise-gate,ON,NUX Noise Gate,Threshold=16; Decay=100
 37,MAY P CLEAN SOLO,modulation,off,MXR HARMONIZER,KEY=E; SCALE=MINOR; HARM=+8; BLEND=16
-37,MAY P CLEAN SOLO,delay,off,NUX DUOTIME,LEVEL=9; TIME1=66; SUB DIV1=raw 214 (codifica Sub Div non verificata); REPEAT1=17; TIME2=100; SUB DIV2=raw 213 (codifica Sub Div non verificata); REPEAT2=17; PARA=8
+37,MAY P CLEAN SOLO,delay,off,NUX DUOTIME,LEVEL=9; TIME1=66; SUB DIV1=1/4; REPEAT1=17; TIME2=100; SUB DIV2=1/8D; REPEAT2=17; PARA=8
 37,MAY P CLEAN SOLO,reverb,ON,Lexicon 224 Hall Reverb,DECAY=30; PRE DELAY=0; LIVELINESS=80; LEVEL=26
 37,MAY P CLEAN SOLO,ir,ON,AMPEG SVT 8X10,Level=0; Lo Cut=20; Hi Cut=20000
 37,MAY P CLEAN SOLO,sr,off,SEND / RETURN,Send=64; Return=64
@@ -450,7 +450,7 @@ slot,name,block,on,model,params (nome=valore)
 38,MAY P CLEAN,eq,ON,MXR 10 BAND,VOL=1; 31.25Hz=49; 62.5Hz=50; 125Hz=54; 250Hz=36; 500Hz=58; 1KHz=57; 2KHz=59; 4KHz=59; 8KHz=75; 16KHz=75; GAIN=2
 38,MAY P CLEAN,noise-gate,ON,NUX Noise Gate,Threshold=16; Decay=100
 38,MAY P CLEAN,modulation,off,MXR HARMONIZER,KEY=E; SCALE=MINOR; HARM=+8; BLEND=16
-38,MAY P CLEAN,delay,off,NUX DUOTIME,LEVEL=9; TIME1=66; SUB DIV1=raw 214 (codifica Sub Div non verificata); REPEAT1=17; TIME2=100; SUB DIV2=raw 213 (codifica Sub Div non verificata); REPEAT2=17; PARA=8
+38,MAY P CLEAN,delay,off,NUX DUOTIME,LEVEL=9; TIME1=66; SUB DIV1=1/4; REPEAT1=17; TIME2=100; SUB DIV2=1/8D; REPEAT2=17; PARA=8
 38,MAY P CLEAN,reverb,off,Lexicon 224 Hall Reverb,DECAY=30; PRE DELAY=0; LIVELINESS=100; LEVEL=25
 38,MAY P CLEAN,ir,ON,AMPEG SVT 8X10,Level=0; Lo Cut=20; Hi Cut=20000
 38,MAY P CLEAN,sr,off,SEND / RETURN,Send=64; Return=64
@@ -462,7 +462,7 @@ slot,name,block,on,model,params (nome=valore)
 39,MAY P DIST,eq,ON,MXR 10 BAND,VOL=1; 31.25Hz=49; 62.5Hz=50; 125Hz=58; 250Hz=36; 500Hz=57; 1KHz=56; 2KHz=47; 4KHz=39; 8KHz=71; 16KHz=72; GAIN=2
 39,MAY P DIST,noise-gate,ON,NUX Noise Gate,Threshold=16; Decay=100
 39,MAY P DIST,modulation,off,MXR HARMONIZER,KEY=E; SCALE=MINOR; HARM=+8; BLEND=16
-39,MAY P DIST,delay,off,NUX DUOTIME,LEVEL=9; TIME1=66; SUB DIV1=raw 214 (codifica Sub Div non verificata); REPEAT1=17; TIME2=100; SUB DIV2=raw 213 (codifica Sub Div non verificata); REPEAT2=17; PARA=8
+39,MAY P DIST,delay,off,NUX DUOTIME,LEVEL=9; TIME1=66; SUB DIV1=1/4; REPEAT1=17; TIME2=100; SUB DIV2=1/8D; REPEAT2=17; PARA=8
 39,MAY P DIST,reverb,off,Lexicon 224 Hall Reverb,DECAY=30; PRE DELAY=0; LIVELINESS=100; LEVEL=25
 39,MAY P DIST,ir,ON,MARSHALL VINTAGE 30 4X12,Mic=C3000; Axis=CENTER; Level=0; Lo Cut=20; Hi Cut=20000
 39,MAY P DIST,sr,off,SEND / RETURN,Send=64; Return=64
@@ -473,8 +473,8 @@ slot,name,block,on,model,params (nome=valore)
 40,MAY P SLAP DIST,amp,ON,Aguilar Tone Hammer AMP,Gain=26; Master=100; Bass=89; Middle=43; M FREQ=0; Treble=55; Level=92
 40,MAY P SLAP DIST,eq,ON,MXR 10 BAND,VOL=1; 31.25Hz=49; 62.5Hz=53; 125Hz=49; 250Hz=36; 500Hz=61; 1KHz=61; 2KHz=47; 4KHz=39; 8KHz=75; 16KHz=72; GAIN=2
 40,MAY P SLAP DIST,noise-gate,ON,NUX Noise Gate,Threshold=16; Decay=100
-40,MAY P SLAP DIST,modulation,off,ROLAND CE-2 CHORUS,Rate=69; Depth=41; Sub Div=raw 214 (codifica Sub Div non verificata)
-40,MAY P SLAP DIST,delay,off,NUX DUOTIME,LEVEL=16; TIME1=100; SUB DIV1=raw 214 (codifica Sub Div non verificata); REPEAT1=50; TIME2=100; SUB DIV2=raw 213 (codifica Sub Div non verificata); REPEAT2=49; PARA=0
+40,MAY P SLAP DIST,modulation,off,ROLAND CE-2 CHORUS,Rate=69; Depth=41; Sub Div=1/4
+40,MAY P SLAP DIST,delay,off,NUX DUOTIME,LEVEL=16; TIME1=100; SUB DIV1=1/4; REPEAT1=50; TIME2=100; SUB DIV2=1/8D; REPEAT2=49; PARA=0
 40,MAY P SLAP DIST,reverb,off,Vintage Spring Reverb,DECAY=0; LEVEL=0
 40,MAY P SLAP DIST,ir,ON,MARSHALL VINTAGE 30 4X12,Mic=C3000; Axis=MIDDLE; Level=0; Lo Cut=20; Hi Cut=20000
 40,MAY P SLAP DIST,sr,off,SEND / RETURN,Send=64; Return=64
@@ -485,8 +485,8 @@ slot,name,block,on,model,params (nome=valore)
 41,Emir BLUES,amp,ON,67 Marshall Plexi 45W,Gain=37; Master=61; Bass=49; Middle=100; Treble=100; Presence=100; Bias=100; Level=25
 41,Emir BLUES,eq,ON,BOSS GE-6,100Hz=75; 220Hz=58; 500Hz=68; 1.2kHz=57; 2.6kHz=71; 6.4kHz=81; Level=30
 41,Emir BLUES,noise-gate,off,NUX Noise Gate,Threshold=20; Decay=50
-41,Emir BLUES,modulation,off,ROLAND CE-1 CHORUS,Intensity=59; Depth=63; Rate=36; Sub Div=raw 214 (codifica Sub Div non verificata)
-41,Emir BLUES,delay,ON,Ibanez DML Modulation Delay,TIME=30; LEVEL=7; MODULATION=100; REPEAT=21; Sub Div=raw 213 (codifica Sub Div non verificata)
+41,Emir BLUES,modulation,off,ROLAND CE-1 CHORUS,Intensity=59; Depth=63; Rate=36; Sub Div=1/4
+41,Emir BLUES,delay,ON,Ibanez DML Modulation Delay,TIME=30; LEVEL=7; MODULATION=100; REPEAT=21; Sub Div=1/8D
 41,Emir BLUES,reverb,ON,Vintage Spring Reverb,DECAY=18; LEVEL=18
 41,Emir BLUES,ir,ON,MARSHALL 4X12,Mic=C3000; Axis=MIDDLE; Level=0; Lo Cut=20; Hi Cut=20000
 41,Emir BLUES,sr,off,SEND / RETURN,Send=64; Return=64
@@ -497,8 +497,8 @@ slot,name,block,on,model,params (nome=valore)
 42,Emir CLEAN,amp,ON,64 Fender Deluxe Reverb,Gain=7; Master=60; Bass=47; Middle=89; Treble=79; Bias=61; Level=39
 42,Emir CLEAN,eq,ON,BOSS GE-6,100Hz=77; 220Hz=63; 500Hz=63; 1.2kHz=42; 2.6kHz=59; 6.4kHz=78; Level=30
 42,Emir CLEAN,noise-gate,off,NUX Noise Gate,Threshold=20; Decay=50
-42,Emir CLEAN,modulation,ON,MXR STEREO CHORUS,Intensity=15; Width=100; Rate=15; Sub Div=raw 211 (codifica Sub Div non verificata)
-42,Emir CLEAN,delay,ON,Ibanez DML Modulation Delay,TIME=48; LEVEL=18; MODULATION=100; REPEAT=34; Sub Div=raw 213 (codifica Sub Div non verificata)
+42,Emir CLEAN,modulation,ON,MXR STEREO CHORUS,Intensity=15; Width=100; Rate=15; Sub Div=1/4T
+42,Emir CLEAN,delay,ON,Ibanez DML Modulation Delay,TIME=48; LEVEL=18; MODULATION=100; REPEAT=34; Sub Div=1/8D
 42,Emir CLEAN,reverb,ON,SHIMMER REVERB,MIX=64; DECAY=21; SHIM=19
 42,Emir CLEAN,ir,ON,MARSHALL 4X12,Mic=U87; Axis=CENTER; Level=0; Lo Cut=20; Hi Cut=20000
 42,Emir CLEAN,sr,off,SEND / RETURN,Send=64; Return=64
@@ -509,8 +509,8 @@ slot,name,block,on,model,params (nome=valore)
 43,Emir LEAD,amp,ON,1999 DEIZEL VH4,Gain=65; Master=43; Bass=64; Middle=100; Treble=34; Presence=92; Bias=70; Level=39
 43,Emir LEAD,eq,ON,ALIGN EQ,Band1 Freq=47; Band1 Gain=67; Band1 Q=30; Band2 Freq=19; Band2 Gain=76; Band2 Q=78; Band3 Freq=81; Band3 Gain=13; Band3 Q=78
 43,Emir LEAD,noise-gate,ON,NUX Noise Gate,Threshold=36; Decay=20
-43,Emir LEAD,modulation,off,ROLAND CE-1 CHORUS,Intensity=59; Depth=63; Rate=36; Sub Div=raw 214 (codifica Sub Div non verificata)
-43,Emir LEAD,delay,ON,Ibanez DML Modulation Delay,TIME=52; LEVEL=17; MODULATION=100; REPEAT=25; Sub Div=raw 213 (codifica Sub Div non verificata)
+43,Emir LEAD,modulation,off,ROLAND CE-1 CHORUS,Intensity=59; Depth=63; Rate=36; Sub Div=1/4
+43,Emir LEAD,delay,ON,Ibanez DML Modulation Delay,TIME=52; LEVEL=17; MODULATION=100; REPEAT=25; Sub Div=1/8D
 43,Emir LEAD,reverb,ON,Lexicon 224 Hall Reverb,DECAY=36; PRE DELAY=84; LIVELINESS=90; LEVEL=20
 43,Emir LEAD,ir,ON,MARSHALL 4X12,Mic=U87; Axis=CENTER; Level=0; Lo Cut=20; Hi Cut=20000
 43,Emir LEAD,sr,off,SEND / RETURN,Send=64; Return=64
@@ -521,8 +521,8 @@ slot,name,block,on,model,params (nome=valore)
 44,Emir METAL,amp,ON,Bognar Uberschall,Gain=18; Master=45; Bass=71; Middle=63; Treble=13; Presence=67; Bias=64; Level=34
 44,Emir METAL,eq,ON,MXR 10 BAND,VOL=2; 31.25Hz=55; 62.5Hz=69; 125Hz=66; 250Hz=57; 500Hz=48; 1KHz=59; 2KHz=52; 4KHz=56; 8KHz=63; 16KHz=68; GAIN=2
 44,Emir METAL,noise-gate,ON,NUX Noise Gate,Threshold=36; Decay=20
-44,Emir METAL,modulation,off,ROLAND CE-1 CHORUS,Intensity=59; Depth=63; Rate=36; Sub Div=raw 214 (codifica Sub Div non verificata)
-44,Emir METAL,delay,off,Ibanez DML Modulation Delay,TIME=53; LEVEL=22; MODULATION=100; REPEAT=35; Sub Div=raw 213 (codifica Sub Div non verificata)
+44,Emir METAL,modulation,off,ROLAND CE-1 CHORUS,Intensity=59; Depth=63; Rate=36; Sub Div=1/4
+44,Emir METAL,delay,off,Ibanez DML Modulation Delay,TIME=53; LEVEL=22; MODULATION=100; REPEAT=35; Sub Div=1/8D
 44,Emir METAL,reverb,ON,T-Rex Room Mate Reverb,DECAY=33; TONE=54; LEVEL=28
 44,Emir METAL,ir,ON,MARSHALL VINTAGE 30 4X12,Mic=U87; Axis=CENTER; Level=0; Lo Cut=20; Hi Cut=20000
 44,Emir METAL,sr,off,SEND / RETURN,Send=64; Return=64
@@ -533,8 +533,8 @@ slot,name,block,on,model,params (nome=valore)
 45,JL-Super RVD,amp,ON,2008 Fender Supersonic,Gain=50; Master=100; Bass=23; Middle=20; Treble=25; Bright SW=100; Bias=60; Level=100
 45,JL-Super RVD,eq,ON,ALIGN EQ,HPF=80Hz; 110Hz=41; 340Hz=50; 660Hz=60; 1300Hz=28; 2600Hz=50; 5000Hz=48; Volume=78
 45,JL-Super RVD,noise-gate,off,NUX Noise Gate,Threshold=20; Decay=50
-45,JL-Super RVD,modulation,off,BOSS TR-3 TREMOLO,RATE=50; DEPTH=18; Sub Div=raw 214 (codifica Sub Div non verificata)
-45,JL-Super RVD,delay,off,Maestro EchoPlex EP-4,TIME=70; LEVEL=20; REPEAT=50; Sub Div=raw 214 (codifica Sub Div non verificata)
+45,JL-Super RVD,modulation,off,BOSS TR-3 TREMOLO,RATE=50; DEPTH=18; Sub Div=1/4
+45,JL-Super RVD,delay,off,Maestro EchoPlex EP-4,TIME=70; LEVEL=20; REPEAT=50; Sub Div=1/4
 45,JL-Super RVD,reverb,ON,Lexicon 224 Hall Reverb,DECAY=100; PRE DELAY=86; LIVELINESS=100; LEVEL=9
 45,JL-Super RVD,ir,ON,65 TWIN REVERB,Mic=R121; Axis=EDGE; Level=-12; Lo Cut=20; Hi Cut=12650
 45,JL-Super RVD,sr,off,SEND / RETURN,Send=64; Return=64
@@ -546,7 +546,7 @@ slot,name,block,on,model,params (nome=valore)
 46,JL-Warm Lead,eq,ON,ALIGN EQ,Band1 Freq=41; Band1 Gain=0; Band1 Q=38; Band2 Freq=48; Band2 Gain=11; Band2 Q=21; Band3 Freq=52; Band3 Gain=0; Band3 Q=17
 46,JL-Warm Lead,noise-gate,ON,NUX Noise Gate,Threshold=67; Decay=50
 46,JL-Warm Lead,modulation,off,Stereo DETUNE,SHIFT LEFT OUT=70; MIX=71; SHIFT RIGHT OUT=30
-46,JL-Warm Lead,delay,ON,Boss DD-2 Digital Delay,EFFECT LEVEL=25; FEEDBACK=65; DELAY TIME=50; Sub Div=raw 214 (codifica Sub Div non verificata)
+46,JL-Warm Lead,delay,ON,Boss DD-2 Digital Delay,EFFECT LEVEL=25; FEEDBACK=65; DELAY TIME=50; Sub Div=1/4
 46,JL-Warm Lead,reverb,ON,Lexicon 224 Hall Reverb,DECAY=89; PRE DELAY=100; LIVELINESS=100; LEVEL=10
 46,JL-Warm Lead,ir,ON,MARSHALL VINTAGE 30 4X12,Mic=U87; Axis=EDGE; Level=5; Lo Cut=598; Hi Cut=5000
 46,JL-Warm Lead,sr,off,SEND / RETURN,Send=64; Return=64
@@ -557,8 +557,8 @@ slot,name,block,on,model,params (nome=valore)
 47,JL-PLEXI,amp,ON,68 Marshall Plexi 100W,Gain=26; Master=100; Bass=0; Middle=100; Treble=0; Presence=0; Bias=100; Level=60
 47,JL-PLEXI,eq,ON,ALIGN EQ,Band1 Freq=10; Band1 Gain=49; Band1 Q=38; Band2 Freq=50; Band2 Gain=7; Band2 Q=21; Band3 Freq=37; Band3 Gain=11; Band3 Q=15
 47,JL-PLEXI,noise-gate,off,NUX Noise Gate,Threshold=20; Decay=50
-47,JL-PLEXI,modulation,off,MXR PHASE 90,SPEED=12; Sub Div=raw 214 (codifica Sub Div non verificata)
-47,JL-PLEXI,delay,off,Boss DD-2 Digital Delay,EFFECT LEVEL=20; FEEDBACK=61; DELAY TIME=50; Sub Div=raw 214 (codifica Sub Div non verificata)
+47,JL-PLEXI,modulation,off,MXR PHASE 90,SPEED=12; Sub Div=1/4
+47,JL-PLEXI,delay,off,Boss DD-2 Digital Delay,EFFECT LEVEL=20; FEEDBACK=61; DELAY TIME=50; Sub Div=1/4
 47,JL-PLEXI,reverb,ON,Lexicon 224 Hall Reverb,DECAY=81; PRE DELAY=100; LIVELINESS=100; LEVEL=5
 47,JL-PLEXI,ir,ON,MARSHALL VINTAGE 30 4X12,Mic=U87; Axis=CENTER; Level=2; Lo Cut=422; Hi Cut=5000
 47,JL-PLEXI,sr,off,SEND / RETURN,Send=64; Return=64
@@ -570,7 +570,7 @@ slot,name,block,on,model,params (nome=valore)
 48,JL-Heavy,eq,ON,ALIGN EQ,Band1 Freq=10; Band1 Gain=49; Band1 Q=38; Band2 Freq=42; Band2 Gain=0; Band2 Q=21; Band3 Freq=68; Band3 Gain=0; Band3 Q=15
 48,JL-Heavy,noise-gate,ON,NUX Noise Gate,Threshold=65; Decay=0
 48,JL-Heavy,modulation,off,Stereo DETUNE,SHIFT LEFT OUT=38; MIX=50; SHIFT RIGHT OUT=64
-48,JL-Heavy,delay,off,NUX DUOTIME,LEVEL=25; TIME1=59; SUB DIV1=raw 214 (codifica Sub Div non verificata); REPEAT1=65; TIME2=42; SUB DIV2=raw 213 (codifica Sub Div non verificata); REPEAT2=80; PARA=0
+48,JL-Heavy,delay,off,NUX DUOTIME,LEVEL=25; TIME1=59; SUB DIV1=1/4; REPEAT1=65; TIME2=42; SUB DIV2=1/8D; REPEAT2=80; PARA=0
 48,JL-Heavy,reverb,off,Lexicon 224 Hall Reverb,DECAY=90; PRE DELAY=100; LIVELINESS=100; LEVEL=15
 48,JL-Heavy,ir,ON,MARSHALL VINTAGE 30 4X12,Mic=U87; Axis=CENTER; Level=-12; Lo Cut=422; Hi Cut=5000
 48,JL-Heavy,sr,off,SEND / RETURN,Send=64; Return=64
@@ -581,8 +581,8 @@ slot,name,block,on,model,params (nome=valore)
 49,JL-Bassman,amp,ON,59 Fender Bassman,Gain=30; Master=100; Bass=0; Middle=100; Treble=30; Presence=100; Bias=100; Level=100
 49,JL-Bassman,eq,ON,ALIGN EQ,Band1 Freq=24; Band1 Gain=0; Band1 Q=50; Band2 Freq=47; Band2 Gain=18; Band2 Q=18; Band3 Freq=100; Band3 Gain=0; Band3 Q=53
 49,JL-Bassman,noise-gate,off,NUX Noise Gate,Threshold=20; Decay=50
-49,JL-Bassman,modulation,off,ROTARY SPEAKER,BALANCE=18; SPEED=62; Sub Div=raw 214 (codifica Sub Div non verificata)
-49,JL-Bassman,delay,off,Maestro EchoPlex EP-4,TIME=100; LEVEL=5; REPEAT=20; Sub Div=raw 213 (codifica Sub Div non verificata)
+49,JL-Bassman,modulation,off,ROTARY SPEAKER,BALANCE=18; SPEED=62; Sub Div=1/4
+49,JL-Bassman,delay,off,Maestro EchoPlex EP-4,TIME=100; LEVEL=5; REPEAT=20; Sub Div=1/8D
 49,JL-Bassman,reverb,ON,Lexicon 224 Hall Reverb,DECAY=100; PRE DELAY=84; LIVELINESS=100; LEVEL=9
 49,JL-Bassman,ir,ON,MARSHALL 4X12,Mic=U87; Axis=MIDDLE; Level=-9; Lo Cut=334; Hi Cut=5000
 49,JL-Bassman,sr,off,SEND / RETURN,Send=64; Return=64
@@ -594,7 +594,7 @@ slot,name,block,on,model,params (nome=valore)
 50,JL-JC120,eq,ON,ALIGN EQ,Band1 Freq=26; Band1 Gain=0; Band1 Q=34; Band2 Freq=47; Band2 Gain=31; Band2 Q=16; Band3 Freq=100; Band3 Gain=0; Band3 Q=61
 50,JL-JC120,noise-gate,off,NUX Noise Gate,Threshold=20; Decay=50
 50,JL-JC120,modulation,ON,Stereo DETUNE,SHIFT LEFT OUT=64; MIX=51; SHIFT RIGHT OUT=36
-50,JL-JC120,delay,ON,NUX DUOTIME,LEVEL=25; TIME1=44; SUB DIV1=raw 214 (codifica Sub Div non verificata); REPEAT1=80; TIME2=57; SUB DIV2=raw 214 (codifica Sub Div non verificata); REPEAT2=75; PARA=0
+50,JL-JC120,delay,ON,NUX DUOTIME,LEVEL=25; TIME1=44; SUB DIV1=1/4; REPEAT1=80; TIME2=57; SUB DIV2=1/4; REPEAT2=75; PARA=0
 50,JL-JC120,reverb,ON,Lexicon 224 Hall Reverb,DECAY=94; PRE DELAY=100; LIVELINESS=100; LEVEL=7
 50,JL-JC120,ir,ON,ROLAND JC120,Mic=C3000; Axis=MIDDLE; Level=-12; Lo Cut=598; Hi Cut=20000
 50,JL-JC120,sr,off,SEND / RETURN,Send=64; Return=64
@@ -605,8 +605,8 @@ slot,name,block,on,model,params (nome=valore)
 51,JL-L. Kravitz,amp,ON,1989 Marshall 1987 X 50W,Gain=10; Master=100; Bass=20; Middle=60; Treble=100; Presence=100; Bias=100; Level=95
 51,JL-L. Kravitz,eq,ON,ALIGN EQ,Band1 Freq=24; Band1 Gain=0; Band1 Q=50; Band2 Freq=45; Band2 Gain=32; Band2 Q=18; Band3 Freq=100; Band3 Gain=0; Band3 Q=53
 51,JL-L. Kravitz,noise-gate,ON,NUX Noise Gate,Threshold=52; Decay=0
-51,JL-L. Kravitz,modulation,off,BOSS BF-2 Flanger,Level=100; Rate=20; Width=0; F.BACK=30; Sub Div=raw 214 (codifica Sub Div non verificata)
-51,JL-L. Kravitz,delay,off,Boss DD-2 Digital Delay,EFFECT LEVEL=25; FEEDBACK=55; DELAY TIME=50; Sub Div=raw 213 (codifica Sub Div non verificata)
+51,JL-L. Kravitz,modulation,off,BOSS BF-2 Flanger,Level=100; Rate=20; Width=0; F.BACK=30; Sub Div=1/4
+51,JL-L. Kravitz,delay,off,Boss DD-2 Digital Delay,EFFECT LEVEL=25; FEEDBACK=55; DELAY TIME=50; Sub Div=1/8D
 51,JL-L. Kravitz,reverb,off,Lexicon 224 Hall Reverb,DECAY=84; PRE DELAY=100; LIVELINESS=100; LEVEL=9
 51,JL-L. Kravitz,ir,ON,MARSHALL 4X12,Mic=U87; Axis=MIDDLE; Level=-12; Lo Cut=20; Hi Cut=12500
 51,JL-L. Kravitz,sr,off,SEND / RETURN,Send=64; Return=64
@@ -618,7 +618,7 @@ slot,name,block,on,model,params (nome=valore)
 52,JL-Slash,eq,ON,ALIGN EQ,Band1 Freq=24; Band1 Gain=0; Band1 Q=50; Band2 Freq=45; Band2 Gain=32; Band2 Q=18; Band3 Freq=99; Band3 Gain=0; Band3 Q=52
 52,JL-Slash,noise-gate,ON,NUX Noise Gate,Threshold=55; Decay=0
 52,JL-Slash,modulation,off,Stereo DETUNE,SHIFT LEFT OUT=40; MIX=50; SHIFT RIGHT OUT=60
-52,JL-Slash,delay,off,Boss DD-2 Digital Delay,EFFECT LEVEL=25; FEEDBACK=55; DELAY TIME=50; Sub Div=raw 213 (codifica Sub Div non verificata)
+52,JL-Slash,delay,off,Boss DD-2 Digital Delay,EFFECT LEVEL=25; FEEDBACK=55; DELAY TIME=50; Sub Div=1/8D
 52,JL-Slash,reverb,ON,Lexicon 224 Hall Reverb,DECAY=90; PRE DELAY=100; LIVELINESS=59; LEVEL=4
 52,JL-Slash,ir,ON,MARSHALL 4X12,Mic=U87; Axis=MIDDLE; Level=-10; Lo Cut=294; Hi Cut=9200
 52,JL-Slash,sr,off,SEND / RETURN,Send=64; Return=64
@@ -629,8 +629,8 @@ slot,name,block,on,model,params (nome=valore)
 53,JCordy 30,amp,ON,1986 Matchless DC30,Gain=25; Master=59; Cut=55; Bass=65; Treble=62; Level=52
 53,JCordy 30,eq,off,BOSS GE-6,100Hz=50; 220Hz=50; 500Hz=50; 1.2kHz=50; 2.6kHz=50; 6.4kHz=50; Level=50
 53,JCordy 30,noise-gate,off,NUX Noise Gate,Threshold=20; Decay=50
-53,JCordy 30,modulation,off,ROLAND CE-1 CHORUS,Intensity=50; Depth=50; Rate=20; Sub Div=raw 214 (codifica Sub Div non verificata)
-53,JCordy 30,delay,ON,Ibanez DPL10 Stereo Pan Delay,TIME=47; REPEAT=51; DELAY LEVEL=26; Sub Div=raw 214 (codifica Sub Div non verificata)
+53,JCordy 30,modulation,off,ROLAND CE-1 CHORUS,Intensity=50; Depth=50; Rate=20; Sub Div=1/4
+53,JCordy 30,delay,ON,Ibanez DPL10 Stereo Pan Delay,TIME=47; REPEAT=51; DELAY LEVEL=26; Sub Div=1/4
 53,JCordy 30,reverb,ON,Lexicon 224 Hall Reverb,DECAY=77; PRE DELAY=0; LIVELINESS=85; LEVEL=33
 53,JCordy 30,ir,ON,VOX AC30,Mic=C3000; Axis=MIDDLE; Level=0; Lo Cut=20; Hi Cut=20000
 53,JCordy 30,sr,off,SEND / RETURN,Send=64; Return=64
@@ -641,8 +641,8 @@ slot,name,block,on,model,params (nome=valore)
 54,JCordy TS,amp,ON,1990 Fender Vibro King,Gain=22; Master=71; Bass=48; Middle=67; Treble=60; Presence=61; Bias=57; Level=61
 54,JCordy TS,eq,off,BOSS GE-6,100Hz=50; 220Hz=50; 500Hz=50; 1.2kHz=50; 2.6kHz=50; 6.4kHz=50; Level=50
 54,JCordy TS,noise-gate,off,NUX Noise Gate,Threshold=20; Decay=50
-54,JCordy TS,modulation,ON,BOSS VB-2 Vibrato,Rate=25; Depth=12; Sub Div=raw 214 (codifica Sub Div non verificata)
-54,JCordy TS,delay,ON,Ibanez DPL10 Stereo Pan Delay,TIME=47; REPEAT=51; DELAY LEVEL=36; Sub Div=raw 214 (codifica Sub Div non verificata)
+54,JCordy TS,modulation,ON,BOSS VB-2 Vibrato,Rate=25; Depth=12; Sub Div=1/4
+54,JCordy TS,delay,ON,Ibanez DPL10 Stereo Pan Delay,TIME=47; REPEAT=51; DELAY LEVEL=36; Sub Div=1/4
 54,JCordy TS,reverb,ON,Lexicon 224 Hall Reverb,DECAY=77; PRE DELAY=59; LIVELINESS=85; LEVEL=34
 54,JCordy TS,ir,ON,64 DELUXE REVERB,Mic=U87; Axis=CENTER; Level=0; Lo Cut=20; Hi Cut=20000
 54,JCordy TS,sr,off,SEND / RETURN,Send=64; Return=64
@@ -653,8 +653,8 @@ slot,name,block,on,model,params (nome=valore)
 55,JCordy Eric Lead,amp,ON,68 Marshall Plexi 100W,Gain=100; Master=100; Bass=35; Middle=100; Treble=0; Presence=0; Bias=51; Level=60
 55,JCordy Eric Lead,eq,ON,MXR 10 BAND,VOL=1; 31.25Hz=43; 62.5Hz=53; 125Hz=54; 250Hz=39; 500Hz=56; 1KHz=52; 2KHz=59; 4KHz=38; 8KHz=30; 16KHz=29; GAIN=2
 55,JCordy Eric Lead,noise-gate,ON,NUX Noise Gate,Threshold=31; Decay=50
-55,JCordy Eric Lead,modulation,off,ROLAND CE-1 CHORUS,Intensity=50; Depth=50; Rate=20; Sub Div=raw 214 (codifica Sub Div non verificata)
-55,JCordy Eric Lead,delay,ON,Ibanez DPL10 Stereo Pan Delay,TIME=47; REPEAT=51; DELAY LEVEL=49; Sub Div=raw 214 (codifica Sub Div non verificata)
+55,JCordy Eric Lead,modulation,off,ROLAND CE-1 CHORUS,Intensity=50; Depth=50; Rate=20; Sub Div=1/4
+55,JCordy Eric Lead,delay,ON,Ibanez DPL10 Stereo Pan Delay,TIME=47; REPEAT=51; DELAY LEVEL=49; Sub Div=1/4
 55,JCordy Eric Lead,reverb,ON,Lexicon 224 Hall Reverb,DECAY=77; PRE DELAY=59; LIVELINESS=75; LEVEL=38
 55,JCordy Eric Lead,ir,ON,64 DELUXE REVERB,Mic=U87; Axis=CENTER; Level=-4; Lo Cut=20; Hi Cut=6950
 55,JCordy Eric Lead,sr,off,SEND / RETURN,Send=64; Return=64
@@ -665,8 +665,8 @@ slot,name,block,on,model,params (nome=valore)
 56,JCordy Clean,amp,ON,1990 Fender Vibro King,Gain=22; Master=71; Bass=48; Middle=67; Treble=60; Presence=61; Bias=57; Level=61
 56,JCordy Clean,eq,off,BOSS GE-6,100Hz=50; 220Hz=50; 500Hz=50; 1.2kHz=50; 2.6kHz=50; 6.4kHz=50; Level=50
 56,JCordy Clean,noise-gate,off,NUX Noise Gate,Threshold=20; Decay=50
-56,JCordy Clean,modulation,off,ROLAND CE-1 CHORUS,Intensity=50; Depth=50; Rate=20; Sub Div=raw 214 (codifica Sub Div non verificata)
-56,JCordy Clean,delay,ON,Ibanez DPL10 Stereo Pan Delay,TIME=47; REPEAT=51; DELAY LEVEL=36; Sub Div=raw 214 (codifica Sub Div non verificata)
+56,JCordy Clean,modulation,off,ROLAND CE-1 CHORUS,Intensity=50; Depth=50; Rate=20; Sub Div=1/4
+56,JCordy Clean,delay,ON,Ibanez DPL10 Stereo Pan Delay,TIME=47; REPEAT=51; DELAY LEVEL=36; Sub Div=1/4
 56,JCordy Clean,reverb,ON,Lexicon 224 Hall Reverb,DECAY=77; PRE DELAY=59; LIVELINESS=85; LEVEL=34
 56,JCordy Clean,ir,ON,64 DELUXE REVERB,Mic=U87; Axis=CENTER; Level=0; Lo Cut=20; Hi Cut=20000
 56,JCordy Clean,sr,off,SEND / RETURN,Send=64; Return=64
@@ -677,8 +677,8 @@ slot,name,block,on,model,params (nome=valore)
 57,JCordy Lead,amp,ON,2005 Friedman HBE,Gain=38; Master=60; Bass=45; Middle=100; Treble=72; Presence=44; Bias=53; Level=78
 57,JCordy Lead,eq,ON,MXR 10 BAND,VOL=1; 31.25Hz=43; 62.5Hz=53; 125Hz=54; 250Hz=39; 500Hz=56; 1KHz=52; 2KHz=59; 4KHz=38; 8KHz=30; 16KHz=29; GAIN=2
 57,JCordy Lead,noise-gate,off,NUX Noise Gate,Threshold=20; Decay=50
-57,JCordy Lead,modulation,off,ROLAND CE-1 CHORUS,Intensity=50; Depth=50; Rate=20; Sub Div=raw 214 (codifica Sub Div non verificata)
-57,JCordy Lead,delay,ON,Ibanez DPL10 Stereo Pan Delay,TIME=47; REPEAT=51; DELAY LEVEL=49; Sub Div=raw 214 (codifica Sub Div non verificata)
+57,JCordy Lead,modulation,off,ROLAND CE-1 CHORUS,Intensity=50; Depth=50; Rate=20; Sub Div=1/4
+57,JCordy Lead,delay,ON,Ibanez DPL10 Stereo Pan Delay,TIME=47; REPEAT=51; DELAY LEVEL=49; Sub Div=1/4
 57,JCordy Lead,reverb,ON,Lexicon 224 Hall Reverb,DECAY=77; PRE DELAY=59; LIVELINESS=75; LEVEL=38
 57,JCordy Lead,ir,ON,64 DELUXE REVERB,Mic=U87; Axis=CENTER; Level=0; Lo Cut=20; Hi Cut=5000
 57,JCordy Lead,sr,off,SEND / RETURN,Send=64; Return=64
@@ -689,8 +689,8 @@ slot,name,block,on,model,params (nome=valore)
 58,JCordy Lead 2,amp,ON,1978 Mesa Boogie MK1,Gain=64; Master=86; Bass=53; Middle=65; Treble=56; Presence=62; Bias=60; Level=50
 58,JCordy Lead 2,eq,ON,MXR 10 BAND,VOL=1; 31.25Hz=43; 62.5Hz=53; 125Hz=54; 250Hz=39; 500Hz=56; 1KHz=52; 2KHz=59; 4KHz=33; 8KHz=23; 16KHz=29; GAIN=2
 58,JCordy Lead 2,noise-gate,off,NUX Noise Gate,Threshold=20; Decay=50
-58,JCordy Lead 2,modulation,off,ROLAND CE-1 CHORUS,Intensity=50; Depth=50; Rate=20; Sub Div=raw 214 (codifica Sub Div non verificata)
-58,JCordy Lead 2,delay,ON,Ibanez DPL10 Stereo Pan Delay,TIME=47; REPEAT=51; DELAY LEVEL=49; Sub Div=raw 214 (codifica Sub Div non verificata)
+58,JCordy Lead 2,modulation,off,ROLAND CE-1 CHORUS,Intensity=50; Depth=50; Rate=20; Sub Div=1/4
+58,JCordy Lead 2,delay,ON,Ibanez DPL10 Stereo Pan Delay,TIME=47; REPEAT=51; DELAY LEVEL=49; Sub Div=1/4
 58,JCordy Lead 2,reverb,ON,Lexicon 224 Hall Reverb,DECAY=77; PRE DELAY=59; LIVELINESS=75; LEVEL=38
 58,JCordy Lead 2,ir,ON,64 DELUXE REVERB,Mic=U87; Axis=CENTER; Level=0; Lo Cut=20; Hi Cut=5000
 58,JCordy Lead 2,sr,off,SEND / RETURN,Send=64; Return=64
@@ -701,8 +701,8 @@ slot,name,block,on,model,params (nome=valore)
 59,MK AG Sim Mag,amp,ON,NUX STAGEMAN ACOUSTIC,Gain=28; Master=42; Bass=58; Middle=56; Treble=67; Level=50
 59,MK AG Sim Mag,eq,ON,ALIGN EQ,HPF=160Hz; 110Hz=58; 340Hz=35; 660Hz=64; 1300Hz=44; 2600Hz=61; 5000Hz=67; Volume=56
 59,MK AG Sim Mag,noise-gate,ON,NUX Noise Gate,Threshold=34; Decay=45
-59,MK AG Sim Mag,modulation,off,TC CHORUS,SPEED=59; WIDTH=45; MODE=PITCH MODULATOR; INTENSITY=80; Sub Div=raw 214 (codifica Sub Div non verificata)
-59,MK AG Sim Mag,delay,off,Ibanez DML Modulation Delay,TIME=48; LEVEL=28; MODULATION=59; REPEAT=25; Sub Div=raw 213 (codifica Sub Div non verificata)
+59,MK AG Sim Mag,modulation,off,TC CHORUS,SPEED=59; WIDTH=45; MODE=CHORUS; INTENSITY=80; Sub Div=1/4
+59,MK AG Sim Mag,delay,off,Ibanez DML Modulation Delay,TIME=48; LEVEL=28; MODULATION=59; REPEAT=25; Sub Div=1/8D
 59,MK AG Sim Mag,reverb,ON,Lexicon 224 Hall Reverb,DECAY=59; PRE DELAY=50; LIVELINESS=81; LEVEL=28
 59,MK AG Sim Mag,ir,ON,GIBSON HUMMINGBIRD (ACOUSTIC),Level=1; Lo Cut=20; Hi Cut=20000
 59,MK AG Sim Mag,sr,off,SEND / RETURN,Send=64; Return=64
@@ -713,8 +713,8 @@ slot,name,block,on,model,params (nome=valore)
 60,MK Santana Europ,amp,ON,1978 Mesa Boogie MK1,Gain=18; Master=96; Bass=53; Middle=68; Treble=56; Presence=62; Bias=67; Level=50
 60,MK Santana Europ,eq,off,BOSS GE-6,100Hz=50; 220Hz=50; 500Hz=50; 1.2kHz=50; 2.6kHz=50; 6.4kHz=50; Level=50
 60,MK Santana Europ,noise-gate,ON,NUX Noise Gate,Threshold=35; Decay=38
-60,MK Santana Europ,modulation,off,ROLAND CE-1 CHORUS,Intensity=50; Depth=50; Rate=20; Sub Div=raw 214 (codifica Sub Div non verificata)
-60,MK Santana Europ,delay,ON,Boss DM-2 Analog Delay,REPEAT=26; ECHO=29; INTENSITY=17; Sub Div=raw 213 (codifica Sub Div non verificata)
+60,MK Santana Europ,modulation,off,ROLAND CE-1 CHORUS,Intensity=50; Depth=50; Rate=20; Sub Div=1/4
+60,MK Santana Europ,delay,ON,Boss DM-2 Analog Delay,REPEAT=26; ECHO=29; INTENSITY=17; Sub Div=1/8D
 60,MK Santana Europ,reverb,ON,EMT 140 Plate Reverb,DECAY=27; LEVEL=15
 60,MK Santana Europ,ir,ON,64 DELUXE REVERB,Mic=S57; Axis=CENTER; Level=0; Lo Cut=20; Hi Cut=20000
 60,MK Santana Europ,sr,off,SEND / RETURN,Send=64; Return=64
@@ -725,8 +725,8 @@ slot,name,block,on,model,params (nome=valore)
 61,Joko Bounce,amp,ON,Bognar Uberschall,Gain=49; Master=56; Bass=58; Middle=57; Treble=38; Presence=30; Bias=100; Level=50
 61,Joko Bounce,eq,ON,ALIGN EQ,Band1 Freq=7; Band1 Gain=45; Band1 Q=43; Band2 Freq=5; Band2 Gain=50; Band2 Q=26; Band3 Freq=32; Band3 Gain=55; Band3 Q=26
 61,Joko Bounce,noise-gate,ON,NUX Noise Gate,Threshold=49; Decay=34
-61,Joko Bounce,modulation,off,TC CHORUS,SPEED=58; WIDTH=46; MODE=CHORUS; INTENSITY=58; Sub Div=raw 214 (codifica Sub Div non verificata)
-61,Joko Bounce,delay,off,Ibanez DPL10 Stereo Pan Delay,TIME=49; REPEAT=51; DELAY LEVEL=16; Sub Div=raw 214 (codifica Sub Div non verificata)
+61,Joko Bounce,modulation,off,TC CHORUS,SPEED=58; WIDTH=46; MODE=PITCH MODULATOR; INTENSITY=58; Sub Div=1/4
+61,Joko Bounce,delay,off,Ibanez DPL10 Stereo Pan Delay,TIME=49; REPEAT=51; DELAY LEVEL=16; Sub Div=1/4
 61,Joko Bounce,reverb,off,Lexicon 224 Hall Reverb,DECAY=77; PRE DELAY=59; LIVELINESS=85; LEVEL=46
 61,Joko Bounce,ir,ON,MARSHALL VINTAGE 30 4X12,Mic=U87; Axis=CENTER; Level=0; Lo Cut=20; Hi Cut=20000
 61,Joko Bounce,sr,off,SEND / RETURN,Send=64; Return=64
@@ -737,8 +737,8 @@ slot,name,block,on,model,params (nome=valore)
 62,Joko Funko,amp,ON,65 Fender Twin Reverb,Gain=55; Master=44; Bass=45; Middle=34; Treble=57; Bright SW=100; Bias=51; Level=69
 62,Joko Funko,eq,off,BOSS GE-6,100Hz=50; 220Hz=50; 500Hz=50; 1.2kHz=50; 2.6kHz=50; 6.4kHz=50; Level=50
 62,Joko Funko,noise-gate,off,NUX Noise Gate,Threshold=20; Decay=50
-62,Joko Funko,modulation,ON,TC CHORUS,SPEED=19; WIDTH=100; MODE=CHORUS; INTENSITY=100; Sub Div=raw 214 (codifica Sub Div non verificata)
-62,Joko Funko,delay,off,Boss DD-2 Digital Delay,EFFECT LEVEL=33; FEEDBACK=36; DELAY TIME=68; Sub Div=raw 214 (codifica Sub Div non verificata)
+62,Joko Funko,modulation,ON,TC CHORUS,SPEED=19; WIDTH=100; MODE=PITCH MODULATOR; INTENSITY=100; Sub Div=1/4
+62,Joko Funko,delay,off,Boss DD-2 Digital Delay,EFFECT LEVEL=33; FEEDBACK=36; DELAY TIME=68; Sub Div=1/4
 62,Joko Funko,reverb,ON,T-Rex Room Mate Reverb,DECAY=71; TONE=69; LEVEL=19
 62,Joko Funko,ir,ON,MARSHALL 4X12,Mic=R122; Axis=CENTER; Level=0; Lo Cut=20; Hi Cut=20000
 62,Joko Funko,sr,off,SEND / RETURN,Send=64; Return=64
@@ -749,8 +749,8 @@ slot,name,block,on,model,params (nome=valore)
 63,Joko HG Lead,amp,ON,1999 DEIZEL VH4,Gain=47; Master=56; Bass=45; Middle=53; Treble=63; Presence=39; Bias=69; Level=50
 63,Joko HG Lead,eq,ON,ALIGN EQ,Band1 Freq=18; Band1 Gain=22; Band1 Q=43; Band2 Freq=7; Band2 Gain=52; Band2 Q=26; Band3 Freq=31; Band3 Gain=59; Band3 Q=26
 63,Joko HG Lead,noise-gate,ON,NUX Noise Gate,Threshold=47; Decay=43
-63,Joko HG Lead,modulation,off,ROLAND CE-1 CHORUS,Intensity=59; Depth=63; Rate=36; Sub Div=raw 214 (codifica Sub Div non verificata)
-63,Joko HG Lead,delay,ON,Ibanez DPL10 Stereo Pan Delay,TIME=44; REPEAT=51; DELAY LEVEL=16; Sub Div=raw 214 (codifica Sub Div non verificata)
+63,Joko HG Lead,modulation,off,ROLAND CE-1 CHORUS,Intensity=59; Depth=63; Rate=36; Sub Div=1/4
+63,Joko HG Lead,delay,ON,Ibanez DPL10 Stereo Pan Delay,TIME=44; REPEAT=51; DELAY LEVEL=16; Sub Div=1/4
 63,Joko HG Lead,reverb,ON,Lexicon 224 Hall Reverb,DECAY=77; PRE DELAY=59; LIVELINESS=85; LEVEL=35
 63,Joko HG Lead,ir,ON,MARSHALL VINTAGE 30 4X12,Mic=C3000; Axis=MIDDLE; Level=0; Lo Cut=20; Hi Cut=20000
 63,Joko HG Lead,sr,off,SEND / RETURN,Send=64; Return=64
@@ -761,8 +761,8 @@ slot,name,block,on,model,params (nome=valore)
 64,Joko Krunch,amp,ON,1977 Marshall JCM800,Gain=35; Master=41; Bass=48; Middle=60; Treble=52; Presence=59; Bias=51; Level=43
 64,Joko Krunch,eq,ON,ALIGN EQ,Band1 Freq=18; Band1 Gain=22; Band1 Q=43; Band2 Freq=0; Band2 Gain=50; Band2 Q=26; Band3 Freq=35; Band3 Gain=51; Band3 Q=100
 64,Joko Krunch,noise-gate,off,NUX Noise Gate,Threshold=20; Decay=50
-64,Joko Krunch,modulation,off,ROLAND CE-2 CHORUS,Rate=69; Depth=41; Sub Div=raw 214 (codifica Sub Div non verificata)
-64,Joko Krunch,delay,ON,Ibanez DPL10 Stereo Pan Delay,TIME=35; REPEAT=31; DELAY LEVEL=20; Sub Div=raw 214 (codifica Sub Div non verificata)
+64,Joko Krunch,modulation,off,ROLAND CE-2 CHORUS,Rate=69; Depth=41; Sub Div=1/4
+64,Joko Krunch,delay,ON,Ibanez DPL10 Stereo Pan Delay,TIME=35; REPEAT=31; DELAY LEVEL=20; Sub Div=1/4
 64,Joko Krunch,reverb,ON,Lexicon 224 Hall Reverb,DECAY=77; PRE DELAY=59; LIVELINESS=85; LEVEL=47
 64,Joko Krunch,ir,ON,MARSHALL VINTAGE 30 4X12,Mic=C3000; Axis=MIDDLE; Level=0; Lo Cut=20; Hi Cut=20000
 64,Joko Krunch,sr,off,SEND / RETURN,Send=64; Return=64
@@ -773,8 +773,8 @@ slot,name,block,on,model,params (nome=valore)
 65,Joko Ocean View,amp,ON,65 Fender Twin Reverb,Gain=38; Master=84; Bass=62; Middle=45; Treble=52; Bright SW=100; Bias=49; Level=55
 65,Joko Ocean View,eq,off,ALIGN EQ,Band1 Freq=37; Band1 Gain=56; Band1 Q=43; Band2 Freq=0; Band2 Gain=44; Band2 Q=26; Band3 Freq=33; Band3 Gain=52; Band3 Q=100
 65,Joko Ocean View,noise-gate,off,NUX Noise Gate,Threshold=33; Decay=32
-65,Joko Ocean View,modulation,off,TC CHORUS,SPEED=19; WIDTH=100; MODE=CHORUS; INTENSITY=25; Sub Div=raw 214 (codifica Sub Div non verificata)
-65,Joko Ocean View,delay,ON,Ibanez DPL10 Stereo Pan Delay,TIME=44; REPEAT=51; DELAY LEVEL=22; Sub Div=raw 214 (codifica Sub Div non verificata)
+65,Joko Ocean View,modulation,off,TC CHORUS,SPEED=19; WIDTH=100; MODE=PITCH MODULATOR; INTENSITY=25; Sub Div=1/4
+65,Joko Ocean View,delay,ON,Ibanez DPL10 Stereo Pan Delay,TIME=44; REPEAT=51; DELAY LEVEL=22; Sub Div=1/4
 65,Joko Ocean View,reverb,ON,Lexicon 224 Hall Reverb,DECAY=100; PRE DELAY=19; LIVELINESS=87; LEVEL=78
 65,Joko Ocean View,ir,ON,65 TWIN REVERB,Mic=U87; Axis=MIDDLE; Level=0; Lo Cut=20; Hi Cut=20000
 65,Joko Ocean View,sr,off,SEND / RETURN,Send=64; Return=64
@@ -785,8 +785,8 @@ slot,name,block,on,model,params (nome=valore)
 66,Joko Space Lead,amp,ON,1999 DEIZEL VH4,Gain=47; Master=56; Bass=45; Middle=53; Treble=40; Presence=39; Bias=69; Level=50
 66,Joko Space Lead,eq,ON,ALIGN EQ,Band1 Freq=18; Band1 Gain=22; Band1 Q=43; Band2 Freq=7; Band2 Gain=52; Band2 Q=26; Band3 Freq=31; Band3 Gain=59; Band3 Q=26
 66,Joko Space Lead,noise-gate,ON,NUX Noise Gate,Threshold=47; Decay=43
-66,Joko Space Lead,modulation,off,ROLAND CE-1 CHORUS,Intensity=59; Depth=63; Rate=36; Sub Div=raw 214 (codifica Sub Div non verificata)
-66,Joko Space Lead,delay,ON,NUX DUOTIME,LEVEL=44; TIME1=100; SUB DIV1=raw 214 (codifica Sub Div non verificata); REPEAT1=70; TIME2=75; SUB DIV2=raw 213 (codifica Sub Div non verificata); REPEAT2=90; PARA=38
+66,Joko Space Lead,modulation,off,ROLAND CE-1 CHORUS,Intensity=59; Depth=63; Rate=36; Sub Div=1/4
+66,Joko Space Lead,delay,ON,NUX DUOTIME,LEVEL=44; TIME1=100; SUB DIV1=1/4; REPEAT1=70; TIME2=75; SUB DIV2=1/8D; REPEAT2=90; PARA=38
 66,Joko Space Lead,reverb,ON,Lexicon 224 Hall Reverb,DECAY=71; PRE DELAY=14; LIVELINESS=85; LEVEL=71
 66,Joko Space Lead,ir,ON,MARSHALL VINTAGE 30 4X12,Mic=C3000; Axis=MIDDLE; Level=0; Lo Cut=20; Hi Cut=20000
 66,Joko Space Lead,sr,off,SEND / RETURN,Send=64; Return=64
@@ -797,8 +797,8 @@ slot,name,block,on,model,params (nome=valore)
 67,Joko Sunny Side,amp,ON,67 Marshall Plexi 45W,Gain=61; Master=69; Bass=37; Middle=49; Treble=36; Presence=51; Bias=100; Level=64
 67,Joko Sunny Side,eq,ON,ALIGN EQ,Band1 Freq=38; Band1 Gain=35; Band1 Q=43; Band2 Freq=25; Band2 Gain=56; Band2 Q=26; Band3 Freq=32; Band3 Gain=51; Band3 Q=26
 67,Joko Sunny Side,noise-gate,ON,NUX Noise Gate,Threshold=33; Decay=72
-67,Joko Sunny Side,modulation,off,TC CHORUS,SPEED=58; WIDTH=46; MODE=CHORUS; INTENSITY=58; Sub Div=raw 214 (codifica Sub Div non verificata)
-67,Joko Sunny Side,delay,ON,Ibanez DPL10 Stereo Pan Delay,TIME=44; REPEAT=51; DELAY LEVEL=15; Sub Div=raw 214 (codifica Sub Div non verificata)
+67,Joko Sunny Side,modulation,off,TC CHORUS,SPEED=58; WIDTH=46; MODE=PITCH MODULATOR; INTENSITY=58; Sub Div=1/4
+67,Joko Sunny Side,delay,ON,Ibanez DPL10 Stereo Pan Delay,TIME=44; REPEAT=51; DELAY LEVEL=15; Sub Div=1/4
 67,Joko Sunny Side,reverb,ON,Lexicon 224 Hall Reverb,DECAY=77; PRE DELAY=59; LIVELINESS=85; LEVEL=45
 67,Joko Sunny Side,ir,ON,MARSHALL VINTAGE 30 4X12,Mic=C3000; Axis=CENTER; Level=0; Lo Cut=20; Hi Cut=20000
 67,Joko Sunny Side,sr,off,SEND / RETURN,Send=64; Return=64
@@ -809,8 +809,8 @@ slot,name,block,on,model,params (nome=valore)
 68,Joko Time Trip,amp,ON,1977 Marshall JCM800,Gain=38; Master=33; Bass=60; Middle=60; Treble=77; Presence=67; Bias=50; Level=43
 68,Joko Time Trip,eq,off,BOSS GE-6,100Hz=50; 220Hz=50; 500Hz=50; 1.2kHz=50; 2.6kHz=50; 6.4kHz=50; Level=50
 68,Joko Time Trip,noise-gate,off,NUX Noise Gate,Threshold=20; Decay=50
-68,Joko Time Trip,modulation,ON,ROLAND CE-1 CHORUS,Intensity=50; Depth=50; Rate=20; Sub Div=raw 214 (codifica Sub Div non verificata)
-68,Joko Time Trip,delay,ON,Boss DD-2 Digital Delay,EFFECT LEVEL=79; FEEDBACK=34; DELAY TIME=45; Sub Div=raw 213 (codifica Sub Div non verificata)
+68,Joko Time Trip,modulation,ON,ROLAND CE-1 CHORUS,Intensity=50; Depth=50; Rate=20; Sub Div=1/4
+68,Joko Time Trip,delay,ON,Boss DD-2 Digital Delay,EFFECT LEVEL=79; FEEDBACK=34; DELAY TIME=45; Sub Div=1/8D
 68,Joko Time Trip,reverb,ON,Lexicon 224 Hall Reverb,DECAY=77; PRE DELAY=59; LIVELINESS=85; LEVEL=64
 68,Joko Time Trip,ir,ON,MARSHALL 4X12,Mic=R122; Axis=CENTER; Level=0; Lo Cut=20; Hi Cut=20000
 68,Joko Time Trip,sr,off,SEND / RETURN,Send=64; Return=64
@@ -821,8 +821,8 @@ slot,name,block,on,model,params (nome=valore)
 69,JonK's Clean,amp,ON,64 Fender Deluxe Reverb,Gain=26; Master=96; Bass=54; Middle=60; Treble=71; Bias=58; Level=50
 69,JonK's Clean,eq,ON,BOSS GE-6,100Hz=50; 220Hz=52; 500Hz=52; 1.2kHz=50; 2.6kHz=50; 6.4kHz=53; Level=50
 69,JonK's Clean,noise-gate,ON,NUX Noise Gate,Threshold=31; Decay=50
-69,JonK's Clean,modulation,off,ROLAND CE-2 CHORUS,Rate=72; Depth=49; Sub Div=raw 214 (codifica Sub Div non verificata)
-69,JonK's Clean,delay,off,Boss DD-2 Digital Delay,EFFECT LEVEL=23; FEEDBACK=36; DELAY TIME=68; Sub Div=raw 213 (codifica Sub Div non verificata)
+69,JonK's Clean,modulation,off,ROLAND CE-2 CHORUS,Rate=72; Depth=49; Sub Div=1/4
+69,JonK's Clean,delay,off,Boss DD-2 Digital Delay,EFFECT LEVEL=23; FEEDBACK=36; DELAY TIME=68; Sub Div=1/8D
 69,JonK's Clean,reverb,ON,Lexicon 224 Hall Reverb,DECAY=77; PRE DELAY=59; LIVELINESS=85; LEVEL=31
 69,JonK's Clean,ir,ON,64 DELUXE REVERB,Mic=U87; Axis=MIDDLE; Level=3; Lo Cut=314; Hi Cut=17450
 69,JonK's Clean,sr,off,SEND / RETURN,Send=64; Return=64
@@ -833,8 +833,8 @@ slot,name,block,on,model,params (nome=valore)
 70,JonK's Drive,amp,ON,1977 Marshall JCM800,Gain=56; Master=29; Bass=83; Middle=86; Treble=78; Presence=35; Bias=50; Level=43
 70,JonK's Drive,eq,ON,BOSS GE-6,100Hz=50; 220Hz=57; 500Hz=56; 1.2kHz=57; 2.6kHz=54; 6.4kHz=50; Level=50
 70,JonK's Drive,noise-gate,ON,NUX Noise Gate,Threshold=29; Decay=50
-70,JonK's Drive,modulation,off,DUNLOP UNIVIBE,SPEED=54; VOLUME=61; INTENSITY=71; MODE=VIBRATO; Sub Div=raw 214 (codifica Sub Div non verificata)
-70,JonK's Drive,delay,off,Boss DD-2 Digital Delay,EFFECT LEVEL=33; FEEDBACK=36; DELAY TIME=68; Sub Div=raw 213 (codifica Sub Div non verificata)
+70,JonK's Drive,modulation,off,DUNLOP UNIVIBE,SPEED=54; VOLUME=61; INTENSITY=71; MODE=VIBRATO; Sub Div=1/4
+70,JonK's Drive,delay,off,Boss DD-2 Digital Delay,EFFECT LEVEL=33; FEEDBACK=36; DELAY TIME=68; Sub Div=1/8D
 70,JonK's Drive,reverb,ON,T-Rex Room Mate Reverb,DECAY=71; TONE=69; LEVEL=30
 70,JonK's Drive,ir,ON,MARSHALL GREENBACK 4X12,Mic=U87; Axis=EDGE; Level=0; Lo Cut=20; Hi Cut=20000
 70,JonK's Drive,sr,off,SEND / RETURN,Send=64; Return=64
@@ -845,8 +845,8 @@ slot,name,block,on,model,params (nome=valore)
 71,JonK's SemiClean,amp,ON,64 Fender Deluxe Reverb,Gain=45; Master=81; Bass=37; Middle=68; Treble=60; Bias=58; Level=50
 71,JonK's SemiClean,eq,ON,BOSS GE-6,100Hz=50; 220Hz=49; 500Hz=50; 1.2kHz=52; 2.6kHz=50; 6.4kHz=50; Level=50
 71,JonK's SemiClean,noise-gate,ON,NUX Noise Gate,Threshold=33; Decay=50
-71,JonK's SemiClean,modulation,off,BOSS TR-3 TREMOLO,RATE=73; DEPTH=24; Sub Div=raw 214 (codifica Sub Div non verificata)
-71,JonK's SemiClean,delay,ON,Boss DD-2 Digital Delay,EFFECT LEVEL=16; FEEDBACK=36; DELAY TIME=68; Sub Div=raw 213 (codifica Sub Div non verificata)
+71,JonK's SemiClean,modulation,off,BOSS TR-3 TREMOLO,RATE=73; DEPTH=24; Sub Div=1/4
+71,JonK's SemiClean,delay,ON,Boss DD-2 Digital Delay,EFFECT LEVEL=16; FEEDBACK=36; DELAY TIME=68; Sub Div=1/8D
 71,JonK's SemiClean,reverb,ON,Lexicon 224 Hall Reverb,DECAY=77; PRE DELAY=68; LIVELINESS=85; LEVEL=42
 71,JonK's SemiClean,ir,ON,64 DELUXE REVERB,Mic=U87; Axis=MIDDLE; Level=0; Lo Cut=363; Hi Cut=17450
 71,JonK's SemiClean,sr,off,SEND / RETURN,Send=64; Return=64
@@ -857,8 +857,8 @@ slot,name,block,on,model,params (nome=valore)
 72,JonK's Solo,amp,ON,1999 DEIZEL VH4,Gain=68; Master=55; Bass=58; Middle=70; Treble=70; Presence=70; Bias=59; Level=50
 72,JonK's Solo,eq,ON,BOSS GE-6,100Hz=50; 220Hz=50; 500Hz=49; 1.2kHz=50; 2.6kHz=53; 6.4kHz=50; Level=54
 72,JonK's Solo,noise-gate,ON,NUX Noise Gate,Threshold=20; Decay=50
-72,JonK's Solo,modulation,off,MXR STEREO CHORUS,Intensity=71; Width=71; Rate=63; Sub Div=raw 214 (codifica Sub Div non verificata)
-72,JonK's Solo,delay,off,Boss DD-2 Digital Delay,EFFECT LEVEL=23; FEEDBACK=36; DELAY TIME=68; Sub Div=raw 213 (codifica Sub Div non verificata)
+72,JonK's Solo,modulation,off,MXR STEREO CHORUS,Intensity=71; Width=71; Rate=63; Sub Div=1/4
+72,JonK's Solo,delay,off,Boss DD-2 Digital Delay,EFFECT LEVEL=23; FEEDBACK=36; DELAY TIME=68; Sub Div=1/8D
 72,JonK's Solo,reverb,ON,Lexicon 224 Hall Reverb,DECAY=77; PRE DELAY=75; LIVELINESS=85; LEVEL=37
 72,JonK's Solo,ir,ON,MARSHALL 4X12,Mic=S57; Axis=EDGE; Level=1; Lo Cut=334; Hi Cut=18050
 72,JonK's Solo,sr,off,SEND / RETURN,Send=64; Return=64
@@ -869,8 +869,8 @@ slot,name,block,on,model,params (nome=valore)
 73,RL - Ambience,amp,ON,Roland JC-120,Gain=35; Master=96; Bass=70; Middle=65; Treble=65; Bright SW=100; Level=50
 73,RL - Ambience,eq,ON,ALIGN EQ,HPF=160Hz; 110Hz=50; 340Hz=35; 660Hz=44; 1300Hz=53; 2600Hz=28; 5000Hz=17; Volume=94
 73,RL - Ambience,noise-gate,off,NUX Noise Gate,Threshold=20; Decay=50
-73,RL - Ambience,modulation,ON,ROLAND CE-2 CHORUS,Rate=20; Depth=76; Sub Div=raw 214 (codifica Sub Div non verificata)
-73,RL - Ambience,delay,ON,Ibanez DPL10 Stereo Pan Delay,TIME=88; REPEAT=79; DELAY LEVEL=26; Sub Div=raw 214 (codifica Sub Div non verificata)
+73,RL - Ambience,modulation,ON,ROLAND CE-2 CHORUS,Rate=20; Depth=76; Sub Div=1/4
+73,RL - Ambience,delay,ON,Ibanez DPL10 Stereo Pan Delay,TIME=88; REPEAT=79; DELAY LEVEL=26; Sub Div=1/4
 73,RL - Ambience,reverb,ON,Lexicon 224 Hall Reverb,DECAY=100; PRE DELAY=100; LIVELINESS=100; LEVEL=74
 73,RL - Ambience,ir,ON,ROLAND JC120,Mic=C3000; Axis=CENTER; Level=0; Lo Cut=510; Hi Cut=12500
 73,RL - Ambience,sr,off,SEND / RETURN,Send=64; Return=64
@@ -881,8 +881,8 @@ slot,name,block,on,model,params (nome=valore)
 74,RL - Calm,amp,ON,65 Fender Twin Reverb,Gain=59; Master=100; Bass=63; Middle=39; Treble=31; Bright SW=100; Bias=58; Level=29
 74,RL - Calm,eq,ON,MXR 10 BAND,VOL=5; 31.25Hz=40; 62.5Hz=53; 125Hz=54; 250Hz=62; 500Hz=52; 1KHz=41; 2KHz=49; 4KHz=47; 8KHz=48; 16KHz=47; GAIN=2
 74,RL - Calm,noise-gate,ON,NUX Noise Gate,Threshold=21; Decay=0
-74,RL - Calm,modulation,ON,ROLAND CE-2 CHORUS,Rate=17; Depth=74; Sub Div=raw 214 (codifica Sub Div non verificata)
-74,RL - Calm,delay,ON,Ibanez DPL10 Stereo Pan Delay,TIME=84; REPEAT=79; DELAY LEVEL=13; Sub Div=raw 214 (codifica Sub Div non verificata)
+74,RL - Calm,modulation,ON,ROLAND CE-2 CHORUS,Rate=17; Depth=74; Sub Div=1/4
+74,RL - Calm,delay,ON,Ibanez DPL10 Stereo Pan Delay,TIME=84; REPEAT=79; DELAY LEVEL=13; Sub Div=1/4
 74,RL - Calm,reverb,ON,SHIMMER REVERB,MIX=21; DECAY=100; SHIM=10
 74,RL - Calm,ir,ON,65 TWIN REVERB,Mic=DYN421; Axis=MIDDLE; Level=0; Lo Cut=20; Hi Cut=20000
 74,RL - Calm,sr,off,SEND / RETURN,Send=64; Return=64
@@ -894,7 +894,7 @@ slot,name,block,on,model,params (nome=valore)
 75,RL - Mariana,eq,ON,BOSS GE-6,100Hz=50; 220Hz=50; 500Hz=54; 1.2kHz=56; 2.6kHz=35; 6.4kHz=39; Level=59
 75,RL - Mariana,noise-gate,ON,NUX Noise Gate,Threshold=49; Decay=43
 75,RL - Mariana,modulation,ON,MXR HARMONIZER,KEY=G; SCALE=MINOR; HARM=-8; BLEND=100
-75,RL - Mariana,delay,ON,Ibanez DML Modulation Delay,TIME=53; LEVEL=100; MODULATION=83; REPEAT=20; Sub Div=raw 213 (codifica Sub Div non verificata)
+75,RL - Mariana,delay,ON,Ibanez DML Modulation Delay,TIME=53; LEVEL=100; MODULATION=83; REPEAT=20; Sub Div=1/8D
 75,RL - Mariana,reverb,ON,Lexicon 224 Hall Reverb,DECAY=100; PRE DELAY=100; LIVELINESS=72; LEVEL=40
 75,RL - Mariana,ir,ON,ROLAND JC120,Mic=C3000; Axis=CENTER; Level=0; Lo Cut=510; Hi Cut=12500
 75,RL - Mariana,sr,off,SEND / RETURN,Send=64; Return=64
@@ -905,8 +905,8 @@ slot,name,block,on,model,params (nome=valore)
 76,RL - Quartz,amp,ON,Roland JC-120,Gain=21; Master=67; Bass=70; Middle=65; Treble=65; Bright SW=100; Level=75
 76,RL - Quartz,eq,ON,MXR 10 BAND,VOL=4; 31.25Hz=43; 62.5Hz=53; 125Hz=54; 250Hz=62; 500Hz=52; 1KHz=52; 2KHz=46; 4KHz=55; 8KHz=46; 16KHz=41; GAIN=2
 76,RL - Quartz,noise-gate,off,NUX Noise Gate,Threshold=55; Decay=0
-76,RL - Quartz,modulation,ON,BOSS TR-3 TREMOLO,RATE=54; DEPTH=76; Sub Div=raw 214 (codifica Sub Div non verificata)
-76,RL - Quartz,delay,off,Boss DM-2 Analog Delay,REPEAT=100; ECHO=76; INTENSITY=100; Sub Div=raw 213 (codifica Sub Div non verificata)
+76,RL - Quartz,modulation,ON,BOSS TR-3 TREMOLO,RATE=54; DEPTH=76; Sub Div=1/4
+76,RL - Quartz,delay,off,Boss DM-2 Analog Delay,REPEAT=100; ECHO=76; INTENSITY=100; Sub Div=1/8D
 76,RL - Quartz,reverb,ON,SHIMMER REVERB,MIX=20; DECAY=86; SHIM=0
 76,RL - Quartz,ir,ON,ROLAND JC120,Mic=S57; Axis=EDGE; Level=0; Lo Cut=510; Hi Cut=12500
 76,RL - Quartz,sr,off,SEND / RETURN,Send=64; Return=64
@@ -917,8 +917,8 @@ slot,name,block,on,model,params (nome=valore)
 77,GY Bluesy Man,amp,ON,59 Fender Bassman,Gain=36; Master=80; Bass=55; Middle=64; Treble=45; Presence=57; Bias=78; Level=80
 77,GY Bluesy Man,eq,off,BOSS GE-6,100Hz=50; 220Hz=50; 500Hz=50; 1.2kHz=50; 2.6kHz=50; 6.4kHz=50; Level=50
 77,GY Bluesy Man,noise-gate,off,NUX Noise Gate,Threshold=33; Decay=32
-77,GY Bluesy Man,modulation,off,TC CHORUS,SPEED=58; WIDTH=46; MODE=CHORUS; INTENSITY=58; Sub Div=raw 214 (codifica Sub Div non verificata)
-77,GY Bluesy Man,delay,off,Boss DD-2 Digital Delay,EFFECT LEVEL=37; FEEDBACK=61; DELAY TIME=68; Sub Div=raw 214 (codifica Sub Div non verificata)
+77,GY Bluesy Man,modulation,off,TC CHORUS,SPEED=58; WIDTH=46; MODE=PITCH MODULATOR; INTENSITY=58; Sub Div=1/4
+77,GY Bluesy Man,delay,off,Boss DD-2 Digital Delay,EFFECT LEVEL=37; FEEDBACK=61; DELAY TIME=68; Sub Div=1/4
 77,GY Bluesy Man,reverb,ON,Vintage Spring Reverb,DECAY=22; LEVEL=21
 77,GY Bluesy Man,ir,ON,59 BASSMAN,Mic=R121; Axis=MIDDLE; Level=0; Lo Cut=20; Hi Cut=20000
 77,GY Bluesy Man,sr,off,SEND / RETURN,Send=64; Return=64
@@ -930,7 +930,7 @@ slot,name,block,on,model,params (nome=valore)
 78,GY Funky Stummin,eq,off,BOSS GE-6,100Hz=50; 220Hz=50; 500Hz=50; 1.2kHz=50; 2.6kHz=50; 6.4kHz=50; Level=50
 78,GY Funky Stummin,noise-gate,off,NUX Noise Gate,Threshold=20; Decay=50
 78,GY Funky Stummin,modulation,ON,Stereo DETUNE,SHIFT LEFT OUT=20; MIX=37; SHIFT RIGHT OUT=80
-78,GY Funky Stummin,delay,off,Boss DM-2 Analog Delay,REPEAT=50; ECHO=50; INTENSITY=50; Sub Div=raw 214 (codifica Sub Div non verificata)
+78,GY Funky Stummin,delay,off,Boss DM-2 Analog Delay,REPEAT=50; ECHO=50; INTENSITY=50; Sub Div=1/4
 78,GY Funky Stummin,reverb,off,EMT 140 Plate Reverb,DECAY=7; LEVEL=20
 78,GY Funky Stummin,ir,ON,65 TWIN REVERB,Mic=DYN421; Axis=EDGE; Level=0; Lo Cut=20; Hi Cut=20000
 78,GY Funky Stummin,sr,off,SEND / RETURN,Send=64; Return=64
@@ -942,7 +942,7 @@ slot,name,block,on,model,params (nome=valore)
 79,GY I'm Bassist,eq,off,BOSS GE-6,100Hz=50; 220Hz=50; 500Hz=50; 1.2kHz=50; 2.6kHz=50; 6.4kHz=50; Level=50
 79,GY I'm Bassist,noise-gate,off,NUX Noise Gate,Threshold=20; Decay=50
 79,GY I'm Bassist,modulation,ON,MXR HARMONIZER,KEY=E; SCALE=MAJOR; HARM=-8; BLEND=100
-79,GY I'm Bassist,delay,off,Maestro EchoPlex EP-4,TIME=100; LEVEL=37; REPEAT=49; Sub Div=raw 213 (codifica Sub Div non verificata)
+79,GY I'm Bassist,delay,off,Maestro EchoPlex EP-4,TIME=100; LEVEL=37; REPEAT=49; Sub Div=1/8D
 79,GY I'm Bassist,reverb,off,EMT 140 Plate Reverb,DECAY=0; LEVEL=0
 79,GY I'm Bassist,ir,ON,FENDER BASSMAN 4X10,Level=0; Lo Cut=20; Hi Cut=20000
 79,GY I'm Bassist,sr,off,SEND / RETURN,Send=64; Return=64
@@ -953,8 +953,8 @@ slot,name,block,on,model,params (nome=valore)
 80,GY So Tight Dly,amp,ON,1999 DEIZEL VH4,Gain=62; Master=40; Bass=55; Middle=63; Treble=67; Presence=47; Bias=59; Level=41
 80,GY So Tight Dly,eq,ON,ALIGN EQ,Band1 Freq=23; Band1 Gain=48; Band1 Q=62; Band2 Freq=18; Band2 Gain=54; Band2 Q=19; Band3 Freq=28; Band3 Gain=45; Band3 Q=12
 80,GY So Tight Dly,noise-gate,ON,NUX Noise Gate,Threshold=29; Decay=24
-80,GY So Tight Dly,modulation,off,ROLAND CE-2 CHORUS,Rate=69; Depth=41; Sub Div=raw 214 (codifica Sub Div non verificata)
-80,GY So Tight Dly,delay,ON,Boss DD-2 Digital Delay,EFFECT LEVEL=15; FEEDBACK=41; DELAY TIME=39; Sub Div=raw 210 (codifica Sub Div non verificata)
+80,GY So Tight Dly,modulation,off,ROLAND CE-2 CHORUS,Rate=69; Depth=41; Sub Div=1/4
+80,GY So Tight Dly,delay,ON,Boss DD-2 Digital Delay,EFFECT LEVEL=15; FEEDBACK=41; DELAY TIME=39; Sub Div=1/16
 80,GY So Tight Dly,reverb,ON,Vintage Spring Reverb,DECAY=13; LEVEL=21
 80,GY So Tight Dly,ir,ON,MARSHALL 4X12,Mic=U87; Axis=CENTER; Level=0; Lo Cut=20; Hi Cut=20000
 80,GY So Tight Dly,sr,off,SEND / RETURN,Send=64; Return=64
@@ -965,8 +965,8 @@ slot,name,block,on,model,params (nome=valore)
 81,TAMESHIBIKI CLN,amp,ON,65 Fender Twin Reverb,Gain=28; Master=84; Bass=62; Middle=44; Treble=33; Bright SW=100; Bias=82; Level=50
 81,TAMESHIBIKI CLN,eq,ON,MXR 10 BAND,VOL=0; 31.25Hz=50; 62.5Hz=50; 125Hz=50; 250Hz=50; 500Hz=50; 1KHz=45; 2KHz=50; 4KHz=50; 8KHz=50; 16KHz=60; GAIN=0
 81,TAMESHIBIKI CLN,noise-gate,ON,NUX Noise Gate,Threshold=20; Decay=50
-81,TAMESHIBIKI CLN,modulation,off,MXR STEREO CHORUS,Intensity=43; Width=50; Rate=71; Sub Div=raw 214 (codifica Sub Div non verificata)
-81,TAMESHIBIKI CLN,delay,off,Ibanez DPL10 Stereo Pan Delay,TIME=60; REPEAT=40; DELAY LEVEL=10; Sub Div=raw 214 (codifica Sub Div non verificata)
+81,TAMESHIBIKI CLN,modulation,off,MXR STEREO CHORUS,Intensity=43; Width=50; Rate=71; Sub Div=1/4
+81,TAMESHIBIKI CLN,delay,off,Ibanez DPL10 Stereo Pan Delay,TIME=60; REPEAT=40; DELAY LEVEL=10; Sub Div=1/4
 81,TAMESHIBIKI CLN,reverb,ON,Lexicon 224 Hall Reverb,DECAY=68; PRE DELAY=57; LIVELINESS=55; LEVEL=26
 81,TAMESHIBIKI CLN,ir,ON,USER IR CAB,Level=0; Lo Cut=510; Hi Cut=20000
 81,TAMESHIBIKI CLN,sr,off,SEND / RETURN,Send=64; Return=64
@@ -977,8 +977,8 @@ slot,name,block,on,model,params (nome=valore)
 82,TAMESHIBIKI DS,amp,ON,1999 DEIZEL VH4,Gain=35; Master=27; Bass=50; Middle=20; Treble=54; Presence=80; Bias=81; Level=58
 82,TAMESHIBIKI DS,eq,ON,MXR 10 BAND,VOL=0; 31.25Hz=50; 62.5Hz=50; 125Hz=50; 250Hz=47; 500Hz=36; 1KHz=38; 2KHz=44; 4KHz=54; 8KHz=55; 16KHz=56; GAIN=0
 82,TAMESHIBIKI DS,noise-gate,ON,NUX Noise Gate,Threshold=20; Decay=50
-82,TAMESHIBIKI DS,modulation,off,BOSS BF-2 Flanger,Level=50; Rate=50; Width=50; F.BACK=50; Sub Div=raw 214 (codifica Sub Div non verificata)
-82,TAMESHIBIKI DS,delay,off,Ibanez DPL10 Stereo Pan Delay,TIME=60; REPEAT=40; DELAY LEVEL=21; Sub Div=raw 214 (codifica Sub Div non verificata)
+82,TAMESHIBIKI DS,modulation,off,BOSS BF-2 Flanger,Level=50; Rate=50; Width=50; F.BACK=50; Sub Div=1/4
+82,TAMESHIBIKI DS,delay,off,Ibanez DPL10 Stereo Pan Delay,TIME=60; REPEAT=40; DELAY LEVEL=21; Sub Div=1/4
 82,TAMESHIBIKI DS,reverb,ON,Lexicon 224 Hall Reverb,DECAY=68; PRE DELAY=57; LIVELINESS=55; LEVEL=26
 82,TAMESHIBIKI DS,ir,ON,USER IR CAB,Level=0; Lo Cut=334; Hi Cut=20000
 82,TAMESHIBIKI DS,sr,off,SEND / RETURN,Send=64; Return=64
@@ -989,8 +989,8 @@ slot,name,block,on,model,params (nome=valore)
 83,TAMESHIBIKI OD,amp,ON,65 Fender Twin Reverb,Gain=33; Master=55; Bass=77; Middle=54; Treble=39; Bright SW=100; Bias=80; Level=60
 83,TAMESHIBIKI OD,eq,ON,MXR 10 BAND,VOL=0; 31.25Hz=50; 62.5Hz=50; 125Hz=50; 250Hz=50; 500Hz=50; 1KHz=44; 2KHz=35; 4KHz=38; 8KHz=36; 16KHz=50; GAIN=0
 83,TAMESHIBIKI OD,noise-gate,ON,NUX Noise Gate,Threshold=20; Decay=50
-83,TAMESHIBIKI OD,modulation,off,MXR PHASE 90,SPEED=51; Sub Div=raw 214 (codifica Sub Div non verificata)
-83,TAMESHIBIKI OD,delay,off,Ibanez DPL10 Stereo Pan Delay,TIME=60; REPEAT=40; DELAY LEVEL=10; Sub Div=raw 214 (codifica Sub Div non verificata)
+83,TAMESHIBIKI OD,modulation,off,MXR PHASE 90,SPEED=51; Sub Div=1/4
+83,TAMESHIBIKI OD,delay,off,Ibanez DPL10 Stereo Pan Delay,TIME=60; REPEAT=40; DELAY LEVEL=10; Sub Div=1/4
 83,TAMESHIBIKI OD,reverb,ON,Lexicon 224 Hall Reverb,DECAY=68; PRE DELAY=57; LIVELINESS=55; LEVEL=26
 83,TAMESHIBIKI OD,ir,ON,USER IR CAB,Level=0; Lo Cut=510; Hi Cut=20000
 83,TAMESHIBIKI OD,sr,off,SEND / RETURN,Send=64; Return=64
@@ -1001,8 +1001,8 @@ slot,name,block,on,model,params (nome=valore)
 84,TAMESHIBIKI PLEX,amp,ON,67 Marshall Plexi 45W,Gain=51; Master=59; Bass=38; Middle=58; Treble=80; Presence=81; Bias=50; Level=60
 84,TAMESHIBIKI PLEX,eq,ON,MXR 10 BAND,VOL=0; 31.25Hz=50; 62.5Hz=50; 125Hz=50; 250Hz=47; 500Hz=50; 1KHz=50; 2KHz=53; 4KHz=63; 8KHz=62; 16KHz=60; GAIN=-2
 84,TAMESHIBIKI PLEX,noise-gate,ON,NUX Noise Gate,Threshold=20; Decay=50
-84,TAMESHIBIKI PLEX,modulation,off,BOSS TR-3 TREMOLO,RATE=65; DEPTH=18; Sub Div=raw 214 (codifica Sub Div non verificata)
-84,TAMESHIBIKI PLEX,delay,off,Ibanez DPL10 Stereo Pan Delay,TIME=60; REPEAT=40; DELAY LEVEL=10; Sub Div=raw 214 (codifica Sub Div non verificata)
+84,TAMESHIBIKI PLEX,modulation,off,BOSS TR-3 TREMOLO,RATE=65; DEPTH=18; Sub Div=1/4
+84,TAMESHIBIKI PLEX,delay,off,Ibanez DPL10 Stereo Pan Delay,TIME=60; REPEAT=40; DELAY LEVEL=10; Sub Div=1/4
 84,TAMESHIBIKI PLEX,reverb,ON,Lexicon 224 Hall Reverb,DECAY=68; PRE DELAY=57; LIVELINESS=55; LEVEL=26
 84,TAMESHIBIKI PLEX,ir,ON,USER IR CAB,Level=0; Lo Cut=20; Hi Cut=20000
 84,TAMESHIBIKI PLEX,sr,off,SEND / RETURN,Send=64; Return=64
@@ -1013,8 +1013,8 @@ slot,name,block,on,model,params (nome=valore)
 85,MF EVH-ISH,amp,ON,68 Marshall Plexi 100W,Gain=87; Master=57; Bass=29; Middle=40; Treble=64; Presence=68; Bias=87; Level=50
 85,MF EVH-ISH,eq,ON,BOSS GE-6,100Hz=46; 220Hz=50; 500Hz=50; 1.2kHz=50; 2.6kHz=54; 6.4kHz=56; Level=50
 85,MF EVH-ISH,noise-gate,off,NUX Noise Gate,Threshold=20; Decay=50
-85,MF EVH-ISH,modulation,off,MXR PHASE 90,SPEED=40; Sub Div=raw 214 (codifica Sub Div non verificata)
-85,MF EVH-ISH,delay,off,Maestro EchoPlex EP-4,TIME=50; LEVEL=8; REPEAT=0; Sub Div=raw 213 (codifica Sub Div non verificata)
+85,MF EVH-ISH,modulation,off,MXR PHASE 90,SPEED=40; Sub Div=1/4
+85,MF EVH-ISH,delay,off,Maestro EchoPlex EP-4,TIME=50; LEVEL=8; REPEAT=0; Sub Div=1/8D
 85,MF EVH-ISH,reverb,ON,Lexicon 224 Hall Reverb,DECAY=22; PRE DELAY=48; LIVELINESS=85; LEVEL=60
 85,MF EVH-ISH,ir,ON,MARSHALL GREENBACK 4X12,Mic=B52; Axis=CENTER; Level=0; Lo Cut=304; Hi Cut=20000
 85,MF EVH-ISH,sr,off,SEND / RETURN,Send=64; Return=64
@@ -1025,8 +1025,8 @@ slot,name,block,on,model,params (nome=valore)
 86,MF GILMOUR-ISH,amp,ON,1969 HIWATT,Gain=0; Master=100; Bass=28; Middle=53; Treble=68; Presence=60; Bias=53; Level=87
 86,MF GILMOUR-ISH,eq,ON,BOSS GE-6,100Hz=40; 220Hz=50; 500Hz=50; 1.2kHz=50; 2.6kHz=63; 6.4kHz=64; Level=50
 86,MF GILMOUR-ISH,noise-gate,ON,NUX Noise Gate,Threshold=50; Decay=50
-86,MF GILMOUR-ISH,modulation,off,BOSS BF-2 Flanger,Level=20; Rate=40; Width=62; F.BACK=8; Sub Div=raw 214 (codifica Sub Div non verificata)
-86,MF GILMOUR-ISH,delay,ON,Maestro EchoPlex EP-4,TIME=56; LEVEL=82; REPEAT=48; Sub Div=raw 213 (codifica Sub Div non verificata)
+86,MF GILMOUR-ISH,modulation,off,BOSS BF-2 Flanger,Level=20; Rate=40; Width=62; F.BACK=8; Sub Div=1/4
+86,MF GILMOUR-ISH,delay,ON,Maestro EchoPlex EP-4,TIME=56; LEVEL=82; REPEAT=48; Sub Div=1/8D
 86,MF GILMOUR-ISH,reverb,ON,Lexicon 224 Hall Reverb,DECAY=0; PRE DELAY=77; LIVELINESS=85; LEVEL=21
 86,MF GILMOUR-ISH,ir,ON,MARSHALL 4X12,Mic=S57; Axis=CENTER; Level=-5; Lo Cut=304; Hi Cut=20000
 86,MF GILMOUR-ISH,sr,off,SEND / RETURN,Send=64; Return=64
@@ -1037,8 +1037,8 @@ slot,name,block,on,model,params (nome=valore)
 87,MF MAYER-ISH,amp,ON,64 Fender Deluxe Reverb,Gain=28; Master=67; Bass=52; Middle=40; Treble=60; Bias=53; Level=41
 87,MF MAYER-ISH,eq,off,BOSS GE-6,100Hz=50; 220Hz=50; 500Hz=50; 1.2kHz=50; 2.6kHz=50; 6.4kHz=50; Level=60
 87,MF MAYER-ISH,noise-gate,off,NUX Noise Gate,Threshold=20; Decay=50
-87,MF MAYER-ISH,modulation,off,MXR PHASE 90,SPEED=22; Sub Div=raw 214 (codifica Sub Div non verificata)
-87,MF MAYER-ISH,delay,off,Boss DM-2 Analog Delay,REPEAT=100; ECHO=15; INTENSITY=12; Sub Div=raw 213 (codifica Sub Div non verificata)
+87,MF MAYER-ISH,modulation,off,MXR PHASE 90,SPEED=22; Sub Div=1/4
+87,MF MAYER-ISH,delay,off,Boss DM-2 Analog Delay,REPEAT=100; ECHO=15; INTENSITY=12; Sub Div=1/8D
 87,MF MAYER-ISH,reverb,ON,Vintage Spring Reverb,DECAY=11; LEVEL=48
 87,MF MAYER-ISH,ir,ON,64 DELUXE REVERB,Mic=R121; Axis=MIDDLE; Level=0; Lo Cut=304; Hi Cut=20000
 87,MF MAYER-ISH,sr,off,SEND / RETURN,Send=64; Return=64
@@ -1049,8 +1049,8 @@ slot,name,block,on,model,params (nome=valore)
 88,MF SLASH-ISH,amp,ON,1977 Marshall JCM800,Gain=20; Master=100; Bass=80; Middle=60; Treble=62; Presence=87; Bias=62; Level=43
 88,MF SLASH-ISH,eq,off,MXR 10 BAND,VOL=0; 31.25Hz=43; 62.5Hz=50; 125Hz=50; 250Hz=50; 500Hz=74; 1KHz=75; 2KHz=52; 4KHz=45; 8KHz=39; 16KHz=38; GAIN=0
 88,MF SLASH-ISH,noise-gate,ON,NUX Noise Gate,Threshold=20; Decay=75
-88,MF SLASH-ISH,modulation,off,ROLAND CE-2 CHORUS,Rate=40; Depth=64; Sub Div=raw 214 (codifica Sub Div non verificata)
-88,MF SLASH-ISH,delay,off,Boss DD-2 Digital Delay,EFFECT LEVEL=28; FEEDBACK=28; DELAY TIME=49; Sub Div=raw 213 (codifica Sub Div non verificata)
+88,MF SLASH-ISH,modulation,off,ROLAND CE-2 CHORUS,Rate=40; Depth=64; Sub Div=1/4
+88,MF SLASH-ISH,delay,off,Boss DD-2 Digital Delay,EFFECT LEVEL=28; FEEDBACK=28; DELAY TIME=49; Sub Div=1/8D
 88,MF SLASH-ISH,reverb,ON,Lexicon 224 Hall Reverb,DECAY=45; PRE DELAY=59; LIVELINESS=85; LEVEL=22
 88,MF SLASH-ISH,ir,ON,MARSHALL GREENBACK 4X12,Mic=B52; Axis=MIDDLE; Level=0; Lo Cut=304; Hi Cut=20000
 88,MF SLASH-ISH,sr,off,SEND / RETURN,Send=64; Return=64
@@ -1061,8 +1061,8 @@ slot,name,block,on,model,params (nome=valore)
 89,RG ANGUS 87X,amp,ON,1989 Marshall 1987 X 50W,Gain=75; Master=57; Bass=34; Middle=78; Treble=42; Presence=38; Bias=100; Level=50
 89,RG ANGUS 87X,eq,ON,BOSS GE-6,100Hz=50; 220Hz=55; 500Hz=50; 1.2kHz=50; 2.6kHz=50; 6.4kHz=50; Level=50
 89,RG ANGUS 87X,noise-gate,off,NUX Noise Gate,Threshold=20; Decay=50
-89,RG ANGUS 87X,modulation,off,BOSS BF-2 Flanger,Level=50; Rate=50; Width=50; F.BACK=50; Sub Div=raw 214 (codifica Sub Div non verificata)
-89,RG ANGUS 87X,delay,off,Boss DM-2 Analog Delay,REPEAT=100; ECHO=32; INTENSITY=36; Sub Div=raw 213 (codifica Sub Div non verificata)
+89,RG ANGUS 87X,modulation,off,BOSS BF-2 Flanger,Level=50; Rate=50; Width=50; F.BACK=50; Sub Div=1/4
+89,RG ANGUS 87X,delay,off,Boss DM-2 Analog Delay,REPEAT=100; ECHO=32; INTENSITY=36; Sub Div=1/8D
 89,RG ANGUS 87X,reverb,ON,Lexicon 224 Hall Reverb,DECAY=31; PRE DELAY=42; LIVELINESS=35; LEVEL=4
 89,RG ANGUS 87X,ir,ON,MARSHALL GREENBACK 4X12,Mic=DYN421; Axis=MIDDLE; Level=0; Lo Cut=20; Hi Cut=20000
 89,RG ANGUS 87X,sr,off,SEND / RETURN,Send=64; Return=64
@@ -1073,8 +1073,8 @@ slot,name,block,on,model,params (nome=valore)
 90,RG SLASH,amp,ON,1977 Marshall JCM800,Gain=47; Master=71; Bass=79; Middle=69; Treble=51; Presence=50; Bias=0; Level=43
 90,RG SLASH,eq,ON,BOSS GE-6,100Hz=27; 220Hz=47; 500Hz=47; 1.2kHz=34; 2.6kHz=60; 6.4kHz=55; Level=50
 90,RG SLASH,noise-gate,off,NUX Noise Gate,Threshold=20; Decay=50
-90,RG SLASH,modulation,off,BOSS BF-2 Flanger,Level=50; Rate=50; Width=50; F.BACK=50; Sub Div=raw 214 (codifica Sub Div non verificata)
-90,RG SLASH,delay,off,Boss DM-2 Analog Delay,REPEAT=100; ECHO=32; INTENSITY=36; Sub Div=raw 213 (codifica Sub Div non verificata)
+90,RG SLASH,modulation,off,BOSS BF-2 Flanger,Level=50; Rate=50; Width=50; F.BACK=50; Sub Div=1/4
+90,RG SLASH,delay,off,Boss DM-2 Analog Delay,REPEAT=100; ECHO=32; INTENSITY=36; Sub Div=1/8D
 90,RG SLASH,reverb,ON,Lexicon 224 Hall Reverb,DECAY=31; PRE DELAY=42; LIVELINESS=35; LEVEL=8
 90,RG SLASH,ir,ON,MARSHALL GREENBACK 4X12,Mic=DYN421; Axis=EDGE; Level=0; Lo Cut=20; Hi Cut=20000
 90,RG SLASH,sr,off,SEND / RETURN,Send=64; Return=64
@@ -1085,8 +1085,8 @@ slot,name,block,on,model,params (nome=valore)
 91,RG GMoore Blues,amp,ON,68 Marshall Plexi 100W,Gain=75; Master=75; Bass=43; Middle=40; Treble=19; Presence=25; Bias=2; Level=70
 91,RG GMoore Blues,eq,off,BOSS GE-6,100Hz=27; 220Hz=47; 500Hz=47; 1.2kHz=34; 2.6kHz=60; 6.4kHz=55; Level=50
 91,RG GMoore Blues,noise-gate,off,NUX Noise Gate,Threshold=20; Decay=50
-91,RG GMoore Blues,modulation,off,DUNLOP UNIVIBE,SPEED=66; VOLUME=78; INTENSITY=40; MODE=VIBRATO; Sub Div=raw 214 (codifica Sub Div non verificata)
-91,RG GMoore Blues,delay,off,Boss DM-2 Analog Delay,REPEAT=100; ECHO=32; INTENSITY=36; Sub Div=raw 213 (codifica Sub Div non verificata)
+91,RG GMoore Blues,modulation,off,DUNLOP UNIVIBE,SPEED=66; VOLUME=78; INTENSITY=40; MODE=VIBRATO; Sub Div=1/4
+91,RG GMoore Blues,delay,off,Boss DM-2 Analog Delay,REPEAT=100; ECHO=32; INTENSITY=36; Sub Div=1/8D
 91,RG GMoore Blues,reverb,ON,Lexicon 224 Hall Reverb,DECAY=69; PRE DELAY=86; LIVELINESS=33; LEVEL=9
 91,RG GMoore Blues,ir,ON,MARSHALL GREENBACK 4X12,Mic=U87; Axis=MIDDLE; Level=0; Lo Cut=20; Hi Cut=20000
 91,RG GMoore Blues,sr,off,SEND / RETURN,Send=64; Return=64
@@ -1097,8 +1097,8 @@ slot,name,block,on,model,params (nome=valore)
 92,RG Jimi Fuzz,amp,ON,67 Marshall Plexi 45W,Gain=86; Master=59; Bass=37; Middle=49; Treble=80; Presence=80; Bias=62; Level=51
 92,RG Jimi Fuzz,eq,off,BOSS GE-6,100Hz=27; 220Hz=47; 500Hz=47; 1.2kHz=34; 2.6kHz=60; 6.4kHz=55; Level=50
 92,RG Jimi Fuzz,noise-gate,off,NUX Noise Gate,Threshold=20; Decay=50
-92,RG Jimi Fuzz,modulation,ON,DUNLOP UNIVIBE,SPEED=66; VOLUME=78; INTENSITY=40; MODE=VIBRATO; Sub Div=raw 214 (codifica Sub Div non verificata)
-92,RG Jimi Fuzz,delay,off,Boss DM-2 Analog Delay,REPEAT=100; ECHO=32; INTENSITY=36; Sub Div=raw 213 (codifica Sub Div non verificata)
+92,RG Jimi Fuzz,modulation,ON,DUNLOP UNIVIBE,SPEED=66; VOLUME=78; INTENSITY=40; MODE=VIBRATO; Sub Div=1/4
+92,RG Jimi Fuzz,delay,off,Boss DM-2 Analog Delay,REPEAT=100; ECHO=32; INTENSITY=36; Sub Div=1/8D
 92,RG Jimi Fuzz,reverb,ON,Lexicon 224 Hall Reverb,DECAY=31; PRE DELAY=42; LIVELINESS=35; LEVEL=8
 92,RG Jimi Fuzz,ir,ON,MARSHALL GREENBACK 4X12,Mic=U87; Axis=MIDDLE; Level=0; Lo Cut=20; Hi Cut=20000
 92,RG Jimi Fuzz,sr,off,SEND / RETURN,Send=64; Return=64
@@ -1109,8 +1109,8 @@ slot,name,block,on,model,params (nome=valore)
 93,LX BLUE DAY ST,amp,ON,2008 Fender Supersonic,Gain=35; Master=65; Bass=40; Middle=82; Treble=41; Bright SW=100; Bias=62; Level=34
 93,LX BLUE DAY ST,eq,off,BOSS GE-6,100Hz=50; 220Hz=50; 500Hz=74; 1.2kHz=73; 2.6kHz=35; 6.4kHz=22; Level=50
 93,LX BLUE DAY ST,noise-gate,off,NUX Noise Gate,Threshold=20; Decay=50
-93,LX BLUE DAY ST,modulation,off,ROLAND CE-1 CHORUS,Intensity=14; Depth=100; Rate=45; Sub Div=raw 214 (codifica Sub Div non verificata)
-93,LX BLUE DAY ST,delay,off,Boss DM-2 Analog Delay,REPEAT=50; ECHO=50; INTENSITY=50; Sub Div=raw 214 (codifica Sub Div non verificata)
+93,LX BLUE DAY ST,modulation,off,ROLAND CE-1 CHORUS,Intensity=14; Depth=100; Rate=45; Sub Div=1/4
+93,LX BLUE DAY ST,delay,off,Boss DM-2 Analog Delay,REPEAT=50; ECHO=50; INTENSITY=50; Sub Div=1/4
 93,LX BLUE DAY ST,reverb,ON,Lexicon 224 Hall Reverb,DECAY=57; PRE DELAY=28; LIVELINESS=53; LEVEL=21
 93,LX BLUE DAY ST,ir,ON,59 BASSMAN,Mic=B52; Axis=MIDDLE; Level=0; Lo Cut=20; Hi Cut=20000
 93,LX BLUE DAY ST,sr,off,SEND / RETURN,Send=64; Return=64
@@ -1121,8 +1121,8 @@ slot,name,block,on,model,params (nome=valore)
 94,LX DuskCL LP,amp,ON,Roland JC-120,Gain=49; Master=62; Bass=70; Middle=81; Treble=43; Bright SW=100; Level=50
 94,LX DuskCL LP,eq,off,BOSS GE-6,100Hz=50; 220Hz=50; 500Hz=50; 1.2kHz=50; 2.6kHz=50; 6.4kHz=50; Level=50
 94,LX DuskCL LP,noise-gate,off,NUX Noise Gate,Threshold=20; Decay=50
-94,LX DuskCL LP,modulation,ON,BOSS TR-3 TREMOLO,RATE=50; DEPTH=14; Sub Div=raw 214 (codifica Sub Div non verificata)
-94,LX DuskCL LP,delay,ON,Boss DM-2 Analog Delay,REPEAT=50; ECHO=50; INTENSITY=12; Sub Div=raw 214 (codifica Sub Div non verificata)
+94,LX DuskCL LP,modulation,ON,BOSS TR-3 TREMOLO,RATE=50; DEPTH=14; Sub Div=1/4
+94,LX DuskCL LP,delay,ON,Boss DM-2 Analog Delay,REPEAT=50; ECHO=50; INTENSITY=12; Sub Div=1/4
 94,LX DuskCL LP,reverb,ON,EMT 140 Plate Reverb,DECAY=14; LEVEL=49
 94,LX DuskCL LP,ir,ON,ROLAND JC120,Mic=DYN421; Axis=CENTER; Level=0; Lo Cut=510; Hi Cut=12500
 94,LX DuskCL LP,sr,off,SEND / RETURN,Send=64; Return=64
@@ -1133,8 +1133,8 @@ slot,name,block,on,model,params (nome=valore)
 95,LX Fever,amp,ON,64 Fender Deluxe Reverb,Gain=29; Master=88; Bass=71; Middle=73; Treble=46; Bias=61; Level=68
 95,LX Fever,eq,off,BOSS GE-6,100Hz=50; 220Hz=50; 500Hz=50; 1.2kHz=50; 2.6kHz=50; 6.4kHz=50; Level=50
 95,LX Fever,noise-gate,ON,NUX Noise Gate,Threshold=24; Decay=50
-95,LX Fever,modulation,ON,DUNLOP UNIVIBE,SPEED=64; VOLUME=78; INTENSITY=84; MODE=CHORUS; Sub Div=raw 214 (codifica Sub Div non verificata)
-95,LX Fever,delay,ON,Boss DM-2 Analog Delay,REPEAT=100; ECHO=51; INTENSITY=20; Sub Div=raw 213 (codifica Sub Div non verificata)
+95,LX Fever,modulation,ON,DUNLOP UNIVIBE,SPEED=64; VOLUME=78; INTENSITY=84; MODE=CHORUS; Sub Div=1/4
+95,LX Fever,delay,ON,Boss DM-2 Analog Delay,REPEAT=100; ECHO=51; INTENSITY=20; Sub Div=1/8D
 95,LX Fever,reverb,ON,Lexicon 224 Hall Reverb,DECAY=92; PRE DELAY=59; LIVELINESS=85; LEVEL=45
 95,LX Fever,ir,ON,64 DELUXE REVERB,Mic=R122; Axis=MIDDLE; Level=0; Lo Cut=20; Hi Cut=20000
 95,LX Fever,sr,off,SEND / RETURN,Send=64; Return=64
@@ -1145,8 +1145,8 @@ slot,name,block,on,model,params (nome=valore)
 96,LX Funky NowST,amp,ON,64 Fender Deluxe Reverb,Gain=15; Master=73; Bass=71; Middle=54; Treble=70; Bias=58; Level=50
 96,LX Funky NowST,eq,ON,BOSS GE-6,100Hz=56; 220Hz=73; 500Hz=50; 1.2kHz=50; 2.6kHz=50; 6.4kHz=50; Level=50
 96,LX Funky NowST,noise-gate,ON,NUX Noise Gate,Threshold=32; Decay=50
-96,LX Funky NowST,modulation,ON,ROLAND CE-1 CHORUS,Intensity=8; Depth=50; Rate=20; Sub Div=raw 214 (codifica Sub Div non verificata)
-96,LX Funky NowST,delay,off,Boss DM-2 Analog Delay,REPEAT=50; ECHO=50; INTENSITY=50; Sub Div=raw 214 (codifica Sub Div non verificata)
+96,LX Funky NowST,modulation,ON,ROLAND CE-1 CHORUS,Intensity=8; Depth=50; Rate=20; Sub Div=1/4
+96,LX Funky NowST,delay,off,Boss DM-2 Analog Delay,REPEAT=50; ECHO=50; INTENSITY=50; Sub Div=1/4
 96,LX Funky NowST,reverb,off,T-Rex Room Mate Reverb,DECAY=26; TONE=21; LEVEL=35
 96,LX Funky NowST,ir,ON,64 DELUXE REVERB,Mic=R122; Axis=MIDDLE; Level=0; Lo Cut=20; Hi Cut=20000
 96,LX Funky NowST,sr,off,SEND / RETURN,Send=64; Return=64
@@ -1158,7 +1158,7 @@ slot,name,block,on,model,params (nome=valore)
 97,LX HMJassLP,eq,off,BOSS GE-6,100Hz=50; 220Hz=50; 500Hz=50; 1.2kHz=50; 2.6kHz=50; 6.4kHz=50; Level=50
 97,LX HMJassLP,noise-gate,off,NUX Noise Gate,Threshold=20; Decay=50
 97,LX HMJassLP,modulation,ON,MXR HARMONIZER,KEY=C; SCALE=MINOR; HARM=-8; BLEND=20
-97,LX HMJassLP,delay,off,Boss DM-2 Analog Delay,REPEAT=50; ECHO=50; INTENSITY=50; Sub Div=raw 214 (codifica Sub Div non verificata)
+97,LX HMJassLP,delay,off,Boss DM-2 Analog Delay,REPEAT=50; ECHO=50; INTENSITY=50; Sub Div=1/4
 97,LX HMJassLP,reverb,ON,EMT 140 Plate Reverb,DECAY=13; LEVEL=23
 97,LX HMJassLP,ir,ON,ROLAND JC120,Mic=DYN421; Axis=CENTER; Level=0; Lo Cut=510; Hi Cut=12500
 97,LX HMJassLP,sr,off,SEND / RETURN,Send=64; Return=64
@@ -1169,8 +1169,8 @@ slot,name,block,on,model,params (nome=valore)
 98,LX LOST IN DUO,amp,ON,64 Fender Deluxe Reverb,Gain=16; Master=100; Bass=71; Middle=51; Treble=43; Bias=58; Level=74
 98,LX LOST IN DUO,eq,off,BOSS GE-6,100Hz=50; 220Hz=50; 500Hz=50; 1.2kHz=50; 2.6kHz=50; 6.4kHz=50; Level=50
 98,LX LOST IN DUO,noise-gate,off,NUX Noise Gate,Threshold=20; Decay=50
-98,LX LOST IN DUO,modulation,off,ROLAND CE-1 CHORUS,Intensity=0; Depth=50; Rate=20; Sub Div=raw 214 (codifica Sub Div non verificata)
-98,LX LOST IN DUO,delay,ON,NUX DUOTIME,LEVEL=100; TIME1=51; SUB DIV1=raw 214 (codifica Sub Div non verificata); REPEAT1=49; TIME2=32; SUB DIV2=raw 213 (codifica Sub Div non verificata); REPEAT2=70; PARA=0
+98,LX LOST IN DUO,modulation,off,ROLAND CE-1 CHORUS,Intensity=0; Depth=50; Rate=20; Sub Div=1/4
+98,LX LOST IN DUO,delay,ON,NUX DUOTIME,LEVEL=100; TIME1=51; SUB DIV1=1/4; REPEAT1=49; TIME2=32; SUB DIV2=1/8D; REPEAT2=70; PARA=0
 98,LX LOST IN DUO,reverb,ON,Lexicon 224 Hall Reverb,DECAY=100; PRE DELAY=59; LIVELINESS=85; LEVEL=30
 98,LX LOST IN DUO,ir,ON,64 DELUXE REVERB,Mic=R122; Axis=MIDDLE; Level=0; Lo Cut=20; Hi Cut=20000
 98,LX LOST IN DUO,sr,off,SEND / RETURN,Send=64; Return=64
@@ -1181,8 +1181,8 @@ slot,name,block,on,model,params (nome=valore)
 99,LX Mid-Night ST,amp,ON,64 Fender Deluxe Reverb,Gain=29; Master=71; Bass=71; Middle=51; Treble=59; Bias=68; Level=50
 99,LX Mid-Night ST,eq,off,BOSS GE-6,100Hz=50; 220Hz=50; 500Hz=50; 1.2kHz=50; 2.6kHz=50; 6.4kHz=50; Level=50
 99,LX Mid-Night ST,noise-gate,ON,NUX Noise Gate,Threshold=20; Decay=50
-99,LX Mid-Night ST,modulation,ON,ROLAND CE-1 CHORUS,Intensity=50; Depth=81; Rate=20; Sub Div=raw 214 (codifica Sub Div non verificata)
-99,LX Mid-Night ST,delay,ON,Boss DM-2 Analog Delay,REPEAT=100; ECHO=71; INTENSITY=11; Sub Div=raw 213 (codifica Sub Div non verificata)
+99,LX Mid-Night ST,modulation,ON,ROLAND CE-1 CHORUS,Intensity=50; Depth=81; Rate=20; Sub Div=1/4
+99,LX Mid-Night ST,delay,ON,Boss DM-2 Analog Delay,REPEAT=100; ECHO=71; INTENSITY=11; Sub Div=1/8D
 99,LX Mid-Night ST,reverb,ON,Lexicon 224 Hall Reverb,DECAY=95; PRE DELAY=67; LIVELINESS=86; LEVEL=50
 99,LX Mid-Night ST,ir,ON,64 DELUXE REVERB,Mic=R122; Axis=MIDDLE; Level=0; Lo Cut=20; Hi Cut=20000
 99,LX Mid-Night ST,sr,off,SEND / RETURN,Send=64; Return=64
@@ -1193,8 +1193,8 @@ slot,name,block,on,model,params (nome=valore)
 100,LX MN CS ST,amp,ON,1990 Fender Vibro King,Gain=15; Master=83; Bass=42; Middle=69; Treble=80; Presence=77; Bias=57; Level=50
 100,LX MN CS ST,eq,off,BOSS GE-6,100Hz=50; 220Hz=50; 500Hz=50; 1.2kHz=50; 2.6kHz=50; 6.4kHz=50; Level=50
 100,LX MN CS ST,noise-gate,ON,NUX Noise Gate,Threshold=28; Decay=50
-100,LX MN CS ST,modulation,ON,MXR STEREO CHORUS,Intensity=0; Width=78; Rate=42; Sub Div=raw 214 (codifica Sub Div non verificata)
-100,LX MN CS ST,delay,ON,Boss DM-2 Analog Delay,REPEAT=100; ECHO=35; INTENSITY=24; Sub Div=raw 213 (codifica Sub Div non verificata)
+100,LX MN CS ST,modulation,ON,MXR STEREO CHORUS,Intensity=0; Width=78; Rate=42; Sub Div=1/4
+100,LX MN CS ST,delay,ON,Boss DM-2 Analog Delay,REPEAT=100; ECHO=35; INTENSITY=24; Sub Div=1/8D
 100,LX MN CS ST,reverb,ON,EMT 140 Plate Reverb,DECAY=9; LEVEL=75
 100,LX MN CS ST,ir,ON,59 BASSMAN,Mic=R122; Axis=MIDDLE; Level=0; Lo Cut=20; Hi Cut=20000
 100,LX MN CS ST,sr,off,SEND / RETURN,Send=64; Return=64
@@ -1205,8 +1205,8 @@ slot,name,block,on,model,params (nome=valore)
 101,LX OD Melody ST,amp,ON,2008 Fender Supersonic,Gain=84; Master=28; Bass=40; Middle=65; Treble=47; Bright SW=100; Bias=73; Level=49
 101,LX OD Melody ST,eq,off,ALIGN EQ,Band1 Freq=65; Band1 Gain=56; Band1 Q=30; Band2 Freq=8; Band2 Gain=60; Band2 Q=60; Band3 Freq=54; Band3 Gain=44; Band3 Q=0
 101,LX OD Melody ST,noise-gate,ON,NUX Noise Gate,Threshold=24; Decay=50
-101,LX OD Melody ST,modulation,off,TC CHORUS,SPEED=58; WIDTH=46; MODE=CHORUS; INTENSITY=58; Sub Div=raw 214 (codifica Sub Div non verificata)
-101,LX OD Melody ST,delay,ON,Boss DD-2 Digital Delay,EFFECT LEVEL=19; FEEDBACK=54; DELAY TIME=69; Sub Div=raw 213 (codifica Sub Div non verificata)
+101,LX OD Melody ST,modulation,off,TC CHORUS,SPEED=58; WIDTH=46; MODE=PITCH MODULATOR; INTENSITY=58; Sub Div=1/4
+101,LX OD Melody ST,delay,ON,Boss DD-2 Digital Delay,EFFECT LEVEL=19; FEEDBACK=54; DELAY TIME=69; Sub Div=1/8D
 101,LX OD Melody ST,reverb,ON,Vintage Spring Reverb,DECAY=9; LEVEL=87
 101,LX OD Melody ST,ir,ON,59 BASSMAN,Mic=B52; Axis=MIDDLE; Level=0; Lo Cut=20; Hi Cut=20000
 101,LX OD Melody ST,sr,off,SEND / RETURN,Send=64; Return=64
@@ -1217,8 +1217,8 @@ slot,name,block,on,model,params (nome=valore)
 102,LX SWT OD LP,amp,ON,1986 Matchless DC30,Gain=20; Master=71; Cut=64; Bass=100; Treble=62; Level=65
 102,LX SWT OD LP,eq,off,BOSS GE-6,100Hz=50; 220Hz=50; 500Hz=50; 1.2kHz=50; 2.6kHz=50; 6.4kHz=50; Level=50
 102,LX SWT OD LP,noise-gate,off,NUX Noise Gate,Threshold=20; Decay=50
-102,LX SWT OD LP,modulation,off,ROLAND CE-1 CHORUS,Intensity=50; Depth=50; Rate=20; Sub Div=raw 214 (codifica Sub Div non verificata)
-102,LX SWT OD LP,delay,ON,Boss DM-2 Analog Delay,REPEAT=100; ECHO=50; INTENSITY=15; Sub Div=raw 214 (codifica Sub Div non verificata)
+102,LX SWT OD LP,modulation,off,ROLAND CE-1 CHORUS,Intensity=50; Depth=50; Rate=20; Sub Div=1/4
+102,LX SWT OD LP,delay,ON,Boss DM-2 Analog Delay,REPEAT=100; ECHO=50; INTENSITY=15; Sub Div=1/4
 102,LX SWT OD LP,reverb,ON,Lexicon 224 Hall Reverb,DECAY=85; PRE DELAY=45; LIVELINESS=75; LEVEL=14
 102,LX SWT OD LP,ir,ON,VOX AC30,Mic=C3000; Axis=MIDDLE; Level=0; Lo Cut=20; Hi Cut=20000
 102,LX SWT OD LP,sr,off,SEND / RETURN,Send=64; Return=64
@@ -1229,8 +1229,8 @@ slot,name,block,on,model,params (nome=valore)
 103,LX The ROCK LP,amp,ON,1989 Marshall 1987 X 50W,Gain=28; Master=53; Bass=65; Middle=77; Treble=66; Presence=57; Bias=58; Level=50
 103,LX The ROCK LP,eq,off,BOSS GE-6,100Hz=50; 220Hz=50; 500Hz=50; 1.2kHz=50; 2.6kHz=50; 6.4kHz=50; Level=50
 103,LX The ROCK LP,noise-gate,ON,NUX Noise Gate,Threshold=20; Decay=50
-103,LX The ROCK LP,modulation,off,ROLAND CE-1 CHORUS,Intensity=50; Depth=50; Rate=20; Sub Div=raw 214 (codifica Sub Div non verificata)
-103,LX The ROCK LP,delay,off,Boss DM-2 Analog Delay,REPEAT=50; ECHO=50; INTENSITY=50; Sub Div=raw 214 (codifica Sub Div non verificata)
+103,LX The ROCK LP,modulation,off,ROLAND CE-1 CHORUS,Intensity=50; Depth=50; Rate=20; Sub Div=1/4
+103,LX The ROCK LP,delay,off,Boss DM-2 Analog Delay,REPEAT=50; ECHO=50; INTENSITY=50; Sub Div=1/4
 103,LX The ROCK LP,reverb,ON,Lexicon 224 Hall Reverb,DECAY=55; PRE DELAY=34; LIVELINESS=85; LEVEL=28
 103,LX The ROCK LP,ir,ON,MARSHALL VINTAGE 30 4X12,Mic=U87; Axis=CENTER; Level=0; Lo Cut=20; Hi Cut=20000
 103,LX The ROCK LP,sr,off,SEND / RETURN,Send=64; Return=64
@@ -1241,8 +1241,8 @@ slot,name,block,on,model,params (nome=valore)
 104,LX Lenny FD,amp,ON,2008 Fender Supersonic,Gain=31; Master=69; Bass=40; Middle=39; Treble=59; Bright SW=100; Bias=69; Level=55
 104,LX Lenny FD,eq,off,ALIGN EQ,Band1 Freq=46; Band1 Gain=49; Band1 Q=30; Band2 Freq=25; Band2 Gain=80; Band2 Q=65; Band3 Freq=39; Band3 Gain=53; Band3 Q=0
 104,LX Lenny FD,noise-gate,off,NUX Noise Gate,Threshold=20; Decay=50
-104,LX Lenny FD,modulation,off,ROLAND CE-1 CHORUS,Intensity=50; Depth=50; Rate=20; Sub Div=raw 214 (codifica Sub Div non verificata)
-104,LX Lenny FD,delay,ON,Boss DM-2 Analog Delay,REPEAT=87; ECHO=49; INTENSITY=15; Sub Div=raw 214 (codifica Sub Div non verificata)
+104,LX Lenny FD,modulation,off,ROLAND CE-1 CHORUS,Intensity=50; Depth=50; Rate=20; Sub Div=1/4
+104,LX Lenny FD,delay,ON,Boss DM-2 Analog Delay,REPEAT=87; ECHO=49; INTENSITY=15; Sub Div=1/4
 104,LX Lenny FD,reverb,ON,Lexicon 224 Hall Reverb,DECAY=67; PRE DELAY=41; LIVELINESS=78; LEVEL=30
 104,LX Lenny FD,ir,ON,59 BASSMAN,Mic=B52; Axis=MIDDLE; Level=0; Lo Cut=20; Hi Cut=20000
 104,LX Lenny FD,sr,off,SEND / RETURN,Send=64; Return=64
@@ -1253,8 +1253,8 @@ slot,name,block,on,model,params (nome=valore)
 105,LX RS LP,amp,ON,Roland JC-120,Gain=51; Master=46; Bass=70; Middle=65; Treble=82; Bright SW=100; Level=50
 105,LX RS LP,eq,off,BOSS GE-6,100Hz=50; 220Hz=50; 500Hz=50; 1.2kHz=50; 2.6kHz=50; 6.4kHz=50; Level=50
 105,LX RS LP,noise-gate,off,NUX Noise Gate,Threshold=20; Decay=50
-105,LX RS LP,modulation,ON,ROTARY SPEAKER,BALANCE=81; SPEED=66; Sub Div=raw 214 (codifica Sub Div non verificata)
-105,LX RS LP,delay,ON,Maestro EchoPlex EP-4,TIME=52; LEVEL=22; REPEAT=49; Sub Div=raw 213 (codifica Sub Div non verificata)
+105,LX RS LP,modulation,ON,ROTARY SPEAKER,BALANCE=81; SPEED=66; Sub Div=1/4
+105,LX RS LP,delay,ON,Maestro EchoPlex EP-4,TIME=52; LEVEL=22; REPEAT=49; Sub Div=1/8D
 105,LX RS LP,reverb,ON,Lexicon 224 Hall Reverb,DECAY=59; PRE DELAY=96; LIVELINESS=85; LEVEL=38
 105,LX RS LP,ir,ON,ROLAND JC120,Mic=U87; Axis=CENTER; Level=0; Lo Cut=510; Hi Cut=12500
 105,LX RS LP,sr,off,SEND / RETURN,Send=64; Return=64
@@ -1265,8 +1265,8 @@ slot,name,block,on,model,params (nome=valore)
 106,LX SadButTrueLP,amp,ON,Bognar Uberschall,Gain=9; Master=52; Bass=58; Middle=19; Treble=81; Presence=76; Bias=62; Level=50
 106,LX SadButTrueLP,eq,off,BOSS GE-6,100Hz=50; 220Hz=50; 500Hz=38; 1.2kHz=18; 2.6kHz=52; 6.4kHz=67; Level=50
 106,LX SadButTrueLP,noise-gate,ON,NUX Noise Gate,Threshold=42; Decay=18
-106,LX SadButTrueLP,modulation,ON,ROLAND CE-1 CHORUS,Intensity=0; Depth=50; Rate=20; Sub Div=raw 214 (codifica Sub Div non verificata)
-106,LX SadButTrueLP,delay,off,Boss DD-2 Digital Delay,EFFECT LEVEL=20; FEEDBACK=42; DELAY TIME=68; Sub Div=raw 213 (codifica Sub Div non verificata)
+106,LX SadButTrueLP,modulation,ON,ROLAND CE-1 CHORUS,Intensity=0; Depth=50; Rate=20; Sub Div=1/4
+106,LX SadButTrueLP,delay,off,Boss DD-2 Digital Delay,EFFECT LEVEL=20; FEEDBACK=42; DELAY TIME=68; Sub Div=1/8D
 106,LX SadButTrueLP,reverb,ON,Lexicon 224 Hall Reverb,DECAY=77; PRE DELAY=59; LIVELINESS=85; LEVEL=33
 106,LX SadButTrueLP,ir,ON,MARSHALL VINTAGE 30 4X12,Mic=C3000; Axis=CENTER; Level=0; Lo Cut=20; Hi Cut=20000
 106,LX SadButTrueLP,sr,off,SEND / RETURN,Send=64; Return=64
@@ -1277,8 +1277,8 @@ slot,name,block,on,model,params (nome=valore)
 107,LX Sunset,amp,ON,2008 Fender Supersonic,Gain=32; Master=89; Bass=59; Middle=81; Treble=49; Bright SW=100; Bias=76; Level=50
 107,LX Sunset,eq,off,BOSS GE-6,100Hz=50; 220Hz=50; 500Hz=50; 1.2kHz=50; 2.6kHz=50; 6.4kHz=50; Level=50
 107,LX Sunset,noise-gate,ON,NUX Noise Gate,Threshold=22; Decay=38
-107,LX Sunset,modulation,ON,BOSS TR-3 TREMOLO,RATE=61; DEPTH=18; Sub Div=raw 214 (codifica Sub Div non verificata)
-107,LX Sunset,delay,ON,Boss DD-2 Digital Delay,EFFECT LEVEL=27; FEEDBACK=50; DELAY TIME=68; Sub Div=raw 213 (codifica Sub Div non verificata)
+107,LX Sunset,modulation,ON,BOSS TR-3 TREMOLO,RATE=61; DEPTH=18; Sub Div=1/4
+107,LX Sunset,delay,ON,Boss DD-2 Digital Delay,EFFECT LEVEL=27; FEEDBACK=50; DELAY TIME=68; Sub Div=1/8D
 107,LX Sunset,reverb,ON,Lexicon 224 Hall Reverb,DECAY=77; PRE DELAY=59; LIVELINESS=85; LEVEL=35
 107,LX Sunset,ir,ON,59 BASSMAN,Mic=U87; Axis=MIDDLE; Level=0; Lo Cut=20; Hi Cut=20000
 107,LX Sunset,sr,off,SEND / RETURN,Send=64; Return=64
@@ -1289,8 +1289,8 @@ slot,name,block,on,model,params (nome=valore)
 108,LX What kindWMST,amp,ON,57 Fender Tweed Deluxe,Gain=26; Tone=41; Master=100; Level=76
 108,LX What kindWMST,eq,ON,BOSS GE-6,100Hz=66; 220Hz=54; 500Hz=49; 1.2kHz=63; 2.6kHz=53; 6.4kHz=56; Level=28
 108,LX What kindWMST,noise-gate,off,NUX Noise Gate,Threshold=20; Decay=50
-108,LX What kindWMST,modulation,off,ROLAND CE-1 CHORUS,Intensity=50; Depth=50; Rate=20; Sub Div=raw 214 (codifica Sub Div non verificata)
-108,LX What kindWMST,delay,off,Boss DM-2 Analog Delay,REPEAT=50; ECHO=50; INTENSITY=50; Sub Div=raw 214 (codifica Sub Div non verificata)
+108,LX What kindWMST,modulation,off,ROLAND CE-1 CHORUS,Intensity=50; Depth=50; Rate=20; Sub Div=1/4
+108,LX What kindWMST,delay,off,Boss DM-2 Analog Delay,REPEAT=50; ECHO=50; INTENSITY=50; Sub Div=1/4
 108,LX What kindWMST,reverb,ON,T-Rex Room Mate Reverb,DECAY=71; TONE=61; LEVEL=38
 108,LX What kindWMST,ir,ON,64 DELUXE REVERB,Mic=U87; Axis=EDGE; Level=0; Lo Cut=20; Hi Cut=20000
 108,LX What kindWMST,sr,off,SEND / RETURN,Send=64; Return=64
@@ -1301,8 +1301,8 @@ slot,name,block,on,model,params (nome=valore)
 109,TT Clean Single,amp,ON,64 Fender Deluxe Reverb,Gain=16; Master=64; Bass=53; Middle=58; Treble=56; Bias=72; Level=49
 109,TT Clean Single,eq,ON,MXR 10 BAND,VOL=-1; 31.25Hz=22; 62.5Hz=41; 125Hz=45; 250Hz=58; 500Hz=51; 1KHz=64; 2KHz=70; 4KHz=54; 8KHz=56; 16KHz=44; GAIN=0
 109,TT Clean Single,noise-gate,off,NUX Noise Gate,Threshold=20; Decay=50
-109,TT Clean Single,modulation,off,DUNLOP UNIVIBE,SPEED=44; VOLUME=41; INTENSITY=35; MODE=CHORUS; Sub Div=raw 214 (codifica Sub Div non verificata)
-109,TT Clean Single,delay,off,Boss DM-2 Analog Delay,REPEAT=93; ECHO=34; INTENSITY=15; Sub Div=raw 213 (codifica Sub Div non verificata)
+109,TT Clean Single,modulation,off,DUNLOP UNIVIBE,SPEED=44; VOLUME=41; INTENSITY=35; MODE=CHORUS; Sub Div=1/4
+109,TT Clean Single,delay,off,Boss DM-2 Analog Delay,REPEAT=93; ECHO=34; INTENSITY=15; Sub Div=1/8D
 109,TT Clean Single,reverb,ON,Vintage Spring Reverb,DECAY=17; LEVEL=1
 109,TT Clean Single,ir,ON,64 DELUXE REVERB,Mic=DYN421; Axis=CENTER; Level=2; Lo Cut=20; Hi Cut=20000
 109,TT Clean Single,sr,off,SEND / RETURN,Send=64; Return=64
@@ -1314,7 +1314,7 @@ slot,name,block,on,model,params (nome=valore)
 110,TT 1987X JMP,eq,off,ALIGN EQ,Band1 Freq=40; Band1 Gain=43; Band1 Q=50; Band2 Freq=52; Band2 Gain=72; Band2 Q=50; Band3 Freq=100; Band3 Gain=39; Band3 Q=50
 110,TT 1987X JMP,noise-gate,ON,NUX Noise Gate,Threshold=22; Decay=50
 110,TT 1987X JMP,modulation,ON,Stereo DETUNE,SHIFT LEFT OUT=54; MIX=25; SHIFT RIGHT OUT=48
-110,TT 1987X JMP,delay,off,Boss DD-2 Digital Delay,EFFECT LEVEL=17; FEEDBACK=39; DELAY TIME=41; Sub Div=raw 214 (codifica Sub Div non verificata)
+110,TT 1987X JMP,delay,off,Boss DD-2 Digital Delay,EFFECT LEVEL=17; FEEDBACK=39; DELAY TIME=41; Sub Div=1/4
 110,TT 1987X JMP,reverb,ON,T-Rex Room Mate Reverb,DECAY=50; TONE=50; LEVEL=50
 110,TT 1987X JMP,ir,ON,USER IR CAB,Level=0; Lo Cut=510; Hi Cut=12500
 110,TT 1987X JMP,sr,off,SEND / RETURN,Send=64; Return=64
@@ -1325,8 +1325,8 @@ slot,name,block,on,model,params (nome=valore)
 111,TT DJENTIE,amp,ON,2005 Friedman HBE,Gain=52; Master=25; Bass=34; Middle=54; Treble=62; Presence=39; Bias=61; Level=46
 111,TT DJENTIE,eq,ON,MXR 10 BAND,VOL=0; 31.25Hz=12; 62.5Hz=46; 125Hz=54; 250Hz=50; 500Hz=53; 1KHz=54; 2KHz=65; 4KHz=57; 8KHz=61; 16KHz=44; GAIN=0
 111,TT DJENTIE,noise-gate,ON,NUX Noise Gate,Threshold=59; Decay=33
-111,TT DJENTIE,modulation,off,ROLAND CE-1 CHORUS,Intensity=50; Depth=50; Rate=20; Sub Div=raw 214 (codifica Sub Div non verificata)
-111,TT DJENTIE,delay,off,Boss DM-2 Analog Delay,REPEAT=50; ECHO=50; INTENSITY=50; Sub Div=raw 214 (codifica Sub Div non verificata)
+111,TT DJENTIE,modulation,off,ROLAND CE-1 CHORUS,Intensity=50; Depth=50; Rate=20; Sub Div=1/4
+111,TT DJENTIE,delay,off,Boss DM-2 Analog Delay,REPEAT=50; ECHO=50; INTENSITY=50; Sub Div=1/4
 111,TT DJENTIE,reverb,ON,T-Rex Room Mate Reverb,DECAY=18; TONE=60; LEVEL=29
 111,TT DJENTIE,ir,ON,USER IR CAB,Level=3; Lo Cut=373; Hi Cut=19100
 111,TT DJENTIE,sr,off,SEND / RETURN,Send=64; Return=64
@@ -1337,8 +1337,8 @@ slot,name,block,on,model,params (nome=valore)
 112,TT TY,amp,ON,59 Fender Bassman,Gain=71; Master=28; Bass=26; Middle=62; Treble=53; Presence=63; Bias=64; Level=72
 112,TT TY,eq,off,BOSS GE-6,100Hz=50; 220Hz=50; 500Hz=50; 1.2kHz=50; 2.6kHz=50; 6.4kHz=50; Level=50
 112,TT TY,noise-gate,ON,NUX Noise Gate,Threshold=46; Decay=50
-112,TT TY,modulation,ON,BOSS TR-3 TREMOLO,RATE=25; DEPTH=5; Sub Div=raw 214 (codifica Sub Div non verificata)
-112,TT TY,delay,ON,Boss DD-2 Digital Delay,EFFECT LEVEL=8; FEEDBACK=34; DELAY TIME=24; Sub Div=raw 213 (codifica Sub Div non verificata)
+112,TT TY,modulation,ON,BOSS TR-3 TREMOLO,RATE=25; DEPTH=5; Sub Div=1/4
+112,TT TY,delay,ON,Boss DD-2 Digital Delay,EFFECT LEVEL=8; FEEDBACK=34; DELAY TIME=24; Sub Div=1/8D
 112,TT TY,reverb,ON,T-Rex Room Mate Reverb,DECAY=17; TONE=38; LEVEL=16
 112,TT TY,ir,ON,59 BASSMAN,Mic=R121; Axis=MIDDLE; Level=1; Lo Cut=20; Hi Cut=20000
 112,TT TY,sr,off,SEND / RETURN,Send=64; Return=64
@@ -1349,8 +1349,8 @@ slot,name,block,on,model,params (nome=valore)
 113,MK Grooving AD,amp,ON,65 Fender Twin Reverb,Gain=34; Master=84; Bass=62; Middle=45; Treble=52; Bright SW=100; Bias=64; Level=55
 113,MK Grooving AD,eq,off,BOSS GE-6,100Hz=50; 220Hz=50; 500Hz=50; 1.2kHz=50; 2.6kHz=50; 6.4kHz=50; Level=50
 113,MK Grooving AD,noise-gate,ON,NUX Noise Gate,Threshold=45; Decay=38
-113,MK Grooving AD,modulation,ON,ROLAND CE-1 CHORUS,Intensity=50; Depth=50; Rate=20; Sub Div=raw 214 (codifica Sub Div non verificata)
-113,MK Grooving AD,delay,ON,Boss DM-2 Analog Delay,REPEAT=50; ECHO=41; INTENSITY=49; Sub Div=raw 213 (codifica Sub Div non verificata)
+113,MK Grooving AD,modulation,ON,ROLAND CE-1 CHORUS,Intensity=50; Depth=50; Rate=20; Sub Div=1/4
+113,MK Grooving AD,delay,ON,Boss DM-2 Analog Delay,REPEAT=50; ECHO=41; INTENSITY=49; Sub Div=1/8D
 113,MK Grooving AD,reverb,ON,SHIMMER REVERB,MIX=34; DECAY=41; SHIM=38
 113,MK Grooving AD,ir,ON,65 TWIN REVERB,Mic=DYN421; Axis=MIDDLE; Level=0; Lo Cut=20; Hi Cut=20000
 113,MK Grooving AD,sr,off,SEND / RETURN,Send=64; Return=64
@@ -1361,8 +1361,8 @@ slot,name,block,on,model,params (nome=valore)
 114,MK Shim Dly,amp,ON,2008 Fender Supersonic,Gain=39; Master=96; Bass=40; Middle=65; Treble=47; Bright SW=100; Bias=62; Level=50
 114,MK Shim Dly,eq,off,BOSS GE-6,100Hz=50; 220Hz=50; 500Hz=50; 1.2kHz=50; 2.6kHz=50; 6.4kHz=50; Level=50
 114,MK Shim Dly,noise-gate,ON,NUX Noise Gate,Threshold=32; Decay=39
-114,MK Shim Dly,modulation,ON,TC CHORUS,SPEED=37; WIDTH=46; MODE=PITCH MODULATOR; INTENSITY=58; Sub Div=raw 214 (codifica Sub Div non verificata)
-114,MK Shim Dly,delay,ON,NUX DUOTIME,LEVEL=24; TIME1=100; SUB DIV1=raw 214 (codifica Sub Div non verificata); REPEAT1=70; TIME2=75; SUB DIV2=raw 213 (codifica Sub Div non verificata); REPEAT2=80; PARA=38
+114,MK Shim Dly,modulation,ON,TC CHORUS,SPEED=37; WIDTH=46; MODE=CHORUS; INTENSITY=58; Sub Div=1/4
+114,MK Shim Dly,delay,ON,NUX DUOTIME,LEVEL=24; TIME1=100; SUB DIV1=1/4; REPEAT1=70; TIME2=75; SUB DIV2=1/8D; REPEAT2=80; PARA=38
 114,MK Shim Dly,reverb,ON,SHIMMER REVERB,MIX=46; DECAY=41; SHIM=26
 114,MK Shim Dly,ir,ON,59 BASSMAN,Mic=B52; Axis=MIDDLE; Level=0; Lo Cut=20; Hi Cut=20000
 114,MK Shim Dly,sr,off,SEND / RETURN,Send=64; Return=64
@@ -1373,8 +1373,8 @@ slot,name,block,on,model,params (nome=valore)
 115,MK Slap Root,amp,ON,64 Fender Deluxe Reverb,Gain=29; Master=76; Bass=71; Middle=51; Treble=59; Bias=58; Level=50
 115,MK Slap Root,eq,off,BOSS GE-6,100Hz=50; 220Hz=50; 500Hz=50; 1.2kHz=50; 2.6kHz=50; 6.4kHz=50; Level=50
 115,MK Slap Root,noise-gate,ON,NUX Noise Gate,Threshold=33; Decay=31
-115,MK Slap Root,modulation,off,ROLAND CE-1 CHORUS,Intensity=50; Depth=50; Rate=20; Sub Div=raw 214 (codifica Sub Div non verificata)
-115,MK Slap Root,delay,ON,Maestro EchoPlex EP-4,TIME=10; LEVEL=32; REPEAT=49; Sub Div=raw 214 (codifica Sub Div non verificata)
+115,MK Slap Root,modulation,off,ROLAND CE-1 CHORUS,Intensity=50; Depth=50; Rate=20; Sub Div=1/4
+115,MK Slap Root,delay,ON,Maestro EchoPlex EP-4,TIME=10; LEVEL=32; REPEAT=49; Sub Div=1/4
 115,MK Slap Root,reverb,ON,Vintage Spring Reverb,DECAY=35; LEVEL=27
 115,MK Slap Root,ir,ON,64 DELUXE REVERB,Mic=R122; Axis=MIDDLE; Level=0; Lo Cut=20; Hi Cut=20000
 115,MK Slap Root,sr,off,SEND / RETURN,Send=64; Return=64
@@ -1385,8 +1385,8 @@ slot,name,block,on,model,params (nome=valore)
 116,MK Cristal Clean,amp,ON,VOX AC30,Gain=26; Master=78; Cut=40; Bass=61; Treble=61; Level=53
 116,MK Cristal Clean,eq,ON,MXR 10 BAND,VOL=1; 31.25Hz=43; 62.5Hz=53; 125Hz=54; 250Hz=39; 500Hz=52; 1KHz=41; 2KHz=66; 4KHz=47; 8KHz=48; 16KHz=47; GAIN=2
 116,MK Cristal Clean,noise-gate,ON,NUX Noise Gate,Threshold=32; Decay=39
-116,MK Cristal Clean,modulation,ON,ROLAND CE-2 CHORUS,Rate=69; Depth=41; Sub Div=raw 214 (codifica Sub Div non verificata)
-116,MK Cristal Clean,delay,off,Boss DM-2 Analog Delay,REPEAT=50; ECHO=50; INTENSITY=50; Sub Div=raw 214 (codifica Sub Div non verificata)
+116,MK Cristal Clean,modulation,ON,ROLAND CE-2 CHORUS,Rate=69; Depth=41; Sub Div=1/4
+116,MK Cristal Clean,delay,off,Boss DM-2 Analog Delay,REPEAT=50; ECHO=50; INTENSITY=50; Sub Div=1/4
 116,MK Cristal Clean,reverb,ON,T-Rex Room Mate Reverb,DECAY=50; TONE=50; LEVEL=28
 116,MK Cristal Clean,ir,ON,VOX AC30,Mic=R122; Axis=MIDDLE; Level=0; Lo Cut=20; Hi Cut=20000
 116,MK Cristal Clean,sr,off,SEND / RETURN,Send=64; Return=64
@@ -1397,8 +1397,8 @@ slot,name,block,on,model,params (nome=valore)
 117,MK Pop Clean,amp,ON,Roland JC-120,Gain=35; Master=82; Bass=70; Middle=65; Treble=65; Bright SW=100; Level=51
 117,MK Pop Clean,eq,off,BOSS GE-6,100Hz=50; 220Hz=50; 500Hz=50; 1.2kHz=50; 2.6kHz=50; 6.4kHz=50; Level=50
 117,MK Pop Clean,noise-gate,off,NUX Noise Gate,Threshold=20; Decay=50
-117,MK Pop Clean,modulation,ON,ROLAND CE-1 CHORUS,Intensity=50; Depth=50; Rate=20; Sub Div=raw 214 (codifica Sub Div non verificata)
-117,MK Pop Clean,delay,ON,Boss DM-2 Analog Delay,REPEAT=50; ECHO=30; INTENSITY=30; Sub Div=raw 213 (codifica Sub Div non verificata)
+117,MK Pop Clean,modulation,ON,ROLAND CE-1 CHORUS,Intensity=50; Depth=50; Rate=20; Sub Div=1/4
+117,MK Pop Clean,delay,ON,Boss DM-2 Analog Delay,REPEAT=50; ECHO=30; INTENSITY=30; Sub Div=1/8D
 117,MK Pop Clean,reverb,ON,Vintage Spring Reverb,DECAY=27; LEVEL=35
 117,MK Pop Clean,ir,ON,ROLAND JC120,Mic=DYN421; Axis=CENTER; Level=0; Lo Cut=510; Hi Cut=12500
 117,MK Pop Clean,sr,off,SEND / RETURN,Send=64; Return=64
@@ -1409,8 +1409,8 @@ slot,name,block,on,model,params (nome=valore)
 118,MK Pop Crunch,amp,ON,2005 Friedman HBE,Gain=17; Master=55; Bass=45; Middle=56; Treble=60; Presence=62; Bias=77; Level=50
 118,MK Pop Crunch,eq,off,MXR 10 BAND,VOL=1; 31.25Hz=43; 62.5Hz=53; 125Hz=54; 250Hz=39; 500Hz=52; 1KHz=41; 2KHz=66; 4KHz=47; 8KHz=48; 16KHz=47; GAIN=2
 118,MK Pop Crunch,noise-gate,ON,NUX Noise Gate,Threshold=36; Decay=32
-118,MK Pop Crunch,modulation,off,ROLAND CE-1 CHORUS,Intensity=50; Depth=50; Rate=20; Sub Div=raw 214 (codifica Sub Div non verificata)
-118,MK Pop Crunch,delay,off,Boss DD-2 Digital Delay,EFFECT LEVEL=33; FEEDBACK=36; DELAY TIME=68; Sub Div=raw 213 (codifica Sub Div non verificata)
+118,MK Pop Crunch,modulation,off,ROLAND CE-1 CHORUS,Intensity=50; Depth=50; Rate=20; Sub Div=1/4
+118,MK Pop Crunch,delay,off,Boss DD-2 Digital Delay,EFFECT LEVEL=33; FEEDBACK=36; DELAY TIME=68; Sub Div=1/8D
 118,MK Pop Crunch,reverb,ON,T-Rex Room Mate Reverb,DECAY=37; TONE=50; LEVEL=31
 118,MK Pop Crunch,ir,ON,MARSHALL VINTAGE 30 4X12,Mic=C3000; Axis=MIDDLE; Level=0; Lo Cut=20; Hi Cut=20000
 118,MK Pop Crunch,sr,off,SEND / RETURN,Send=64; Return=64
@@ -1421,8 +1421,8 @@ slot,name,block,on,model,params (nome=valore)
 119,MK Pop Drive,amp,ON,57 Fender Tweed Deluxe,Gain=57; Tone=73; Master=76; Level=50
 119,MK Pop Drive,eq,off,BOSS GE-6,100Hz=50; 220Hz=50; 500Hz=50; 1.2kHz=50; 2.6kHz=50; 6.4kHz=50; Level=50
 119,MK Pop Drive,noise-gate,ON,NUX Noise Gate,Threshold=31; Decay=50
-119,MK Pop Drive,modulation,off,MXR PHASE 100,INTENSITY=61; SPEED=30; Sub Div=raw 214 (codifica Sub Div non verificata)
-119,MK Pop Drive,delay,off,Ibanez DPL10 Stereo Pan Delay,TIME=47; REPEAT=34; DELAY LEVEL=44; Sub Div=raw 214 (codifica Sub Div non verificata)
+119,MK Pop Drive,modulation,off,MXR PHASE 100,INTENSITY=61; SPEED=30; Sub Div=1/4
+119,MK Pop Drive,delay,off,Ibanez DPL10 Stereo Pan Delay,TIME=47; REPEAT=34; DELAY LEVEL=44; Sub Div=1/4
 119,MK Pop Drive,reverb,ON,T-Rex Room Mate Reverb,DECAY=40; TONE=70; LEVEL=50
 119,MK Pop Drive,ir,ON,64 DELUXE REVERB,Mic=U87; Axis=EDGE; Level=0; Lo Cut=20; Hi Cut=20000
 119,MK Pop Drive,sr,off,SEND / RETURN,Send=64; Return=64
@@ -1433,8 +1433,8 @@ slot,name,block,on,model,params (nome=valore)
 120,MK Pop Lead,amp,ON,1985 Mesa Dual Rectifier,Gain=12; Master=62; Bass=42; Middle=60; Treble=65; Presence=57; Bias=84; Level=50
 120,MK Pop Lead,eq,off,MXR 10 BAND,VOL=1; 31.25Hz=43; 62.5Hz=53; 125Hz=54; 250Hz=39; 500Hz=52; 1KHz=41; 2KHz=66; 4KHz=47; 8KHz=48; 16KHz=47; GAIN=0
 120,MK Pop Lead,noise-gate,ON,NUX Noise Gate,Threshold=51; Decay=13
-120,MK Pop Lead,modulation,off,ROLAND CE-1 CHORUS,Intensity=50; Depth=50; Rate=20; Sub Div=raw 214 (codifica Sub Div non verificata)
-120,MK Pop Lead,delay,ON,NUX DUOTIME,LEVEL=29; TIME1=100; SUB DIV1=raw 214 (codifica Sub Div non verificata); REPEAT1=61; TIME2=75; SUB DIV2=raw 213 (codifica Sub Div non verificata); REPEAT2=69; PARA=38
+120,MK Pop Lead,modulation,off,ROLAND CE-1 CHORUS,Intensity=50; Depth=50; Rate=20; Sub Div=1/4
+120,MK Pop Lead,delay,ON,NUX DUOTIME,LEVEL=29; TIME1=100; SUB DIV1=1/4; REPEAT1=61; TIME2=75; SUB DIV2=1/8D; REPEAT2=69; PARA=38
 120,MK Pop Lead,reverb,ON,Vintage Spring Reverb,DECAY=27; LEVEL=24
 120,MK Pop Lead,ir,ON,MARSHALL VINTAGE 30 4X12,Mic=U87; Axis=CENTER; Level=0; Lo Cut=20; Hi Cut=20000
 120,MK Pop Lead,sr,off,SEND / RETURN,Send=64; Return=64
@@ -1445,8 +1445,8 @@ slot,name,block,on,model,params (nome=valore)
 121,MK Europe Final,amp,ON,1989 Marshall 1987 X 50W,Gain=78; Master=53; Bass=61; Middle=48; Treble=64; Presence=75; Bias=58; Level=50
 121,MK Europe Final,eq,off,BOSS GE-6,100Hz=50; 220Hz=50; 500Hz=50; 1.2kHz=50; 2.6kHz=50; 6.4kHz=50; Level=50
 121,MK Europe Final,noise-gate,ON,NUX Noise Gate,Threshold=28; Decay=50
-121,MK Europe Final,modulation,off,ROLAND CE-1 CHORUS,Intensity=50; Depth=50; Rate=20; Sub Div=raw 214 (codifica Sub Div non verificata)
-121,MK Europe Final,delay,off,Boss DM-2 Analog Delay,REPEAT=50; ECHO=34; INTENSITY=30; Sub Div=raw 213 (codifica Sub Div non verificata)
+121,MK Europe Final,modulation,off,ROLAND CE-1 CHORUS,Intensity=50; Depth=50; Rate=20; Sub Div=1/4
+121,MK Europe Final,delay,off,Boss DM-2 Analog Delay,REPEAT=50; ECHO=34; INTENSITY=30; Sub Div=1/8D
 121,MK Europe Final,reverb,ON,EMT 140 Plate Reverb,DECAY=26; LEVEL=20
 121,MK Europe Final,ir,ON,MARSHALL VINTAGE 30 4X12,Mic=U87; Axis=CENTER; Level=0; Lo Cut=20; Hi Cut=20000
 121,MK Europe Final,sr,off,SEND / RETURN,Send=64; Return=64
@@ -1457,8 +1457,8 @@ slot,name,block,on,model,params (nome=valore)
 122,MK Masaru Night,amp,ON,1978 Mesa Boogie MK1,Gain=64; Master=86; Bass=53; Middle=61; Treble=56; Presence=62; Bias=70; Level=50
 122,MK Masaru Night,eq,off,MXR 10 BAND,VOL=1; 31.25Hz=43; 62.5Hz=53; 125Hz=54; 250Hz=39; 500Hz=52; 1KHz=41; 2KHz=66; 4KHz=47; 8KHz=48; 16KHz=47; GAIN=2
 122,MK Masaru Night,noise-gate,ON,NUX Noise Gate,Threshold=37; Decay=50
-122,MK Masaru Night,modulation,off,ROLAND CE-1 CHORUS,Intensity=50; Depth=50; Rate=20; Sub Div=raw 214 (codifica Sub Div non verificata)
-122,MK Masaru Night,delay,ON,Ibanez DML Modulation Delay,TIME=48; LEVEL=35; MODULATION=59; REPEAT=42; Sub Div=raw 213 (codifica Sub Div non verificata)
+122,MK Masaru Night,modulation,off,ROLAND CE-1 CHORUS,Intensity=50; Depth=50; Rate=20; Sub Div=1/4
+122,MK Masaru Night,delay,ON,Ibanez DML Modulation Delay,TIME=48; LEVEL=35; MODULATION=59; REPEAT=42; Sub Div=1/8D
 122,MK Masaru Night,reverb,ON,SHIMMER REVERB,MIX=26; DECAY=33; SHIM=94
 122,MK Masaru Night,ir,ON,64 DELUXE REVERB,Mic=S57; Axis=CENTER; Level=0; Lo Cut=20; Hi Cut=20000
 122,MK Masaru Night,sr,off,SEND / RETURN,Send=64; Return=64
@@ -1469,8 +1469,8 @@ slot,name,block,on,model,params (nome=valore)
 123,MK Namewee Wubai,amp,ON,1977 Marshall JCM800,Gain=65; Master=33; Bass=60; Middle=60; Treble=77; Presence=76; Bias=72; Level=51
 123,MK Namewee Wubai,eq,off,BOSS GE-6,100Hz=50; 220Hz=50; 500Hz=50; 1.2kHz=50; 2.6kHz=50; 6.4kHz=50; Level=50
 123,MK Namewee Wubai,noise-gate,ON,NUX Noise Gate,Threshold=33; Decay=39
-123,MK Namewee Wubai,modulation,off,ROLAND CE-1 CHORUS,Intensity=50; Depth=50; Rate=20; Sub Div=raw 214 (codifica Sub Div non verificata)
-123,MK Namewee Wubai,delay,ON,Maestro EchoPlex EP-4,TIME=100; LEVEL=44; REPEAT=49; Sub Div=raw 213 (codifica Sub Div non verificata)
+123,MK Namewee Wubai,modulation,off,ROLAND CE-1 CHORUS,Intensity=50; Depth=50; Rate=20; Sub Div=1/4
+123,MK Namewee Wubai,delay,ON,Maestro EchoPlex EP-4,TIME=100; LEVEL=44; REPEAT=49; Sub Div=1/8D
 123,MK Namewee Wubai,reverb,ON,T-Rex Room Mate Reverb,DECAY=63; TONE=37; LEVEL=50
 123,MK Namewee Wubai,ir,ON,MARSHALL 4X12,Mic=R122; Axis=CENTER; Level=0; Lo Cut=20; Hi Cut=20000
 123,MK Namewee Wubai,sr,off,SEND / RETURN,Send=64; Return=64
@@ -1481,8 +1481,8 @@ slot,name,block,on,model,params (nome=valore)
 124,MK BJovi Always,amp,ON,Marshall JTM2000,Gain=28; Master=36; Bass=67; Middle=43; Treble=71; Presence=72; Bias=56; Level=50
 124,MK BJovi Always,eq,off,BOSS GE-6,100Hz=50; 220Hz=50; 500Hz=50; 1.2kHz=50; 2.6kHz=50; 6.4kHz=50; Level=50
 124,MK BJovi Always,noise-gate,ON,NUX Noise Gate,Threshold=32; Decay=31
-124,MK BJovi Always,modulation,ON,BOSS VB-2 Vibrato,Rate=64; Depth=44; Sub Div=raw 214 (codifica Sub Div non verificata)
-124,MK BJovi Always,delay,ON,Boss DM-2 Analog Delay,REPEAT=50; ECHO=25; INTENSITY=26; Sub Div=raw 213 (codifica Sub Div non verificata)
+124,MK BJovi Always,modulation,ON,BOSS VB-2 Vibrato,Rate=64; Depth=44; Sub Div=1/4
+124,MK BJovi Always,delay,ON,Boss DM-2 Analog Delay,REPEAT=50; ECHO=25; INTENSITY=26; Sub Div=1/8D
 124,MK BJovi Always,reverb,ON,Lexicon 224 Hall Reverb,DECAY=52; PRE DELAY=59; LIVELINESS=85; LEVEL=33
 124,MK BJovi Always,ir,ON,MARSHALL VINTAGE 30 4X12,Mic=S57; Axis=CENTER; Level=0; Lo Cut=20; Hi Cut=20000
 124,MK BJovi Always,sr,off,SEND / RETURN,Send=64; Return=64
@@ -1493,8 +1493,8 @@ slot,name,block,on,model,params (nome=valore)
 125,MK Asato Poetic,amp,ON,1990 Fender Vibro King,Gain=8; Master=100; Bass=33; Middle=61; Treble=76; Presence=70; Bias=71; Level=62
 125,MK Asato Poetic,eq,off,BOSS GE-6,100Hz=50; 220Hz=50; 500Hz=50; 1.2kHz=50; 2.6kHz=50; 6.4kHz=50; Level=50
 125,MK Asato Poetic,noise-gate,off,NUX Noise Gate,Threshold=20; Decay=50
-125,MK Asato Poetic,modulation,off,ROLAND CE-1 CHORUS,Intensity=50; Depth=50; Rate=20; Sub Div=raw 214 (codifica Sub Div non verificata)
-125,MK Asato Poetic,delay,ON,Boss DD-2 Digital Delay,EFFECT LEVEL=33; FEEDBACK=51; DELAY TIME=68; Sub Div=raw 213 (codifica Sub Div non verificata)
+125,MK Asato Poetic,modulation,off,ROLAND CE-1 CHORUS,Intensity=50; Depth=50; Rate=20; Sub Div=1/4
+125,MK Asato Poetic,delay,ON,Boss DD-2 Digital Delay,EFFECT LEVEL=33; FEEDBACK=51; DELAY TIME=68; Sub Div=1/8D
 125,MK Asato Poetic,reverb,ON,Vintage Spring Reverb,DECAY=27; LEVEL=35
 125,MK Asato Poetic,ir,ON,59 BASSMAN,Mic=R122; Axis=MIDDLE; Level=0; Lo Cut=20; Hi Cut=20000
 125,MK Asato Poetic,sr,off,SEND / RETURN,Send=64; Return=64
@@ -1505,8 +1505,8 @@ slot,name,block,on,model,params (nome=valore)
 126,MK Hotel CA,amp,ON,2008 Fender Supersonic,Gain=39; Master=89; Bass=40; Middle=65; Treble=47; Bright SW=100; Bias=70; Level=50
 126,MK Hotel CA,eq,off,BOSS GE-6,100Hz=50; 220Hz=50; 500Hz=50; 1.2kHz=50; 2.6kHz=50; 6.4kHz=50; Level=50
 126,MK Hotel CA,noise-gate,off,NUX Noise Gate,Threshold=20; Decay=50
-126,MK Hotel CA,modulation,ON,BOSS BF-2 Flanger,Level=42; Rate=50; Width=50; F.BACK=50; Sub Div=raw 214 (codifica Sub Div non verificata)
-126,MK Hotel CA,delay,off,NUX DUOTIME,LEVEL=16; TIME1=100; SUB DIV1=raw 214 (codifica Sub Div non verificata); REPEAT1=51; TIME2=75; SUB DIV2=raw 213 (codifica Sub Div non verificata); REPEAT2=65; PARA=22
+126,MK Hotel CA,modulation,ON,BOSS BF-2 Flanger,Level=42; Rate=50; Width=50; F.BACK=50; Sub Div=1/4
+126,MK Hotel CA,delay,off,NUX DUOTIME,LEVEL=16; TIME1=100; SUB DIV1=1/4; REPEAT1=51; TIME2=75; SUB DIV2=1/8D; REPEAT2=65; PARA=22
 126,MK Hotel CA,reverb,ON,Vintage Spring Reverb,DECAY=27; LEVEL=23
 126,MK Hotel CA,ir,ON,59 BASSMAN,Mic=B52; Axis=MIDDLE; Level=0; Lo Cut=20; Hi Cut=20000
 126,MK Hotel CA,sr,off,SEND / RETURN,Send=64; Return=64
@@ -1517,8 +1517,8 @@ slot,name,block,on,model,params (nome=valore)
 127,MK RCHP Can't St,amp,ON,68 Marshall Plexi 100W,Gain=1; Master=72; Bass=43; Middle=40; Treble=71; Presence=78; Bias=25; Level=69
 127,MK RCHP Can't St,eq,off,BOSS GE-6,100Hz=50; 220Hz=50; 500Hz=50; 1.2kHz=50; 2.6kHz=50; 6.4kHz=50; Level=50
 127,MK RCHP Can't St,noise-gate,ON,NUX Noise Gate,Threshold=38; Decay=50
-127,MK RCHP Can't St,modulation,off,ROLAND CE-1 CHORUS,Intensity=50; Depth=50; Rate=20; Sub Div=raw 214 (codifica Sub Div non verificata)
-127,MK RCHP Can't St,delay,off,Boss DM-2 Analog Delay,REPEAT=50; ECHO=50; INTENSITY=42; Sub Div=raw 213 (codifica Sub Div non verificata)
+127,MK RCHP Can't St,modulation,off,ROLAND CE-1 CHORUS,Intensity=50; Depth=50; Rate=20; Sub Div=1/4
+127,MK RCHP Can't St,delay,off,Boss DM-2 Analog Delay,REPEAT=50; ECHO=50; INTENSITY=42; Sub Div=1/8D
 127,MK RCHP Can't St,reverb,ON,Vintage Spring Reverb,DECAY=27; LEVEL=30
 127,MK RCHP Can't St,ir,ON,MARSHALL GREENBACK 4X12,Mic=S57; Axis=CENTER; Level=0; Lo Cut=20; Hi Cut=20000
 127,MK RCHP Can't St,sr,off,SEND / RETURN,Send=64; Return=64
@@ -1529,8 +1529,8 @@ slot,name,block,on,model,params (nome=valore)
 128,MK Nirvana,amp,ON,VOX AC30,Gain=26; Master=79; Cut=40; Bass=61; Treble=61; Level=64
 128,MK Nirvana,eq,off,BOSS GE-6,100Hz=50; 220Hz=50; 500Hz=50; 1.2kHz=50; 2.6kHz=50; 6.4kHz=50; Level=50
 128,MK Nirvana,noise-gate,ON,NUX Noise Gate,Threshold=31; Decay=45
-128,MK Nirvana,modulation,off,ROLAND CE-1 CHORUS,Intensity=43; Depth=63; Rate=68; Sub Div=raw 214 (codifica Sub Div non verificata)
-128,MK Nirvana,delay,off,Boss DM-2 Analog Delay,REPEAT=50; ECHO=50; INTENSITY=50; Sub Div=raw 214 (codifica Sub Div non verificata)
+128,MK Nirvana,modulation,off,ROLAND CE-1 CHORUS,Intensity=43; Depth=63; Rate=68; Sub Div=1/4
+128,MK Nirvana,delay,off,Boss DM-2 Analog Delay,REPEAT=50; ECHO=50; INTENSITY=50; Sub Div=1/4
 128,MK Nirvana,reverb,ON,Vintage Spring Reverb,DECAY=22; LEVEL=29
 128,MK Nirvana,ir,ON,VOX AC30,Mic=R122; Axis=MIDDLE; Level=0; Lo Cut=20; Hi Cut=20000
 128,MK Nirvana,sr,off,SEND / RETURN,Send=64; Return=64

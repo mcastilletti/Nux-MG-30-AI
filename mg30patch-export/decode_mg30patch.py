@@ -24,7 +24,12 @@ def convert(raw, p):
     if p is None:
         return raw
     if p['id'].startswith('subdiv'):
-        return f'raw {raw} (codifica Sub Div non verificata)'
+        # ordine della pedaliera = lista dell'app al contrario (214 = indice 6 = 1/4, verificato sul preset 18); gli altri indici sono ipotesi
+        order = list(reversed(['1/4', '1/8D', '1/8', '1/4T', '1/16', '1/8T', '1/32']))
+        idx = raw & 0x0F
+        return order[idx] if idx < len(order) else f'raw {raw}'
+    if p['id'] == 'mode' and p.get('options') and p['options'][0] == 'CHORUS' and len(p['options']) == 3:
+        return ['PITCH MODULATOR', 'CHORUS', 'FLANGER'][min(raw & 0x0F, 2)]  # S.C.F. CH/FL: P., CHO, FLG (CHO verificato)
     if p['id'] == 'range':
         return (raw & 0x0F) + 1  # posizione 1-6 del selettore (indice 0-5 + 1; da verificare sul display)
     if p.get('options'):

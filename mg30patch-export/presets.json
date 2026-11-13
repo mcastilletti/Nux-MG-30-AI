@@ -28698,30 +28698,27 @@
    "compressor": {
     "enabled": true,
     "modelIndex": 11,
-    "model": null,
-    "modelName": "(modello 12 non presente nell'app)",
+    "model": "reddirt",
+    "modelName": "KEELY RED DIRT",
     "stateByte": 12,
     "params": [
      {
-      "id": "p1",
-      "name": "Param 1",
+      "id": "drive",
+      "name": "Drive",
       "raw": 38,
-      "value": 38,
-      "note": "modello non presente nell'app"
+      "value": 38
      },
      {
-      "id": "p2",
-      "name": "Param 2",
+      "id": "tone",
+      "name": "Tone",
       "raw": 55,
-      "value": 55,
-      "note": "modello non presente nell'app"
+      "value": 55
      },
      {
-      "id": "p3",
-      "name": "Param 3",
+      "id": "level",
+      "name": "Level",
       "raw": 51,
-      "value": 51,
-      "note": "modello non presente nell'app"
+      "value": 51
      }
     ]
    },
@@ -37243,30 +37240,27 @@
    "compressor": {
     "enabled": false,
     "modelIndex": 7,
-    "model": null,
-    "modelName": "(modello 8 non presente nell'app)",
+    "model": "tscream",
+    "modelName": "Ibanez TUBE SCREAMER",
     "stateByte": 72,
     "params": [
      {
-      "id": "p1",
-      "name": "Param 1",
+      "id": "drive",
+      "name": "Drive",
       "raw": 26,
-      "value": 26,
-      "note": "modello non presente nell'app"
+      "value": 26
      },
      {
-      "id": "p2",
-      "name": "Param 2",
+      "id": "tone",
+      "name": "Tone",
       "raw": 28,
-      "value": 28,
-      "note": "modello non presente nell'app"
+      "value": 28
      },
      {
-      "id": "p3",
-      "name": "Param 3",
+      "id": "level",
+      "name": "Level",
       "raw": 48,
-      "value": 48,
-      "note": "modello non presente nell'app"
+      "value": 48
      }
     ]
    },

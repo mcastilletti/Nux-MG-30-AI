@@ -52,6 +52,10 @@ def decode_scene(s):
         midx = (b & 63) - 1
         models = MODELS.get(t, [])
         m = models[midx] if 0 <= midx < len(models) else None
+        if t == 'compressor' and midx >= len(models):
+            # blocco comp usato come secondo EFX (tasto premuto): indici dopo i 3 compressori = modelli EFX (verificato sui preset 67 e 87)
+            efx = MODELS['efx']
+            m = efx[midx - len(models)] if midx - len(models) < len(efx) else None
         start, cnt = LAYOUT[t]
         n = s[cnt]
         raws = list(s[start:start + n])

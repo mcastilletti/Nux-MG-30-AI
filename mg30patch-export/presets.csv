@@ -792,7 +792,7 @@ slot,name,block,on,model,params (nome=valore)
 66,Joko Space Lead,sr,off,SEND / RETURN,Send=64; Return=64
 66,Joko Space Lead,vol,ON,PATCH VOLUME,VOL MIN=0; VOL MAX=100
 67,Joko Sunny Side,wah,off,HORSE WAH (non presente nell'app),Contour=70; Range=3
-67,Joko Sunny Side,compressor,ON,(modello 12 non presente nell'app),Param 1=38; Param 2=55; Param 3=51
+67,Joko Sunny Side,compressor,ON,KEELY RED DIRT,Drive=38; Tone=55; Level=51
 67,Joko Sunny Side,efx,ON,Ibanez TUBE SCREAMER,Drive=55; Tone=40; Level=62
 67,Joko Sunny Side,amp,ON,67 Marshall Plexi 45W,Gain=61; Master=69; Bass=37; Middle=49; Treble=36; Presence=51; Bias=100; Level=64
 67,Joko Sunny Side,eq,ON,ALIGN EQ,Band1 Freq=38; Band1 Gain=35; Band1 Q=43; Band2 Freq=25; Band2 Gain=56; Band2 Q=26; Band3 Freq=32; Band3 Gain=51; Band3 Q=26
@@ -1032,7 +1032,7 @@ slot,name,block,on,model,params (nome=valore)
 86,MF GILMOUR-ISH,sr,off,SEND / RETURN,Send=64; Return=64
 86,MF GILMOUR-ISH,vol,ON,PATCH VOLUME,VOL MIN=0; VOL MAX=100
 87,MF MAYER-ISH,wah,off,Fulltone Clyde Wah,Position=50
-87,MF MAYER-ISH,compressor,off,(modello 8 non presente nell'app),Param 1=26; Param 2=28; Param 3=48
+87,MF MAYER-ISH,compressor,off,Ibanez TUBE SCREAMER,Drive=26; Tone=28; Level=48
 87,MF MAYER-ISH,efx,ON,KEELY KATANA CLEAN BOOST,Boost SW=100; Volume=20
 87,MF MAYER-ISH,amp,ON,64 Fender Deluxe Reverb,Gain=28; Master=67; Bass=52; Middle=40; Treble=60; Bias=53; Level=41
 87,MF MAYER-ISH,eq,off,BOSS GE-6,100Hz=50; 220Hz=50; 500Hz=50; 1.2kHz=50; 2.6kHz=50; 6.4kHz=50; Level=60

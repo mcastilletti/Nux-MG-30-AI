@@ -12,12 +12,16 @@ interface RotaryKnobProps {
   max?: number;
   step?: number;
   unit?: string;
+  /** Valore iniziale del parametro: il doppio clic ci riporta la manopola (senza, il centro). */
+  defaultValue?: number;
   /** Posizione della manopola nel blocco: torna in `onChange`, così il genitore può passare un gestore unico e stabile. */
   index?: number;
   onChange: (value: number, index: number) => void;
   className?: string;
+  /** Diametro in px. Senza, 62 px su telefono e 88 px da `lg`. */
   size?: number;
-  color?: string; // Hex, HSL or CSS variable
+  /** Colore dei punti accesi e del valore (CSS). */
+  color?: string;
 }
 
 /** Pixel di trascinamento verticale per l'intera escursione. */
@@ -29,12 +33,23 @@ const FINE_FACTOR = 0.2;
 
 const ARROW_KEYS = new Set(['ArrowUp', 'ArrowRight', 'ArrowDown', 'ArrowLeft', 'Home', 'End']);
 
+/** Punti dell'anello: 11, ogni 27° da -135° a +135° (270° di corsa). */
+const DOT_COUNT = 11;
+const CENTER = 31;
+const polar = (deg: number, r: number) => {
+  const a = (deg * Math.PI) / 180;
+  return { x: CENTER + r * Math.sin(a), y: CENTER - r * Math.cos(a) };
+};
+const DOTS = Array.from({ length: DOT_COUNT }, (_, i) => ({ ...polar(-135 + 27 * i, 26), at: (i / (DOT_COUNT - 1)) * 100 }));
+
 /**
  * Manopola: trascinamento verticale, tastiera e campo numerico.
  * - Regolazione fine (K3): con Shift o spostando il dito di lato di oltre 48px;
  *   il valore avanza in modo relativo, quindi il cambio di modalità non lo fa saltare.
  * - Il campo numerico invia solo alla conferma (Invio o uscita dal campo), mai a ogni cifra (K4).
  * - Trascinamento, frecce e campo numerico entrano nella cronologia undo (K7).
+ * - Aspetto: cappello crema con un anello di punti che si accendono col valore; nome sotto la manopola,
+ *   valore e unità sempre visibili.
  */
 export const RotaryKnob = memo(function RotaryKnob({
   label,
@@ -43,10 +58,11 @@ export const RotaryKnob = memo(function RotaryKnob({
   max = 100,
   step = 1,
   unit = '',
+  defaultValue,
   index = 0,
   onChange,
   className,
-  size = 64,
+  size,
   color = 'hsl(var(--primary))'
 }: RotaryKnobProps) {
   const [isDragging, setIsDragging] = useState(false);
@@ -150,20 +166,18 @@ export const RotaryKnob = memo(function RotaryKnob({
     if (ARROW_KEYS.has(e.key)) saveToHistory();
   };
 
-  const rotation = ((value - min) / (max - min)) * 270 - 135;
-  
-  const radius = 40;
-  const circumference = 2 * Math.PI * radius;
-  const arcPercentage = 270 / 360;
-  const totalArcLength = circumference * arcPercentage;
-  const activePercentage = (value - min) / (max - min);
-  const activeLength = totalArcLength * activePercentage;
+  const ratio = max === min ? 0 : (value - min) / (max - min);
+  const pointerEnd = polar(-135 + 270 * ratio, 11);
+  const percent = ratio * 100;
+  const sized = size !== undefined;
 
   return (
     <div className={cn("flex flex-col items-center gap-1 knob-container", className)}>
-      <span className="text-label font-medium uppercase text-muted-foreground select-none">{label}</span>
-      <div 
-        className="relative cursor-ns-resize group touch-none rounded-full outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+      <div
+        className={cn(
+          "relative cursor-ns-resize touch-none rounded-full outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-card",
+          !sized && "h-[62px] w-[62px] lg:h-[88px] lg:w-[88px]"
+        )}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
@@ -176,84 +190,60 @@ export const RotaryKnob = memo(function RotaryKnob({
         aria-valuemin={min}
         aria-valuemax={max}
         aria-valuenow={value}
-        aria-valuetext={`${value}${unit}`}
+        aria-valuetext={`${value}${unit ? ` ${unit}` : ''}`}
         onDoubleClick={() => {
-          onChange((max + min) / 2, index);
+          const target = defaultValue !== undefined ? defaultValue : (max + min) / 2;
+          if (target === value) return;
+          onChange(target, index);
           saveToHistory();
         }}
-        style={{ width: size, height: size }}
+        style={sized ? { width: size, height: size } : undefined}
       >
-        <svg viewBox="0 0 100 100" className="w-full h-full transform">
-          <circle cx="50" cy="50" r="45" fill="currentColor" className="text-secondary" />
-          <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" strokeWidth="2" className="text-border" />
-          
-          <path 
-            d="M 25 80 A 40 40 0 1 1 75 80"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="4"
-            className="text-muted/20"
-            strokeLinecap="round"
-          />
-
-          <path 
-            d="M 25 80 A 40 40 0 1 1 75 80"
-            fill="none"
-            stroke={color}
-            strokeWidth="4"
-            strokeLinecap="round"
-            strokeDasharray={`${activeLength} ${circumference}`}
-            className="transition-[stroke-dasharray] duration-75"
-          />
-
-          <g transform={`rotate(${rotation} 50 50)`}>
-            <circle cx="50" cy="50" r="38" fill="currentColor" className="text-card" />
-            <rect x="47" y="15" width="6" height="15" rx="3" fill={color} className="transition-all" />
-          </g>
+        <svg viewBox="0 0 62 62" className="h-full w-full" aria-hidden="true">
+          {DOTS.map((dot, i) => (
+            <circle key={i} cx={dot.x} cy={dot.y} r="2.2" fill={percent >= dot.at - 0.001 ? color : 'hsl(var(--border))'} />
+          ))}
+          <circle cx={CENTER} cy={CENTER} r="17" fill="#ece4d2" />
+          <circle cx={CENTER} cy={CENTER} r="13" fill="#f6f0e2" />
+          <path d={`M${CENTER} ${CENTER}L${pointerEnd.x.toFixed(2)} ${pointerEnd.y.toFixed(2)}`} stroke="#2b2622" strokeWidth="3" strokeLinecap="round" />
         </svg>
-        
-        <div className={cn(
-          "absolute inset-0 flex items-center justify-center pointer-events-none transition-opacity",
-          isDragging ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-        )}>
-           <span 
-             className="text-label font-mono bg-background/90 px-1.5 py-0.5 rounded border shadow-lg"
-             style={{ borderColor: color }}
-           >
-            {value.toFixed(step < 1 ? 1 : 0)}{unit}
-            {isFine && <span className="ml-1 text-muted-foreground">fine</span>}
-          </span>
-        </div>
+        {isDragging && isFine && (
+          <span className="pointer-events-none absolute -top-5 left-1/2 -translate-x-1/2 rounded bg-background px-1.5 text-caption font-semibold text-muted-foreground">fine</span>
+        )}
       </div>
-      <input
-        type="number"
-        inputMode="decimal"
-        min={min}
-        max={max}
-        step={step}
-        value={inputValue}
-        aria-label={`${label} valore numerico`}
-        onPointerDown={(event) => event.stopPropagation()}
-        onFocus={() => { setIsInputFocused(true); setInputValue(String(value)); }}
-        onChange={(event) => setInputValue(event.target.value)}
-        onBlur={() => {
-          if (cancelInput.current) setInputValue(String(value));
-          else commitInputValue();
-          cancelInput.current = false;
-          setIsInputFocused(false);
-        }}
-        onKeyDown={(event) => {
-          if (event.key === 'Enter') {
-            event.preventDefault();
-            event.currentTarget.blur(); // l'uscita dal campo esegue la conferma
-          } else if (event.key === 'Escape') {
-            cancelInput.current = true; // Esc annulla: nessun invio
-            event.currentTarget.blur();
-          }
-        }}
-        className="no-number-spinner mt-1 h-6 w-16 rounded border border-transparent bg-transparent px-1 text-center text-caption font-mono font-bold outline-none transition-colors focus:border-primary focus:bg-background"
-        style={{ color }}
-      />
+      <span className="select-none text-center text-caption font-semibold leading-tight text-soft">{label}</span>
+      <div className="flex items-baseline justify-center gap-1">
+        <input
+          type="number"
+          inputMode="decimal"
+          min={min}
+          max={max}
+          step={step}
+          value={inputValue}
+          aria-label={`${label} valore numerico`}
+          onPointerDown={(event) => event.stopPropagation()}
+          onFocus={() => { setIsInputFocused(true); setInputValue(String(value)); }}
+          onChange={(event) => setInputValue(event.target.value)}
+          onBlur={() => {
+            if (cancelInput.current) setInputValue(String(value));
+            else commitInputValue();
+            cancelInput.current = false;
+            setIsInputFocused(false);
+          }}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') {
+              event.preventDefault();
+              event.currentTarget.blur(); // l'uscita dal campo esegue la conferma
+            } else if (event.key === 'Escape') {
+              cancelInput.current = true; // Esc annulla: nessun invio
+              event.currentTarget.blur();
+            }
+          }}
+          className="no-number-spinner h-7 w-14 rounded border border-transparent bg-transparent px-0.5 text-center text-body-sm value-mono outline-none transition-colors focus:border-primary focus:bg-background"
+          style={{ color }}
+        />
+        {unit && <span className="-ml-1 select-none text-caption font-semibold text-muted-foreground">{unit}</span>}
+      </div>
     </div>
   );
 });

@@ -9,6 +9,7 @@ import { Database, ShieldCheck, ExternalLink, AlertCircle, Globe, HelpCircle, Te
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useMidiLogStore } from '@/stores/use-midi-log-store';
 
+import { PageHeader } from '@/components/common/page-header';
 // ── MIDI Monitor (componente separato per evitare re-render pesanti) ────────
 function MidiMonitorCard() {
   const midiLog = useMidiLogStore(s => s.midiLog);
@@ -26,7 +27,7 @@ function MidiMonitorCard() {
           <div className="flex items-center gap-2">
             <Badge variant="outline" className="text-label">IN: {midiLog.length}</Badge>
             <Badge variant="outline" className="text-label text-success border-success/30">OUT: {midiOutLog.length}</Badge>
-            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { clearMidiLog(); clearMidiOutLog(); }} title="Cancella log">
+            <Button variant="ghost" size="icon" aria-label="Cancella log" onClick={() => { clearMidiLog(); clearMidiOutLog(); }} title="Cancella log">
               <Trash2 className="w-3.5 h-3.5" />
             </Button>
           </div>
@@ -70,10 +71,7 @@ export default function SettingsPage() {
   return (
     <>
       <div className="max-w-4xl mx-auto space-y-8 pb-20">
-        <header>
-          <h2 className="text-3xl font-bold tracking-tight">Impostazioni</h2>
-          <p className="text-muted-foreground">Gestione account, cloud storage e preferenze hardware.</p>
-        </header>
+        <PageHeader title="Impostazioni" description="Gestione account, cloud storage e preferenze hardware." />
 
         {!user && (
           <Alert variant="destructive" className="border-warning/50 bg-warning/5">
@@ -107,7 +105,7 @@ export default function SettingsPage() {
           <Card className="border-border">
             <CardHeader>
               <CardTitle className="text-sm flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-accent" /> Privacy & Dati
+                <ShieldCheck className="w-4 h-4 text-primary" /> Privacy & Dati
               </CardTitle>
               <CardDescription>Protezione dei tuoi preset</CardDescription>
             </CardHeader>
@@ -154,7 +152,7 @@ export default function SettingsPage() {
             </div>
 
             <div className="pt-2">
-              <Button variant="outline" size="sm" className="h-8 text-label font-bold" asChild>
+              <Button variant="outline" size="sm" className="min-h-11 text-label font-bold" asChild>
                 <a href="https://console.firebase.google.com/" target="_blank" rel="noreferrer">
                   APRI CONSOLE FIREBASE <ExternalLink className="w-3 h-3 ml-2" />
                 </a>

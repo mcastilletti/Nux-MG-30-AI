@@ -40,7 +40,7 @@ export function AddToPlaylistsDialog({ note, onOpenChange, playlists, bands, onA
           {groups.length === 0 && <p className="py-6 text-center text-sm text-muted-foreground">Nessuna playlist: creale dalla pagina Band.</p>}
           {groups.map((group) => (
             <fieldset key={group.band?.id ?? group.bandName}>
-              <legend className="mb-1 text-caption font-black uppercase tracking-wider text-muted-foreground">{group.bandName}</legend>
+              <legend className="mb-1 text-caption font-bold uppercase tracking-wider text-muted-foreground">{group.bandName}</legend>
               {group.playlists.map((playlist) => {
                 const on = checked.has(playlist.id);
                 return (

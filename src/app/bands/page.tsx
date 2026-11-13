@@ -22,6 +22,7 @@ import { nameKey } from '@/lib/playlist-migration';
 import { cn } from '@/lib/utils';
 import type { Band, Playlist } from '@/types/playlist';
 
+import { PageHeader } from '@/components/common/page-header';
 /**
  * Pagina Band (spec playlist §5): band e playlist reali, create, rinominate ed
  * eliminate qui; i brani stanno nel serbatoio e si gestiscono dalla pagina Note.
@@ -64,45 +65,51 @@ export default function BandsPage() {
   // Senza account si mostra solo una copia locale già convertita (al logout la cache viene svuotata).
   if (!isUserLoading && !user && !converted) {
     return (
-      <EmptyState
-        icon={<Users className="h-10 w-10" />}
-        title="Accedi per gestire band e playlist"
-        description="Band e playlist sono salvate nel tuo account. Accedi con Google dal menu laterale."
-      />
+      <>
+        <h1 className="sr-only">Band e playlist</h1>
+        <EmptyState
+          icon={<Users className="h-10 w-10" />}
+          title="Accedi per gestire band e playlist"
+          description="Band e playlist sono salvate nel tuo account. Accedi con Google dal menu laterale."
+        />
+      </>
     );
   }
 
   if (loading && bands.length === 0) {
-    return <EmptyState icon={<Loader2 className="h-10 w-10 animate-spin" />} title="Caricamento band e playlist…" />;
+    return (
+      <>
+        <h1 className="sr-only">Band e playlist</h1>
+        <EmptyState icon={<Loader2 className="h-10 w-10 animate-spin" />} title="Caricamento band e playlist…" />
+      </>
+    );
   }
 
   if (!converted) {
     return (
-      <EmptyState
-        icon={<ListMusic className="h-10 w-10" />}
-        title="Prima converti le scalette in playlist"
-        description="Band e playlist si gestiscono qui dopo la conversione. Apri la pagina Note e usa l'avviso «Nuova organizzazione a playlist»."
-        action={<Button asChild className="min-h-11"><Link href="/notes">Vai alle Note</Link></Button>}
-      />
+      <>
+        <h1 className="sr-only">Band e playlist</h1>
+        <EmptyState
+          icon={<ListMusic className="h-10 w-10" />}
+          title="Prima converti le scalette in playlist"
+          description="Band e playlist si gestiscono qui dopo la conversione. Apri la pagina Note e usa l'avviso «Nuova organizzazione a playlist»."
+          action={<Button asChild className="min-h-11"><Link href="/notes">Vai alle Note</Link></Button>}
+        />
+      </>
     );
   }
 
   return (
     <div className="mx-auto max-w-5xl space-y-6 px-2 pb-20 md:px-0">
-      <header className="flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <div className="rounded-xl border border-primary/30 bg-primary/10 p-3">
-            <Users className="h-6 w-6 text-primary" aria-hidden="true" />
-          </div>
-          <div>
-            <h2 className="text-2xl font-bold tracking-tight">Band e playlist</h2>
-            <p className="text-sm text-muted-foreground">I brani si aggiungono alle playlist dalla pagina Note.</p>
-          </div>
-        </div>
-        <Button onClick={() => setBandDialog({ band: null })} className="min-h-11 gap-2 font-semibold">
-          <Plus className="h-4 w-4" aria-hidden="true" /> Nuova band
-        </Button>
-      </header>
+      <PageHeader
+        title="Band e playlist"
+        description="I brani si aggiungono alle playlist dalla pagina Note."
+        actions={
+          <Button onClick={() => setBandDialog({ band: null })} className="gap-2">
+            <Plus className="h-4 w-4" aria-hidden="true" /> Nuova band
+          </Button>
+        }
+      />
 
       {sortedBands.length === 0 ? (
         <EmptyState icon={<Users className="h-10 w-10" />} title="Nessuna band" description="Crea la prima band, poi aggiungi le sue playlist." />

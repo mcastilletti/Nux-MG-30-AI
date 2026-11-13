@@ -7,12 +7,19 @@ import { AppShell } from '@/components/layout/app-shell';
 // Font serviti dall'app stessa (M9): niente richieste a Google, né all'avvio né
 // durante la build (su Firebase App Hosting `next/font/google` non riusciva a
 // scaricarli), e disponibili offline grazie alla cache della PWA su /_next/static.
-// File variabili latin di Fontsource, licenza OFL (src/fonts/OFL-*.txt).
-const outfit = localFont({ src: '../fonts/outfit-latin-wght-normal.woff2', weight: '100 900', display: 'swap', variable: '--font-outfit' });
-const sourceCodePro = localFont({ src: '../fonts/source-code-pro-latin-wght-normal.woff2', weight: '200 900', display: 'swap', variable: '--font-source-code' });
+// File latin di Fontsource, licenza OFL (src/fonts/OFL-*.txt).
+const spaceGrotesk = localFont({ src: '../fonts/space-grotesk-latin-wght-normal.woff2', weight: '300 700', display: 'swap', variable: '--font-space-grotesk' });
+const spaceMono = localFont({
+  src: [
+    { path: '../fonts/space-mono-latin-400-normal.woff2', weight: '400', style: 'normal' },
+    { path: '../fonts/space-mono-latin-700-normal.woff2', weight: '700', style: 'normal' },
+  ],
+  display: 'swap',
+  variable: '--font-space-mono',
+});
 
 export const viewport: Viewport = {
-  themeColor: '#0a0a0b',
+  themeColor: '#171513',
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
@@ -50,7 +57,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="it" className={`dark ${outfit.variable} ${sourceCodePro.variable}`}>
+    <html lang="it" className={`dark ${spaceGrotesk.variable} ${spaceMono.variable}`}>
       <body className="font-body antialiased selection:bg-primary/30">
         <FirebaseClientProvider>
           {/* Shell condivisa (N3): MIDI, wake lock e salvataggio dei preset non ripartono a ogni pagina. */}

@@ -10,6 +10,7 @@ import { Zap, Play, Trash2, Copy, History, Loader2, Binary } from 'lucide-react'
 import { useUser } from '@/firebase';
 import { analyzeSysEx } from '@/ai/flows/sysex-analysis';
 
+import { PageHeader } from '@/components/common/page-header';
 export default function SysExAnalyzerPage() {
   const [sysexData, setSysexData] = useState('');
   const [description, setDescription] = useState('');
@@ -63,15 +64,7 @@ export default function SysExAnalyzerPage() {
   return (
     <>
       <div className="max-w-4xl mx-auto space-y-8">
-        <header className="flex items-center gap-4">
-          <div className="rounded-xl border border-primary/30 bg-primary/10 p-3">
-            <Zap className="h-8 w-8 text-primary" />
-          </div>
-          <div>
-            <h2 className="text-3xl font-bold tracking-tight">AI SysEx Analyzer</h2>
-            <p className="text-muted-foreground">Reverse engineer NUX MG-30 messages using AI assistance.</p>
-          </div>
-        </header>
+        <PageHeader kicker="Strumento" title="Analisi SysEx" description="Analizza con l'AI i messaggi SysEx della MG-30." />
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card className="border-border">

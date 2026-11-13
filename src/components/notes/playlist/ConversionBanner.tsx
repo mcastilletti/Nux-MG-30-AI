@@ -86,7 +86,7 @@ export function ConversionBanner({ onBackup, backupDownloaded }: { onBackup: () 
   const s = plan?.summary;
   return (
     <section aria-labelledby="conversion-title" className="rounded-2xl border border-primary/40 bg-primary/10 p-4">
-      <h3 id="conversion-title" className="flex items-center gap-2 text-base font-black"><ListMusic className="h-5 w-5 text-primary" aria-hidden="true" /> Nuova organizzazione a playlist</h3>
+      <h3 id="conversion-title" className="flex items-center gap-2 text-base font-bold"><ListMusic className="h-5 w-5 text-primary" aria-hidden="true" /> Nuova organizzazione a playlist</h3>
       <p className="mt-1 text-sm text-muted-foreground">
         I brani finiscono in un unico serbatoio e le scalette diventano playlist: lo stesso brano può stare in più playlist senza duplicarlo.
         Prima di convertire, scarica un backup.

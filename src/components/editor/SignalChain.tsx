@@ -1,15 +1,21 @@
 'use client';
 
-import React, { memo } from 'react';
-import { LayoutGrid, X } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { memo, useEffect, useRef } from 'react';
+import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { BlockIcon } from '@/components/icons/block-icons';
+import { Panel } from '@/components/common/panel';
+import { CATEGORY_SHORT, categoryColor } from '@/components/common/category-chip';
+import { DeviceArt } from '@/components/device-art';
+import { deviceArtFor } from '@/lib/device-art-map';
+import { MG30_MODELS } from '@/lib/mg30-data';
 import { cn } from '@/lib/utils';
 import type { EffectState } from '@/types/preset';
-import { getBlockColorVar } from './block-colors';
 
-/** Catena degli effetti: selezione del blocco e chip ON/OFF. */
+/**
+ * Catena degli effetti: una fila di dispositivi, ognuno con la sagoma di ciò che è (pedale, wah, testata,
+ * cassa, pedale d'espressione…), il colore della sua categoria e un LED. Sotto `lg` la fila scorre in
+ * orizzontale con una sfumatura a destra che segnala che c'è altro; da `lg` sta tutta in una riga.
+ */
 export const SignalChain = memo(function SignalChain({ effects, selectedBlockId, handleSelectBlock, handleToggleBlock, exitBlockEditor }: {
   effects: EffectState[];
   selectedBlockId: string;
@@ -17,124 +23,90 @@ export const SignalChain = memo(function SignalChain({ effects, selectedBlockId,
   handleToggleBlock: (e: React.MouseEvent, effectId: string, type: string, currentEnabled: boolean) => void;
   exitBlockEditor: () => void;
 }) {
+  const active = effects.filter((e) => e.enabled).length;
   return (
-    <Card className="app-surface overflow-hidden rounded-2xl bg-background/40 shadow-none">
-      <CardHeader className="flex flex-row items-center justify-between border-b border-border/80 bg-secondary/20 py-3">
-        <CardTitle className="section-kicker flex items-center gap-2"><LayoutGrid className="h-4 w-4 text-primary" /> Signal Chain</CardTitle>
-        <Button variant="ghost" size="sm" className="h-9 gap-2 text-label font-bold uppercase" onClick={exitBlockEditor}><X className="h-3.5 w-3.5" /> Chiudi</Button>
-      </CardHeader>
-      <CardContent className="py-4">
-        <div className="mx-auto flex max-w-6xl items-center gap-3 overflow-x-auto px-4 py-5 md:gap-4 md:px-8 md:py-6">
-          {effects.map((effect, idx) => (
+    <Panel variant="inset" className="overflow-hidden">
+      <div className="flex items-center justify-between gap-3 px-3 pt-3 md:px-4">
+        <div className="flex items-baseline gap-2">
+          <h2 className="section-kicker">Catena</h2>
+          <span className="text-caption text-muted-foreground">{active} di {effects.length} accesi</span>
+        </div>
+        <Button variant="ghost" size="sm" className="gap-1.5 text-caption" onClick={exitBlockEditor}>
+          <X className="h-3.5 w-3.5" aria-hidden="true" /> Chiudi
+        </Button>
+      </div>
+      <div className="relative">
+        <div className="flex snap-x snap-proximity gap-2 overflow-x-auto px-3 pb-3 pt-2 [scrollbar-width:none] md:px-4 lg:grid lg:grid-cols-12 lg:gap-1.5 lg:overflow-visible [&::-webkit-scrollbar]:hidden">
+          {effects.map((effect) => (
             <ChainBlock
               key={effect.id}
               effect={effect}
               isSelected={selectedBlockId === effect.id}
-              isLast={idx === effects.length - 1}
               handleSelectBlock={handleSelectBlock}
               handleToggleBlock={handleToggleBlock}
             />
           ))}
         </div>
-      </CardContent>
-    </Card>
+        <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-inset to-transparent lg:hidden" />
+      </div>
+    </Panel>
   );
 });
 
 /**
  * Un blocco della catena: si ridisegna solo se cambiano il suo effetto o la selezione.
- * Il chip ON/OFF è un pulsante fratello di quello del blocco, non annidato (E2):
+ * Il LED ON/OFF è un pulsante fratello di quello del blocco, non annidato (E2):
  * stessa posizione visiva, area di tocco allargata.
  */
-const ChainBlock = memo(function ChainBlock({ effect, isSelected, isLast, handleSelectBlock, handleToggleBlock }: {
+const ChainBlock = memo(function ChainBlock({ effect, isSelected, handleSelectBlock, handleToggleBlock }: {
   effect: EffectState;
   isSelected: boolean;
-  isLast: boolean;
   handleSelectBlock: (effectId: string, type: string) => void;
   handleToggleBlock: (e: React.MouseEvent, effectId: string, type: string, currentEnabled: boolean) => void;
 }) {
-  const blockColor = getBlockColorVar(effect.type);
+  const ref = useRef<HTMLDivElement>(null);
+  const spec = deviceArtFor(effect.type, effect.model);
+  const modelName = MG30_MODELS[effect.type]?.find((m) => m.id === effect.model)?.name ?? effect.model;
   const isEnabled = effect.enabled;
+
+  // La selezione (anche da un altro punto) porta la tessera dentro la fascia che scorre.
+  useEffect(() => {
+    if (isSelected) ref.current?.scrollIntoView({ inline: 'center', block: 'nearest' });
+  }, [isSelected]);
+
   return (
-    <>
-      <div className="relative shrink-0">
-        <button
-          type="button"
-          onClick={() => handleSelectBlock(effect.id, effect.type)}
-          aria-label={`Apri ${effect.type}`}
-          aria-pressed={isSelected}
-          className={cn(
-            "relative flex h-[7.25rem] w-24 shrink-0 cursor-pointer flex-col items-stretch justify-between overflow-hidden rounded-xl border transition-all md:h-[8.25rem] md:w-28",
-            isEnabled
-              ? isSelected
-                ? "border-2 shadow-[0_0_15px_hsla(var(--block-glow),0.35)]"
-                : "border-border/60 hover:border-primary/50 bg-secondary/40"
-              : isSelected
-                ? "border-2 border-zinc-500 bg-zinc-950/80 shadow-md grayscale"
-                : "border-zinc-800/80 hover:border-zinc-700 bg-zinc-950/60 grayscale"
-          )}
-          style={{
-            '--block-glow': blockColor,
-            ...(isEnabled && isSelected ? { borderColor: `hsl(${blockColor})` } : {}),
-            ...(isEnabled && effect.type === 'modulation' ? { backgroundColor: `hsl(${blockColor} / 0.12)` } : {})
-          } as React.CSSProperties}
-        >
-          <div className="relative min-h-0 flex-1">
-            <BlockIcon
-              type={effect.type}
-              className={cn(
-                "absolute inset-1.5 transition-all",
-                isEnabled
-                  ? "drop-shadow-[0_0_8px_hsl(var(--icon-color)_/_0.7)]"
-                  : "drop-shadow-none opacity-40"
-              )}
-              style={{
-                '--icon-color': isEnabled ? blockColor : '0 0% 50%',
-                color: isEnabled ? `hsl(${blockColor})` : 'hsl(0, 0%, 50%)'
-              } as React.CSSProperties}
-            />
-          </div>
-          <span
-            className={cn(
-              "truncate border-t px-2 py-2 text-label font-semibold uppercase tracking-wide transition-colors",
-              isEnabled
-                ? "border-border/50 text-foreground"
-                : "border-zinc-800/80 text-zinc-400"
-            )}
-          >
-            {effect.type === 'noise-gate' ? 'Gate' : effect.type === 'modulation' ? 'Mod' : effect.type}
-          </span>
-        </button>
-        <button
-          type="button"
-          onClick={(e) => handleToggleBlock(e, effect.id, effect.type, effect.enabled)}
-          // Nome stabile + aria-pressed: "Accensione wah, premuto" = acceso.
-          aria-label={`Accensione ${effect.type}`}
-          aria-pressed={isEnabled}
-          title={isEnabled ? 'Disattiva blocco' : 'Attiva blocco'}
-          className={cn(
-            // Stessa posizione del chip annidato di prima: 6px dentro il bordo (1px, 2px se selezionato).
-            "absolute rounded-md px-1.5 py-0.5 text-micro font-bold uppercase tracking-wide border transition-all hover:scale-105 cursor-pointer select-none",
-            "outline-none focus-visible:ring-2 focus-visible:ring-primary",
-            // Area di tocco allargata oltre il chip visibile.
-            "after:absolute after:-inset-x-2 after:-inset-y-2.5 after:content-['']",
-            isSelected ? "left-2 top-2" : "left-[7px] top-[7px]",
-            isEnabled
-              ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/40 hover:bg-emerald-500/30"
-              : "bg-zinc-800/90 text-zinc-400 border-zinc-700/60 hover:bg-zinc-700/80 hover:text-zinc-200"
-          )}
-        >
-          {isEnabled ? 'ON' : 'OFF'}
-        </button>
-      </div>
-      {!isLast && (
-        <div
-          className={cn(
-            "flex-1 min-w-[20px] h-[2px] transition-colors",
-            isEnabled ? "bg-border/60" : "bg-zinc-800/50"
-          )}
+    <div ref={ref} className="relative w-[4.25rem] shrink-0 snap-start lg:w-auto lg:min-w-0">
+      <button
+        type="button"
+        onClick={() => handleSelectBlock(effect.id, effect.type)}
+        aria-label={`Apri ${effect.type}`}
+        aria-pressed={isSelected}
+        title={modelName}
+        className={cn(
+          'flex w-full cursor-pointer flex-col items-center gap-1 rounded-xl border-2 px-1 pb-1.5 pt-2 transition-colors',
+          isSelected ? 'border-primary bg-card' : 'border-transparent hover:bg-card/60',
+        )}
+      >
+        <DeviceArt kind={spec.kind} knobs={spec.knobs} color={categoryColor(effect.type)} on={isEnabled} size={60} className="lg:h-[72px] lg:w-auto" />
+        <span className={cn('font-code text-micro font-bold', isSelected ? 'text-primary' : isEnabled ? 'text-foreground' : 'text-muted-foreground')}>
+          {CATEGORY_SHORT[effect.type]}
+        </span>
+        <span className="hidden w-full truncate text-center text-micro text-muted-foreground lg:block">{modelName}</span>
+      </button>
+      <button
+        type="button"
+        onClick={(e) => handleToggleBlock(e, effect.id, effect.type, effect.enabled)}
+        // Nome stabile + aria-pressed: "Accensione wah, premuto" = acceso.
+        aria-label={`Accensione ${effect.type}`}
+        aria-pressed={isEnabled}
+        title={isEnabled ? 'Disattiva blocco' : 'Attiva blocco'}
+        className="absolute right-1 top-1 flex h-5 w-5 cursor-pointer items-center justify-center rounded-full outline-none focus-visible:ring-2 focus-visible:ring-primary after:absolute after:-inset-3 after:content-['']"
+      >
+        <span
+          aria-hidden="true"
+          className={cn('h-2.5 w-2.5 rounded-full border transition-colors', isEnabled ? 'border-success bg-success' : 'border-muted-foreground/60 bg-transparent')}
         />
-      )}
-    </>
+      </button>
+    </div>
   );
 });

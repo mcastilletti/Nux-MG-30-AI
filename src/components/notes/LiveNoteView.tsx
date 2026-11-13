@@ -96,9 +96,9 @@ export function LiveNoteView({ noteId, position, onExit, preset }: {
 
   if (!note) {
     return (
-      <div className="flex min-h-full flex-col items-center justify-center gap-4 bg-black p-6 text-center text-zinc-100">
+      <div className="flex min-h-full flex-col items-center justify-center gap-4 bg-black p-6 text-center text-foreground">
         <p className="text-lg font-bold">Brano non disponibile su questo dispositivo</p>
-        <button type="button" onClick={onExit} className="min-h-12 rounded-xl border border-zinc-700 px-4 font-semibold">Esci dalla Live</button>
+        <button type="button" onClick={onExit} className="min-h-12 rounded-xl border border-border px-4 font-semibold">Esci dalla Live</button>
       </div>
     );
   }
@@ -111,9 +111,9 @@ export function LiveNoteView({ noteId, position, onExit, preset }: {
   const max = NOTE_TEXT_SCALES[NOTE_TEXT_SCALES.length - 1];
 
   return (
-    <div className="flex min-h-full flex-col bg-black text-zinc-50" data-live-view>
-      <header className="sticky top-0 z-10 grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 border-b border-zinc-800 bg-black/95 px-3 py-2.5 backdrop-blur">
-        <span className="text-base font-black tabular-nums text-zinc-400" aria-label={position ? `Brano ${position.index} di ${position.total}` : undefined}>
+    <div className="flex min-h-full flex-col bg-black text-foreground" data-live-view>
+      <header className="sticky top-0 z-10 grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 border-b border-border bg-black/95 px-3 py-2.5 backdrop-blur">
+        <span className="text-base font-bold tabular-nums text-muted-foreground" aria-label={position ? `Brano ${position.index} di ${position.total}` : undefined}>
           {position ? `${position.index}/${position.total}` : 'LIVE'}
         </span>
         <div className="min-w-0">
@@ -126,9 +126,9 @@ export function LiveNoteView({ noteId, position, onExit, preset }: {
                 disabled={!connected}
                 aria-label={`Preset ${chip.label}: ${connected ? chip.state.text : 'pedaliera non collegata'}. Tocca per inviarlo alla pedaliera`}
                 className={cn('inline-flex min-h-8 items-center gap-1.5 whitespace-nowrap rounded-full border px-3 text-caption font-semibold',
-                  chip.state.tone === 'success' ? 'border-success/50 text-success' : 'border-zinc-700 text-zinc-300')}
+                  chip.state.tone === 'success' ? 'border-success/50 text-success' : 'border-border text-soft')}
               >
-                <span aria-hidden="true" className={cn('h-2 w-2 rounded-full', chip.state.tone === 'success' ? 'bg-success' : 'bg-zinc-400')} />
+                <span aria-hidden="true" className={cn('h-2 w-2 rounded-full', chip.state.tone === 'success' ? 'bg-success' : 'bg-muted-foreground')} />
                 <span className="font-bold">{chip.label}</span> · {chip.state.text}
               </button>
             )}
@@ -157,12 +157,12 @@ export function LiveNoteView({ noteId, position, onExit, preset }: {
             </button>
           ) : (
             <>
-              <IconButton label="Blocca i comandi (anti-tocco)" variant="outline" className="rounded-full border-zinc-700 bg-transparent text-zinc-200" onClick={() => setLocked(true)}>
+              <IconButton label="Blocca i comandi (anti-tocco)" variant="outline" className="rounded-full border-border bg-transparent text-soft" onClick={() => setLocked(true)}>
                 <LockOpen className="h-5 w-5" />
               </IconButton>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <IconButton label="Opzioni Live" variant="outline" className="rounded-xl border-zinc-700 bg-transparent text-zinc-200">
+                  <IconButton label="Opzioni Live" variant="outline" className="rounded-xl border-border bg-transparent text-soft">
                     <MoreVertical className="h-5 w-5" />
                   </IconButton>
                 </DropdownMenuTrigger>
@@ -193,7 +193,7 @@ export function LiveNoteView({ noteId, position, onExit, preset }: {
       </header>
 
       {locked && (
-        <p className="border-b border-zinc-800 bg-zinc-950 px-4 py-1.5 text-center text-caption text-zinc-400">
+        <p className="border-b border-border bg-inset px-4 py-1.5 text-center text-caption text-muted-foreground">
           Comandi bloccati: restano attivi Prec, Succ e la scelta del brano. Tieni premuto il lucchetto per sbloccare.
         </p>
       )}
@@ -206,21 +206,21 @@ export function LiveNoteView({ noteId, position, onExit, preset }: {
             <section key={section.id} className="grid grid-cols-[6px_minmax(0,1fr)] gap-3">
               <span aria-hidden="true" className={cn('rounded-full', sectionBarClass(section.type))} />
               <div className="min-w-0">
-                <h3 className={cn('mb-1.5 text-sm font-black uppercase tracking-widest', SECTION_COLORS[section.type as SectionType]?.text)}>{section.type}</h3>
+                <h3 className={cn('mb-1.5 text-sm font-bold uppercase tracking-widest', SECTION_COLORS[section.type as SectionType]?.text)}>{section.type}</h3>
                 <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
                   {(section.chords || []).map((chord, i) => (
                     chord.trim().toUpperCase() === 'NEWLINE'
                       ? <span key={i} className="basis-full" aria-hidden="true" />
-                      : <span key={i} className={cn('font-black text-[length:calc(28px*var(--note-scale,1))] leading-tight', /^x\d+$/i.test(chord.trim()) ? 'text-primary' : 'text-zinc-50')}>{chord}</span>
+                      : <span key={i} className={cn('font-code font-bold text-[length:calc(28px*var(--note-scale,1))] leading-tight', /^x\d+$/i.test(chord.trim()) ? 'text-primary' : 'text-foreground')}>{chord}</span>
                   ))}
                 </div>
-                {section.text && <p className="mt-1.5 whitespace-pre-wrap text-[length:calc(22px*var(--note-scale,1))] font-semibold leading-snug text-zinc-100">{section.text}</p>}
+                {section.text && <p className="mt-1.5 whitespace-pre-wrap text-[length:calc(22px*var(--note-scale,1))] font-semibold leading-snug text-foreground">{section.text}</p>}
               </div>
             </section>
           ))
         )}
         {note.type !== 'block' && note.generalNotes && (
-          <p className="whitespace-pre-wrap border-t border-zinc-800 pt-4 text-[length:calc(18px*var(--note-scale,1))] text-zinc-300">{note.generalNotes}</p>
+          <p className="whitespace-pre-wrap border-t border-border pt-4 text-[length:calc(18px*var(--note-scale,1))] text-soft">{note.generalNotes}</p>
         )}
       </div>
     </div>

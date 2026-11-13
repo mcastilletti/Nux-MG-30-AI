@@ -145,9 +145,9 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
   return (
     <SidebarProvider>
       <div className="flex min-h-[100dvh] w-full bg-background overflow-hidden">
-        <Sidebar className="border-r border-white/5">
+        <Sidebar className="border-r border-sidebar-border">
           <nav aria-label="Navigazione principale" className="flex min-h-0 flex-1 flex-col">
-          <SidebarHeader className="p-4 border-b border-white/5">
+          <SidebarHeader className="border-b border-sidebar-border p-4">
             <div className="flex items-center gap-3">
               <div className="w-[70px] h-[70px] flex items-center justify-center overflow-hidden">
                 <img
@@ -158,7 +158,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
               </div>
               <div>
                 <p className="text-base font-bold tracking-tight">MG30 STUDIO</p>
-                <p className="text-[12px] text-muted-foreground uppercase tracking-widest">NUX EDITOR</p>
+                <p className="text-caption text-muted-foreground uppercase tracking-widest">NUX EDITOR</p>
               </div>
             </div>
           </SidebarHeader>
@@ -166,7 +166,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
           <SidebarContent>
             {SIDEBAR_GROUPS.map((group) => (
               <SidebarGroup key={group.label}>
-                <SidebarGroupLabel className="text-sm font-bold uppercase tracking-wider opacity-70">{group.label}</SidebarGroupLabel>
+                <SidebarGroupLabel className="text-caption font-semibold uppercase tracking-[0.14em] text-muted-foreground">{group.label}</SidebarGroupLabel>
                 <SidebarMenu>
                   {group.keys.map((key) => {
                     const entry = NAV_ENTRIES[key];
@@ -187,12 +187,12 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
             ))}
 
             <SidebarGroup className="mt-auto">
-              <SidebarGroupLabel className="text-sm font-bold uppercase tracking-wider opacity-70">Account Google</SidebarGroupLabel>
+              <SidebarGroupLabel className="text-caption font-semibold uppercase tracking-[0.14em] text-muted-foreground">Account Google</SidebarGroupLabel>
               <SidebarGroupContent className="px-3 py-2">{accountBlock}</SidebarGroupContent>
             </SidebarGroup>
 
             <SidebarGroup>
-              <SidebarGroupLabel className="text-sm font-bold uppercase tracking-wider opacity-70">Pedaliera</SidebarGroupLabel>
+              <SidebarGroupLabel className="text-caption font-semibold uppercase tracking-[0.14em] text-muted-foreground">Pedaliera</SidebarGroupLabel>
               <SidebarGroupContent className="px-3 py-2">
                 <ConnectionStatus status={status} lastError={lastError} />
               </SidebarGroupContent>
@@ -206,12 +206,10 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
             <div className="flex min-w-0 items-center gap-4">
               {/* Su mobile le sezioni secondarie sono in "Altro": la sidebar serve solo da md in su. */}
               <SidebarTrigger className="hidden md:flex" />
-              <div className="mx-2 hidden h-4 w-[1px] bg-white/10 md:block" />
-              <div className="flex min-w-0 items-center gap-2">
-                {/* Titolo principale della pagina (h1), su mobile e desktop. */}
-                <h1 className="truncate text-base font-semibold">
-                  {getRouteTitle(pathname)}
-                </h1>
+              <div className="mx-2 hidden h-4 w-px bg-border md:block" />
+              <div className="flex min-w-0 items-center gap-3">
+                {/* Il titolo (h1) lo scrive ogni pagina, una volta sola: qui solo il marchio, su telefono. */}
+                <span className="truncate text-base font-bold tracking-tight md:hidden">MG30 Studio</span>
                 <ConnectionStatus status={status} lastError={lastError} />
               </div>
             </div>

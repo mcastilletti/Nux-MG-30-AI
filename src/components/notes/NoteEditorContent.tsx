@@ -501,7 +501,7 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
   return (
     <>
       <div className="flex flex-col gap-6 h-full">
-        <div className="sticky top-0 z-20 border-b border-white/10 bg-background/95 px-3 py-3 shadow-[0_10px_30px_-24px_hsl(var(--primary))] backdrop-blur-xl lg:px-5">
+        <div className="sticky top-0 z-20 border-b border-border bg-background/95 px-3 py-3 backdrop-blur-xl lg:px-5">
           <div className="grid min-h-11 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3">
             <button
               type="button"
@@ -609,7 +609,7 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
                     onClick={handleSaveNote}
                     disabled={isSaving}
                     aria-busy={isSaving}
-                    className="flex h-11 w-11 items-center justify-center rounded-xl border border-primary/30 bg-primary text-primary-foreground shadow-md shadow-primary/20 transition-[background-color,box-shadow,transform] duration-150 hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/25 active:scale-95 disabled:opacity-60"
+                    className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary text-primary-foreground transition-[background-color,transform] duration-150 hover:bg-primary/90 active:scale-95 disabled:opacity-60"
                     title="Salva nota"
                     aria-label="Salva nota"
                   >
@@ -642,7 +642,7 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
             <div className="space-y-4 p-4 rounded-xl bg-secondary/20 border border-border/50">
               {editsPlaylistPreset && (
                 <fieldset className="space-y-2">
-                  <legend className="text-caption uppercase font-black text-muted-foreground tracking-tighter">Preset in «{playlist?.name}»</legend>
+                  <legend className="text-caption uppercase font-bold text-muted-foreground tracking-tighter">Preset in «{playlist?.name}»</legend>
                   <div role="radiogroup" aria-label={`Preset in ${playlist?.name}`} className="grid grid-cols-1 gap-2 sm:grid-cols-3">
                     {([
                       ['default', `Predefinito del brano: ${defaultPresetLabel}`],
@@ -668,7 +668,7 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
               {showPresetSelects && (
               <div className="grid grid-cols-3 gap-3">
                 <div className="col-span-2 space-y-2">
-                  <label className="text-caption uppercase font-black text-muted-foreground tracking-tighter">{isPlaylistModel && !editsPlaylistPreset ? 'Preset predefinito del brano' : 'Hardware Preset'}</label>
+                  <label className="text-caption uppercase font-bold text-muted-foreground tracking-tighter">{isPlaylistModel && !editsPlaylistPreset ? 'Preset predefinito del brano' : 'Hardware Preset'}</label>
                   <Select value={selectedPresetSlot} onValueChange={(val) => { setSelectedPresetSlot(val); if (status === 'connected') sendProgramChange(parseInt(val)-1); }} disabled={!editMode}>
                     <SelectTrigger aria-label="Preset della pedaliera (slot)" className="h-11 bg-background/50 border-border font-mono text-body-sm"><SelectValue placeholder="Collega a Slot MG-30" /></SelectTrigger>
                     <SelectContent className="max-h-[300px]">
@@ -699,7 +699,7 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-caption uppercase font-black text-muted-foreground tracking-tighter">Scena</label>
+                  <label className="text-caption uppercase font-bold text-muted-foreground tracking-tighter">Scena</label>
                   <Select 
                     value={selectedPresetScene} 
                     onValueChange={(val) => { setSelectedPresetScene(val); if (status === 'connected') sendSceneChange(parseInt(val)); }} 
@@ -724,9 +724,9 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
               {!isPlaylistModel && (
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
-                  <label className="text-caption uppercase font-black text-muted-foreground tracking-tighter">Band</label>
+                  <label className="text-caption uppercase font-bold text-muted-foreground tracking-tighter">Band</label>
                   <Select value={band} onValueChange={setBand} disabled={!editMode}>
-                    <SelectTrigger aria-label="Band" className="h-11 text-[14px] bg-background/50 border-border">
+                    <SelectTrigger aria-label="Band" className="h-11 text-sm bg-background/50 border-border">
                       <SelectValue placeholder="Scegli Band" />
                     </SelectTrigger>
                     <SelectContent>
@@ -738,9 +738,9 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-caption uppercase font-black text-muted-foreground tracking-tighter">Scaletta</label>
+                  <label className="text-caption uppercase font-bold text-muted-foreground tracking-tighter">Scaletta</label>
                   <Select value={setlist} onValueChange={setSetlist} disabled={!editMode}>
-                    <SelectTrigger aria-label="Scaletta" className="h-11 text-[14px] bg-background/50 border-border">
+                    <SelectTrigger aria-label="Scaletta" className="h-11 text-sm bg-background/50 border-border">
                       <SelectValue placeholder="Scegli Scaletta" />
                     </SelectTrigger>
                     <SelectContent>
@@ -759,7 +759,7 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
           {editMode || (generalNotes && generalNotes.trim() !== '...') ? (
             <Collapsible open={isNotesOpen} onOpenChange={setIsNotesOpen} className="space-y-2">
               <CollapsibleTrigger asChild>
-                <button className="w-full justify-between h-10 text-caption font-black uppercase tracking-widest bg-secondary/30 rounded-xl px-4 border border-border/30 flex items-center">
+                <button className="w-full justify-between h-10 text-caption font-bold uppercase tracking-widest bg-secondary/30 rounded-xl px-4 border border-border/30 flex items-center">
                   <span>Note Generali</span>
                   {isNotesOpen ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
                 </button>
@@ -767,7 +767,7 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
               <CollapsibleContent>
                 <Textarea 
                   placeholder="..." 
-                  className={cn("min-h-[140px] bg-card/30 border-border/50 resize-none leading-relaxed p-4", editMode ? "text-[16px]" : "text-[length:calc(16px*var(--note-scale,1))]")}
+                  className={cn("min-h-[140px] bg-card/30 border-border/50 resize-none leading-relaxed p-4", editMode ? "text-base" : "text-[length:calc(16px*var(--note-scale,1))]")}
                   value={generalNotes} 
                   onChange={(e) => setGeneralNotes(e.target.value)} 
                   readOnly={!editMode} 
@@ -776,10 +776,10 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
             </Collapsible>
           ) : null}
 
-          <Card className="border-border shadow-xl bg-card/40 rounded-2xl overflow-hidden">
+          <Card className="overflow-hidden rounded-xl">
             {editMode && (
               <CardHeader className="py-3 bg-secondary/40 flex flex-row items-center justify-between px-5 border-b border-border/40">
-                <CardTitle className="text-[12px] uppercase tracking-widest font-black text-primary flex items-center gap-2"><Layers className="w-5 h-5" /> Struttura Brano</CardTitle>
+                <CardTitle className="text-caption uppercase tracking-widest font-bold text-primary flex items-center gap-2"><Layers className="w-5 h-5" /> Struttura Brano</CardTitle>
                 <button onClick={() => handleAddSection(sections.length)} className="h-9 text-caption font-bold bg-background/50 border px-3 rounded flex items-center gap-2"><Plus className="w-4 h-4 mr-1" /> Sezione</button>
               </CardHeader>
             )}
@@ -802,7 +802,7 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
                             onValueChange={(val: SectionType) => setSections(sections.map(s => s.id === section.id ? { ...s, type: val } : s))}
                           >
                             <SelectTrigger aria-label={`Tipo della sezione ${sIdx + 1}`} className={cn(
-                              "w-full h-9 text-[12px] font-black uppercase border p-1",
+                              "w-full h-9 text-caption font-bold uppercase border p-1",
                               SECTION_COLORS[section.type as SectionType]?.bg,
                               SECTION_COLORS[section.type as SectionType]?.text,
                               SECTION_COLORS[section.type as SectionType]?.border
@@ -819,7 +819,7 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
                           <Badge
                             variant="secondary"
                             className={cn(
-                              "w-full justify-center h-9 text-body-sm font-black uppercase tracking-tighter border",
+                              "w-full justify-center h-9 text-body-sm font-bold uppercase tracking-tighter border",
                               SECTION_COLORS[section.type as SectionType]?.bg,
                               SECTION_COLORS[section.type as SectionType]?.text,
                               SECTION_COLORS[section.type as SectionType]?.border
@@ -881,7 +881,7 @@ export function NoteEditorContent({ noteId, onClose, onUpdate, onEditModeChange,
                             value={section.text} 
                             onChange={(e) => setSections(sections.map(s => s.id === section.id ? { ...s, text: e.target.value } : s))} 
                             placeholder="Note blocco..." 
-                            className="h-9 text-[16px] font-semibold border-none bg-transparent p-0 italic text-muted-foreground focus-visible:ring-0 shadow-none" 
+                            className="h-9 text-base font-semibold border-none bg-transparent p-0 italic text-muted-foreground focus-visible:ring-0 shadow-none" 
                           />
                         ) : (
                           <p className="text-[length:calc(16px*var(--note-scale,1))] font-semibold leading-snug whitespace-pre-wrap">{section.text}</p>

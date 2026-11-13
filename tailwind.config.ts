@@ -10,18 +10,18 @@ export default {
   ],
   theme: {
     extend: {
-      // Scala dei testi piccoli (solo font-size). Direzione approvata in Fase 1:
-      // nessun testo sotto 12px, salvo i badge di stato (micro, es. ON/OFF dei blocchi).
+      // Scala dei testi piccoli (solo font-size). Nessun testo sotto 11px; `label` e `caption`
+      // restano alias di 12px per non toccare i file esistenti: in quelli nuovi usare `caption`.
       fontSize: {
-        micro: '10px',
+        micro: '11px',
         label: '12px',
         caption: '12px',
         'body-sm': '13px',
       },
       fontFamily: {
-        body: ['var(--font-outfit)', 'sans-serif'],
-        headline: ['var(--font-outfit)', 'sans-serif'],
-        code: ['var(--font-source-code)', 'monospace'],
+        body: ['var(--font-space-grotesk)', 'system-ui', 'sans-serif'],
+        headline: ['var(--font-space-grotesk)', 'system-ui', 'sans-serif'],
+        code: ['var(--font-space-mono)', 'ui-monospace', 'monospace'],
       },
       colors: {
         background: 'hsl(var(--background))',
@@ -69,12 +69,22 @@ export default {
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',
-        chart: {
-          '1': 'hsl(var(--chart-1))',
-          '2': 'hsl(var(--chart-2))',
-          '3': 'hsl(var(--chart-3))',
-          '4': 'hsl(var(--chart-4))',
-          '5': 'hsl(var(--chart-5))',
+        inset: 'hsl(var(--inset))',
+        soft: 'hsl(var(--text-soft))',
+        block: {
+          wah: 'hsl(var(--block-wah))',
+          'noise-gate': 'hsl(var(--block-noise-gate))',
+          compressor: 'hsl(var(--block-compressor))',
+          efx: 'hsl(var(--block-efx))',
+          amp: 'hsl(var(--block-amp))',
+          ir: 'hsl(var(--block-ir))',
+          sr: 'hsl(var(--block-sr))',
+          modulation: 'hsl(var(--block-modulation))',
+          delay: 'hsl(var(--block-delay))',
+          reverb: 'hsl(var(--block-reverb))',
+          vol: 'hsl(var(--block-vol))',
+          eq: 'hsl(var(--block-eq))',
+          off: 'hsl(var(--block-off))',
         },
         sidebar: {
           DEFAULT: 'hsl(var(--sidebar-background))',

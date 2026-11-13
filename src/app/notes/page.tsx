@@ -691,7 +691,7 @@ function NotesLibraryContent() {
             <div className="rounded-xl border border-primary/20 bg-primary/10 p-2.5">
               <NotebookPen className="h-5 w-5 text-primary" />
             </div>
-            <h2 className="text-xl font-black tracking-tight uppercase">Archivio Note</h2>
+            <h1 className="text-2xl font-bold tracking-tight md:text-3xl">Note brani</h1>
           </div>
           <div className="flex items-center gap-2">
             <Button
@@ -813,7 +813,7 @@ function NotesLibraryContent() {
                       <div className="text-xs text-muted-foreground">{note.band} - {note.setlist}</div>
                     </div>
                     {note.presetSlot && (
-                      <Badge variant="outline" className="flex h-6 shrink-0 items-center gap-1.5 border-primary/20 bg-primary/10 px-2 text-label font-black text-primary">
+                      <Badge variant="outline" className="flex h-6 shrink-0 items-center gap-1.5 border-primary/20 bg-primary/10 px-2 text-label font-bold text-primary">
                         <span>{formatSlotLabel(parseInt(note.presetSlot))}</span>
                         <>
                           <span className="opacity-30">•</span>
@@ -863,14 +863,14 @@ function NotesLibraryContent() {
         ) : (<>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 bg-card/40 p-3 rounded-2xl border border-border shadow-sm">
           <Select value={selectedBand || 'all'} onValueChange={(v) => { setSelectedBand(v === 'all' ? null : v); setSelectedSetlist(null); }}>
-            <SelectTrigger aria-label="Filtra per band" className="h-11 bg-background/50 border-border text-[14px] font-bold"><SelectValue placeholder="Tutte le band" /></SelectTrigger>
+            <SelectTrigger aria-label="Filtra per band" className="h-11 bg-background/50 border-border text-sm font-bold"><SelectValue placeholder="Tutte le band" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Tutte le band</SelectItem>
               {bands.map(band => <SelectItem key={band} value={band}>{band}</SelectItem>)}
             </SelectContent>
           </Select>
           <Select value={selectedSetlist || 'all'} onValueChange={(v) => setSelectedSetlist(v === 'all' ? null : v)} disabled={!selectedBand}>
-            <SelectTrigger aria-label="Filtra per scaletta" className="h-11 bg-background/50 border-border text-[14px] font-bold"><SelectValue placeholder="Tutte le scalette" /></SelectTrigger>
+            <SelectTrigger aria-label="Filtra per scaletta" className="h-11 bg-background/50 border-border text-sm font-bold"><SelectValue placeholder="Tutte le scalette" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Tutte le scalette</SelectItem>
               {setlists.map(setlist => <SelectItem key={setlist} value={setlist}>{setlist}</SelectItem>)}
@@ -947,7 +947,7 @@ function NotesLibraryContent() {
               <div className="py-4 space-y-4">
                 <p className="text-sm font-bold">Step 1: Scegli la Band</p>
                 <Select value={targetBand} onValueChange={setTargetBand}>
-                    <SelectTrigger aria-label="Band di destinazione" className="h-11 text-[14px]"><SelectValue placeholder="Scegli band..." /></SelectTrigger>
+                    <SelectTrigger aria-label="Band di destinazione" className="h-11 text-sm"><SelectValue placeholder="Scegli band..." /></SelectTrigger>
                     <SelectContent>
                         {bands.map(b => <SelectItem key={`cb-${b}`} value={b}>{b}</SelectItem>)}
                     </SelectContent>
@@ -958,7 +958,7 @@ function NotesLibraryContent() {
                <div className="py-4 space-y-4">
                  <p className="text-sm font-bold">Step 2: Scegli o crea una Scaletta</p>
                 <Select value={targetSetlist} onValueChange={setTargetSetlist}>
-                    <SelectTrigger aria-label="Scaletta di destinazione" className="h-11 text-[14px]"><SelectValue placeholder="Scegli scaletta..." /></SelectTrigger>
+                    <SelectTrigger aria-label="Scaletta di destinazione" className="h-11 text-sm"><SelectValue placeholder="Scegli scaletta..." /></SelectTrigger>
                     <SelectContent>
                         {setlistsForCopy.map(s => <SelectItem key={`cs-${s}`} value={s}>{s}</SelectItem>)}
                     </SelectContent>
@@ -1121,7 +1121,7 @@ function NotesLibraryContent() {
         footer={!isEditing && setlistPosition && (setlistPosition.total > 1 || noteSheet.live) ? (
           <SetlistNavBar
             size={noteSheet.live ? 'live' : 'rehearsal'}
-            className={noteSheet.live ? 'border-zinc-800 bg-zinc-950' : undefined}
+            className={noteSheet.live ? 'border-border bg-black' : undefined}
             index={setlistPosition.index}
             total={setlistPosition.total}
             outside={!!outsidePosition}
@@ -1221,8 +1221,8 @@ const SortableNoteCard = React.memo(React.forwardRef<HTMLDivElement, {
        <Card className={cn(
          "group relative flex items-center overflow-hidden rounded-xl border-border bg-card/60 py-4 pl-1 pr-4 transition-all duration-300 hover:border-primary/50",
          note.type === 'block' && "border-primary/30 bg-primary/10 hover:border-primary/50",
-         isDragging && "border-primary/50 shadow-2xl shadow-primary/30",
-         isHighlighted && "border-primary bg-primary/5 shadow-lg shadow-primary/20 ring-2 ring-primary"
+         isDragging && "border-primary/50 shadow-xl",
+         isHighlighted && "border-primary bg-primary/5 ring-2 ring-primary"
        )}
        style={{ animationDelay: `${index * 0.05}s` }}
        >
@@ -1237,7 +1237,7 @@ const SortableNoteCard = React.memo(React.forwardRef<HTMLDivElement, {
           {note.type === 'block' ? (
             <div className="flex items-start justify-between gap-3">
               <div className="flex-1 min-w-0">
-                <CardTitle className="break-words text-[16px] font-black uppercase leading-tight text-primary">{note.title}</CardTitle>
+                <CardTitle className="break-words text-base font-bold uppercase leading-tight text-primary">{note.title}</CardTitle>
               </div>
               <div className="flex items-center gap-1 shrink-0 no-print">
                  <IconButton label="Copia nota" className="text-primary" onClick={(e) => onCopy(e, note)}><Copy className="w-4 h-4" /></IconButton>
@@ -1248,7 +1248,7 @@ const SortableNoteCard = React.memo(React.forwardRef<HTMLDivElement, {
             <>
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
-                  <CardTitle className="text-[16px] font-black uppercase leading-tight whitespace-pre-wrap">{note.title}</CardTitle>
+                  <CardTitle className="text-base font-bold uppercase leading-tight whitespace-pre-wrap">{note.title}</CardTitle>
                 </div>
                 <div className="flex items-center gap-1 shrink-0 no-print">
                   <IconButton label="Copia nota" className="text-primary" onClick={(e) => onCopy(e, note)}><Copy className="w-4 h-4" /></IconButton>

@@ -90,13 +90,16 @@ Prima di progettare o modificare la sezione Note leggi `references/live-notes.md
 
 ## Ancoraggi tecnici del progetto
 
-- **Token e stili**: `src/app/globals.css` (variabili HSL, `.touch-target`, `.section-kicker`, stampa) e `tailwind.config.ts`. Nuovi colori come token semantici, non come `zinc-*`/`emerald-*` o HSL inline:
+- **Token e stili**: `src/app/globals.css` (variabili HSL, `.touch-target`, `.section-kicker`, `.value-mono`, stampa) e `tailwind.config.ts`. Il sistema visivo completo è in `DESIGN.md`. Nuovi colori come token semantici, non come `zinc-*`/`emerald-*` o HSL inline:
+  - superfici: `background`, `card` (pannello), `inset` (incassato: fascia della catena, fondo delle immagini), `secondary`/`accent` (rilievo e passaggio del mouse); testo: `foreground`, `text-soft`, `muted-foreground`;
+  - un solo accento giallo (`primary`, con `text-primary-foreground` scuro sopra, mai `text-white`) per azioni e selezione; il verde `success` è il LED (acceso, collegato, inviato);
   - stato: `success`, `warning`, `info`, `destructive` (es. `text-success`, `bg-warning/15`);
-  - blocchi della catena: `--block-<tipo>` (es. `hsl(var(--block-amp) / 0.4)`; mai `hsla(H S L, a)`, che è CSS non valido);
-  - testo piccolo: `text-label` (10px), `text-caption` (11px), `text-body-sm` (13px), `text-micro` (9px, da eliminare). Niente nuovi `text-[Npx]`; direzione: nessun testo sotto 12px salvo badge.
-  - `--primary-foreground` è scuro: sul viola usa `text-primary-foreground`, mai `text-white`.
+  - categorie dei blocchi: `--block-<tipo>` e le classi `bg-block-amp`, `text-block-delay`… (mai `hsla(H S L, a)`, CSS non valido); nomi brevi e colori in `src/components/common/category-chip.tsx`;
+  - testo piccolo: `text-micro` (11px, solo etichette sotto le immagini), `text-caption` (12px, anche `text-label`), `text-body-sm` (13px). Niente nuovi `text-[Npx]` né `font-black`; slot e valori in `font-code` (Space Mono, `value-mono`).
+  - Superfici e titoli: un solo tipo di card (`Panel` in `src/components/common/panel.tsx`, o `Card`), un solo titolo di pagina (`PageHeader`, l'unico `h1`; la barra in alto mostra solo il marchio su telefono).
   - I moduli in `src/lib` sono analizzati da Tailwind: le classi lì dentro vengono generate.
-  - **Colori scritti a mano per scelta, da non "correggere":** la palette `zinc-*` della modalità Live (tema palco nero ad alto contrasto, `LiveNoteView.tsx`); il grigio dei blocchi in bypass (`SignalChain.tsx`, `BlockParamsPanel.tsx`); i colori delle sezioni del brano (`src/lib/section-colors.ts` e la stampa in `globals.css`). Tutto il resto usa i token.
+  - **Immagini dei dispositivi**: `src/components/device-art/` (una sagoma per tipo: pedale, wah, espressione, testata, combo, casse, microfoni, IR utente, S/R) e `src/lib/device-art-map.ts` (modello → sagoma). Nuovi modelli: aggiungerli alla mappa (c'è un test che fallisce se ne manca uno). Disegni fatti per l'app: niente foto né marchi di terzi.
+  - **Colori scritti a mano per scelta, da non "correggere":** il nero puro `bg-black` della modalità Live (tema palco, `LiveNoteView.tsx`, `notes/page.tsx` per il foglio Live); i materiali delle immagini (crema delle manopole, nero caldo, coni) in `device-art/shapes.tsx`; i colori delle sezioni del brano (`src/lib/section-colors.ts` e la stampa in `globals.css`). Tutto il resto usa i token.
 - **Componenti**: shadcn in `src/components/ui`. Attenzione: `button.tsx` applica `[&_svg]:size-4`, che annulla le classi di dimensione sulle icone dentro `<Button>`.
 - **Componenti comuni** (`src/components/common`), da preferire al markup ad hoc:
   - `IconButton` per ogni pulsante con sola icona (`label` obbligatorio, 44×44px);

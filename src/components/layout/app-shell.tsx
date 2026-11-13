@@ -19,6 +19,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useWakeLock } from '@/hooks/use-wake-lock';
 import { clearSavedPresets, usePresetPersistence } from '@/hooks/use-preset-persistence';
 import { soundArchive } from '@/hooks/use-sound-archive';
+import { factoryNotes } from '@/hooks/use-factory-notes';
 import { cn } from '@/lib/utils';
 import { ConnectionStatus } from '@/components/common/connection-status';
 import { ElectricGuitarIcon } from '@/components/icons/electric-guitar-icon';
@@ -36,6 +37,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
   useWakeLock();
   usePresetPersistence();
   soundArchive.useSync();
+  factoryNotes.useSync();
 
   useEffect(() => {
     initialize();
@@ -97,6 +99,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
     usePlaylistsCache.getState().clearCache();
     clearSavedPresets();
     soundArchive.clearLocal();
+    factoryNotes.clearLocal();
     toast({
       title: "Logout effettuato",
       description: "Dati cloud disconnessi. L'app continuerà a funzionare in locale.",

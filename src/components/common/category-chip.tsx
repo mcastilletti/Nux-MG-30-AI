@@ -18,6 +18,22 @@ export const CATEGORY_SHORT: Record<EffectType, string> = {
   sr: 'S/R',
 };
 
+/** Nome esteso della categoria, per intestazioni e descrizioni. */
+export const CATEGORY_LONG: Record<EffectType, string> = {
+  wah: 'Wah',
+  compressor: 'Compressore',
+  'noise-gate': 'Noise gate',
+  efx: 'Drive / Effetto',
+  amp: 'Ampli',
+  ir: 'Cassa (IR)',
+  eq: 'Equalizzatore',
+  modulation: 'Modulazione',
+  delay: 'Delay',
+  reverb: 'Reverb',
+  vol: 'Volume',
+  sr: 'Send / Return',
+};
+
 /** Colore di categoria come valore CSS (token `--block-*`, definiti in globals.css). */
 export const categoryColor = (type: EffectType) => `hsl(var(--block-${type}))`;
 

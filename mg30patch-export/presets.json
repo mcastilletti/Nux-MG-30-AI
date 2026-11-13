@@ -1538,7 +1538,7 @@
       "id": "mode",
       "name": "MODE",
       "raw": 128,
-      "value": "CHORUS"
+      "value": "VIBRATO"
      },
      {
       "id": "subdiv",
@@ -4120,7 +4120,7 @@
       "id": "mode",
       "name": "MODE",
       "raw": 129,
-      "value": "VIBRATO"
+      "value": "CHORUS"
      },
      {
       "id": "subdiv",
@@ -13031,7 +13031,7 @@
       "id": "mode",
       "name": "MODE",
       "raw": 129,
-      "value": "VIBRATO"
+      "value": "CHORUS"
      },
      {
       "id": "subdiv",
@@ -14735,7 +14735,7 @@
       "id": "mode",
       "name": "MODE",
       "raw": 128,
-      "value": "CHORUS"
+      "value": "VIBRATO"
      },
      {
       "id": "subdiv",
@@ -15611,7 +15611,7 @@
       "id": "scale",
       "name": "SCALE",
       "raw": 128,
-      "value": "MINOR"
+      "value": "MAJOR"
      },
      {
       "id": "harm",
@@ -16082,7 +16082,7 @@
       "id": "scale",
       "name": "SCALE",
       "raw": 128,
-      "value": "MINOR"
+      "value": "MAJOR"
      },
      {
       "id": "harm",
@@ -16553,7 +16553,7 @@
       "id": "scale",
       "name": "SCALE",
       "raw": 128,
-      "value": "MINOR"
+      "value": "MAJOR"
      },
      {
       "id": "harm",
@@ -30209,7 +30209,7 @@
       "id": "mode",
       "name": "MODE",
       "raw": 129,
-      "value": "VIBRATO"
+      "value": "CHORUS"
      },
      {
       "id": "subdiv",
@@ -32330,7 +32330,7 @@
       "id": "scale",
       "name": "SCALE",
       "raw": 128,
-      "value": "MINOR"
+      "value": "MAJOR"
      },
      {
       "id": "harm",
@@ -33998,7 +33998,7 @@
       "id": "scale",
       "name": "SCALE",
       "raw": 129,
-      "value": "MAJOR"
+      "value": "MINOR"
      },
      {
       "id": "harm",
@@ -39177,7 +39177,7 @@
       "id": "mode",
       "name": "MODE",
       "raw": 129,
-      "value": "VIBRATO"
+      "value": "CHORUS"
      },
      {
       "id": "subdiv",
@@ -39612,7 +39612,7 @@
       "id": "mode",
       "name": "MODE",
       "raw": 129,
-      "value": "VIBRATO"
+      "value": "CHORUS"
      },
      {
       "id": "subdiv",
@@ -40881,7 +40881,7 @@
       "id": "mode",
       "name": "MODE",
       "raw": 128,
-      "value": "CHORUS"
+      "value": "VIBRATO"
      },
      {
       "id": "subdiv",
@@ -41739,7 +41739,7 @@
       "id": "scale",
       "name": "SCALE",
       "raw": 128,
-      "value": "MINOR"
+      "value": "MAJOR"
      },
      {
       "id": "harm",
@@ -46845,7 +46845,7 @@
       "id": "mode",
       "name": "MODE",
       "raw": 128,
-      "value": "CHORUS"
+      "value": "VIBRATO"
      },
      {
       "id": "subdiv",

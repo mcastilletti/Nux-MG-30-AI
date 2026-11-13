@@ -41,7 +41,7 @@ slot,name,block,on,model,params (nome=valore)
 4,CT-PlexiLead,amp,ON,68 Marshall Plexi 100W,Gain=33; Master=57; Bass=43; Middle=50; Treble=65; Presence=78; Bias=51; Level=40
 4,CT-PlexiLead,eq,ON,ALIGN EQ,HPF=80Hz; 110Hz=61; 340Hz=49; 660Hz=64; 1300Hz=50; 2600Hz=57; 5000Hz=36; Volume=56
 4,CT-PlexiLead,noise-gate,ON,NUX Noise Gate,Threshold=20; Decay=50
-4,CT-PlexiLead,modulation,off,DUNLOP UNIVIBE,SPEED=66; VOLUME=78; INTENSITY=40; MODE=CHORUS; Sub Div=1/4
+4,CT-PlexiLead,modulation,off,DUNLOP UNIVIBE,SPEED=66; VOLUME=78; INTENSITY=40; MODE=VIBRATO; Sub Div=1/4
 4,CT-PlexiLead,delay,ON,Ibanez DPL10 Stereo Pan Delay,TIME=34; REPEAT=30; DELAY LEVEL=23; Sub Div=1/4
 4,CT-PlexiLead,reverb,ON,Lexicon 224 Hall Reverb,DECAY=75; PRE DELAY=22; LIVELINESS=64; LEVEL=22
 4,CT-PlexiLead,ir,ON,USER IR CAB,Level=0; Lo Cut=20; Hi Cut=20000
@@ -113,7 +113,7 @@ slot,name,block,on,model,params (nome=valore)
 10,LT BLUES DELUXE,amp,ON,64 Fender Deluxe Reverb,Gain=45; Master=36; Bass=55; Middle=40; Treble=36; Bias=58; Level=30
 10,LT BLUES DELUXE,eq,off,BOSS GE-6,100Hz=0; 220Hz=38; 500Hz=70; 1.2kHz=77; 2.6kHz=57; 6.4kHz=11; Level=81
 10,LT BLUES DELUXE,noise-gate,off,NUX Noise Gate,Threshold=20; Decay=50
-10,LT BLUES DELUXE,modulation,ON,DUNLOP UNIVIBE,SPEED=74; VOLUME=100; INTENSITY=61; MODE=VIBRATO; Sub Div=1/4
+10,LT BLUES DELUXE,modulation,ON,DUNLOP UNIVIBE,SPEED=74; VOLUME=100; INTENSITY=61; MODE=CHORUS; Sub Div=1/4
 10,LT BLUES DELUXE,delay,off,Boss DM-2 Analog Delay,REPEAT=100; ECHO=26; INTENSITY=36; Sub Div=1/8D
 10,LT BLUES DELUXE,reverb,ON,EMT 140 Plate Reverb,DECAY=20; LEVEL=12
 10,LT BLUES DELUXE,ir,ON,USER IR CAB,Level=0; Lo Cut=422; Hi Cut=10550
@@ -365,7 +365,7 @@ slot,name,block,on,model,params (nome=valore)
 31,SFHairNation-800,amp,ON,1977 Marshall JCM800,Gain=71; Master=29; Bass=23; Middle=66; Treble=53; Presence=29; Bias=50; Level=31
 31,SFHairNation-800,eq,ON,BOSS GE-6,100Hz=45; 220Hz=52; 500Hz=50; 1.2kHz=50; 2.6kHz=53; 6.4kHz=57; Level=38
 31,SFHairNation-800,noise-gate,off,NUX Noise Gate,Threshold=20; Decay=50
-31,SFHairNation-800,modulation,off,DUNLOP UNIVIBE,SPEED=54; VOLUME=61; INTENSITY=71; MODE=VIBRATO; Sub Div=1/4
+31,SFHairNation-800,modulation,off,DUNLOP UNIVIBE,SPEED=54; VOLUME=61; INTENSITY=71; MODE=CHORUS; Sub Div=1/4
 31,SFHairNation-800,delay,off,Boss DD-2 Digital Delay,EFFECT LEVEL=33; FEEDBACK=36; DELAY TIME=68; Sub Div=1/8D
 31,SFHairNation-800,reverb,ON,T-Rex Room Mate Reverb,DECAY=58; TONE=58; LEVEL=30
 31,SFHairNation-800,ir,ON,MARSHALL 4X12,Mic=R121; Axis=CENTER; Level=0; Lo Cut=20; Hi Cut=20000
@@ -413,7 +413,7 @@ slot,name,block,on,model,params (nome=valore)
 35,LeoGibson Crunch,amp,ON,1977 Marshall JCM800,Gain=69; Master=29; Bass=60; Middle=60; Treble=67; Presence=65; Bias=50; Level=30
 35,LeoGibson Crunch,eq,off,BOSS GE-6,100Hz=50; 220Hz=50; 500Hz=50; 1.2kHz=50; 2.6kHz=50; 6.4kHz=50; Level=50
 35,LeoGibson Crunch,noise-gate,off,NUX Noise Gate,Threshold=20; Decay=50
-35,LeoGibson Crunch,modulation,off,DUNLOP UNIVIBE,SPEED=74; VOLUME=76; INTENSITY=71; MODE=CHORUS; Sub Div=1/4
+35,LeoGibson Crunch,modulation,off,DUNLOP UNIVIBE,SPEED=74; VOLUME=76; INTENSITY=71; MODE=VIBRATO; Sub Div=1/4
 35,LeoGibson Crunch,delay,off,Ibanez DPL10 Stereo Pan Delay,TIME=47; REPEAT=29; DELAY LEVEL=34; Sub Div=1/4
 35,LeoGibson Crunch,reverb,off,Lexicon 224 Hall Reverb,DECAY=77; PRE DELAY=59; LIVELINESS=85; LEVEL=62
 35,LeoGibson Crunch,ir,ON,MARSHALL 4X12,Mic=S57; Axis=CENTER; Level=0; Lo Cut=20; Hi Cut=20000
@@ -437,7 +437,7 @@ slot,name,block,on,model,params (nome=valore)
 37,MAY P CLEAN SOLO,amp,ON,Aguilar Tone Hammer AMP,Gain=11; Master=100; Bass=40; Middle=56; M FREQ=58; Treble=59; Level=100
 37,MAY P CLEAN SOLO,eq,ON,MXR 10 BAND,VOL=0; 31.25Hz=49; 62.5Hz=46; 125Hz=47; 250Hz=28; 500Hz=50; 1KHz=49; 2KHz=59; 4KHz=59; 8KHz=75; 16KHz=75; GAIN=2
 37,MAY P CLEAN SOLO,noise-gate,ON,NUX Noise Gate,Threshold=16; Decay=100
-37,MAY P CLEAN SOLO,modulation,off,MXR HARMONIZER,KEY=E; SCALE=MINOR; HARM=+8; BLEND=16
+37,MAY P CLEAN SOLO,modulation,off,MXR HARMONIZER,KEY=E; SCALE=MAJOR; HARM=+8; BLEND=16
 37,MAY P CLEAN SOLO,delay,off,NUX DUOTIME,LEVEL=9; TIME1=66; SUB DIV1=1/4; REPEAT1=17; TIME2=100; SUB DIV2=1/8D; REPEAT2=17; PARA=8
 37,MAY P CLEAN SOLO,reverb,ON,Lexicon 224 Hall Reverb,DECAY=30; PRE DELAY=0; LIVELINESS=80; LEVEL=26
 37,MAY P CLEAN SOLO,ir,ON,AMPEG SVT 8X10,Level=0; Lo Cut=20; Hi Cut=20000
@@ -449,7 +449,7 @@ slot,name,block,on,model,params (nome=valore)
 38,MAY P CLEAN,amp,ON,Aguilar Tone Hammer AMP,Gain=16; Master=100; Bass=51; Middle=60; M FREQ=59; Treble=59; Level=100
 38,MAY P CLEAN,eq,ON,MXR 10 BAND,VOL=1; 31.25Hz=49; 62.5Hz=50; 125Hz=54; 250Hz=36; 500Hz=58; 1KHz=57; 2KHz=59; 4KHz=59; 8KHz=75; 16KHz=75; GAIN=2
 38,MAY P CLEAN,noise-gate,ON,NUX Noise Gate,Threshold=16; Decay=100
-38,MAY P CLEAN,modulation,off,MXR HARMONIZER,KEY=E; SCALE=MINOR; HARM=+8; BLEND=16
+38,MAY P CLEAN,modulation,off,MXR HARMONIZER,KEY=E; SCALE=MAJOR; HARM=+8; BLEND=16
 38,MAY P CLEAN,delay,off,NUX DUOTIME,LEVEL=9; TIME1=66; SUB DIV1=1/4; REPEAT1=17; TIME2=100; SUB DIV2=1/8D; REPEAT2=17; PARA=8
 38,MAY P CLEAN,reverb,off,Lexicon 224 Hall Reverb,DECAY=30; PRE DELAY=0; LIVELINESS=100; LEVEL=25
 38,MAY P CLEAN,ir,ON,AMPEG SVT 8X10,Level=0; Lo Cut=20; Hi Cut=20000
@@ -461,7 +461,7 @@ slot,name,block,on,model,params (nome=valore)
 39,MAY P DIST,amp,ON,Aguilar Tone Hammer AMP,Gain=23; Master=100; Bass=88; Middle=47; M FREQ=0; Treble=59; Level=92
 39,MAY P DIST,eq,ON,MXR 10 BAND,VOL=1; 31.25Hz=49; 62.5Hz=50; 125Hz=58; 250Hz=36; 500Hz=57; 1KHz=56; 2KHz=47; 4KHz=39; 8KHz=71; 16KHz=72; GAIN=2
 39,MAY P DIST,noise-gate,ON,NUX Noise Gate,Threshold=16; Decay=100
-39,MAY P DIST,modulation,off,MXR HARMONIZER,KEY=E; SCALE=MINOR; HARM=+8; BLEND=16
+39,MAY P DIST,modulation,off,MXR HARMONIZER,KEY=E; SCALE=MAJOR; HARM=+8; BLEND=16
 39,MAY P DIST,delay,off,NUX DUOTIME,LEVEL=9; TIME1=66; SUB DIV1=1/4; REPEAT1=17; TIME2=100; SUB DIV2=1/8D; REPEAT2=17; PARA=8
 39,MAY P DIST,reverb,off,Lexicon 224 Hall Reverb,DECAY=30; PRE DELAY=0; LIVELINESS=100; LEVEL=25
 39,MAY P DIST,ir,ON,MARSHALL VINTAGE 30 4X12,Mic=C3000; Axis=CENTER; Level=0; Lo Cut=20; Hi Cut=20000
@@ -833,7 +833,7 @@ slot,name,block,on,model,params (nome=valore)
 70,JonK's Drive,amp,ON,1977 Marshall JCM800,Gain=56; Master=29; Bass=83; Middle=86; Treble=78; Presence=35; Bias=50; Level=43
 70,JonK's Drive,eq,ON,BOSS GE-6,100Hz=50; 220Hz=57; 500Hz=56; 1.2kHz=57; 2.6kHz=54; 6.4kHz=50; Level=50
 70,JonK's Drive,noise-gate,ON,NUX Noise Gate,Threshold=29; Decay=50
-70,JonK's Drive,modulation,off,DUNLOP UNIVIBE,SPEED=54; VOLUME=61; INTENSITY=71; MODE=VIBRATO; Sub Div=1/4
+70,JonK's Drive,modulation,off,DUNLOP UNIVIBE,SPEED=54; VOLUME=61; INTENSITY=71; MODE=CHORUS; Sub Div=1/4
 70,JonK's Drive,delay,off,Boss DD-2 Digital Delay,EFFECT LEVEL=33; FEEDBACK=36; DELAY TIME=68; Sub Div=1/8D
 70,JonK's Drive,reverb,ON,T-Rex Room Mate Reverb,DECAY=71; TONE=69; LEVEL=30
 70,JonK's Drive,ir,ON,MARSHALL GREENBACK 4X12,Mic=U87; Axis=EDGE; Level=0; Lo Cut=20; Hi Cut=20000
@@ -893,7 +893,7 @@ slot,name,block,on,model,params (nome=valore)
 75,RL - Mariana,amp,ON,Roland JC-120,Gain=35; Master=76; Bass=70; Middle=65; Treble=65; Bright SW=100; Level=50
 75,RL - Mariana,eq,ON,BOSS GE-6,100Hz=50; 220Hz=50; 500Hz=54; 1.2kHz=56; 2.6kHz=35; 6.4kHz=39; Level=59
 75,RL - Mariana,noise-gate,ON,NUX Noise Gate,Threshold=49; Decay=43
-75,RL - Mariana,modulation,ON,MXR HARMONIZER,KEY=G; SCALE=MINOR; HARM=-8; BLEND=100
+75,RL - Mariana,modulation,ON,MXR HARMONIZER,KEY=G; SCALE=MAJOR; HARM=-8; BLEND=100
 75,RL - Mariana,delay,ON,Ibanez DML Modulation Delay,TIME=53; LEVEL=100; MODULATION=83; REPEAT=20; Sub Div=1/8D
 75,RL - Mariana,reverb,ON,Lexicon 224 Hall Reverb,DECAY=100; PRE DELAY=100; LIVELINESS=72; LEVEL=40
 75,RL - Mariana,ir,ON,ROLAND JC120,Mic=C3000; Axis=CENTER; Level=0; Lo Cut=510; Hi Cut=12500
@@ -941,7 +941,7 @@ slot,name,block,on,model,params (nome=valore)
 79,GY I'm Bassist,amp,ON,BASSMAN 100,Gain=57; Master=88; Bass=73; Middle=35; Treble=57; Presence=47; Level=53
 79,GY I'm Bassist,eq,off,BOSS GE-6,100Hz=50; 220Hz=50; 500Hz=50; 1.2kHz=50; 2.6kHz=50; 6.4kHz=50; Level=50
 79,GY I'm Bassist,noise-gate,off,NUX Noise Gate,Threshold=20; Decay=50
-79,GY I'm Bassist,modulation,ON,MXR HARMONIZER,KEY=E; SCALE=MAJOR; HARM=-8; BLEND=100
+79,GY I'm Bassist,modulation,ON,MXR HARMONIZER,KEY=E; SCALE=MINOR; HARM=-8; BLEND=100
 79,GY I'm Bassist,delay,off,Maestro EchoPlex EP-4,TIME=100; LEVEL=37; REPEAT=49; Sub Div=1/8D
 79,GY I'm Bassist,reverb,off,EMT 140 Plate Reverb,DECAY=0; LEVEL=0
 79,GY I'm Bassist,ir,ON,FENDER BASSMAN 4X10,Level=0; Lo Cut=20; Hi Cut=20000
@@ -1085,7 +1085,7 @@ slot,name,block,on,model,params (nome=valore)
 91,RG GMoore Blues,amp,ON,68 Marshall Plexi 100W,Gain=75; Master=75; Bass=43; Middle=40; Treble=19; Presence=25; Bias=2; Level=70
 91,RG GMoore Blues,eq,off,BOSS GE-6,100Hz=27; 220Hz=47; 500Hz=47; 1.2kHz=34; 2.6kHz=60; 6.4kHz=55; Level=50
 91,RG GMoore Blues,noise-gate,off,NUX Noise Gate,Threshold=20; Decay=50
-91,RG GMoore Blues,modulation,off,DUNLOP UNIVIBE,SPEED=66; VOLUME=78; INTENSITY=40; MODE=VIBRATO; Sub Div=1/4
+91,RG GMoore Blues,modulation,off,DUNLOP UNIVIBE,SPEED=66; VOLUME=78; INTENSITY=40; MODE=CHORUS; Sub Div=1/4
 91,RG GMoore Blues,delay,off,Boss DM-2 Analog Delay,REPEAT=100; ECHO=32; INTENSITY=36; Sub Div=1/8D
 91,RG GMoore Blues,reverb,ON,Lexicon 224 Hall Reverb,DECAY=69; PRE DELAY=86; LIVELINESS=33; LEVEL=9
 91,RG GMoore Blues,ir,ON,MARSHALL GREENBACK 4X12,Mic=U87; Axis=MIDDLE; Level=0; Lo Cut=20; Hi Cut=20000
@@ -1097,7 +1097,7 @@ slot,name,block,on,model,params (nome=valore)
 92,RG Jimi Fuzz,amp,ON,67 Marshall Plexi 45W,Gain=86; Master=59; Bass=37; Middle=49; Treble=80; Presence=80; Bias=62; Level=51
 92,RG Jimi Fuzz,eq,off,BOSS GE-6,100Hz=27; 220Hz=47; 500Hz=47; 1.2kHz=34; 2.6kHz=60; 6.4kHz=55; Level=50
 92,RG Jimi Fuzz,noise-gate,off,NUX Noise Gate,Threshold=20; Decay=50
-92,RG Jimi Fuzz,modulation,ON,DUNLOP UNIVIBE,SPEED=66; VOLUME=78; INTENSITY=40; MODE=VIBRATO; Sub Div=1/4
+92,RG Jimi Fuzz,modulation,ON,DUNLOP UNIVIBE,SPEED=66; VOLUME=78; INTENSITY=40; MODE=CHORUS; Sub Div=1/4
 92,RG Jimi Fuzz,delay,off,Boss DM-2 Analog Delay,REPEAT=100; ECHO=32; INTENSITY=36; Sub Div=1/8D
 92,RG Jimi Fuzz,reverb,ON,Lexicon 224 Hall Reverb,DECAY=31; PRE DELAY=42; LIVELINESS=35; LEVEL=8
 92,RG Jimi Fuzz,ir,ON,MARSHALL GREENBACK 4X12,Mic=U87; Axis=MIDDLE; Level=0; Lo Cut=20; Hi Cut=20000
@@ -1133,7 +1133,7 @@ slot,name,block,on,model,params (nome=valore)
 95,LX Fever,amp,ON,64 Fender Deluxe Reverb,Gain=29; Master=88; Bass=71; Middle=73; Treble=46; Bias=61; Level=68
 95,LX Fever,eq,off,BOSS GE-6,100Hz=50; 220Hz=50; 500Hz=50; 1.2kHz=50; 2.6kHz=50; 6.4kHz=50; Level=50
 95,LX Fever,noise-gate,ON,NUX Noise Gate,Threshold=24; Decay=50
-95,LX Fever,modulation,ON,DUNLOP UNIVIBE,SPEED=64; VOLUME=78; INTENSITY=84; MODE=CHORUS; Sub Div=1/4
+95,LX Fever,modulation,ON,DUNLOP UNIVIBE,SPEED=64; VOLUME=78; INTENSITY=84; MODE=VIBRATO; Sub Div=1/4
 95,LX Fever,delay,ON,Boss DM-2 Analog Delay,REPEAT=100; ECHO=51; INTENSITY=20; Sub Div=1/8D
 95,LX Fever,reverb,ON,Lexicon 224 Hall Reverb,DECAY=92; PRE DELAY=59; LIVELINESS=85; LEVEL=45
 95,LX Fever,ir,ON,64 DELUXE REVERB,Mic=R122; Axis=MIDDLE; Level=0; Lo Cut=20; Hi Cut=20000
@@ -1157,7 +1157,7 @@ slot,name,block,on,model,params (nome=valore)
 97,LX HMJassLP,amp,ON,Roland JC-120,Gain=35; Master=73; Bass=66; Middle=100; Treble=27; Bright SW=100; Level=64
 97,LX HMJassLP,eq,off,BOSS GE-6,100Hz=50; 220Hz=50; 500Hz=50; 1.2kHz=50; 2.6kHz=50; 6.4kHz=50; Level=50
 97,LX HMJassLP,noise-gate,off,NUX Noise Gate,Threshold=20; Decay=50
-97,LX HMJassLP,modulation,ON,MXR HARMONIZER,KEY=C; SCALE=MINOR; HARM=-8; BLEND=20
+97,LX HMJassLP,modulation,ON,MXR HARMONIZER,KEY=C; SCALE=MAJOR; HARM=-8; BLEND=20
 97,LX HMJassLP,delay,off,Boss DM-2 Analog Delay,REPEAT=50; ECHO=50; INTENSITY=50; Sub Div=1/4
 97,LX HMJassLP,reverb,ON,EMT 140 Plate Reverb,DECAY=13; LEVEL=23
 97,LX HMJassLP,ir,ON,ROLAND JC120,Mic=DYN421; Axis=CENTER; Level=0; Lo Cut=510; Hi Cut=12500
@@ -1301,7 +1301,7 @@ slot,name,block,on,model,params (nome=valore)
 109,TT Clean Single,amp,ON,64 Fender Deluxe Reverb,Gain=16; Master=64; Bass=53; Middle=58; Treble=56; Bias=72; Level=49
 109,TT Clean Single,eq,ON,MXR 10 BAND,VOL=-1; 31.25Hz=22; 62.5Hz=41; 125Hz=45; 250Hz=58; 500Hz=51; 1KHz=64; 2KHz=70; 4KHz=54; 8KHz=56; 16KHz=44; GAIN=0
 109,TT Clean Single,noise-gate,off,NUX Noise Gate,Threshold=20; Decay=50
-109,TT Clean Single,modulation,off,DUNLOP UNIVIBE,SPEED=44; VOLUME=41; INTENSITY=35; MODE=CHORUS; Sub Div=1/4
+109,TT Clean Single,modulation,off,DUNLOP UNIVIBE,SPEED=44; VOLUME=41; INTENSITY=35; MODE=VIBRATO; Sub Div=1/4
 109,TT Clean Single,delay,off,Boss DM-2 Analog Delay,REPEAT=93; ECHO=34; INTENSITY=15; Sub Div=1/8D
 109,TT Clean Single,reverb,ON,Vintage Spring Reverb,DECAY=17; LEVEL=1
 109,TT Clean Single,ir,ON,64 DELUXE REVERB,Mic=DYN421; Axis=CENTER; Level=2; Lo Cut=20; Hi Cut=20000

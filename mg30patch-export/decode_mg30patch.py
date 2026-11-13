@@ -32,6 +32,10 @@ def convert(raw, p):
         return ['PITCH MODULATOR', 'CHORUS', 'FLANGER'][min(raw & 0x0F, 2)]  # S.C.F. CH/FL: P., CHO, FLG (CHO verificato)
     if p['id'] == 'range':
         return (raw & 0x0F) + 1  # posizione 1-6 del selettore (indice 0-5 + 1; da verificare sul display)
+    if p['id'] == 'scale' and p.get('options') == ['MINOR', 'MAJOR']:
+        return ['MAJOR', 'MINOR'][raw & 0x0F]  # Harmonizer, verificato sul preset 79 (129 = MINOR)
+    if p['id'] == 'mode' and p.get('options') == ['CHORUS', 'VIBRATO']:
+        return ['VIBRATO', 'CHORUS'][raw & 0x0F]  # U-Vibe CH/VIB, verificato sul preset 10 (129 = CHO)
     if p.get('options'):
         idx = raw & 0x0F if raw >= 128 else raw
         return p['options'][idx] if idx < len(p['options']) else idx

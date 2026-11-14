@@ -44,7 +44,7 @@ export function deviceArtFor(type: EffectType, modelId: string): DeviceArtSpec {
     case 'eq': return { kind: 'eq', model: modelId };
     case 'amp':
       return { kind: 'amp', model: modelId };
-    case 'ir': return SPECIAL_IR[modelId] ? { kind: SPECIAL_IR[modelId] } : { kind: 'cab', model: modelId };
+    case 'ir': return SPECIAL_IR[modelId] ? { kind: SPECIAL_IR[modelId], model: modelId } : { kind: 'cab', model: modelId };
     default: return { kind: 'stomp', knobs: stompKnobs(type, modelId), model: modelId };
   }
 }

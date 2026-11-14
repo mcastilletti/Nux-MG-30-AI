@@ -35,15 +35,28 @@ const Expression = ({ color, led }: ShapeProps) => (
   </>
 );
 
-const Acoustic = ({ color, led }: ShapeProps) => (
-  <>
-    <rect x="24" y="2" width="6" height="22" rx="2" fill={BLACK} />
-    <path d="M27 22C17 22 15 30 19 36C11 40 10 60 27 64C44 60 43 40 35 36C39 30 37 22 27 22Z" fill={color} />
-    <circle cx="27" cy="44" r="5.5" fill={DEEP} />
-    <rect x="21" y="55" width="12" height="3" rx="1.5" fill={DEEP} />
-    <circle cx="44" cy="62" r="2.6" fill={led} />
-  </>
-);
+/** Tre marroni per le tre acustiche: palissandro scuro (D-45), ciliegia (Hummingbird), miele (J-15). */
+const ACOUSTIC_WOOD: Record<string, { body: string; edge: string; neck: string }> = {
+  'ir-md45': { body: '#6b3d22', edge: '#3f2213', neck: '#2c1a10' },
+  'ir-ghbird': { body: '#a4572b', edge: '#5d2c14', neck: '#3b2013' },
+  'ir-gj15': { body: '#c98f4f', edge: '#8a5a2b', neck: '#5a3a1e' },
+};
+
+const Acoustic = ({ led, model }: ShapeProps) => {
+  const wood = (model && ACOUSTIC_WOOD[model]) || ACOUSTIC_WOOD['ir-ghbird'];
+  const outline = 'M27 22C17 22 15 30 19 36C11 40 10 60 27 64C44 60 43 40 35 36C39 30 37 22 27 22Z';
+  return (
+    <>
+      <rect x="24" y="2" width="6" height="22" rx="2" fill={wood.neck} />
+      <path d={outline} fill={wood.edge} />
+      <path d="M27 24.5C19 24.5 17.5 31 21 36.5C14 40.5 13 58 27 61.5C41 58 40 40.5 33 36.5C36.5 31 35 24.5 27 24.5Z" fill={wood.body} />
+      <circle cx="27" cy="44" r="5.5" fill={DEEP} />
+      <circle cx="27" cy="44" r="6.6" fill="none" stroke={wood.edge} strokeWidth="1" />
+      <rect x="21" y="55" width="12" height="3" rx="1.5" fill={wood.neck} />
+      <circle cx="44" cy="62" r="2.6" fill={led} />
+    </>
+  );
+};
 
 const UserIr = ({ color, led }: ShapeProps) => (
   <>

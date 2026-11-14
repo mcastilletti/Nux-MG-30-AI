@@ -8,6 +8,7 @@
 
 import { ai, z } from '@/ai/genkit';
 import { authorizeAiCall } from '@/ai/guard';
+import { classifyAiError, type AiResult } from '@/ai/ai-error';
 import { GENRES } from '@/lib/genres';
 
 const InputSchema = z.object({
@@ -52,7 +53,13 @@ const flow = ai.defineFlow(
   },
 );
 
-export async function estimateSongGenres(input: SongGenreInput, idToken: string): Promise<SongGenreOutput> {
-  await authorizeAiCall(idToken);
-  return flow(InputSchema.parse(input));
+/** Restituisce un esito invece di lanciare (vedi describeFactoryPresets). */
+export async function estimateSongGenres(input: SongGenreInput, idToken: string): Promise<AiResult<SongGenreOutput>> {
+  try {
+    await authorizeAiCall(idToken);
+    return { ok: true, data: await flow(InputSchema.parse(input)) };
+  } catch (error) {
+    console.error('[estimateSongGenres]', error);
+    return classifyAiError(error);
+  }
 }

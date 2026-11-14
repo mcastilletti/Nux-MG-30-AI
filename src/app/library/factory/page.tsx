@@ -16,6 +16,7 @@ import { useFactoryNotes } from '@/hooks/use-factory-notes';
 import { useToast } from '@/hooks/use-toast';
 import { useUser } from '@/firebase';
 import { describeFactoryPresets } from '@/ai/flows/factory-preset-notes';
+import { aiFailureText } from '@/ai/ai-error';
 import { FACTORY_PRESETS, factoryPresetToPreset, type FactoryPreset } from '@/lib/factory-presets';
 import { factoryNoteId, parseFactoryNote, pendingFactoryBatches, type FactoryPresetNote } from '@/lib/factory-notes';
 import { GENRES, type Genre } from '@/lib/genres';
@@ -53,7 +54,8 @@ export default function FactoryPresetsPage() {
       toast({ title: 'Generi stimati', description: `${updated} brani aggiornati. Puoi correggerli aprendo il brano in modifica.` });
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : '';
-      toast({ title: message.includes('429') ? 'Limite AI raggiunto' : 'Stima interrotta', description: message.includes('429') ? 'Attendi un minuto e riprova: riparte dai brani ancora senza genere.' : message || 'Riprova più tardi.', variant: 'destructive' });
+      const rateLimited = /429|limite|quota/i.test(message);
+      toast({ title: rateLimited ? 'Limite AI raggiunto' : 'Stima interrotta', description: rateLimited ? 'Attendi un minuto e riprova: riparte dai brani ancora senza genere.' : message || 'Riprova più tardi.', variant: 'destructive' });
     } finally {
       setGenreProgress(null);
     }
@@ -88,7 +90,9 @@ export default function FactoryPresetsPage() {
       for (const slots of batches) {
         if (stopRef.current) break;
         const idToken = await user.getIdToken();
-        const { notes } = await describeFactoryPresets({ slots }, idToken);
+        const result = await describeFactoryPresets({ slots }, idToken);
+        if (!result.ok) throw new Error(aiFailureText(result));
+        const { notes } = result.data;
         const now = new Date().toISOString();
         const parsed = notes.map((n) => parseFactoryNote({ ...n, updatedAt: now })).filter((n): n is FactoryPresetNote => n !== null);
         const results = await saveMany(parsed);
@@ -99,7 +103,7 @@ export default function FactoryPresetsPage() {
       toast({ title: 'Schede pronte', description: `${written} preset di fabbrica descritti dall'AI.` });
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : '';
-      const rateLimited = message.includes('429') || message.toLowerCase().includes('limite');
+      const rateLimited = /429|limite|quota/i.test(message);
       toast({
         title: rateLimited ? 'Limite AI raggiunto' : 'Generazione interrotta',
         description: `${written} schede salvate. ${rateLimited ? 'Attendi un minuto e premi di nuovo il pulsante: riparte dagli slot mancanti.' : `${message || 'Errore AI.'} Riprova: riparte dagli slot mancanti.`}`,

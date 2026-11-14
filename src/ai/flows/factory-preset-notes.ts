@@ -8,6 +8,7 @@
 
 import { ai, z } from '@/ai/genkit';
 import { authorizeAiCall } from '@/ai/guard';
+import { classifyAiError, type AiResult } from '@/ai/ai-error';
 import { MG30_MODELS } from '@/lib/mg30-data';
 import { FACTORY_PRESETS, describeFactoryPreset } from '@/lib/factory-presets';
 import { GENRES, SOUND_TYPES } from '@/lib/genres';
@@ -64,7 +65,16 @@ const flow = ai.defineFlow(
   },
 );
 
-export async function describeFactoryPresets(input: FactoryPresetNotesInput, idToken: string): Promise<FactoryPresetNotesOutput> {
-  await authorizeAiCall(idToken);
-  return flow(InputSchema.parse(input));
+/**
+ * Restituisce un esito invece di lanciare: in produzione Next.js nasconde il messaggio di un errore lanciato
+ * da una server action, e così l'utente (e chi guarda i log) non saprebbe cosa è andato storto.
+ */
+export async function describeFactoryPresets(input: FactoryPresetNotesInput, idToken: string): Promise<AiResult<FactoryPresetNotesOutput>> {
+  try {
+    await authorizeAiCall(idToken);
+    return { ok: true, data: await flow(InputSchema.parse(input)) };
+  } catch (error) {
+    console.error('[describeFactoryPresets]', error);
+    return classifyAiError(error);
+  }
 }

@@ -53,7 +53,8 @@ export function FactorySuggestions({ genre, editMode, onGenreChange, note }: {
       toast({ title: 'Genere stimato', description: 'Salvato sul brano. Puoi cambiarlo in modifica.' });
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : '';
-      toast({ title: message.includes('429') ? 'Limite AI raggiunto' : 'Stima non riuscita', description: message.includes('429') ? 'Attendi un minuto e riprova.' : message || 'Riprova più tardi.', variant: 'destructive' });
+      const rateLimited = /429|limite|quota/i.test(message);
+      toast({ title: rateLimited ? 'Limite AI raggiunto' : 'Stima non riuscita', description: rateLimited ? 'Attendi un minuto e riprova.' : message || 'Riprova più tardi.', variant: 'destructive' });
     } finally {
       setEstimating(false);
     }

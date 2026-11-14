@@ -4,6 +4,7 @@ import { useCallback } from 'react';
 import { doc, updateDoc } from 'firebase/firestore';
 import { useFirebase, useUser } from '@/firebase';
 import { estimateSongGenres } from '@/ai/flows/song-genre';
+import { aiFailureText } from '@/ai/ai-error';
 import { awaitWrite, isOnline } from '@/lib/firestore-write';
 import { playlistLabelsFor } from '@/lib/playlist-view';
 import { useNotesCache } from '@/stores/use-notes-cache';
@@ -31,7 +32,9 @@ export function useEstimateSongGenres() {
         const context = [s.band, ...bandNames].filter((b) => b && b !== 'Senza Band').join(', ');
         return { id: s.id, title: s.title.slice(0, 200), ...(context ? { context: `band: ${context}`.slice(0, 200) } : {}) };
       });
-      const { genres } = await estimateSongGenres({ songs: input }, await user.getIdToken());
+      const result = await estimateSongGenres({ songs: input }, await user.getIdToken());
+      if (!result.ok) throw new Error(aiFailureText(result));
+      const { genres } = result.data;
       for (const { id, genre } of genres) {
         await awaitWrite(updateDoc(doc(firestore, 'notes', id), { genre }), { online: isOnline() });
         const cached = useNotesCache.getState().getNoteById(id);

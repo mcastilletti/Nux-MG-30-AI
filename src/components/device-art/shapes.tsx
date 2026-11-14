@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { AmpArt } from './amp-art';
 import type { DeviceKind } from './types';
 
 /**
@@ -10,6 +11,7 @@ export interface ShapeProps {
   color: string;
   led: string;
   knobs?: number;
+  model?: string;
 }
 
 const CREAM = '#f1e9d8';
@@ -67,31 +69,6 @@ const Expression = ({ color, led }: ShapeProps) => (
     <path d="M4 34L50 30" stroke={BLACK} strokeWidth="6" strokeLinecap="round" />
     <rect x="3" y="50" width="48" height="4" rx="2" fill={DEEP} />
     <circle cx="44" cy="43" r="2.6" fill={led} />
-  </>
-);
-
-const Head = ({ color, led }: ShapeProps) => (
-  <>
-    <rect x="19" y="9" width="16" height="5" rx="2.5" fill={BLACK} />
-    <rect x="3" y="14" width="48" height="42" rx="6" fill={BLACK} />
-    <rect x="7" y="18" width="40" height="13" rx="2" fill={color} />
-    {[13, 20, 27, 34].map((x) => <circle key={x} cx={x} cy="24.5" r="2.4" fill={DEEP} />)}
-    <circle cx="42" cy="24.5" r="2.4" fill={led} />
-    <rect x="7" y="35" width="40" height="17" rx="2" fill={TWEED} />
-    <path d="M10 39h34M10 43.5h34M10 48h34" stroke={GRILLE} strokeWidth="1.6" />
-  </>
-);
-
-const Combo = ({ color, led }: ShapeProps) => (
-  <>
-    <rect x="19" y="5" width="16" height="5" rx="2.5" fill={BLACK} />
-    <rect x="3" y="10" width="48" height="56" rx="6" fill={BLACK} />
-    <rect x="7" y="14" width="40" height="11" rx="2" fill={color} />
-    {[13, 20, 27, 34].map((x) => <circle key={x} cx={x} cy="19.5" r="2.2" fill={DEEP} />)}
-    <circle cx="42" cy="19.5" r="2.2" fill={led} />
-    <rect x="7" y="29" width="40" height="33" rx="3" fill={TWEED} />
-    <circle cx="27" cy="45.5" r="12" fill={DEEP} />
-    <circle cx="27" cy="45.5" r="4" fill={color} />
   </>
 );
 
@@ -188,8 +165,7 @@ export const SHAPES: Record<DeviceKind, (props: ShapeProps) => React.ReactElemen
   eq: Eq,
   wah: Wah,
   expression: Expression,
-  head: Head,
-  combo: Combo,
+  amp: ({ color, led, model }) => <AmpArt model={model} color={color} led={led} />,
   'cab-4x12': Cab4x12,
   'cab-2x12': Cab2x12,
   'cab-1x12': Cab1x12,
@@ -209,8 +185,7 @@ export const DEVICE_LABEL: Record<DeviceKind, string> = {
   eq: 'Equalizzatore',
   wah: 'Pedale wah',
   expression: 'Pedale d’espressione',
-  head: 'Testata',
-  combo: 'Combo',
+  amp: 'Ampli',
   'cab-4x12': 'Cassa 4×12',
   'cab-2x12': 'Cassa 2×12',
   'cab-1x12': 'Cassa 1×12',

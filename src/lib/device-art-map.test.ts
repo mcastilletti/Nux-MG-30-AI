@@ -3,6 +3,7 @@ import test from 'node:test';
 
 import { DEVICE_KINDS } from '@/components/device-art/types';
 import { SHAPES } from '@/components/device-art/shapes';
+import { AMP_ART } from '@/components/device-art/amp-art';
 import { MG30_MODELS } from './mg30-data';
 import { CAB_KIND, MIC_KIND, deviceArtFor, micKindFor } from './device-art-map';
 
@@ -31,11 +32,16 @@ test('ogni IR ha una cassa propria e ogni microfono un tipo', () => {
 test('forme per tipo di blocco: wah, volume, ampli e cassa non sono pedali', () => {
   assert.equal(deviceArtFor('wah', 'horsewah').kind, 'wah');
   assert.equal(deviceArtFor('vol', 'patch-vol').kind, 'expression');
-  assert.equal(deviceArtFor('amp', 'plexi100w').kind, 'head');
-  assert.equal(deviceArtFor('amp', 'twinrvb').kind, 'combo');
+  assert.deepEqual(deviceArtFor('amp', 'plexi100w'), { kind: 'amp', model: 'plexi100w' });
+  assert.deepEqual(deviceArtFor('amp', 'twinrvb'), { kind: 'amp', model: 'twinrvb' });
   assert.equal(deviceArtFor('ir', 'ir-1960').kind, 'cab-4x12');
   assert.equal(deviceArtFor('ir', 'ir-user').kind, 'user-ir');
   assert.deepEqual(deviceArtFor('efx', 'tscream'), { kind: 'stomp', knobs: 3 });
   assert.deepEqual(deviceArtFor('compressor', 'reddirt'), { kind: 'stomp', knobs: 3 }, 'EFX nel blocco COMP');
   assert.deepEqual(deviceArtFor('modulation', 'mod-ph90'), { kind: 'stomp', knobs: 1 });
+});
+
+test('ogni ampli ha un disegno proprio', () => {
+  for (const model of MG30_MODELS.amp) assert.ok(AMP_ART[model.id], `ampli ${model.id}`);
+  assert.equal(Object.keys(AMP_ART).length, MG30_MODELS.amp.length);
 });

@@ -39,7 +39,7 @@ export function PresetSummary({ effects, compact = false, className }: { effects
     <div className={cn('flex items-center gap-3', className)}>
       {spec && amp && (
         <div className="shrink-0 rounded-lg bg-inset p-1.5">
-          <DeviceArt kind={spec.kind} knobs={spec.knobs} color={categoryColor('amp')} on={amp.enabled} size={52} />
+          <DeviceArt kind={spec.kind} knobs={spec.knobs} model={spec.model} color={categoryColor('amp')} on={amp.enabled} size={52} />
         </div>
       )}
       <div className="min-w-0 flex-1 space-y-1.5">

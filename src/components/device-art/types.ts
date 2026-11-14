@@ -4,8 +4,7 @@ export const DEVICE_KINDS = [
   'eq',
   'wah',
   'expression',
-  'head',
-  'combo',
+  'amp',
   'cab-4x12',
   'cab-2x12',
   'cab-1x12',
@@ -25,4 +24,6 @@ export interface DeviceArtSpec {
   kind: DeviceKind;
   /** Manopole del pedale (1-4): solo per `stomp`. */
   knobs?: number;
+  /** Id del modello di ampli: solo per `amp`. */
+  model?: string;
 }

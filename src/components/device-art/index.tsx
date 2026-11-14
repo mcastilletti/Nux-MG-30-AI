@@ -11,11 +11,12 @@ export { DEVICE_LABEL };
  * neutro e il LED si spegne. Vettoriale: `size` è l'altezza in px, la larghezza segue (54×70).
  * Decorativa per default (`aria-hidden`): passare `label` solo se l'immagine è l'unica descrizione.
  */
-export function DeviceArt({ kind, color, on = true, knobs, size = 64, label, className }: {
+export function DeviceArt({ kind, color, on = true, knobs, model, size = 64, label, className }: {
   kind: DeviceKind;
   color: string;
   on?: boolean;
   knobs?: number;
+  model?: string;
   size?: number;
   label?: string;
   className?: string;
@@ -33,7 +34,9 @@ export function DeviceArt({ kind, color, on = true, knobs, size = 64, label, cla
       aria-label={label}
       aria-hidden={label ? undefined : true}
     >
-      <Shape color={body} led={led} knobs={knobs} />
+      <g style={on ? undefined : { filter: 'grayscale(1)', opacity: 0.6 }}>
+        <Shape color={body} led={led} knobs={knobs} model={model} />
+      </g>
     </svg>
   );
 }

@@ -3,16 +3,10 @@ import { MG30_MODELS } from '@/lib/mg30-data';
 import type { EffectType } from '@/types/preset';
 
 /**
- * Quale sagoma disegnare per un modello. Ampli: i modelli nati come combo (Roland, Fender, Vox,
- * Matchless, Mesa Mark I, Dr. Z, Budda, Stageman acustico) hanno la sagoma del combo, gli altri la
- * testata; i preamplificatori NUX (MLD, Optima Air, Aguilar) sono pedali.
+ * Quale sagoma disegnare per un modello. Ogni ampli ha il suo disegno (`amp` + id del modello, vedi
+ * `amp-art.tsx`), ispirato all'ampli originale; i preamplificatori NUX (MLD, Optima Air) sono ampli
+ * compatti. Gli altri blocchi hanno la sagoma di ciò che sono.
  */
-const COMBO_AMPS = new Set([
-  'jazzclean', 'deluxervb', 'bassmate', 'tweedy', 'twinrvb', 'calicrunch', 'classa15', 'classa30',
-  'vibroking', 'budda', 'mrz38', 'superrvb', 'match', 'stageman',
-]);
-const PEDAL_AMPS = new Set(['agl', 'mld', 'optimair']);
-
 /** Casse: numero e misura dei coni dal modello. */
 const CAB_KIND: Record<string, DeviceKind> = {
   'ir-jz120': 'cab-2x12',
@@ -65,8 +59,7 @@ export function deviceArtFor(type: EffectType, modelId: string): DeviceArtSpec {
     case 'sr': return { kind: 'send-return' };
     case 'eq': return { kind: 'eq' };
     case 'amp':
-      if (PEDAL_AMPS.has(modelId)) return { kind: 'stomp', knobs: 4 };
-      return { kind: COMBO_AMPS.has(modelId) ? 'combo' : 'head' };
+      return { kind: 'amp', model: modelId };
     case 'ir': return { kind: CAB_KIND[modelId] ?? 'cab-4x12' };
     default: return { kind: 'stomp', knobs: stompKnobs(type, modelId) };
   }

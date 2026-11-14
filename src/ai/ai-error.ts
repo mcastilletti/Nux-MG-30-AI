@@ -48,3 +48,17 @@ export function classifyAiError(error: unknown): AiFailure {
 
 /** Testo unico per i messaggi a schermo. */
 export const aiFailureText = (failure: AiFailure) => (failure.detail ? `${failure.message} (${failure.detail})` : failure.message);
+
+/** Errore lato client che porta con sé l'esito, per poter decidere (riprovare, spiegare) in base al codice. */
+export class AiClientError extends Error {
+  constructor(readonly failure: AiFailure) {
+    super(aiFailureText(failure));
+    this.name = 'AiClientError';
+  }
+}
+
+/**
+ * Vero se il limite sembra giornaliero (quota esaurita fino a domani): riprovare dopo qualche secondo non serve.
+ * Il limite dell'app (10 richieste al minuto) non ha `detail`; quello del servizio AI sì.
+ */
+export const isDailyQuota = (failure: AiFailure) => failure.code === 'rate-limit' && /per ?day|daily|al giorno/i.test(failure.detail ?? '');

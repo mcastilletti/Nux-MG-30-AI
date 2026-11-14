@@ -16,7 +16,7 @@ import { useFactoryNotes } from '@/hooks/use-factory-notes';
 import { useToast } from '@/hooks/use-toast';
 import { useUser } from '@/firebase';
 import { describeFactoryPresets } from '@/ai/flows/factory-preset-notes';
-import { aiFailureText } from '@/ai/ai-error';
+import { AiClientError, isDailyQuota } from '@/ai/ai-error';
 import { FACTORY_PRESETS, factoryPresetToPreset, type FactoryPreset } from '@/lib/factory-presets';
 import { factoryNoteId, parseFactoryNote, pendingFactoryBatches, type FactoryPresetNote } from '@/lib/factory-notes';
 import { GENRES, type Genre } from '@/lib/genres';
@@ -27,6 +27,10 @@ import { useNotesCache } from '@/stores/use-notes-cache';
 
 import { PageHeader } from '@/components/common/page-header';
 const ALL = 'all';
+/** Il servizio AI gratuito ammette poche richieste al minuto: pausa tra i lotti e nuovi tentativi se serve. */
+const PAUSE_BETWEEN_BATCHES_MS = 6000;
+const RETRY_WAIT_MS = 30000;
+const MAX_RETRIES = 2;
 const ALL_SLOTS = FACTORY_PRESETS.map((p) => p.slot);
 
 export default function FactoryPresetsPage() {
@@ -38,6 +42,7 @@ export default function FactoryPresetsPage() {
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
   const [toSend, setToSend] = useState<FactoryPreset | null>(null);
   const stopRef = useRef(false);
+  const [waitNote, setWaitNote] = useState<string | null>(null);
   const songs = useNotesCache((s) => s.notes);
   const estimateGenres = useEstimateSongGenres();
   const [genreProgress, setGenreProgress] = useState<{ done: number; total: number } | null>(null);
@@ -74,6 +79,16 @@ export default function FactoryPresetsPage() {
     });
   }, [search, genre, notesBySlot]);
 
+  /** Pausa con conto alla rovescia visibile; si interrompe con "Interrompi". */
+  const pause = async (ms: number, note: string) => {
+    const end = Date.now() + ms;
+    while (Date.now() < end && !stopRef.current) {
+      setWaitNote(`${note} ${Math.ceil((end - Date.now()) / 1000)} s`);
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+    setWaitNote(null);
+  };
+
   const generate = async (regenerateAll: boolean) => {
     if (!user) {
       toast({ title: 'Accedi per usare l\'AI', description: 'Le schede vengono scritte dall\'AI dell\'app: accedi con Google dal menu laterale.', variant: 'destructive' });
@@ -87,11 +102,19 @@ export default function FactoryPresetsPage() {
     stopRef.current = false;
     setProgress({ done: 0, total });
     try {
-      for (const slots of batches) {
+      for (const [batchIndex, slots] of batches.entries()) {
         if (stopRef.current) break;
-        const idToken = await user.getIdToken();
-        const result = await describeFactoryPresets({ slots }, idToken);
-        if (!result.ok) throw new Error(aiFailureText(result));
+        // Il servizio AI accetta poche richieste al minuto: tra un lotto e l'altro si rallenta.
+        if (batchIndex > 0) await pause(PAUSE_BETWEEN_BATCHES_MS, 'Pausa tra i lotti:');
+        if (stopRef.current) break;
+        let result = await describeFactoryPresets({ slots }, await user.getIdToken());
+        // Limite al minuto: si aspetta e si riprova (non se la quota del giorno è finita).
+        for (let attempt = 0; !result.ok && result.code === 'rate-limit' && !isDailyQuota(result) && attempt < MAX_RETRIES && !stopRef.current; attempt++) {
+          await pause(RETRY_WAIT_MS, 'Limite AI: riprendo tra');
+          if (stopRef.current) break;
+          result = await describeFactoryPresets({ slots }, await user.getIdToken());
+        }
+        if (!result.ok) throw new AiClientError(result);
         const { notes } = result.data;
         const now = new Date().toISOString();
         const parsed = notes.map((n) => parseFactoryNote({ ...n, updatedAt: now })).filter((n): n is FactoryPresetNote => n !== null);
@@ -102,14 +125,25 @@ export default function FactoryPresetsPage() {
       }
       toast({ title: 'Schede pronte', description: `${written} preset di fabbrica descritti dall'AI.` });
     } catch (error: unknown) {
+      const failure = error instanceof AiClientError ? error.failure : null;
       const message = error instanceof Error ? error.message : '';
-      const rateLimited = /429|limite|quota/i.test(message);
+      let reason: string;
+      if (failure?.code === 'rate-limit') {
+        reason = isDailyQuota(failure)
+          ? `La quota giornaliera del servizio AI è finita: riprova domani, oppure attiva la fatturazione sul progetto della chiave. (${failure.detail})`
+          : failure.detail
+            ? `Il servizio AI ha rifiutato la richiesta per il limite al minuto, anche dopo aver aspettato. (${failure.detail})`
+            : 'Hai superato le richieste al minuto consentite dall\'app: attendi un minuto.';
+      } else {
+        reason = message || 'Errore AI.';
+      }
       toast({
-        title: rateLimited ? 'Limite AI raggiunto' : 'Generazione interrotta',
-        description: `${written} schede salvate. ${rateLimited ? 'Attendi un minuto e premi di nuovo il pulsante: riparte dagli slot mancanti.' : `${message || 'Errore AI.'} Riprova: riparte dagli slot mancanti.`}`,
+        title: failure?.code === 'rate-limit' ? 'Limite AI raggiunto' : 'Generazione interrotta',
+        description: `${written} schede salvate. ${reason} Riprova: riparte dagli slot mancanti.`,
         variant: 'destructive',
       });
     } finally {
+      setWaitNote(null);
       setProgress(null);
     }
   };
@@ -132,6 +166,7 @@ export default function FactoryPresetsPage() {
               <div className="space-y-1 pt-1" role="status" aria-live="polite">
                 <Progress value={(progress.done / progress.total) * 100} className="h-2" />
                 <div className="text-caption text-muted-foreground">{progress.done} di {progress.total} schede…</div>
+                {waitNote && <div className="text-caption font-semibold text-warning">{waitNote}</div>}
               </div>
             )}
           </div>

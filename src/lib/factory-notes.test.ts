@@ -21,9 +21,10 @@ test('schede: generi fuori lista scartati, slot non validi rifiutati', () => {
   assert.equal(parseFactoryNote({ slot: 3, soundType: 'Boh' }), null);
 });
 
-test('lotti da 16 solo per gli slot mancanti', () => {
+test('lotti da 8 solo per gli slot mancanti', () => {
   const all = Array.from({ length: 128 }, (_, i) => i + 1);
-  assert.equal(pendingFactoryBatches(all, new Set()).length, 8);
+  assert.equal(pendingFactoryBatches(all, new Set()).length, 16);
+  assert.ok(pendingFactoryBatches(all, new Set()).every((b) => b.length === 8));
   const batches = pendingFactoryBatches(all, new Set(all.slice(0, 120)));
   assert.deepEqual(batches, [[121, 122, 123, 124, 125, 126, 127, 128]]);
 });

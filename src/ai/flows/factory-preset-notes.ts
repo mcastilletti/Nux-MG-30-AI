@@ -3,7 +3,7 @@
  * @fileOverview Schede dei preset di fabbrica della MG-30 (Genkit v1.x): per ogni preset tipo di
  * suono, generi musicali (lista chiusa di src/lib/genres.ts) e note brevi.
  *
- * - describeFactoryPresets - Scrive le schede di un lotto di slot (massimo 16 per chiamata).
+ * - describeFactoryPresets - Scrive le schede di un lotto di slot (massimo 8 per chiamata).
  */
 
 import { ai, z } from '@/ai/genkit';
@@ -14,7 +14,7 @@ import { FACTORY_PRESETS, describeFactoryPreset } from '@/lib/factory-presets';
 import { GENRES, SOUND_TYPES } from '@/lib/genres';
 
 const InputSchema = z.object({
-  slots: z.array(z.number().int().min(1).max(128)).min(1).max(16),
+  slots: z.array(z.number().int().min(1).max(128)).min(1).max(8),
 });
 export type FactoryPresetNotesInput = z.infer<typeof InputSchema>;
 
@@ -34,7 +34,9 @@ const prompt = ai.definePrompt({
   name: 'factoryPresetNotesPrompt',
   input: { schema: PromptInputSchema },
   output: { schema: OutputSchema },
-  config: { temperature: 0.3 },
+  // Niente "ragionamento" prima della risposta: per schede brevi su dati già pronti rallenta soltanto,
+  // e le risposte lente rischiano di superare il tempo massimo di una richiesta sul sito pubblicato.
+  config: { temperature: 0.3, thinkingConfig: { thinkingBudget: 0 } },
   prompt: `Sei un tecnico del suono esperto di chitarra e della pedaliera NUX MG-30.
 Per ognuno dei preset di fabbrica qui sotto scrivi una scheda breve in italiano.
 

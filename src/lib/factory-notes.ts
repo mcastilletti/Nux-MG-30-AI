@@ -32,7 +32,7 @@ export function parseFactoryNote(data: unknown): FactoryPresetNote | null {
 }
 
 /** Slot ancora senza scheda, divisi in lotti per le chiamate AI. */
-export function pendingFactoryBatches(allSlots: number[], done: Set<number>, size = 16): number[][] {
+export function pendingFactoryBatches(allSlots: number[], done: Set<number>, size = 8): number[][] {
   const pending = allSlots.filter((s) => !done.has(s));
   const batches: number[][] = [];
   for (let i = 0; i < pending.length; i += size) batches.push(pending.slice(i, i + size));

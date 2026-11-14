@@ -28,7 +28,7 @@ import { useNotesCache } from '@/stores/use-notes-cache';
 import { PageHeader } from '@/components/common/page-header';
 const ALL = 'all';
 /** Il servizio AI gratuito ammette poche richieste al minuto: pausa tra i lotti e nuovi tentativi se serve. */
-const PAUSE_BETWEEN_BATCHES_MS = 6000;
+const PAUSE_BETWEEN_BATCHES_MS = 4000;
 const RETRY_WAIT_MS = 30000;
 const MAX_RETRIES = 2;
 const ALL_SLOTS = FACTORY_PRESETS.map((p) => p.slot);

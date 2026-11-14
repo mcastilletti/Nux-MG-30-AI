@@ -3,7 +3,7 @@ import test from 'node:test';
 import { z } from 'zod';
 
 import { AiAuthError } from './guard';
-import { aiFailureText, classifyAiError } from './ai-error';
+import { AiClientError, aiFailureText, classifyAiError, isDailyQuota } from './ai-error';
 
 test('errori di accesso e limite: codici e frasi per l\'utente, senza dettagli', () => {
   assert.deepEqual(classifyAiError(new AiAuthError('x', 401)), { ok: false, code: 'auth', message: 'Accedi con Google per usare le funzioni AI.' });
@@ -35,4 +35,19 @@ test('input non valido da Zod; chiavi e testi lunghi non finiscono nel dettaglio
   assert.ok(leaked.detail!.length <= 260);
   assert.equal(aiFailureText({ ok: false, code: 'ai-failed', message: 'Fallita.', detail: 'Errore: x' }), 'Fallita. (Errore: x)');
   assert.equal(aiFailureText({ ok: false, code: 'auth', message: 'Accedi.' }), 'Accedi.');
+});
+
+test('limite dell\'app senza dettaglio, quota del servizio con dettaglio, quota giornaliera', () => {
+  const own = classifyAiError(new AiAuthError('x', 429));
+  assert.equal(own.ok === false && own.detail, undefined);
+  assert.equal(isDailyQuota(own), false);
+  const perMinute = classifyAiError(new Error('429 Too Many Requests: GenerateRequestsPerMinutePerProjectPerModel exceeded'));
+  assert.equal(perMinute.code, 'rate-limit');
+  assert.equal(isDailyQuota(perMinute), false);
+  const perDay = classifyAiError(new Error('RESOURCE_EXHAUSTED: GenerateRequestsPerDayPerProjectPerModel-FreeTier quota exceeded'));
+  assert.equal(isDailyQuota(perDay), true);
+  assert.equal(isDailyQuota({ ok: false, code: 'ai-failed', message: 'x', detail: 'per day' }), false, 'solo per i limiti');
+  const error = new AiClientError(perDay);
+  assert.equal(error.failure.code, 'rate-limit');
+  assert.match(error.message, /Quota o limite AI raggiunto/);
 });

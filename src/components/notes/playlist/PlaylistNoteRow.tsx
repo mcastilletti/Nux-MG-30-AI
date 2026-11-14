@@ -6,6 +6,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { GripVertical, ListMinus, ListPlus, MoreVertical, Trash2 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { IconButton } from '@/components/common/icon-button';
+import { useHoldToOpen } from '@/hooks/use-hold-to-open';
 import { cn } from '@/lib/utils';
 import { formatSlotLabel } from '@/lib/slot';
 import { formatPresetLabel } from '@/components/notes/preset-send';
@@ -15,7 +16,8 @@ import type { PlaylistLabel } from '@/lib/playlist-view';
 
 /**
  * Riga di un brano o blocco nel modello a playlist (spec PL1, PL2).
- * È un `button` vero per aprire il foglio; il menu ⋮ è un controllo separato.
+ * È un `button` vero per aprire il foglio. Le azioni si aprono con la pressione prolungata sul brano
+ * (schermi touch) o con il menu ⋮ (mouse e tastiera).
  */
 export const PlaylistNoteRow = React.memo(function PlaylistNoteRow({
   note, position, preset, chips, moreChips = 0, canReorder, isHighlighted, onOpen, onRemoveFromPlaylist, onAddToPlaylists, onDelete,
@@ -35,6 +37,8 @@ export const PlaylistNoteRow = React.memo(function PlaylistNoteRow({
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: note.id, disabled: !canReorder });
   const style = { transform: CSS.Transform.toString(transform), transition, zIndex: isDragging ? 50 : 0, opacity: isDragging ? 0.6 : 1 };
+  const [menuOpen, setMenuOpen] = React.useState(false);
+  const { handlers: pressHandlers, consumeClick } = useHoldToOpen(() => setMenuOpen(true));
   const isBlock = note.type === 'block';
   const presetText = !isBlock && preset.presetSlot ? formatPresetLabel(formatSlotLabel(Number(preset.presetSlot)), preset.presetScene) : null;
 
@@ -57,7 +61,13 @@ export const PlaylistNoteRow = React.memo(function PlaylistNoteRow({
       ) : (
         <div className="w-2 shrink-0" aria-hidden="true" />
       )}
-      <button type="button" onClick={() => onOpen(note)} className="flex min-h-16 min-w-0 flex-1 items-center gap-3 py-3 pl-1 pr-2 text-left">
+      <button
+        type="button"
+        onClick={() => { if (!consumeClick()) onOpen(note); }}
+        {...pressHandlers}
+        aria-haspopup="menu"
+        className="flex min-h-16 min-w-0 flex-1 select-none items-center gap-3 py-3 pl-1 pr-2 text-left [-webkit-touch-callout:none]"
+      >
         {position !== undefined && (
           <span className="w-7 shrink-0 text-right text-caption font-bold tabular-nums text-muted-foreground" aria-label={`Posizione ${position}`}>{position}</span>
         )}
@@ -76,9 +86,10 @@ export const PlaylistNoteRow = React.memo(function PlaylistNoteRow({
           )}
         </span>
       </button>
-      <DropdownMenu>
+      <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
+        {/* Mouse e tastiera: pulsante ⋮. Su touch non c'è: si usa la pressione prolungata sul brano. */}
         <DropdownMenuTrigger asChild>
-          <IconButton label={`Azioni su ${note.title}`} className="m-1 shrink-0 self-center text-muted-foreground">
+          <IconButton label={`Azioni su ${note.title}`} className="m-1 shrink-0 self-center text-muted-foreground [@media(pointer:coarse)]:hidden">
             <MoreVertical className="h-5 w-5" />
           </IconButton>
         </DropdownMenuTrigger>

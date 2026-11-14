@@ -1,6 +1,6 @@
 /**
  * Architettura informativa approvata in Fase 1 (audit §0.1):
- * - barra mobile: Editor · Library · Note · Band · Altro;
+ * - barra mobile: Editor · Library · Brani · Band · Altro;
  * - sidebar desktop: Suono / Palco / Sistema.
  */
 export type NavKey = 'home' | 'editor' | 'library' | 'notes' | 'bands' | 'instrumentation' | 'settings' | 'sysex';
@@ -15,7 +15,7 @@ export const NAV_ENTRIES: Record<NavKey, NavEntry> = {
   home: { key: 'home', label: 'Home', href: '/' },
   editor: { key: 'editor', label: 'Editor', href: '/editor' },
   library: { key: 'library', label: 'Library', href: '/library' },
-  notes: { key: 'notes', label: 'Note', href: '/notes' },
+  notes: { key: 'notes', label: 'Brani', href: '/notes' },
   bands: { key: 'bands', label: 'Band', href: '/bands' },
   instrumentation: { key: 'instrumentation', label: 'Strumentazione', href: '/instrumentation' },
   settings: { key: 'settings', label: 'Impostazioni', href: '/settings' },

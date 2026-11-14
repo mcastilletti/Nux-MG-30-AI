@@ -19,7 +19,7 @@ import { PlaylistNoteRow } from './PlaylistNoteRow';
 export const POOL_VALUE = 'pool';
 
 /**
- * Lista della pagina Note nel modello a playlist (spec PL1–PL3, PL10):
+ * Lista della pagina Brani nel modello a playlist (spec PL1–PL3, PL10):
  * filtro band → playlist, vista "Tutti i brani" (serbatoio) e vista playlist
  * con riordino, "Aggiungi brani" e "Avvia live".
  */

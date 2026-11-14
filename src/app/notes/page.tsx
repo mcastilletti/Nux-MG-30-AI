@@ -691,7 +691,7 @@ function NotesLibraryContent() {
             <div className="rounded-xl border border-primary/20 bg-primary/10 p-2.5">
               <NotebookPen className="h-5 w-5 text-primary" />
             </div>
-            <h1 className="text-2xl font-bold tracking-tight md:text-3xl">Note brani</h1>
+            <h1 className="text-2xl font-bold tracking-tight md:text-3xl">Brani</h1>
           </div>
           <div className="flex items-center gap-2">
             <Button

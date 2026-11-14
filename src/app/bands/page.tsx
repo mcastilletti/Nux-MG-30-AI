@@ -92,7 +92,7 @@ export default function BandsPage() {
         <EmptyState
           icon={<ListMusic className="h-10 w-10" />}
           title="Prima converti le scalette in playlist"
-          description="Band e playlist si gestiscono qui dopo la conversione. Apri la pagina Note e usa l'avviso «Nuova organizzazione a playlist»."
+          description="Band e playlist si gestiscono qui dopo la conversione. Apri la pagina Brani e usa l'avviso «Nuova organizzazione a playlist»."
           action={<Button asChild className="min-h-11"><Link href="/notes">Vai alle Note</Link></Button>}
         />
       </>

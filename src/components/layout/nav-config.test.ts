@@ -7,7 +7,7 @@ test('titoli di tutte le pagine, Settings compresa (N2)', () => {
   assert.equal(getRouteTitle('/'), 'Home');
   assert.equal(getRouteTitle('/settings'), 'Impostazioni');
   assert.equal(getRouteTitle('/tools/sysex-analyzer'), 'SysEx Analyzer');
-  assert.equal(getRouteTitle('/notes/editor'), 'Note');
+  assert.equal(getRouteTitle('/notes/editor'), 'Brani');
   assert.equal(getRouteTitle('/sconosciuta'), 'MG30 Studio');
 });
 

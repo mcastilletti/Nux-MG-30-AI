@@ -55,7 +55,7 @@ export default function HomePage() {
                   <NotebookPen className="w-7 h-7" />
                 </div>
                 <div className="text-center">
-                  <h3 className="font-bold md:text-lg">Note Brani</h3>
+                  <h3 className="font-bold md:text-lg">Brani</h3>
                   <p className="text-xs text-muted-foreground">Scalette e accordi</p>
                 </div>
               </CardContent>

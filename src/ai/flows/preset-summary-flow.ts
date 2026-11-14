@@ -5,7 +5,8 @@
  * - summarizePreset - Genera un riassunto analitico del suono.
  */
 
-import { ai, z } from '@/ai/genkit';
+import { ai, z, geminiModel } from '@/ai/genkit';
+import { withGeminiModel } from '@/ai/model';
 import { authorizeAiCall } from '@/ai/guard';
 
 const PresetSummaryInputSchema = z.object({
@@ -46,7 +47,7 @@ export const presetSummaryFlow = ai.defineFlow(
     outputSchema: PresetSummaryOutputSchema,
   },
   async (input) => {
-    const { output } = await prompt(input);
+    const { output } = await withGeminiModel((model) => prompt(input, { model: geminiModel(model) }));
     if (!output) throw new Error('Analisi AI fallita.');
     return output;
   }

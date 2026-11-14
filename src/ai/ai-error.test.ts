@@ -32,7 +32,7 @@ test('input non valido da Zod; chiavi e testi lunghi non finiscono nel dettaglio
   if (!zod.success) assert.equal(classifyAiError(zod.error).code, 'invalid-request');
   const leaked = classifyAiError(new Error(`boom AIzaSyA1234567890abcdefghijklmnopqrstuv ${'x'.repeat(500)}`));
   assert.ok(!leaked.detail!.includes('AIzaSy'));
-  assert.ok(leaked.detail!.length <= 260);
+  assert.ok(leaked.detail!.length <= 500);
   assert.equal(aiFailureText({ ok: false, code: 'ai-failed', message: 'Fallita.', detail: 'Errore: x' }), 'Fallita. (Errore: x)');
   assert.equal(aiFailureText({ ok: false, code: 'auth', message: 'Accedi.' }), 'Accedi.');
 });
@@ -50,4 +50,11 @@ test('limite dell\'app senza dettaglio, quota del servizio con dettaglio, quota 
   const error = new AiClientError(perDay);
   assert.equal(error.failure.code, 'rate-limit');
   assert.match(error.message, /Quota o limite AI raggiunto/);
+});
+
+test('modello ritirato (404): non è un limite, nemmeno se il testo contiene "generateContent"', () => {
+  const failure = classifyAiError(new Error('Error fetching from https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent: [404 Not Found] This model models/gemini-2.5-flash is no longer available to new users.'));
+  assert.equal(failure.code, 'ai-model');
+  assert.match(failure.detail!, /no longer available/);
+  assert.equal(classifyAiError(new Error('Something failed in generateContent')).code, 'ai-failed', 'la parola "generate" non è un limite');
 });

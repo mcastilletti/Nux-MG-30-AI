@@ -1,6 +1,6 @@
 /**
- * Generi e tipi di suono usati dalle schede AI dei preset di fabbrica e dai brani.
- * Lista chiusa: l'AI può scegliere solo queste voci, così preset e brani si confrontano direttamente.
+ * Generi e tipi di suono usati dalle schede dei preset di fabbrica e dai brani.
+ * Lista chiusa (anche per la stima AI dei brani): così preset e brani si confrontano direttamente.
  */
 export const GENRES = [
   'Rock',
@@ -12,6 +12,7 @@ export const GENRES = [
   'Jazz',
   'Country',
   'Indie / Alternative',
+  'Britpop',
   'Punk',
   'Grunge',
   'Ambient / Post-rock',

@@ -6,7 +6,8 @@
  * - estimateSongGenres - Stima il genere di un lotto di brani (massimo 40 per chiamata).
  */
 
-import { ai, z } from '@/ai/genkit';
+import { ai, z, geminiModel } from '@/ai/genkit';
+import { withGeminiModel } from '@/ai/model';
 import { authorizeAiCall } from '@/ai/guard';
 import { classifyAiError, type AiResult } from '@/ai/ai-error';
 import { GENRES } from '@/lib/genres';
@@ -46,7 +47,7 @@ const flow = ai.defineFlow(
   { name: 'songGenreFlow', inputSchema: InputSchema, outputSchema: OutputSchema },
   async ({ songs }) => {
     const list = songs.map((s) => `- id ${s.id}: "${s.title}"${s.context ? ` (${s.context})` : ''}`).join('\n');
-    const { output } = await prompt({ songs: list });
+    const { output } = await withGeminiModel((model) => prompt({ songs: list }, { model: geminiModel(model) }));
     if (!output) throw new Error('Generi non stimati.');
     const ids = new Set(songs.map((s) => s.id));
     return { genres: output.genres.filter((g) => ids.has(g.id)) };

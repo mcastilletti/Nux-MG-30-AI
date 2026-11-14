@@ -6,8 +6,17 @@ const withPWA = withPWAInit({
   cacheOnFrontEndNav: true,
   aggressiveFrontEndNavCaching: true,
   disable: process.env.NODE_ENV === "development",
+  extendDefaultRuntimeCaching: true,
   workboxOptions: {
     skipWaiting: true,
+    // Le richieste di Firestore (long polling in tempo reale) e di Firebase Auth devono andare
+    // dirette in rete: se il service worker le intercetta, le connessioni "Listen" vengono interrotte.
+    runtimeCaching: [
+      {
+        urlPattern: ({ url }: { url: URL }) => /(^|\.)(firestore|identitytoolkit|securetoken)\.googleapis\.com$/.test(url.hostname),
+        handler: 'NetworkOnly',
+      },
+    ],
   },
 });
 

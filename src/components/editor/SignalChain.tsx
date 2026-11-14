@@ -87,7 +87,7 @@ const ChainBlock = memo(function ChainBlock({ effect, isSelected, handleSelectBl
           isSelected ? 'border-primary bg-card' : 'border-transparent hover:bg-card/60',
         )}
       >
-        <DeviceArt kind={spec.kind} knobs={spec.knobs} color={categoryColor(effect.type)} on={isEnabled} size={60} className="lg:h-[72px] lg:w-auto" />
+        <DeviceArt kind={spec.kind} knobs={spec.knobs} model={spec.model} color={categoryColor(effect.type)} on={isEnabled} size={60} className="lg:h-[72px] lg:w-auto" />
         <span className={cn('font-code text-micro font-bold', isSelected ? 'text-primary' : isEnabled ? 'text-foreground' : 'text-muted-foreground')}>
           {CATEGORY_SHORT[effect.type]}
         </span>

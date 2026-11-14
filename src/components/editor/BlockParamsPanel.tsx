@@ -68,6 +68,7 @@ export const BlockParamsPanel = memo(function BlockParamsPanel({ selectedEffect,
             <DeviceArt
               kind={spec.kind}
               knobs={spec.knobs}
+              model={spec.model}
               color={color}
               on={selectedEffect.enabled}
               label={`${DEVICE_LABEL[spec.kind]}: ${currentModelData?.name ?? ''}`}

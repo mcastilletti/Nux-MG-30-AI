@@ -5,7 +5,9 @@ import { DEVICE_KINDS } from '@/components/device-art/types';
 import { SHAPES } from '@/components/device-art/shapes';
 import { AMP_ART } from '@/components/device-art/amp-art';
 import { MG30_MODELS } from './mg30-data';
-import { CAB_KIND, MIC_KIND, deviceArtFor, micKindFor } from './device-art-map';
+import { hasCabArt } from '@/components/device-art/cab-art';
+import { PEDAL_ART } from '@/components/device-art/pedal-art';
+import { SPECIAL_IR, MIC_KIND, deviceArtFor, micKindFor } from './device-art-map';
 
 test('ogni sagoma ha un disegno', () => {
   for (const kind of DEVICE_KINDS) assert.equal(typeof SHAPES[kind], 'function', kind);
@@ -22,11 +24,11 @@ test('ogni modello, anche i nuovi, ha una sagoma valida', () => {
 });
 
 test('ogni IR ha una cassa propria e ogni microfono un tipo', () => {
-  for (const model of MG30_MODELS.ir) assert.ok(CAB_KIND[model.id], model.id);
+  for (const model of MG30_MODELS.ir) assert.ok(SPECIAL_IR[model.id] || hasCabArt(model.id), model.id);
   const mic = MG30_MODELS.ir.find((m) => m.id === 'ir-jz120')!.parameters.find((p) => p.id === 'mic')!;
   for (const label of mic.options!) assert.ok(MIC_KIND[label], label);
-  assert.equal(micKindFor('R122'), 'mic-ribbon');
-  assert.equal(micKindFor(undefined), 'mic-dynamic');
+  assert.equal(micKindFor('R122'), 'mic-r122');
+  assert.equal(micKindFor(undefined), 'mic-sm57');
 });
 
 test('forme per tipo di blocco: wah, volume, ampli e cassa non sono pedali', () => {
@@ -34,14 +36,20 @@ test('forme per tipo di blocco: wah, volume, ampli e cassa non sono pedali', () 
   assert.equal(deviceArtFor('vol', 'patch-vol').kind, 'expression');
   assert.deepEqual(deviceArtFor('amp', 'plexi100w'), { kind: 'amp', model: 'plexi100w' });
   assert.deepEqual(deviceArtFor('amp', 'twinrvb'), { kind: 'amp', model: 'twinrvb' });
-  assert.equal(deviceArtFor('ir', 'ir-1960').kind, 'cab-4x12');
+  assert.deepEqual(deviceArtFor('ir', 'ir-1960'), { kind: 'cab', model: 'ir-1960' });
   assert.equal(deviceArtFor('ir', 'ir-user').kind, 'user-ir');
-  assert.deepEqual(deviceArtFor('efx', 'tscream'), { kind: 'stomp', knobs: 3 });
-  assert.deepEqual(deviceArtFor('compressor', 'reddirt'), { kind: 'stomp', knobs: 3 }, 'EFX nel blocco COMP');
-  assert.deepEqual(deviceArtFor('modulation', 'mod-ph90'), { kind: 'stomp', knobs: 1 });
+  assert.deepEqual(deviceArtFor('efx', 'tscream'), { kind: 'stomp', knobs: 3, model: 'tscream' });
+  assert.deepEqual(deviceArtFor('compressor', 'reddirt'), { kind: 'stomp', knobs: 3, model: 'reddirt' }, 'EFX nel blocco COMP');
+  assert.deepEqual(deviceArtFor('modulation', 'mod-ph90'), { kind: 'stomp', knobs: 1, model: 'mod-ph90' });
 });
 
 test('ogni ampli ha un disegno proprio', () => {
   for (const model of MG30_MODELS.amp) assert.ok(AMP_ART[model.id], `ampli ${model.id}`);
   assert.equal(Object.keys(AMP_ART).length, MG30_MODELS.amp.length);
+});
+
+test('ogni pedale ha un disegno proprio', () => {
+  for (const type of ['compressor', 'efx', 'modulation', 'delay', 'reverb', 'noise-gate'] as const) {
+    for (const model of MG30_MODELS[type]) assert.ok(PEDAL_ART[model.id], `${type}/${model.id}`);
+  }
 });

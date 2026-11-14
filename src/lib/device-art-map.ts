@@ -7,24 +7,8 @@ import type { EffectType } from '@/types/preset';
  * `amp-art.tsx`), ispirato all'ampli originale; i preamplificatori NUX (MLD, Optima Air) sono ampli
  * compatti. Gli altri blocchi hanno la sagoma di ciò che sono.
  */
-/** Casse: numero e misura dei coni dal modello. */
-const CAB_KIND: Record<string, DeviceKind> = {
-  'ir-jz120': 'cab-2x12',
-  'ir-dr112': 'cab-1x12',
-  'ir-bs410': 'cab-4x10',
-  'ir-a212': 'cab-2x12',
-  'ir-tr212': 'cab-2x12',
-  'ir-1960': 'cab-4x12',
-  'ir-gb412': 'cab-4x12',
-  'ir-v412': 'cab-4x12',
-  'ir-agldb810': 'cab-8x10',
-  'ir-sv810': 'cab-8x10',
-  'ir-sv410': 'cab-4x10',
-  'ir-sv212': 'cab-2x12',
-  'ir-mkb410': 'cab-4x10',
-  'ir-trc410': 'cab-4x10',
-  'ir-eden410': 'cab-4x10',
-  'ir-bassguy410': 'cab-4x10',
+/** IR che non sono una cassa: chitarre acustiche (simulazione) e IR dell'utente. */
+const SPECIAL_IR: Record<string, DeviceKind> = {
   'ir-md45': 'acoustic',
   'ir-ghbird': 'acoustic',
   'ir-gj15': 'acoustic',
@@ -32,18 +16,18 @@ const CAB_KIND: Record<string, DeviceKind> = {
 };
 
 const MIC_KIND: Record<string, DeviceKind> = {
-  DYN421: 'mic-dynamic',
-  S57: 'mic-dynamic',
-  B52: 'mic-dynamic',
-  U87: 'mic-condenser',
-  C414: 'mic-condenser',
-  C3000: 'mic-condenser',
-  R121: 'mic-ribbon',
-  R122: 'mic-ribbon',
+  DYN421: 'mic-md421',
+  S57: 'mic-sm57',
+  B52: 'mic-beta52',
+  U87: 'mic-u87',
+  C414: 'mic-c414',
+  C3000: 'mic-c3000',
+  R121: 'mic-r121',
+  R122: 'mic-r122',
 };
 
 /** Sagoma del microfono per la voce `mic` di un IR (nome come sulla pedaliera). */
-export const micKindFor = (label: string | undefined): DeviceKind => (label && MIC_KIND[label]) || 'mic-dynamic';
+export const micKindFor = (label: string | undefined): DeviceKind => (label && MIC_KIND[label]) || 'mic-sm57';
 
 /** Manopole del pedale: i parametri a manopola del modello, da 1 a 4. */
 function stompKnobs(type: EffectType, modelId: string): number {
@@ -54,15 +38,15 @@ function stompKnobs(type: EffectType, modelId: string): number {
 
 export function deviceArtFor(type: EffectType, modelId: string): DeviceArtSpec {
   switch (type) {
-    case 'wah': return { kind: 'wah' };
+    case 'wah': return { kind: 'wah', model: modelId };
     case 'vol': return { kind: 'expression' };
     case 'sr': return { kind: 'send-return' };
-    case 'eq': return { kind: 'eq' };
+    case 'eq': return { kind: 'eq', model: modelId };
     case 'amp':
       return { kind: 'amp', model: modelId };
-    case 'ir': return { kind: CAB_KIND[modelId] ?? 'cab-4x12' };
-    default: return { kind: 'stomp', knobs: stompKnobs(type, modelId) };
+    case 'ir': return SPECIAL_IR[modelId] ? { kind: SPECIAL_IR[modelId] } : { kind: 'cab', model: modelId };
+    default: return { kind: 'stomp', knobs: stompKnobs(type, modelId), model: modelId };
   }
 }
 
-export { CAB_KIND, MIC_KIND };
+export { SPECIAL_IR, MIC_KIND };

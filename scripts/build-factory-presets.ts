@@ -30,7 +30,7 @@ const root = join(__dirname, '..');
 const decoded: Decoded[] = JSON.parse(readFileSync(join(root, 'mg30patch-export/presets.json'), 'utf8'));
 const defaults = createDefaultEffects();
 
-const presets: FactoryPreset[] = decoded.map((d) => {
+const presets: Omit<FactoryPreset, 'card'>[] = decoded.map((d) => {
   const order = d.chain.filter((t): t is EffectType => defaults.some((e) => e.type === t));
   const effects: EffectState[] = order.map((type) => {
     const base = defaults.find((e) => e.type === type)!;

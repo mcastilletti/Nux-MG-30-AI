@@ -7,11 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { SendToSlotDialog } from '@/components/library/SendToSlotDialog';
-import { useFactoryNotes } from '@/hooks/use-factory-notes';
 import { useEstimateSongGenres } from '@/hooks/use-song-genres';
 import { useToast } from '@/hooks/use-toast';
 import { FACTORY_PRESETS, factoryPresetToPreset, type FactoryPreset } from '@/lib/factory-presets';
-import { factoryNoteId } from '@/lib/factory-notes';
 import { suggestFactoryPresets } from '@/lib/factory-suggestions';
 import { GENRES, isGenre } from '@/lib/genres';
 import { formatSlotLabel } from '@/lib/slot';
@@ -32,14 +30,12 @@ export function FactorySuggestions({ genre, editMode, onGenreChange, note }: {
   /** Brano salvato: in lettura la stima AI salva subito il genere su questo brano. */
   note?: SavedNote;
 }) {
-  const { notesBySlot } = useFactoryNotes();
   const estimate = useEstimateSongGenres();
   const { toast } = useToast();
   const [estimating, setEstimating] = React.useState(false);
   const [toSend, setToSend] = React.useState<FactoryPreset | null>(null);
 
-  const notes = Object.values(notesBySlot);
-  const suggested = suggestFactoryPresets(genre, notes)
+  const suggested = suggestFactoryPresets(genre)
     .map((slot) => FACTORY_PRESETS.find((p) => p.slot === slot))
     .filter((p): p is FactoryPreset => !!p);
 
@@ -62,11 +58,9 @@ export function FactorySuggestions({ genre, editMode, onGenreChange, note }: {
 
   const triggerLabel = !isGenre(genre)
     ? 'Scegli un genere per i consigli'
-    : notes.length === 0
-      ? 'Schede di fabbrica non ancora generate'
-      : suggested.length === 0
-        ? `Nessun preset di fabbrica per ${genre}`
-        : `${suggested.length} consigliat${suggested.length === 1 ? 'o' : 'i'} per ${genre}`;
+    : suggested.length === 0
+      ? `Nessun preset di fabbrica per ${genre}`
+      : `${suggested.length} consigliat${suggested.length === 1 ? 'o' : 'i'} per ${genre}`;
 
   return (
     <div className="space-y-3">
@@ -100,17 +94,17 @@ export function FactorySuggestions({ genre, editMode, onGenreChange, note }: {
           <DropdownMenuContent align="start" className="w-[min(22rem,calc(100vw-2rem))]">
             <DropdownMenuLabel className="text-caption text-muted-foreground">Scegli per inserirlo in uno slot</DropdownMenuLabel>
             {suggested.map((preset) => {
-              const card = notesBySlot[factoryNoteId(preset.slot)];
+              const { card } = preset;
               return (
                 <DropdownMenuItem key={preset.slot} className="min-h-11 flex-col items-start gap-0.5" onSelect={() => setToSend(preset)}>
                   <span className="font-semibold"><span className="font-mono text-primary">{formatSlotLabel(preset.slot)}</span> · {preset.name}</span>
-                  {card && <span className="text-caption text-muted-foreground">{card.soundType} · {card.genres.join(', ')}</span>}
+                  <span className="text-caption text-muted-foreground">{card.soundType} · {card.bands.slice(0, 2).join(', ')}</span>
                 </DropdownMenuItem>
               );
             })}
             {suggested.length === 0 && (
               <p className="px-2 py-2 text-caption text-muted-foreground">
-                {notes.length === 0 ? 'Genera le schede AI nella Libreria, sezione Fabbrica.' : 'Nessuna scheda di fabbrica indica questo genere.'}
+                Nessuna scheda di fabbrica indica questo genere.
               </p>
             )}
             <DropdownMenuSeparator />

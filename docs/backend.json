@@ -889,49 +889,6 @@
         "createdAt",
         "updatedAt"
       ]
-    },
-    "FactoryPresetNote": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "FactoryPresetNote",
-      "type": "object",
-      "description": "Scheda generata dall'AI per un preset di fabbrica della MG-30: tipo di suono, generi e note.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "slot_N, uguale all'id nel percorso."
-        },
-        "slot": {
-          "type": "number",
-          "description": "Slot di fabbrica (1-128)."
-        },
-        "soundType": {
-          "type": "string",
-          "description": "Tipo di suono (es. clean, crunch, high gain)."
-        },
-        "genres": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "description": "Generi consigliati, dalla lista chiusa dell'app (src/lib/genres.ts)."
-        },
-        "notes": {
-          "type": "string",
-          "description": "Note brevi sull'uso."
-        },
-        "updatedAt": {
-          "type": "string",
-          "format": "date-time"
-        }
-      },
-      "required": [
-        "id",
-        "slot",
-        "soundType",
-        "genres",
-        "notes",
-        "updatedAt"
-      ]
     }
   },
   "auth": {
@@ -1057,26 +1014,6 @@
             {
               "name": "soundId",
               "description": "Id del suono (snd_…)."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/users/{userId}/factoryNotes/{noteId}",
-        "definition": {
-          "entityName": "FactoryPresetNote",
-          "schema": {
-            "$ref": "#/backend/entities/FactoryPresetNote"
-          },
-          "description": "Schede AI dei preset di fabbrica. Copia locale in localStorage 'mg30-factory-notes'.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "UID del proprietario."
-            },
-            {
-              "name": "noteId",
-              "description": "slot_N."
             }
           ]
         }

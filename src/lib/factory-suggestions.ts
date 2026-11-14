@@ -1,26 +1,28 @@
-import type { FactoryPresetNote } from '@/lib/factory-notes';
+import type { FactoryCard } from '@/data/factory-cards';
+import { FACTORY_PRESETS } from '@/lib/factory-presets';
 import { isGenre, type Genre } from '@/lib/genres';
 import type { SavedNote } from '@/types/note';
 
 /**
- * Preset di fabbrica consigliati per un genere: quelli che nella loro scheda AI elencano il genere,
+ * Preset di fabbrica consigliati per un genere: quelli che nella loro scheda elencano il genere,
  * dal più pertinente (genere più in alto nella scheda), a parità di posizione per numero di slot.
  * Restituisce al massimo `limit` slot; se ce ne sono meno, tutti quelli disponibili.
  */
-export function suggestFactoryPresets(genre: string | undefined, notes: Iterable<FactoryPresetNote>, limit = 3): number[] {
+export function suggestFactoryPresets(genre: string | undefined, limit = 3): number[] {
   if (!isGenre(genre)) return [];
-  return [...notes]
-    .map((note) => ({ slot: note.slot, rank: note.genres.indexOf(genre) }))
+  return FACTORY_PRESETS
+    .map((p) => ({ slot: p.slot, rank: p.card.genres.indexOf(genre), alt: p.card.altRock }))
     .filter((c) => c.rank !== -1)
-    .sort((a, b) => a.rank - b.rank || a.slot - b.slot)
+    // Per i generi vicini ai gusti dell'utente (Britpop, alternative) i preset segnati con la stella vengono prima.
+    .sort((a, b) => a.rank - b.rank || Number(b.alt) - Number(a.alt) || a.slot - b.slot)
     .slice(0, limit)
     .map((c) => c.slot);
 }
 
 /** Brani visibili (non blocchi, non uniti in un altro) con genere fra quelli della scheda. */
-export function songsForFactoryNote(note: FactoryPresetNote | undefined, songs: SavedNote[]): SavedNote[] {
-  if (!note) return [];
-  const genres = new Set<Genre>(note.genres);
+export function songsForFactoryCard(card: FactoryCard | undefined, songs: SavedNote[]): SavedNote[] {
+  if (!card) return [];
+  const genres = new Set<Genre>(card.genres);
   return songs
     .filter((s) => s.type !== 'block' && !s.mergedInto && isGenre(s.genre) && genres.has(s.genre))
     .sort((a, b) => a.title.localeCompare(b.title, 'it'));

@@ -1,22 +1,25 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import type { FactoryPresetNote } from './factory-notes';
-import type { Genre } from './genres';
 import type { SavedNote } from '@/types/note';
-import { songsForFactoryNote, songsWithoutGenre, suggestFactoryPresets } from './factory-suggestions';
+import { FACTORY_CARDS } from '@/data/factory-cards';
+import { songsForFactoryCard, songsWithoutGenre, suggestFactoryPresets } from './factory-suggestions';
 
-const note = (slot: number, genres: Genre[]): FactoryPresetNote => ({ id: `slot_${slot}`, slot, soundType: 'Drive', genres, notes: '', updatedAt: '' });
 const song = (id: string, title: string, genre?: string, extra: Partial<SavedNote> = {}): SavedNote => ({ id, title, band: '', setlist: '', genre, ...extra });
 
-test('i primi 3 per genere: prima chi ha il genere più in alto, poi per slot', () => {
-  const notes = [note(9, ['Rock', 'Blues']), note(2, ['Blues']), note(5, ['Blues', 'Rock']), note(7, ['Blues']), note(1, ['Metal'])];
-  assert.deepEqual(suggestFactoryPresets('Blues', notes), [2, 5, 7]);
-  assert.deepEqual(suggestFactoryPresets('Rock', notes), [9, 5], 'meno di 3: tutti quelli che ci sono');
-  assert.deepEqual(suggestFactoryPresets('Metal', notes), [1]);
-  assert.deepEqual(suggestFactoryPresets('Jazz', notes), []);
-  assert.deepEqual(suggestFactoryPresets(undefined, notes), []);
-  assert.deepEqual(suggestFactoryPresets('Vaporwave', notes), [], 'genere fuori lista');
+test('consigli per genere: al massimo 3, dalle schede di fabbrica', () => {
+  for (const genre of ['Blues', 'Rock', 'Britpop', 'Metal']) {
+    const slots = suggestFactoryPresets(genre);
+    assert.ok(slots.length > 0 && slots.length <= 3, genre);
+    for (const slot of slots) assert.ok(FACTORY_CARDS[slot].genres.includes(genre as never), `${genre} → ${slot}`);
+  }
+  assert.deepEqual(suggestFactoryPresets(undefined), []);
+  assert.deepEqual(suggestFactoryPresets('Vaporwave'), [], 'genere fuori lista');
+});
+
+test('per il Britpop i preset segnati come adatti a Oasis/alt rock vengono prima', () => {
+  const slots = suggestFactoryPresets('Britpop', 10);
+  assert.ok(slots.every((s) => FACTORY_CARDS[s].altRock));
 });
 
 test('brani adatti a un preset e brani senza genere', () => {
@@ -28,7 +31,7 @@ test('brani adatti a un preset e brani senza genere', () => {
     song('e', 'Senza genere'),
     song('f', 'Genere strano', 'Vaporwave'),
   ];
-  assert.deepEqual(songsForFactoryNote(note(1, ['Metal', 'Hard rock']), songs).map((s) => s.id), ['a']);
-  assert.deepEqual(songsForFactoryNote(undefined, songs), []);
+  assert.deepEqual(songsForFactoryCard(FACTORY_CARDS[12], songs).map((s) => s.id), ['a']);
+  assert.deepEqual(songsForFactoryCard(undefined, songs), []);
   assert.deepEqual(songsWithoutGenre(songs).map((s) => s.id), ['e', 'f']);
 });

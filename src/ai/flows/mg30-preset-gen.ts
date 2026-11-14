@@ -7,7 +7,8 @@
  * - generateMG30Preset - Funzione principale per la generazione.
  */
 
-import { ai, z } from '@/ai/genkit';
+import { ai, z, geminiModel } from '@/ai/genkit';
+import { withGeminiModel } from '@/ai/model';
 import { authorizeAiCall } from '@/ai/guard';
 import { MG30_MODELS, MG30Parameter } from '@/lib/mg30-data';
 import { DEFAULT_AMPLIFIER_DESCRIPTION, DEFAULT_GUITAR_DESCRIPTION } from '@/lib/instrumentation-context';
@@ -137,7 +138,7 @@ export const mg30PresetFlow = ai.defineFlow(
     outputSchema: MG30PresetOutputSchema,
   },
   async (input) => {
-    const { output } = await prompt(input);
+    const { output } = await withGeminiModel((model) => prompt(input, { model: geminiModel(model) }));
     if (!output) throw new Error('Generazione AI fallita.');
     return output;
   }

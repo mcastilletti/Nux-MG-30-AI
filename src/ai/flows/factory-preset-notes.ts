@@ -6,7 +6,8 @@
  * - describeFactoryPresets - Scrive le schede di un lotto di slot (massimo 8 per chiamata).
  */
 
-import { ai, z } from '@/ai/genkit';
+import { ai, z, geminiModel } from '@/ai/genkit';
+import { withGeminiModel } from '@/ai/model';
 import { authorizeAiCall } from '@/ai/guard';
 import { classifyAiError, type AiResult } from '@/ai/ai-error';
 import { MG30_MODELS } from '@/lib/mg30-data';
@@ -34,9 +35,7 @@ const prompt = ai.definePrompt({
   name: 'factoryPresetNotesPrompt',
   input: { schema: PromptInputSchema },
   output: { schema: OutputSchema },
-  // Niente "ragionamento" prima della risposta: per schede brevi su dati già pronti rallenta soltanto,
-  // e le risposte lente rischiano di superare il tempo massimo di una richiesta sul sito pubblicato.
-  config: { temperature: 0.3, thinkingConfig: { thinkingBudget: 0 } },
+  config: { temperature: 0.3 },
   prompt: `Sei un tecnico del suono esperto di chitarra e della pedaliera NUX MG-30.
 Per ognuno dei preset di fabbrica qui sotto scrivi una scheda breve in italiano.
 
@@ -60,7 +59,7 @@ const flow = ai.defineFlow(
       .filter((p): p is NonNullable<typeof p> => !!p)
       .map((p) => `- ${describeFactoryPreset(p, MG30_MODELS)}`)
       .join('\n');
-    const { output } = await prompt({ presets });
+    const { output } = await withGeminiModel((model) => prompt({ presets }, { model: geminiModel(model) }));
     if (!output) throw new Error('Schede AI non generate.');
     const wanted = new Set(slots);
     return { notes: output.notes.filter((n) => wanted.has(n.slot)) };

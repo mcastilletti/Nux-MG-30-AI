@@ -5,7 +5,8 @@
  * - analyzeSysEx - Analizza sequenze hex per mappare parametri hardware.
  */
 
-import { ai, z } from '@/ai/genkit';
+import { ai, z, geminiModel } from '@/ai/genkit';
+import { withGeminiModel } from '@/ai/model';
 import { authorizeAiCall } from '@/ai/guard';
 
 const AnalyzeSysExInputSchema = z.object({
@@ -39,7 +40,7 @@ export const analyzeSysExFlow = ai.defineFlow(
     outputSchema: AnalyzeSysExOutputSchema,
   },
   async (input) => {
-    const { output } = await prompt(input);
+    const { output } = await withGeminiModel((model) => prompt(input, { model: geminiModel(model) }));
     if (!output) throw new Error('Analisi SysEx fallita.');
     return output;
   }

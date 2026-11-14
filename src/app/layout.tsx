@@ -39,10 +39,12 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: '/icon.png', sizes: '512x512', type: 'image/png' }
+      { url: '/icon.svg', type: 'image/svg+xml' },
+      { url: '/icon.png', sizes: '512x512', type: 'image/png' },
     ],
+    // iPhone non accetta trasparenze e arrotonda da sé: icona a piena superficie.
     apple: [
-      { url: '/icon.png', sizes: '512x512', type: 'image/png' }
+      { url: '/apple-icon.png', sizes: '180x180', type: 'image/png' },
     ],
   },
   formatDetection: {

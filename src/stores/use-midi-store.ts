@@ -74,8 +74,8 @@ type MidiParam = { id?: string; min: number; max: number; options?: string[] };
 export const parameterToMidiValue = (value: number, parameter: MidiParam) => {
   const clamped = Math.min(parameter.max, Math.max(parameter.min, value));
   if (parameter.options) return Math.round(clamped);
-  // PATCH VOL MIN: la pedaliera lo espone come 0..50, lo stesso valore dell'editor.
-  if (parameter.id === 'min' && parameter.min === 0 && parameter.max === 50) return Math.round(clamped);
+  // PATCH VOL: due manopole che fanno tutta la corsa, MIN mostra 0..50 e MAX 50..100. Il CC è la posizione
+  // sulla corsa (0..100) come per le altre manopole: MIN 50 = manopola al massimo = CC 100, non 50.
   if (parameter.max === parameter.min) return 0;
   return Math.round(((clamped - parameter.min) / (parameter.max - parameter.min)) * 100);
 };
@@ -83,7 +83,6 @@ export const parameterToMidiValue = (value: number, parameter: MidiParam) => {
 /** Inverso di parameterToMidiValue: valore CC ricevuto dalla pedaliera → valore dell'editor. */
 export const midiValueToParameter = (value: number, parameter: MidiParam) => {
   if (parameter.options) return Math.min(parameter.max, Math.max(parameter.min, value));
-  if (parameter.id === 'min' && parameter.min === 0 && parameter.max === 50) return Math.min(50, value);
   if (parameter.max === parameter.min) return parameter.min;
   const ratio = Math.min(100, Math.max(0, value)) / 100;
   return Math.round(parameter.min + ratio * (parameter.max - parameter.min));

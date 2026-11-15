@@ -210,7 +210,7 @@ export const MG30_MODELS: Record<EffectType, MG30Model[]> = {
       fullName: 'PATCH VOLUME',
       parameters: [
         { id: 'min', name: 'VOL MIN', min: 0, max: 50, step: 1, default: 30 },
-        { id: 'max', name: 'VOL MAX', min: 51, max: 100, step: 1, default: 60 },
+        { id: 'max', name: 'VOL MAX', min: 50, max: 100, step: 1, default: 60 },
       ],
     }
   ],

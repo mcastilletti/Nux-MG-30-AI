@@ -47,4 +47,8 @@ test('suono AI → suono dell\'Archivio valido, valori riportati nel range', () 
   assert.equal(sound.source, 'ai');
   assert.ok(parseArchivedSound(JSON.parse(JSON.stringify(sound))), 'si rilegge dopo il salvataggio');
   assert.ok(warnings.some((w) => /master/.test(w)), 'master 500 corretto: ' + warnings.join('|'));
+  for (const scene of [0, 1, 2]) {
+    const vol = sound.preset.scenes![scene].find((e) => e.type === 'vol')!;
+    assert.deepEqual([vol.parameters.min, vol.parameters.max], [50, 100], `volume scena ${scene + 1}`);
+  }
 });

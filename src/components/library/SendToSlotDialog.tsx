@@ -5,6 +5,7 @@ import { AlertTriangle, Archive, Loader2, Send, Trash2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { Segmented } from '@/components/common/segmented';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useMidiStore } from '@/stores/use-midi-store';
 import { usePresetNames } from '@/hooks/use-preset-names';
@@ -12,6 +13,7 @@ import { useWriteToSlot, type WriteToSlotResult } from '@/hooks/use-write-to-slo
 import { useToast } from '@/hooks/use-toast';
 import { isPlaceholderPreset } from '@/lib/slot-content';
 import { formatSlotLabel } from '@/lib/slot';
+import { scenesAreIdentical } from '@/lib/scene-merge';
 import type { Preset } from '@/types/preset';
 
 type Step = 'pick' | 'replace' | 'confirm-delete';
@@ -40,10 +42,16 @@ export function SendToSlotDialog({ open, onOpenChange, preset, sourceLabel, defa
   const [slot, setSlot] = React.useState<number>(defaultSlot ?? 1);
   const [step, setStep] = React.useState<Step>('pick');
   const [busy, setBusy] = React.useState(false);
+  const [mode, setMode] = React.useState<'all' | 'scene'>('all');
+  const [fromScene, setFromScene] = React.useState(0);
+  const [toScene, setToScene] = React.useState(0);
 
   React.useEffect(() => {
     if (open) {
       setStep('pick');
+      setMode('all');
+      setFromScene(0);
+      setToScene(0);
       setSlot(defaultSlot && defaultSlot !== excludeSlot ? defaultSlot : excludeSlot === 1 ? 2 : 1);
     }
   }, [open, defaultSlot, excludeSlot]);
@@ -51,12 +59,14 @@ export function SendToSlotDialog({ open, onOpenChange, preset, sourceLabel, defa
   const current = devicePresets.find((p) => p.slot === slot);
   const currentName = savedNames[slot] || current?.name || formatSlotLabel(slot);
   const unknownContent = current ? isPlaceholderPreset(current, savedNames[slot]) : true;
+  const sourceScenesSame = preset ? scenesAreIdentical(preset) : true;
+  const sceneMode = mode === 'scene';
   const slotText = `${formatSlotLabel(slot)} · ${currentName}`;
 
   const report = (result: WriteToSlotResult, archived: boolean) => {
     const where = { cloud: 'Salvato nel tuo account.', queued: 'Salvato: verrà sincronizzato appena torni online.', local: 'Salvato su questo dispositivo.', 'local-error': 'Salvato solo su questo dispositivo: il salvataggio nel tuo account non è riuscito.' }[result.saved];
     const pedal = {
-      sent: 'Invio alla MG-30 in corso (scena 1): attendi la fine prima di cambiare preset.',
+      sent: `Invio alla MG-30 in corso (scena ${result.scene}): attendi la fine prima di cambiare preset.`,
       offline: 'La pedaliera non è collegata: il suono è nella libreria, invialo dall\'editor quando la colleghi.',
       busy: 'Invio alla pedaliera non eseguito: sincronizzazione già in corso. Apri il preset nell\'editor e premi Salva.',
     }[result.pedal];
@@ -64,7 +74,7 @@ export function SendToSlotDialog({ open, onOpenChange, preset, sourceLabel, defa
       ? result.archived === 'local-error' ? ' Il suono precedente è nell\'Archivio solo su questo dispositivo.' : ' Il suono precedente è nell\'Archivio suoni.'
       : '';
     toast({
-      title: `${preset?.name} in ${formatSlotLabel(slot)}`,
+      title: sceneMode ? `Scena ${toScene + 1} di ${formatSlotLabel(slot)} aggiornata` : `${preset?.name} in ${formatSlotLabel(slot)}`,
       description: `${where}${archivedText} ${pedal}`,
       variant: result.saved === 'local-error' || result.pedal === 'busy' ? 'destructive' : undefined,
     });
@@ -74,7 +84,7 @@ export function SendToSlotDialog({ open, onOpenChange, preset, sourceLabel, defa
     if (!preset) return;
     setBusy(true);
     try {
-      const result = await writeToSlot({ preset, slot, archiveCurrent, currentName });
+      const result = await writeToSlot({ preset, slot, archiveCurrent, currentName, scene: sceneMode ? { from: fromScene, to: toScene } : undefined });
       report(result, archiveCurrent);
       onOpenChange(false);
     } catch {
@@ -111,6 +121,39 @@ export function SendToSlotDialog({ open, onOpenChange, preset, sourceLabel, defa
                   : 'Pedaliera non collegata: il suono verrà salvato nella libreria dell\'app.'}
               </p>
             </div>
+            <div className="space-y-2">
+              <Label>Cosa invii</Label>
+              <Segmented
+                ariaLabel="Cosa invii"
+                fill
+                value={mode}
+                onChange={setMode}
+                options={[{ value: 'all', label: 'Tutto il preset' }, { value: 'scene', label: 'Una sola scena' }]}
+              />
+              {sceneMode && (
+                <div className="space-y-3 rounded-lg border border-border bg-card/50 p-3">
+                  {!sourceScenesSame && (
+                    <div className="space-y-1.5">
+                      <Label>Scena da inviare</Label>
+                      <Segmented ariaLabel="Scena da inviare" fill value={fromScene} onChange={setFromScene} options={[0, 1, 2].map((i) => ({ value: i, label: `S${i + 1}`, ariaLabel: `Scena ${i + 1}` }))} />
+                    </div>
+                  )}
+                  <div className="space-y-1.5">
+                    <Label>Scena di {formatSlotLabel(slot)} da sostituire</Label>
+                    <Segmented ariaLabel="Scena da sostituire" fill value={toScene} onChange={setToScene} options={[0, 1, 2].map((i) => ({ value: i, label: `S${i + 1}`, ariaLabel: `Scena ${i + 1}` }))} />
+                  </div>
+                  <p className="text-caption text-muted-foreground">
+                    {sourceScenesSame ? 'Le tre scene di questo suono sono uguali. ' : ''}Cambia solo la scena {toScene + 1}: sulla pedaliera le altre due scene e il nome dello slot non vengono toccati.
+                  </p>
+                  {unknownContent && (
+                    <p className="flex gap-2 rounded-lg border border-warning/40 bg-warning/10 p-3 text-caption">
+                      <AlertTriangle className="h-4 w-4 shrink-0 text-warning" aria-hidden="true" />
+                      L&apos;app non ha mai scritto questo slot: nella sua libreria le altre due scene risultano quelle di partenza, che possono non essere quelle che hai sulla pedaliera. Sulla pedaliera restano com&apos;erano.
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
             <DialogFooter className="gap-2">
               <Button variant="outline" className="min-h-11" onClick={() => onOpenChange(false)}>Annulla</Button>
               <Button className="min-h-11 gap-2" onClick={() => setStep('replace')}><Send className="h-4 w-4" /> Avanti</Button>
@@ -123,21 +166,22 @@ export function SendToSlotDialog({ open, onOpenChange, preset, sourceLabel, defa
             <DialogHeader>
               <DialogTitle>Cosa fai del suono in {formatSlotLabel(slot)}?</DialogTitle>
               <DialogDescription>
-                Nello slot c&apos;è <strong className="text-foreground">{currentName}</strong>. Prima di sostituirlo puoi metterlo nell&apos;Archivio suoni, per riusarlo quando vuoi.
+                Nello slot c&apos;è <strong className="text-foreground">{currentName}</strong>.{' '}
+                {sceneMode ? `Stai per sostituire la sua scena ${toScene + 1}: prima puoi mettere il preset com'è ora nell'Archivio suoni, per riusarlo quando vuoi.` : 'Prima di sostituirlo puoi metterlo nell\'Archivio suoni, per riusarlo quando vuoi.'}
               </DialogDescription>
             </DialogHeader>
             {unknownContent && (
               <p className="flex gap-2 rounded-lg border border-warning/40 bg-warning/10 p-3 text-caption">
                 <AlertTriangle className="h-4 w-4 shrink-0 text-warning" aria-hidden="true" />
-                L&apos;app non ha ancora letto questo slot dalla pedaliera: nell&apos;archivio finirebbe il preset di partenza dell&apos;app, non il suono reale. Per salvarlo davvero, aprilo nell&apos;editor con la pedaliera collegata e usa &quot;Leggi il preset dalla pedaliera&quot;.
+                L&apos;app non ha mai scritto né letto questo slot: nell&apos;archivio finirebbe il preset di partenza dell&apos;app, non il suono che c&apos;è davvero sulla pedaliera.
               </p>
             )}
             <div className="grid gap-2">
               <Button className="min-h-11 justify-start gap-2" disabled={busy} onClick={() => run(true)}>
-                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Archive className="h-4 w-4" />} Archivia {currentName} e sostituisci
+                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Archive className="h-4 w-4" />} Archivia {currentName} e sostituisci{sceneMode ? ` la scena ${toScene + 1}` : ''}
               </Button>
               <Button variant="outline" className="min-h-11 justify-start gap-2 border-destructive/60 hover:bg-destructive/10" disabled={busy} onClick={() => setStep('confirm-delete')}>
-                <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" /> Sostituisci senza archiviare
+                <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" /> {sceneMode ? `Sostituisci la scena ${toScene + 1} senza archiviare` : 'Sostituisci senza archiviare'}
               </Button>
               <Button variant="ghost" className="min-h-11" disabled={busy} onClick={() => setStep('pick')}>Indietro</Button>
             </div>
@@ -149,13 +193,15 @@ export function SendToSlotDialog({ open, onOpenChange, preset, sourceLabel, defa
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2"><AlertTriangle className="h-5 w-5 text-destructive" aria-hidden="true" /> Il suono verrà perso</DialogTitle>
               <DialogDescription>
-                <strong className="text-foreground">{slotText}</strong> verrà sostituito da {preset?.name} e non sarà più recuperabile, né dall&apos;app né dalla pedaliera. Se non sei sicuro, torna indietro e archivialo.
+                {sceneMode
+                  ? <>La scena {toScene + 1} di <strong className="text-foreground">{slotText}</strong> verrà sostituita dalla scena di {preset?.name} e non sarà più recuperabile, né dall&apos;app né dalla pedaliera. Le altre scene restano. Se non sei sicuro, torna indietro e archivia il preset.</>
+                  : <><strong className="text-foreground">{slotText}</strong> verrà sostituito da {preset?.name} e non sarà più recuperabile, né dall&apos;app né dalla pedaliera. Se non sei sicuro, torna indietro e archivialo.</>}
               </DialogDescription>
             </DialogHeader>
             <DialogFooter className="gap-2">
               <Button variant="outline" className="min-h-11" disabled={busy} onClick={() => setStep('replace')}>Indietro</Button>
               <Button variant="destructive" className="min-h-11 gap-2" disabled={busy} onClick={() => run(false)}>
-                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />} Elimina e sostituisci
+                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />} {sceneMode ? 'Elimina e sostituisci la scena' : 'Elimina e sostituisci'}
               </Button>
             </DialogFooter>
           </>

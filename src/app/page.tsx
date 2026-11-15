@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useMidiStore } from '@/stores/use-midi-store';
 import { Button } from '@/components/ui/button';
 import { Sliders, Library, Zap, Download, RotateCw, Usb, NotebookPen, Users } from 'lucide-react';
-import { ElectricGuitarIcon } from '@/components/icons/electric-guitar-icon';
+import { AmpComboIcon } from '@/components/icons/amp-combo-icon';
 import Link from 'next/link';
 
 import { PageHeader } from '@/components/common/page-header';
@@ -80,7 +80,7 @@ export default function HomePage() {
             <Card className="app-surface h-full transition-colors hover:border-primary/50">
               <CardContent className="flex h-full flex-col items-start justify-between gap-5 p-4 md:items-center md:p-6 md:text-center">
                 <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                  <ElectricGuitarIcon className="h-7 w-7" />
+                  <AmpComboIcon className="h-7 w-7" />
                 </div>
                 <div className="text-center">
                   <h3 className="font-bold md:text-lg">Strumentazione</h3>

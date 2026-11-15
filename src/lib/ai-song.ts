@@ -4,6 +4,7 @@ import { createDefaultEffects } from '@/lib/default-effects';
 import { isGenre } from '@/lib/genres';
 import { normalizePresetSuggestion, type PresetSuggestion } from '@/lib/mg30-preset-normalizer';
 import { createArchivedSound, type ArchivedSound } from '@/lib/sound-archive';
+import { applyPatchVolume } from '@/lib/ai-preset-apply';
 
 /** Risposta della funzione AI "brano da richiesta" (vedi src/ai/flows/song-from-prompt.ts). */
 export interface AiSongData {
@@ -96,6 +97,6 @@ export function aiToneToArchivedSound(tone: PresetSuggestion, options: { now?: D
   const { updatedPreset, warnings } = normalizePresetSuggestion(base, tone);
   // Le tre scene partono uguali al suono proposto.
   const clone = () => updatedPreset.effects.map((e) => ({ ...e, parameters: { ...e.parameters } }));
-  const preset: Preset = { ...updatedPreset, name: tone.name.trim() || 'Suono AI', scenes: { 0: clone(), 1: clone(), 2: clone() } };
+  const preset: Preset = applyPatchVolume({ ...updatedPreset, name: tone.name.trim() || 'Suono AI', scenes: { 0: clone(), 1: clone(), 2: clone() } });
   return { sound: createArchivedSound(preset, 'ai', { name: preset.name, now: options.now }), warnings };
 }

@@ -151,3 +151,16 @@ test('addressing a block by its id instead of its type sends nothing', () => {
   }
   assert.equal(sent.length, 0);
 });
+
+test('syncFullPreset con skipName non cambia il nome del preset sulla pedaliera', () => {
+  const sent = captureSentMessages();
+  useMidiStore.setState({ isEditorSyncing: false, isPushingPreset: false });
+  const preset = { ...usePresetStore.getState().activePreset, name: 'Mio Suono' };
+  useMidiStore.getState().syncFullPreset(preset, { skipName: true });
+  assert.ok(!sent.some((m) => m[0] === 0xF0), 'nessun SysEx del nome');
+  useMidiStore.setState({ isEditorSyncing: false, isPushingPreset: false });
+  sent.length = 0;
+  useMidiStore.getState().syncFullPreset(preset);
+  assert.ok(sent.some((m) => m[0] === 0xF0), 'senza skipName il nome viene inviato');
+  useMidiStore.setState({ isEditorSyncing: false, isPushingPreset: false });
+});

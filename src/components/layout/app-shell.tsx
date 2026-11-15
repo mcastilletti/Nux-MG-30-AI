@@ -21,7 +21,7 @@ import { clearSavedPresets, usePresetPersistence } from '@/hooks/use-preset-pers
 import { soundArchive } from '@/hooks/use-sound-archive';
 import { cn } from '@/lib/utils';
 import { ConnectionStatus } from '@/components/common/connection-status';
-import { ElectricGuitarIcon } from '@/components/icons/electric-guitar-icon';
+import { AmpComboIcon } from '@/components/icons/amp-combo-icon';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { MOBILE_BAR, MOBILE_MORE, NAV_ENTRIES, SIDEBAR_GROUPS, getActiveNavKey, getRouteTitle, isMoreActive, type NavKey } from './nav-config';
 
@@ -109,7 +109,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
     library: Library,
     notes: NotebookPen,
     bands: Users,
-    instrumentation: ElectricGuitarIcon,
+    instrumentation: AmpComboIcon,
     settings: Settings,
     sysex: Zap,
   };

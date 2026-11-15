@@ -2,12 +2,13 @@ import type { Preset } from '@/types/preset';
 import { fromPresetDoc, toPresetDoc, type PresetDoc } from '@/lib/preset-storage';
 
 /** Da dove arriva un suono archiviato. */
-export type SoundArchiveSource = 'editor' | 'slot' | 'import';
+export type SoundArchiveSource = 'editor' | 'slot' | 'import' | 'ai';
 
 export const SOUND_ARCHIVE_SOURCE_LABEL: Record<SoundArchiveSource, string> = {
   editor: "Dall'editor",
   slot: 'Sostituito in uno slot',
   import: 'Importato',
+  ai: 'Creato dall\'AI',
 };
 
 /**
@@ -50,7 +51,7 @@ export function createArchivedSound(preset: Preset, source: SoundArchiveSource, 
 export function parseArchivedSound(data: unknown): ArchivedSound | null {
   if (!isRecord(data) || typeof data.id !== 'string' || !data.id) return null;
   if (!fromPresetDoc(data.preset)) return null;
-  const source = (['editor', 'slot', 'import'] as const).includes(data.source as SoundArchiveSource) ? (data.source as SoundArchiveSource) : 'editor';
+  const source = (['editor', 'slot', 'import', 'ai'] as const).includes(data.source as SoundArchiveSource) ? (data.source as SoundArchiveSource) : 'editor';
   const originSlot = typeof data.originSlot === 'number' && data.originSlot >= 1 && data.originSlot <= 128 ? data.originSlot : null;
   const createdAt = typeof data.createdAt === 'string' ? data.createdAt : new Date(0).toISOString();
   return {

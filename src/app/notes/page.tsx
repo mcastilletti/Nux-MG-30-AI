@@ -6,7 +6,7 @@ import { Card, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { IconButton } from '@/components/common/icon-button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { NotebookPen, Plus, Trash2, GripVertical, Music2, Layers, Printer, Copy, ArrowRight, FileText, Search, X, Loader2, Play, MoreVertical, Download, CopyMinus } from 'lucide-react';
+import { NotebookPen, Plus, Trash2, GripVertical, Music2, Layers, Printer, Copy, ArrowRight, FileText, Search, X, Loader2, Play, MoreVertical, Download, CopyMinus, Sparkles } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { buildNotesBackup, notesBackupFileName } from '@/lib/notes-backup';
 import { useFirebase, useUser } from '@/firebase';
@@ -20,6 +20,9 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { AiSongDialog } from '@/components/notes/AiSongDialog';
+import { useSoundArchive } from '@/hooks/use-sound-archive';
+import { aiSongToNote, aiToneToArchivedSound, type AiSongData } from '@/lib/ai-song';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { NoteSheet } from '@/components/notes/NoteSheet';
 import { NoteEditorContent } from '@/components/notes/NoteEditorContent';
@@ -103,6 +106,8 @@ function NotesLibraryContent() {
   const [importJsonText, setImportJsonText] = useState('');
   const [importJsonError, setImportJsonError] = useState('');
   const [isImporting, setIsImporting] = useState(false);
+  const [isAiSongOpen, setIsAiSongOpen] = useState(false);
+  const archive = useSoundArchive();
 
   const scrollToId = searchParams.get('scrollTo');
 
@@ -676,6 +681,42 @@ function NotesLibraryContent() {
     }
   };
 
+  /** "Aggiungi con AI": salva il suono proposto nell'Archivio (se richiesto) e crea il brano. */
+  const handleCreateAiSong = async (data: AiSongData, options: { saveTone: boolean }) => {
+    if (!user) throw new Error('Devi essere autenticato.');
+    let toneName: string | undefined;
+    if (options.saveTone) {
+      const { sound } = aiToneToArchivedSound(data.tone);
+      const saved = await archive.save(sound);
+      if (saved === 'local-error') throw new Error('Salvataggio del suono non riuscito.');
+      toneName = sound.name;
+    }
+    const note = aiSongToNote(data, { toneName });
+    const allNotes = useNotesCache.getState().notes;
+    const newNote = {
+      title: note.title,
+      band: '',
+      setlist: '',
+      generalNotes: note.generalNotes,
+      presetSlot: '',
+      presetScene: '',
+      ...(note.genre ? { genre: note.genre } : {}),
+      sections: note.sections,
+      order: allNotes.length > 0 ? Math.max(...allNotes.map(n => n.order ?? 0)) + 1 : 0,
+      updatedAt: serverTimestamp(),
+      userId: user.uid,
+      type: 'song' as const,
+    };
+    const docRef = await addDoc(collection(firestore, 'notes'), newNote);
+    addNote({ ...newNote, id: docRef.id } as SavedNote);
+    const into = isPlaylistModel ? await addImportedToPlaylist(docRef.id, '', '') : null;
+    toast({
+      title: `Brano "${newNote.title}" creato`,
+      description: [into ? `Aggiunto in coda a «${into}».` : '', toneName ? 'Il suono è nell\'Archivio suoni.' : ''].filter(Boolean).join(' ') || undefined,
+    });
+    dispatchNoteSheet({ type: 'open', noteId: docRef.id, editorKind: 'song', playlistId: isPlaylistModel ? currentPlaylist?.id : undefined });
+  };
+
   // Stampa (PDF): la scaletta filtrata, oppure la playlist aperta nel suo ordine.
   const printNotes = isPlaylistModel
     ? (currentPlaylist ? playlistEntries(currentPlaylist, notesById).map((e) => e.note).filter((n) => matchesQuery(n, searchQuery)) : poolNotes(cachedNotes, { query: searchQuery }))
@@ -772,6 +813,17 @@ function NotesLibraryContent() {
                   >
                     <ArrowRight className="w-4 h-4" />
                     Importa da JSON
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    className="justify-start gap-2 h-10"
+                    onClick={() => {
+                      setIsAiSongOpen(true);
+                      setIsAddMenuOpen(false);
+                    }}
+                  >
+                    <Sparkles className="w-4 h-4" />
+                    Aggiungi con AI
                   </Button>
                 </div>
               </PopoverContent>
@@ -999,6 +1051,8 @@ function NotesLibraryContent() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AiSongDialog open={isAiSongOpen} onOpenChange={setIsAiSongOpen} onCreate={handleCreateAiSong} />
 
       {/* JSON Import Dialog */}
       <Dialog open={isImportJsonDialogOpen} onOpenChange={(open) => { setIsImportJsonDialogOpen(open); if (!open) { setImportJsonText(''); setImportJsonError(''); } }}>

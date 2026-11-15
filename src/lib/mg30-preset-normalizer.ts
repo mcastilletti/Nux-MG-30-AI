@@ -182,7 +182,7 @@ export function normalizePresetState(preset: Preset): PresetStateNormalizationRe
     }
   }
 
-  // VOL MIN/MAX: bastano i limiti del modello (MIN 0..50, MAX 51..100). In passato MIN veniva forzato
+  // VOL MIN/MAX: bastano i limiti del modello (MIN 0..50, MAX 50..100). In passato MIN veniva forzato
   // a 50, cancellando i valori di fabbrica (0) e quelli impostati dall'utente a ogni ricarica.
 
   return { preset: normalizedPreset, correctedCount, warnings };

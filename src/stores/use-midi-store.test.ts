@@ -39,6 +39,30 @@ test('le manopole 0..100 viaggiano in scala 0..100, come le invia la pedaliera',
   assert.equal(amp.parameters.gain, 100);
 });
 
+test('volume patch: ogni manopola fa tutta la corsa (MIN 0..50, MAX 50..100) e il CC va da 0 a 100', () => {
+  const sent = captureSentMessages();
+  useMidiStore.setState({ isEditorSyncing: false });
+  usePresetStore.getState().setActivePreset({ ...usePresetStore.getState().activePreset, slot: 120, activeScene: 0 });
+  // MIN: 0 → inizio corsa, 25 → metà, 50 (massimo) → fondo corsa.
+  for (const [value, cc] of [[0, 0], [25, 50], [50, 100]] as const) {
+    sent.length = 0;
+    useMidiStore.getState().sendKnobParameter('vol', 0, value);
+    assert.deepEqual(sent[0], [0xB0, 75, cc], `MIN ${value}`);
+  }
+  // MAX: 50 → inizio corsa, 75 → metà, 100 → fondo corsa.
+  for (const [value, cc] of [[50, 0], [75, 50], [100, 100]] as const) {
+    sent.length = 0;
+    useMidiStore.getState().sendKnobParameter('vol', 1, value);
+    assert.deepEqual(sent[0], [0xB0, 76, cc], `MAX ${value}`);
+  }
+  // Dalla pedaliera: CC 100 sulla prima manopola = 50, sulla seconda = 100.
+  receive(0xB0, 75, 100);
+  receive(0xB0, 76, 100);
+  const vol = usePresetStore.getState().activePreset.effects.find(e => e.type === 'vol')!;
+  assert.equal(vol.parameters.min, 50);
+  assert.equal(vol.parameters.max, 100);
+});
+
 test('cattura reale: modello, ON/OFF e parametri dell\'amp letti dalla pedaliera', () => {
   captureSentMessages();
   useMidiStore.setState({ isEditorSyncing: false });

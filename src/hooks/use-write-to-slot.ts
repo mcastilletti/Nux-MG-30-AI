@@ -74,7 +74,8 @@ export function useWriteToSlot(savePresetName: (slot: number, name: string) => v
     setTimeout(() => {
       const s = useMidiStore.getState();
       s.sendSceneChange(sceneIndex);
-      s.syncFullPreset(destination);
+      // Con una sola scena il nome dello slot sulla pedaliera non cambia.
+      s.syncFullPreset(destination, { skipName: !!(scene && current) });
     }, 300);
     return { saved, archived, pedal: 'sent', scene: sceneIndex + 1 };
   }, [user, firestore, savePresetName]);

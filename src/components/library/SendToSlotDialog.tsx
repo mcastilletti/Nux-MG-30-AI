@@ -60,7 +60,7 @@ export function SendToSlotDialog({ open, onOpenChange, preset, sourceLabel, defa
   const currentName = savedNames[slot] || current?.name || formatSlotLabel(slot);
   const unknownContent = current ? isPlaceholderPreset(current, savedNames[slot]) : true;
   const sourceScenesSame = preset ? scenesAreIdentical(preset) : true;
-  const sceneMode = mode === 'scene' && !unknownContent;
+  const sceneMode = mode === 'scene';
   const slotText = `${formatSlotLabel(slot)} · ${currentName}`;
 
   const report = (result: WriteToSlotResult, archived: boolean) => {
@@ -130,12 +130,6 @@ export function SendToSlotDialog({ open, onOpenChange, preset, sourceLabel, defa
                 onChange={setMode}
                 options={[{ value: 'all', label: 'Tutto il preset' }, { value: 'scene', label: 'Una sola scena' }]}
               />
-              {mode === 'scene' && unknownContent && (
-                <p className="flex gap-2 rounded-lg border border-warning/40 bg-warning/10 p-3 text-caption">
-                  <AlertTriangle className="h-4 w-4 shrink-0 text-warning" aria-hidden="true" />
-                  L&apos;app non conosce ancora il contenuto di questo slot: per cambiare una sola scena le altre due devono restare com&apos;erano. Aprilo nell&apos;editor con la pedaliera collegata e usa &quot;Leggi il preset dalla pedaliera&quot;, poi torna qui.
-                </p>
-              )}
               {sceneMode && (
                 <div className="space-y-3 rounded-lg border border-border bg-card/50 p-3">
                   {!sourceScenesSame && (
@@ -149,8 +143,14 @@ export function SendToSlotDialog({ open, onOpenChange, preset, sourceLabel, defa
                     <Segmented ariaLabel="Scena da sostituire" fill value={toScene} onChange={setToScene} options={[0, 1, 2].map((i) => ({ value: i, label: `S${i + 1}`, ariaLabel: `Scena ${i + 1}` }))} />
                   </div>
                   <p className="text-caption text-muted-foreground">
-                    {sourceScenesSame ? 'Le tre scene di questo suono sono uguali. ' : ''}Cambia solo la scena {toScene + 1}: le altre due scene e il nome dello slot restano come sono.
+                    {sourceScenesSame ? 'Le tre scene di questo suono sono uguali. ' : ''}Cambia solo la scena {toScene + 1}: sulla pedaliera le altre due scene e il nome dello slot non vengono toccati.
                   </p>
+                  {unknownContent && (
+                    <p className="flex gap-2 rounded-lg border border-warning/40 bg-warning/10 p-3 text-caption">
+                      <AlertTriangle className="h-4 w-4 shrink-0 text-warning" aria-hidden="true" />
+                      L&apos;app non ha mai scritto questo slot: nella sua libreria le altre due scene risultano quelle di partenza, che possono non essere quelle che hai sulla pedaliera. Sulla pedaliera restano com&apos;erano.
+                    </p>
+                  )}
                 </div>
               )}
             </div>
@@ -173,7 +173,7 @@ export function SendToSlotDialog({ open, onOpenChange, preset, sourceLabel, defa
             {unknownContent && (
               <p className="flex gap-2 rounded-lg border border-warning/40 bg-warning/10 p-3 text-caption">
                 <AlertTriangle className="h-4 w-4 shrink-0 text-warning" aria-hidden="true" />
-                L&apos;app non ha ancora letto questo slot dalla pedaliera: nell&apos;archivio finirebbe il preset di partenza dell&apos;app, non il suono reale. Per salvarlo davvero, aprilo nell&apos;editor con la pedaliera collegata e usa &quot;Leggi il preset dalla pedaliera&quot;.
+                L&apos;app non ha mai scritto né letto questo slot: nell&apos;archivio finirebbe il preset di partenza dell&apos;app, non il suono che c&apos;è davvero sulla pedaliera.
               </p>
             )}
             <div className="grid gap-2">

@@ -158,7 +158,8 @@ interface MidiStore {
   enterBlockEditor: (blockType: string) => void;
   exitBlockEditor: () => void;
   syncBlockParameters: (blockType: string, parameters: Record<string, any>) => void;
-  syncFullPreset: (preset: Preset) => void;
+  /** `skipName`: non cambia il nome del preset sulla pedaliera (invio di una sola scena). */
+  syncFullPreset: (preset: Preset, options?: { skipName?: boolean }) => void;
   readPresetFromPedal: (finalBlockType?: string) => void;
   refreshDevices: () => void;
   syncPresets: (force?: boolean) => Promise<void>;
@@ -506,13 +507,13 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     }, blocks.length * STEP_MS + STEP_MS);
   },
 
-  syncFullPreset: (preset) => {
+  syncFullPreset: (preset, options) => {
     const { sendModelChange, toggleBlock, syncBlockParameters, sendPresetName, isEditorSyncing } = get();
     if (isEditorSyncing) return;
 
     set({ isEditorSyncing: true, isPushingPreset: true });
 
-    sendPresetName(preset.name);
+    if (!options?.skipName) sendPresetName(preset.name);
 
     // Finestra per blocco: entra una sola volta nell'editor (niente doppio SELECT/ENTER CC,
     // vedi commento su sendModelChange) e lascia margine per il blocco con più parametri

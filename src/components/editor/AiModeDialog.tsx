@@ -1,7 +1,8 @@
 'use client';
 
 import { useShallow } from 'zustand/react/shallow';
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 import { CheckCircle2, Loader2, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -10,7 +11,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { useUser } from '@/firebase';
 import { generateMG30Preset, MG30PresetOutput } from '@/ai/flows/mg30-preset-gen';
-import { formatValue, normalizePresetSuggestion, PresetNormalizationResult } from '@/lib/mg30-preset-normalizer';
+import { formatValue } from '@/lib/mg30-preset-normalizer';
+import { applySuggestionToScene } from '@/lib/ai-preset-apply';
+import { Segmented } from '@/components/common/segmented';
+import { useMidiStore } from '@/stores/use-midi-store';
 import { applyJsonToPreset, parseDirectJsonInput } from '@/lib/preset-json';
 import { useInstrumentationStore } from '@/stores/use-instrumentation-store';
 import { buildInstrumentationContext, resolveAmplifier, resolveGuitar } from '@/lib/instrumentation-context';
@@ -30,7 +34,13 @@ export function AiModeDialog({ open, onOpenChange, activePreset, setActivePreset
   const [aiPrompt, setAiPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [proposedPreset, setProposedPreset] = useState<MG30PresetOutput | null>(null);
-  const [proposedNormalization, setProposedNormalization] = useState<PresetNormalizationResult | null>(null);
+  const [targetScene, setTargetScene] = useState(activePreset.activeScene);
+  // Il suono va in una sola scena: scelta e anteprima si ricalcolano se cambia la scena.
+  const proposedNormalization = useMemo(
+    () => (proposedPreset ? applySuggestionToScene(activePreset, proposedPreset, targetScene) : null),
+    [proposedPreset, activePreset, targetScene],
+  );
+  useEffect(() => { if (open) setTargetScene(activePreset.activeScene); }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
   const { guitars, amplifiers, selectedGuitarId, selectedAmplifierId, selectGuitar, selectAmplifier } = useInstrumentationStore(useShallow((s) => ({
     guitars: s.guitars,
     amplifiers: s.amplifiers,
@@ -93,14 +103,12 @@ export function AiModeDialog({ open, onOpenChange, activePreset, setActivePreset
     // Altrimenti, procedi con la generazione tramite Intelligenza Artificiale
     setIsGenerating(true);
     setProposedPreset(null);
-    setProposedNormalization(null);
     try {
       const instrumentation = buildInstrumentationContext(selectedGuitar, selectedAmplifier);
       if (!user) throw new Error('Accedi per usare le funzioni AI.');
       const idToken = await user.getIdToken();
       const result = await generateMG30Preset({ description: aiPrompt.trim(), instrumentation }, idToken);
       setProposedPreset(result);
-      setProposedNormalization(normalizePresetSuggestion(activePreset, result));
     } catch (error: any) {
       const isRateLimit = error.message?.includes('429') || error.message?.toLowerCase().includes('rate');
       toast({
@@ -119,14 +127,16 @@ export function AiModeDialog({ open, onOpenChange, activePreset, setActivePreset
     const newPreset = proposedNormalization.updatedPreset;
 
     setActivePreset(newPreset);
+    // La pedaliera deve stare sulla scena scritta: il salvataggio invia la scena attiva.
+    const midi = useMidiStore.getState();
+    if (midi.status === 'connected' && targetScene !== activePreset.activeScene) midi.sendSceneChange(targetScene);
 
     toast({
       title: "AI Tone Applied",
-      description: `Il preset '${proposedPreset.name}' è pronto. Clicca SAVE per sincronizzare la pedaliera.`
+      description: `Il suono '${proposedPreset.name}' è nella scena ${targetScene + 1}; le altre scene non sono cambiate. Clicca SAVE per sincronizzare la pedaliera.`
     });
 
     setProposedPreset(null);
-    setProposedNormalization(null);
     setIsAiModalOpen(false);
     setAiPrompt('');
   };
@@ -144,19 +154,31 @@ export function AiModeDialog({ open, onOpenChange, activePreset, setActivePreset
               <div className="grid gap-3 rounded-lg border border-primary/20 bg-primary/5 p-3 sm:grid-cols-2">
                 <div className="space-y-2">
                   <p className="text-xs font-semibold uppercase tracking-wide text-primary">Chitarra</p>
-                  <Select value={selectedGuitar?.id ?? 'none'} onValueChange={(value) => selectGuitar(value === 'none' ? undefined : value)}>
-                    <SelectTrigger className="bg-background/60"><SelectValue placeholder="Predefinita (Epiphone ES-335)" /></SelectTrigger>
-                    <SelectContent><SelectItem value="none">Predefinita (Epiphone ES-335)</SelectItem>{guitars.map(guitar => <SelectItem key={guitar.id} value={guitar.id}>{guitar.model}</SelectItem>)}</SelectContent>
-                  </Select>
+                  {guitars.length > 0 ? (
+                    <Select value={selectedGuitar?.id ?? ''} onValueChange={selectGuitar}>
+                      <SelectTrigger aria-label="Chitarra per l'AI" className="bg-background/60"><SelectValue /></SelectTrigger>
+                      <SelectContent>{guitars.map(guitar => <SelectItem key={guitar.id} value={guitar.id}>{guitar.model}</SelectItem>)}</SelectContent>
+                    </Select>
+                  ) : <p className="text-caption text-muted-foreground">Nessuna chitarra inserita.</p>}
                 </div>
                 <div className="space-y-2">
                   <p className="text-xs font-semibold uppercase tracking-wide text-primary">Amplificatore</p>
-                  <Select value={selectedAmplifier?.id ?? 'none'} onValueChange={(value) => selectAmplifier(value === 'none' ? undefined : value)}>
-                    <SelectTrigger className="bg-background/60"><SelectValue placeholder="Predefinito (Headrush FRFR-112)" /></SelectTrigger>
-                    <SelectContent><SelectItem value="none">Predefinito (Headrush FRFR-112)</SelectItem>{amplifiers.map(amplifier => <SelectItem key={amplifier.id} value={amplifier.id}>{amplifier.model}</SelectItem>)}</SelectContent>
-                  </Select>
+                  {amplifiers.length > 0 ? (
+                    <Select value={selectedAmplifier?.id ?? ''} onValueChange={selectAmplifier}>
+                      <SelectTrigger aria-label="Amplificatore per l'AI" className="bg-background/60"><SelectValue /></SelectTrigger>
+                      <SelectContent>{amplifiers.map(amplifier => <SelectItem key={amplifier.id} value={amplifier.id}>{amplifier.model}</SelectItem>)}</SelectContent>
+                    </Select>
+                  ) : <p className="text-caption text-muted-foreground">Nessun amplificatore inserito.</p>}
                 </div>
-                <p className="text-caption text-muted-foreground sm:col-span-2">La selezione viene applicata automaticamente a ogni nuova generazione AI.</p>
+                <p className="text-caption text-muted-foreground sm:col-span-2">
+                  L&apos;AI usa la strumentazione scelta qui, inserita in <Link href="/instrumentation" className="underline underline-offset-2">Strumentazione</Link>.
+                  {guitars.length === 0 || amplifiers.length === 0 ? ' Quello che manca viene trattato come non specificato: il suono sarà neutro.' : ''}
+                </p>
+              </div>
+              <div className="space-y-2">
+                <p className="text-xs font-semibold uppercase tracking-wide text-primary">Scena di destinazione</p>
+                <Segmented ariaLabel="Scena di destinazione" fill value={targetScene} onChange={setTargetScene} options={[0, 1, 2].map((i) => ({ value: i, label: `S${i + 1}`, ariaLabel: `Scena ${i + 1}` }))} />
+                <p className="text-caption text-muted-foreground">Il suono va solo in questa scena; le altre due restano come sono.</p>
               </div>
               <Textarea
                 placeholder={`Es. per prompt AI: Suono grosso in stile Oasis, chitarra humbucker, ritmica anni '90, medi presenti e ambiente contenuto...
@@ -180,6 +202,10 @@ export function AiModeDialog({ open, onOpenChange, activePreset, setActivePreset
               <DialogDescription>L'AI ha selezionato i modelli e i parametri migliori.</DialogDescription>
             </DialogHeader>
             <div className="py-4 space-y-4">
+              <div className="space-y-1.5">
+                <p className="text-xs font-semibold uppercase tracking-wide text-primary">Scena di destinazione</p>
+                <Segmented ariaLabel="Scena di destinazione" fill value={targetScene} onChange={setTargetScene} options={[0, 1, 2].map((i) => ({ value: i, label: `S${i + 1}`, ariaLabel: `Scena ${i + 1}` }))} />
+              </div>
               <div className="p-3 rounded-lg bg-secondary/30 border border-border text-xs italic">
                 "{proposedPreset.explanation}"
               </div>
@@ -208,7 +234,7 @@ export function AiModeDialog({ open, onOpenChange, activePreset, setActivePreset
               )}
             </div>
             <DialogFooter className="gap-2">
-              <Button variant="ghost" onClick={() => { setProposedPreset(null); setProposedNormalization(null); }}>Scarta</Button>
+              <Button variant="ghost" onClick={() => setProposedPreset(null)}>Scarta</Button>
               <Button onClick={applyProposedPreset} disabled={!proposedNormalization?.changes.length} className="flex-1">Applica all'Editor</Button>
             </DialogFooter>
           </>
